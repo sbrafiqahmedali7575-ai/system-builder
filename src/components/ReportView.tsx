@@ -4,6 +4,7 @@ import { Flame, Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
+import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
 import { NinjaBadgeProgress } from './NinjaBadgeProgress';
@@ -102,6 +103,20 @@ export const ReportView: React.FC<ReportViewProps> = ({
   }, [records]);
   const last7CompletedDays = last7Records.filter((record) => record.isCompleted).length;
   const last7Performance = Math.min(100, (last7CompletedDays / 7) * 100);
+
+  const currentCadenceDay = useMemo(() => {
+    const dateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const fullDayName = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      timeZone: 'UTC',
+    }).format(new Date(Date.UTC(year, month - 1, day)));
+
+    return {
+      formattedDate: formatCalendarDate(dateKey),
+      fullDayName,
+    };
+  }, []);
 
   return (
     <motion.div
@@ -272,6 +287,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   <span className="text-blue-600 dark:text-blue-400 font-bold font-mono text-xs shrink-0">
                     {last7CompletedDays}/7 Done
                   </span>
+                </div>
+
+                <div className="relative mb-1 text-[9px] font-semibold text-slate-500 dark:text-slate-400">
+                  Current Day • <span className="font-mono">{currentCadenceDay.formattedDate}</span> • {currentCadenceDay.fullDayName}
                 </div>
 
                 <div className="relative">

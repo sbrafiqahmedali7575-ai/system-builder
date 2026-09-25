@@ -7,7 +7,7 @@ import { AddRecordModal } from './components/AddRecordModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
 import { ConfirmationPage } from './components/ConfirmationPage';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
-import { areDatesEqual, formatCalendarDate } from './utils/taskDateUtils';
+import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
 import {
   subscribeToRecords,
@@ -324,11 +324,17 @@ export default function App() {
     dateKey: string,
     dayTasks: TaskItem[]
   ): Promise<'COMPLETED' | 'NOT_COMPLETED'> => {
+    const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+    if (!areDatesEqual(dateKey, todayDateKey)) {
+      throw new Error('Only the current day can be submitted.');
+    }
+
     if (dayTasks.length === 0) {
-      throw new Error('Add at least one task before submitting the day.');
+      throw new Error('No tasks were created for today. The day will default to Not Completed.');
     }
 
     const allCompleted = dayTasks.every((task) => task.isCompleted);
+    const completedCount = dayTasks.filter((task) => task.isCompleted).length;
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
     const existingRecord = records.find((record) =>
@@ -342,6 +348,9 @@ export default function App() {
         isCompleted: allCompleted,
         result: allCompleted ? 'TRUE' : 'FALSE',
         change: 0,
+        summary: `${completedCount}/${dayTasks.length} tasks completed`,
+        responseSubmittedAt: nowIso,
+        responseSource: 'APP',
         updatedAt: nowIso,
       };
 
@@ -362,7 +371,6 @@ export default function App() {
     } else {
       const nextDay =
         records.reduce((maxDay, record) => Math.max(maxDay, Number(record.day) || 0), 0) + 1;
-      const completedCount = dayTasks.filter((task) => task.isCompleted).length;
       const newRecord: DailyRecord = {
         id: `record-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         day: nextDay,
@@ -373,6 +381,8 @@ export default function App() {
         skill: 'Daily Tasks',
         summary: `${completedCount}/${dayTasks.length} tasks completed`,
         notes: 'Submitted from Today Tasks card',
+        responseSubmittedAt: nowIso,
+        responseSource: 'APP',
         updatedAt: nowIso,
       };
 

@@ -167,18 +167,31 @@ export function buildDailyConfirmationEmail(
           .map(
             (task) => `
               <tr>
-                <td style="padding:11px 12px;border-bottom:1px solid #273449;width:30px;vertical-align:top;font-size:19px;color:#e2e8f0;">
-                  ${task.isCompleted ? '☑' : '☐'}
+                <td style="padding:11px 12px;border-bottom:1px solid #e2e8f0;width:38px;vertical-align:top;font-size:20px;">
+                  <a
+                    href="${reviewUrl}"
+                    target="_blank"
+                    style="display:inline-block;color:#2563eb;text-decoration:none;font-weight:900;line-height:1;"
+                    aria-label="Open checklist for ${escapeHtml(task.title)}"
+                  >
+                    ${task.isCompleted ? '☑' : '☐'}
+                  </a>
                 </td>
-                <td style="padding:11px 12px;border-bottom:1px solid #273449;color:#f1f5f9;font-size:14px;line-height:1.45;">
-                  ${escapeHtml(task.title)}
+                <td style="padding:11px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;line-height:1.45;">
+                  <a
+                    href="${reviewUrl}"
+                    target="_blank"
+                    style="color:#0f172a;text-decoration:none;font-weight:650;"
+                  >
+                    ${escapeHtml(task.title)}
+                  </a>
                 </td>
               </tr>`
           )
           .join('')
       : `
         <tr>
-          <td style="padding:16px;color:#94a3b8;font-size:14px;">
+          <td style="padding:16px;color:#64748b;font-size:14px;">
             No tasks are scheduled for today.
           </td>
         </tr>`;
@@ -190,25 +203,28 @@ export function buildDailyConfirmationEmail(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(subject)}</title>
 </head>
-<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f8fafc;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#0f172a;padding:28px 14px;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;padding:28px 14px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#1e293b;border:1px solid #334155;border-radius:16px;overflow:hidden;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #dbe3ee;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,.08);">
           <tr>
-            <td style="padding:22px 26px;border-bottom:1px solid #334155;">
-              <div style="font-size:20px;font-weight:900;color:#fff;">System Builder</div>
-              <div style="margin-top:5px;font-size:12px;color:#94a3b8;font-family:monospace;">${escapeHtml(details.taskDate)}</div>
+            <td style="padding:22px 26px;border-bottom:1px solid #e2e8f0;background:#ffffff;">
+              <div style="font-size:20px;font-weight:900;color:#0f172a;">System Builder</div>
+              <div style="margin-top:5px;font-size:12px;color:#64748b;font-family:monospace;">${escapeHtml(details.taskDate)}</div>
             </td>
           </tr>
           <tr>
             <td style="padding:24px 26px;">
-              <h1 style="margin:0 0 8px;font-size:21px;line-height:1.3;color:#fff;">Today’s Tasks</h1>
-              <p style="margin:0 0 18px;color:#cbd5e1;font-size:14px;line-height:1.55;">
-                ${completedCount} of ${tasks.length} currently checked. Open the checklist, update any boxes, then submit your response for the day.
+              <h1 style="margin:0 0 8px;font-size:21px;line-height:1.3;color:#0f172a;">Today’s Tasks</h1>
+              <p style="margin:0 0 8px;color:#475569;font-size:14px;line-height:1.55;">
+                ${completedCount} of ${tasks.length} currently checked.
+              </p>
+              <p style="margin:0 0 18px;color:#64748b;font-size:12px;line-height:1.5;">
+                Tap any checkbox or task below to open the live checklist, update the boxes, and submit.
               </p>
 
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#0f172a;border:1px solid #334155;border-radius:12px;overflow:hidden;margin-bottom:22px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:22px;">
                 ${taskRows}
               </table>
 
@@ -216,13 +232,13 @@ export function buildDailyConfirmationEmail(
                 Review Checkboxes &amp; Submit
               </a>
 
-              <p style="margin:16px 0 0;color:#94a3b8;font-size:12px;line-height:1.5;">
+              <p style="margin:16px 0 0;color:#64748b;font-size:12px;line-height:1.5;">
                 If all tasks are checked when you submit, the day is marked Completed. If any task is unchecked, the day is marked Not Completed.
               </p>
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 26px;border-top:1px solid #334155;background:#0f172a;text-align:center;color:#64748b;font-size:12px;">
+            <td style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#64748b;font-size:12px;">
               System Builder • Daily task response
             </td>
           </tr>

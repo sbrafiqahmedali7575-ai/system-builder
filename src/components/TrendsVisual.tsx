@@ -29,7 +29,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
   const [showDataLabels, setShowDataLabels] = useState<boolean>(true);
   const [selectedPoint, setSelectedPoint] = useState<MovingAveragePoint | null>(null);
 
-  // Compute trend metrics
+  // Compute fixed tracked-week trend metrics
   const trendData = useMemo(() => {
     return calculateMovingAverageTrends(records, windowSize);
   }, [records, windowSize]);
@@ -38,20 +38,20 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
     points,
     highProductivityPeriods,
     lowProductivityPeriods,
-    highProductivityDaysCount,
-    lowProductivityDaysCount,
+    highProductivityDaysCount: highProductivityWeeksCount,
+    lowProductivityDaysCount: lowProductivityWeeksCount,
   } = trendData;
 
-  const analyzedDaysCount = points.length;
-  const highProductivityShare = analyzedDaysCount > 0
-    ? (highProductivityDaysCount / analyzedDaysCount) * 100
+  const analyzedWeeksCount = points.length;
+  const highProductivityShare = analyzedWeeksCount > 0
+    ? (highProductivityWeeksCount / analyzedWeeksCount) * 100
     : 0;
-  const lowProductivityShare = analyzedDaysCount > 0
-    ? (lowProductivityDaysCount / analyzedDaysCount) * 100
+  const lowProductivityShare = analyzedWeeksCount > 0
+    ? (lowProductivityWeeksCount / analyzedWeeksCount) * 100
     : 0;
-  const steadyProductivityDaysCount = points.filter((point) => point.productivityLevel === 'STEADY').length;
-  const steadyProductivityShare = analyzedDaysCount > 0
-    ? (steadyProductivityDaysCount / analyzedDaysCount) * 100
+  const steadyProductivityWeeksCount = points.filter((point) => point.productivityLevel === 'STEADY').length;
+  const steadyProductivityShare = analyzedWeeksCount > 0
+    ? (steadyProductivityWeeksCount / analyzedWeeksCount) * 100
     : 0;
 
   // Chart dimensions
@@ -169,15 +169,15 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             <div className="min-w-0" style={{ paddingLeft: '10%' }}>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-extrabold font-mono text-blue-500">
-                  {highProductivityDaysCount}
+                  {highProductivityWeeksCount}
                 </span>
-                <span className="text-[10px] text-slate-400">days ≥80%</span>
+                <span className="text-[10px] text-slate-400">weeks ≥80%</span>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
                 {highProductivityPeriods.length} peak streak{highProductivityPeriods.length === 1 ? '' : 's'} recorded
               </p>
               <p className="mt-0.5 text-[9px] text-slate-400">
-                {Math.round(highProductivityShare)}% of analyzed days
+                {Math.round(highProductivityShare)}% of analyzed weeks
               </p>
             </div>
 
@@ -186,7 +186,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
               size={56}
               strokeWidth={5}
               progressClassName="text-blue-500"
-              label={`${highProductivityDaysCount}D`}
+              label={`${highProductivityWeeksCount}W`}
               sublabel="high"
               delay={0.08}
             />
@@ -231,15 +231,15 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             <div className="min-w-0" style={{ paddingLeft: '10%' }}>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-extrabold font-mono text-amber-500">
-                  {steadyProductivityDaysCount}
+                  {steadyProductivityWeeksCount}
                 </span>
-                <span className="text-[10px] text-slate-400">days 50–79%</span>
+                <span className="text-[10px] text-slate-400">weeks 50–79%</span>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                Days in the steady productivity range
+                Weeks in the steady productivity range
               </p>
               <p className="mt-0.5 text-[9px] text-slate-400">
-                {Math.round(steadyProductivityShare)}% of analyzed days
+                {Math.round(steadyProductivityShare)}% of analyzed weeks
               </p>
             </div>
 
@@ -248,7 +248,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
               size={56}
               strokeWidth={5}
               progressClassName="text-amber-500"
-              label={`${steadyProductivityDaysCount}D`}
+              label={`${steadyProductivityWeeksCount}W`}
               sublabel="steady"
               delay={0.13}
             />
@@ -295,17 +295,17 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                 <span className={`text-2xl font-extrabold font-mono ${
                   lowProductivityDaysCount > 0 ? 'text-rose-500' : 'text-slate-400'
                 }`}>
-                  {lowProductivityDaysCount}
+                  {lowProductivityWeeksCount}
                 </span>
-                <span className="text-[10px] text-slate-400">days &lt;50%</span>
+                <span className="text-[10px] text-slate-400">weeks &lt;50%</span>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
                 {lowProductivityPeriods.length > 0
                   ? `${lowProductivityPeriods.length} recovery window${lowProductivityPeriods.length === 1 ? '' : 's'}`
-                  : 'Zero prolonged dips detected'}
+                  : 'Zero low-productivity weeks detected'}
               </p>
               <p className="mt-0.5 text-[9px] text-slate-400">
-                {Math.round(lowProductivityShare)}% of analyzed days
+                {Math.round(lowProductivityShare)}% of analyzed weeks
               </p>
             </div>
 
@@ -314,7 +314,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
               size={56}
               strokeWidth={5}
               progressClassName="text-rose-500"
-              label={`${lowProductivityDaysCount}D`}
+              label={`${lowProductivityWeeksCount}W`}
               sublabel="low"
               delay={0.18}
             />
@@ -358,13 +358,13 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             <div className="hidden sm:flex items-center space-x-1 pl-1 border-l border-slate-200 dark:border-slate-800">
               <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500 text-white text-[9px] font-bold">✓</span>
               <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Done
+                7/7 Complete
               </span>
             </div>
             <div className="hidden sm:flex items-center space-x-1">
               <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[9px] font-bold">✕</span>
               <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Missed
+                Below 7/7
               </span>
             </div>
           </div>
@@ -526,12 +526,12 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
 
               {/* Data points */}
               {pointsWithCoords.map((pt) => {
-                const isSelected = selectedPoint?.day === pt.day;
+                const isSelected = selectedPoint?.weekNumber === pt.weekNumber;
                 const isHigh = pt.productivityLevel === 'HIGH';
                 const isLow = pt.productivityLevel === 'LOW';
 
                 return (
-                  <g key={`pt-${pt.day}`}>
+                  <g key={`pt-week-${pt.weekNumber}`}>
                     {/* Pulsing ring for selected point */}
                     {isSelected && (
                       <circle
@@ -553,7 +553,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                       initial={{ opacity: 0, scale: 0 }}
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20, delay: Math.min(0.45, pt.day * 0.015) }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20, delay: Math.min(0.45, pt.weekNumber * 0.04) }}
                       fill={
                         isHigh
                           ? '#2563eb'
@@ -568,7 +568,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                       onMouseEnter={() => setSelectedPoint(pt)}
                     />
 
-                    {/* Data Label displaying moving average rate and completed/not completed icon */}
+                    {/* Data label displaying fixed-week completion rate and full-week status icon */}
                     {showDataLabels && (() => {
                       const isNearTop = pt.y < padTop + 8;
                       const labelY = isNearTop ? pt.y + 7 : pt.y - 20;
@@ -658,7 +658,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                       );
                     })()}
 
-                    {/* Day X-axis label */}
+                    {/* Fixed tracked-week X-axis label */}
                     <text
                       x={pt.x}
                       y={padTop + chartHeight + 18}
@@ -667,7 +667,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                       fontFamily="monospace"
                       fill={isDark ? '#94a3b8' : '#64748b'}
                     >
-                      D{pt.day}
+                      W{pt.weekNumber}
                     </text>
                   </g>
                 );
@@ -699,14 +699,17 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             >
               <div className="flex items-center space-x-1.5">
                 <span className="font-mono font-bold px-1 py-0.5 rounded bg-black/20 text-xs">
-                  Day {selectedPoint.day}
+                  Week {selectedPoint.weekNumber}
                 </span>
                 <span className="font-semibold">
-                  {standardizeDate(selectedPoint.date)}
+                  D{selectedPoint.startDay}–D{selectedPoint.endDay}
+                </span>
+                <span className="text-slate-400">
+                  {standardizeDate(selectedPoint.startDate)} – {standardizeDate(selectedPoint.endDate)}
                 </span>
                 <span>•</span>
                 <span>
-                  {windowSize}-Day Window: <strong>{selectedPoint.completedInWindow} / {selectedPoint.totalInWindow} met</strong> ({selectedPoint.movingAverageRate}%)
+                  <strong>{selectedPoint.completedInWindow} / {selectedPoint.totalInWindow} completed</strong> ({selectedPoint.movingAverageRate}%)
                 </span>
               </div>
 

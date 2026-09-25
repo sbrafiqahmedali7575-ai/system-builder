@@ -10,6 +10,13 @@ import {
   writeBatch,
   Unsubscribe,
 } from 'firebase/firestore';
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithCustomToken,
+  signOut,
+  User,
+} from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DailyRecord, TaskItem } from '../types';
 import { INITIAL_RECORDS, INITIAL_TASKS } from '../data/initialData';
@@ -17,6 +24,53 @@ import { standardizeDate } from '../utils/dateUtils';
 
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+export const auth = getAuth(app);
+
+export function subscribeToAuthState(
+  onChange: (user: User | null) => void
+): Unsubscribe {
+  return onAuthStateChanged(auth, onChange);
+}
+
+export async function signInWithAccessKey(accessKey: string): Promise<User> {
+  const response = await fetch('/api/auth/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessKey }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.customToken) {
+    throw new Error(payload.error || 'Unable to sign in to System Builder.');
+  }
+
+  const credential = await signInWithCustomToken(auth, payload.customToken);
+  return credential.user;
+}
+
+export async function signOutOwner(): Promise<void> {
+  await signOut(auth);
+}
+
+export async function authenticatedFetch(
+  input: RequestInfo | URL,
+  init: RequestInit = {}
+): Promise<Response> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Authentication required.');
+  }
+
+  const idToken = await user.getIdToken();
+  const headers = new Headers(init.headers || {});
+  headers.set('Authorization', `Bearer ${idToken}`);
+
+  return fetch(input, {
+    ...init,
+    headers,
+  });
+}
 
 // Target specific Firestore Database ID if configured
 export const db =

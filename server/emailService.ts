@@ -61,9 +61,9 @@ export function sanitizeError(rawMessage: any): string {
 }
 
 /**
- * Returns the public production base URL for all email links.
- * Strictly uses APP_BASE_URL (defaults to https://rafiqcommitdaily.ai.studio).
- * Never uses aistudio.google.com, localhost, or dynamically detected development URLs.
+ * Returns the public production base URL for reminder and review links.
+ * APP_BASE_URL wins when configured; otherwise the current System Builder
+ * production hostname is used.
  */
 export function getAppBaseUrl(): string {
   const envUrl = (process.env.APP_BASE_URL || '').trim();

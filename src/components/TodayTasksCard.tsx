@@ -266,10 +266,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   };
 
   return (
-    <div
+    <motion.div
       id="today-tasks-card"
       aria-label="Today's Tasks"
-      className={`ninja-task-card p-2 sm:p-2.5 rounded-2xl border flex-1 flex flex-col transition-all ${
+      initial={{ opacity: 0, y: 14, scale: 0.99 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -2 }}
+      className={`ninja-task-card ui-motion-section p-2 sm:p-2.5 rounded-2xl border flex-1 flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
@@ -366,7 +370,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
              Do NOT show 0% failure when there are no tasks!
       ───────────────────────────────────────────────────────────── */}
       {totalTasksCount > 0 ? (
-        <div className="mb-2.5 p-2 rounded-2xl bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+        <div className="ui-motion-card mb-2.5 p-2 rounded-2xl bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between text-xs font-semibold mb-1">
             <span className="text-slate-700 dark:text-slate-200">
               {completedCount} of {totalTasksCount} tasks completed
@@ -423,7 +427,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className={`group flex items-center justify-between p-2 sm:p-2 rounded-2xl border transition-all ${
+                  whileHover={{ y: -2, scale: 1.005 }}
+                  whileTap={{ scale: 0.995 }}
+                  className={`group ui-motion-card flex items-center justify-between p-2 sm:p-2 rounded-2xl border transition-all ${
                     isTaskCompleted
                       ? isDark
                         ? 'bg-slate-950/40 border-slate-800/60 opacity-85'
@@ -873,6 +879,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };

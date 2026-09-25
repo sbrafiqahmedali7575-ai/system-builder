@@ -232,22 +232,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   </div>
                 </div>
 
-                {nextTarget ? (
-                  <div className="mt-1.5 min-w-0">
-                    <div className="flex justify-between text-[9px] font-bold text-slate-500 mb-0.5">
-                      <span>Completed-days requirement</span>
-                      <span>{completedDays}/{nextTarget.minDays}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress.dayProgress}%` }}
-                        transition={{ duration: 0.8, delay: 0.08 }}
-                        className="h-full bg-blue-500 rounded-full"
-                      />
-                    </div>
-                  </div>
-                ) : (
+                {!nextTarget && (
                   <div className="mt-2 rounded-xl border border-amber-300/70 dark:border-amber-900 bg-amber-50/80 dark:bg-amber-950/30 p-2 flex items-center gap-2">
                     <Award className="w-5 h-5 text-amber-500" />
                     <div>

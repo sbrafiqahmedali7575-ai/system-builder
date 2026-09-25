@@ -316,7 +316,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
                       initial={{ scale: 0.12, rotate: -42, opacity: 0 }}
                       animate={{ scale: [0.12, 1.32, 0.92, 1], rotate: [-42, 12, -4, 0], opacity: 1 }}
                       transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
-                      className={`ninja-celebration-badge relative w-24 h-24 rounded-[30px] bg-gradient-to-br ${badgeTierGradient[badge.tier]} shadow-[0_18px_45px_rgba(37,99,235,0.34)] flex items-center justify-center text-white ring-4 ring-white/80 dark:ring-slate-800 overflow-hidden`}
+                      className={`system-celebration-badge relative w-24 h-24 rounded-[30px] bg-gradient-to-br ${badgeTierGradient[badge.tier]} shadow-[0_18px_45px_rgba(37,99,235,0.34)] flex items-center justify-center text-white ring-4 ring-white/80 dark:ring-slate-800 overflow-hidden`}
                     >
                       <BadgeIcon badge={badge} className="relative z-10 w-11 h-11" />
                       <motion.div

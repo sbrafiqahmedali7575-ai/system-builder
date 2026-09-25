@@ -1,27 +1,37 @@
-name: Daily Commitment Reminder (09:00 PM IST)
+name: System Builder Reminder Scheduler
 
 on:
   schedule:
-    # 15:30 UTC = 21:00 IST (Asia/Kolkata) every day
-    - cron: '30 15 * * *'
-  workflow_dispatch: # Allows manual testing from GitHub Actions tab
+    # Poll every 15 minutes. The server checks the configured Asia/Kolkata
+    # delivery time, the enabled switch, and persistent daily deduplication.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 jobs:
   send-reminder:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger CommitDaily Reminder Endpoint
+      - name: Trigger System Builder Reminder Endpoint
+        env:
+          SCHEDULER_SECRET: ${{ secrets.SCHEDULER_SECRET }}
         run: |
-          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST https://rafiqcommitdaily.ai.studio/api/send-daily-reminder \
-            -H "Authorization: Bearer ${{ secrets.SCHEDULER_SECRET || 'commit-daily-scheduler-secret-auth-key-2026' }}")
-          
+          if [ -z "$SCHEDULER_SECRET" ]; then
+            echo "SCHEDULER_SECRET GitHub Actions secret is not configured."
+            exit 1
+          fi
+
+          response=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST https://systembuilder08.ai.studio/api/send-daily-reminder \
+            -H "Authorization: Bearer $SCHEDULER_SECRET" \
+            -H "Content-Type: application/json" \
+            --data '{}')
+
           body=$(echo "$response" | sed -e '$d')
           status=$(echo "$response" | tail -n1 | cut -d':' -f2)
 
           echo "Response: $body"
           echo "Status: $status"
 
-          if [ "$status" -ne 200 ]; then
-            echo "Error: Failed with status $status"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "Reminder endpoint failed with HTTP $status"
             exit 1
           fi

@@ -149,15 +149,19 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
 
           {nextTarget ? (
             <div className="relative mt-1.5">
-              <div className="flex items-center justify-between text-[10px] mb-1 gap-2">
+              <div className={`flex items-center justify-between text-[10px] mb-1 gap-2 p-1.5 rounded-lg border ${
+                isDark
+                  ? 'bg-blue-950/20 border-blue-800/70'
+                  : 'bg-blue-50/70 border-blue-200'
+              }`}>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="font-bold text-slate-500 dark:text-slate-400 shrink-0">Next:</span>
+                  <span className="font-extrabold text-slate-700 dark:text-slate-200 shrink-0">Next:</span>
                   <span className={`w-5 h-5 rounded-md flex items-center justify-center ring-1 shrink-0 ${nextStyle?.ring || ''} ${nextStyle?.soft || ''}`}>
                     <BadgeIcon badge={nextTarget} className={`w-3 h-3 ${nextStyle?.text || ''}`} />
                   </span>
-                  <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{nextTarget.name}</span>
+                  <span className="font-extrabold text-slate-800 dark:text-white truncate">{nextTarget.name}</span>
                 </div>
-                <span className="font-mono text-slate-400 shrink-0">{Math.round(progress.unlockProgress)}%</span>
+                <span className="font-mono font-extrabold text-blue-600 dark:text-blue-300 shrink-0">{Math.round(progress.unlockProgress)}%</span>
               </div>
               <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                 <motion.div

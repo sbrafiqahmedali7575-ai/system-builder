@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, ChevronDown, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
-import { getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
+import { BadgeTier, getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
 import { BadgeCelebration } from './BadgeCelebration';
 import { BadgeIcon } from './BadgeIcon';
 
@@ -44,13 +44,54 @@ const accentStyles: Record<LongTermBadge['accent'], { ring: string; soft: string
   },
 };
 
+const achievedTierStyles: Record<
+  BadgeTier,
+  {
+    ring: string;
+    soft: string;
+    text: string;
+    glow: string;
+    fill: string;
+    label: string;
+    currentGlow: string;
+  }
+> = {
+  bronze: {
+    ring: 'ring-amber-700/45 dark:ring-amber-500/45',
+    soft: 'bg-amber-100 dark:bg-amber-950/50',
+    text: 'text-amber-800 dark:text-amber-300',
+    glow: 'shadow-amber-700/20',
+    fill: 'bg-amber-700 dark:bg-amber-600 text-white',
+    label: 'text-amber-800 dark:text-amber-300',
+    currentGlow: 'rgba(180,83,9,.42)',
+  },
+  gold: {
+    ring: 'ring-yellow-400/60 dark:ring-yellow-400/50',
+    soft: 'bg-yellow-50 dark:bg-yellow-950/45',
+    text: 'text-yellow-700 dark:text-yellow-300',
+    glow: 'shadow-yellow-500/20',
+    fill: 'bg-yellow-400 dark:bg-yellow-500 text-yellow-950',
+    label: 'text-yellow-700 dark:text-yellow-300',
+    currentGlow: 'rgba(250,204,21,.48)',
+  },
+  success: {
+    ring: 'ring-emerald-400/55 dark:ring-emerald-400/50',
+    soft: 'bg-emerald-50 dark:bg-emerald-950/45',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    glow: 'shadow-emerald-500/20',
+    fill: 'bg-emerald-500 dark:bg-emerald-500 text-white',
+    label: 'text-emerald-700 dark:text-emerald-300',
+    currentGlow: 'rgba(16,185,129,.46)',
+  },
+};
+
 export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ completedDays, theme }) => {
   const isDark = theme === 'dark';
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [celebrationBadge, setCelebrationBadge] = useState<LongTermBadge | null>(null);
   const initializedRef = useRef(false);
   const progress = useMemo(() => getBadgeProgress(completedDays), [completedDays]);
-  const currentStyle = accentStyles[progress.current.accent];
+  const currentStyle = achievedTierStyles[progress.current.tier];
   const closeCelebration = useCallback(() => setCelebrationBadge(null), []);
 
   useEffect(() => {
@@ -173,7 +214,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
               </div>
             </div>
           ) : (
-            <div className="relative mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-amber-600 dark:text-amber-300">
+            <div className="relative mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-300">
               <Trophy className="w-3 h-3" /> Analytics mastery path completed
             </div>
           )}
@@ -196,6 +237,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                       const unlocked = completedDays >= badge.minDays;
                       const isCurrent = badge.id === progress.current.id;
                       const isNext = nextTarget?.id === badge.id;
+                      const achievedStyle = achievedTierStyles[badge.tier];
                       return (
                         <motion.div
                           key={badge.id}
@@ -205,13 +247,25 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                           className="min-w-0 flex flex-col items-center gap-0.5"
                         >
                           <motion.div
-                            animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 8px rgba(59,130,246,.38)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
+                            animate={
+                              isCurrent
+                                ? {
+                                    boxShadow: [
+                                      `0 0 0 ${achievedStyle.currentGlow.replace('.42', '0').replace('.48', '0').replace('.46', '0')}`,
+                                      `0 0 9px ${achievedStyle.currentGlow}`,
+                                      `0 0 0 ${achievedStyle.currentGlow.replace('.42', '0').replace('.48', '0').replace('.46', '0')}`,
+                                    ],
+                                  }
+                                : undefined
+                            }
                             transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
                             className={`w-full h-4 rounded flex items-center justify-center transition-all ${
-                              isCurrent
-                                ? 'bg-blue-500 text-white ring-1 ring-blue-400 ring-offset-1 dark:ring-offset-slate-900'
-                                : unlocked
-                                ? 'bg-amber-400/85 dark:bg-amber-500/70 text-white'
+                              unlocked
+                                ? `${achievedStyle.fill} ${
+                                    isCurrent
+                                      ? `ring-1 ${achievedStyle.ring} ring-offset-1 dark:ring-offset-slate-900`
+                                      : ''
+                                  }`
                                 : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
                             }`}
                           >
@@ -222,10 +276,8 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                           </motion.div>
 
                           <span className={`text-[7px] font-mono leading-none whitespace-nowrap ${
-                            isCurrent
-                              ? 'font-black text-blue-600 dark:text-blue-300'
-                              : unlocked
-                              ? 'font-bold text-amber-700 dark:text-amber-300'
+                            unlocked
+                              ? `${isCurrent ? 'font-black' : 'font-bold'} ${achievedStyle.label}`
                               : 'text-slate-400'
                           }`}>
                             {badge.minDays}
@@ -237,10 +289,10 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 </div>
 
                 {!nextTarget && (
-                  <div className="mt-2 rounded-xl border border-amber-300/70 dark:border-amber-900 bg-amber-50/80 dark:bg-amber-950/30 p-2 flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-500" />
+                  <div className="mt-2 rounded-xl border border-emerald-300/70 dark:border-emerald-900 bg-emerald-50/80 dark:bg-emerald-950/30 p-2 flex items-center gap-2">
+                    <Award className="w-5 h-5 text-emerald-500" />
                     <div>
-                      <p className="text-[10px] font-black text-amber-700 dark:text-amber-300">Analytics mastery path complete</p>
+                      <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">Analytics mastery path complete</p>
                       <p className="text-[9px] text-slate-500 dark:text-slate-400">Keep completing days to protect your long-term badge rank.</p>
                     </div>
                   </div>

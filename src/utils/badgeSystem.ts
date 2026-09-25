@@ -37,14 +37,14 @@ function badge(
 export const LONG_TERM_BADGES: LongTermBadge[] = [
   // Bronze tier — foundation and early-career analytics roles.
   badge('trainee', 'Analytics Learner', 'Learner', 0, 'blue', 'bronze'),
-  badge('first-scroll', 'Data Trainee', 'Trainee', 7, 'amber', 'bronze'),
+  badge('data-trainee', 'Data Trainee', 'Trainee', 7, 'amber', 'bronze'),
   badge('day-15', 'Data Intern', 'Intern', 15, 'blue', 'bronze'),
-  badge('shuriken-bronze', 'Analytics Associate', 'Associate', 30, 'amber', 'bronze'),
+  badge('analytics-associate', 'Analytics Associate', 'Associate', 30, 'amber', 'bronze'),
   badge('day-45', 'Junior Data Analyst', 'Junior Analyst', 45, 'blue', 'bronze'),
   badge('day-60', 'Reporting Analyst', 'Reporting', 60, 'violet', 'bronze'),
   badge('day-75', 'Data Analyst I', 'Analyst I', 75, 'red', 'bronze'),
-  badge('silent-scout', 'BI Analyst', 'BI Analyst', 90, 'blue', 'bronze'),
-  badge('crimson-guardian', 'Data Analyst II', 'Analyst II', 180, 'red', 'bronze'),
+  badge('bi-analyst', 'BI Analyst', 'BI Analyst', 90, 'blue', 'bronze'),
+  badge('data-analyst-ii', 'Data Analyst II', 'Analyst II', 180, 'red', 'bronze'),
 
   // Gold tier — established and senior individual-contributor roles.
   badge('day-270', 'Business Analyst', 'Business Analyst', 270, 'amber', 'gold'),

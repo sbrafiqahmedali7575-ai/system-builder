@@ -818,7 +818,12 @@ pause
     body{margin:0;background:#0b0f19;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
     .card{max-width:500px;width:100%;background:#161f30;border:1px solid #283548;border-radius:18px;padding:30px;text-align:center}
     .icon{font-size:40px;margin-bottom:12px}h1{font-size:23px;margin:0 0 10px}
-    p{color:#94a3b8;line-height:1.55}.btn{display:block;margin-top:22px;background:#2563eb;color:#fff;text-decoration:none;padding:13px;border-radius:10px;font-weight:800}
+    p{color:#94a3b8;line-height:1.55}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+    .btn{display:block;width:100%;border:0;color:#fff;text-decoration:none;padding:14px 12px;border-radius:10px;font-weight:900;font-size:15px;font-family:inherit;cursor:pointer;text-align:center}
+    .exit-btn{background:#0f172a;border:1px solid #475569}
+    .open-btn{background:#2563eb}
+    @media(max-width:420px){.actions{grid-template-columns:1fr}.btn{min-height:48px}}
   </style>
 </head>
 <body>
@@ -826,7 +831,16 @@ pause
     <div class="icon">${allCompleted ? '✓' : '◐'}</div>
     <h1>Day marked ${statusLabel}</h1>
     <p>${completedCount} of ${dayTasks.length} tasks were submitted as completed for ${escapeHtml(payload.taskDate)}.</p>
-    <a class="btn" href="/">Open System Builder</a>
+    <div class="actions">
+      <button
+        class="btn exit-btn"
+        type="button"
+        onclick="window.close(); setTimeout(function(){ document.body.innerHTML=''; window.location.replace('about:blank'); }, 120);"
+      >
+        Exit
+      </button>
+      <a class="btn open-btn" href="/">Open System Builder</a>
+    </div>
   </main>
 </body>
 </html>`;

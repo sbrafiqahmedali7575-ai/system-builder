@@ -22,7 +22,7 @@ function getAdminCredential() {
   return applicationDefault();
 }
 
-const adminApp =
+export const adminApp =
   getApps().length > 0
     ? getApps()[0]
     : initializeApp({

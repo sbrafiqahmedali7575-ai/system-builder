@@ -364,3 +364,80 @@ body {
   0%, 100% { transform: rotate(45deg) translate3d(0, 0, 0); }
   50% { transform: rotate(49deg) translate3d(-5px, 5px, 0); }
 }
+
+
+/* Global compact spacing: reduce UI padding by ~30% without shrinking typography or icons. */
+.ui-compact .p-0\.5 { padding: 0.0875rem; }
+.ui-compact .p-1 { padding: 0.175rem; }
+.ui-compact .p-1\.5 { padding: 0.2625rem; }
+.ui-compact .p-2 { padding: 0.35rem; }
+.ui-compact .p-2\.5 { padding: 0.4375rem; }
+.ui-compact .p-3 { padding: 0.525rem; }
+.ui-compact .p-3\.5 { padding: 0.6125rem; }
+.ui-compact .p-4 { padding: 0.7rem; }
+.ui-compact .p-5 { padding: 0.875rem; }
+.ui-compact .p-6 { padding: 1.05rem; }
+.ui-compact .p-8 { padding: 1.4rem; }
+
+.ui-compact .px-0\.5 { padding-left: 0.0875rem; padding-right: 0.0875rem; }
+.ui-compact .px-1 { padding-left: 0.175rem; padding-right: 0.175rem; }
+.ui-compact .px-1\.5 { padding-left: 0.2625rem; padding-right: 0.2625rem; }
+.ui-compact .px-2 { padding-left: 0.35rem; padding-right: 0.35rem; }
+.ui-compact .px-2\.5 { padding-left: 0.4375rem; padding-right: 0.4375rem; }
+.ui-compact .px-3 { padding-left: 0.525rem; padding-right: 0.525rem; }
+.ui-compact .px-4 { padding-left: 0.7rem; padding-right: 0.7rem; }
+.ui-compact .px-5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+.ui-compact .px-6 { padding-left: 1.05rem; padding-right: 1.05rem; }
+.ui-compact .px-8 { padding-left: 1.4rem; padding-right: 1.4rem; }
+
+.ui-compact .py-0\.5 { padding-top: 0.0875rem; padding-bottom: 0.0875rem; }
+.ui-compact .py-1 { padding-top: 0.175rem; padding-bottom: 0.175rem; }
+.ui-compact .py-1\.5 { padding-top: 0.2625rem; padding-bottom: 0.2625rem; }
+.ui-compact .py-2 { padding-top: 0.35rem; padding-bottom: 0.35rem; }
+.ui-compact .py-2\.5 { padding-top: 0.4375rem; padding-bottom: 0.4375rem; }
+.ui-compact .py-3 { padding-top: 0.525rem; padding-bottom: 0.525rem; }
+.ui-compact .py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+.ui-compact .py-5 { padding-top: 0.875rem; padding-bottom: 0.875rem; }
+.ui-compact .py-6 { padding-top: 1.05rem; padding-bottom: 1.05rem; }
+.ui-compact .py-8 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
+
+.ui-compact .pt-3 { padding-top: 0.525rem; }
+.ui-compact .pt-5 { padding-top: 0.875rem; }
+.ui-compact .pt-7 { padding-top: 1.225rem; }
+.ui-compact .pt-9 { padding-top: 1.575rem; }
+
+.ui-compact .pb-1 { padding-bottom: 0.175rem; }
+.ui-compact .pb-1\.5 { padding-bottom: 0.2625rem; }
+.ui-compact .pb-2 { padding-bottom: 0.35rem; }
+.ui-compact .pb-3 { padding-bottom: 0.525rem; }
+.ui-compact .pb-5 { padding-bottom: 0.875rem; }
+.ui-compact .pb-7 { padding-bottom: 1.225rem; }
+
+.ui-compact .pl-1 { padding-left: 0.175rem; }
+.ui-compact .pl-2 { padding-left: 0.35rem; }
+.ui-compact .pr-1 { padding-right: 0.175rem; }
+.ui-compact .pr-2 { padding-right: 0.35rem; }
+
+@media (min-width: 40rem) {
+  .ui-compact .sm\:p-2 { padding: 0.35rem; }
+  .ui-compact .sm\:p-2\.5 { padding: 0.4375rem; }
+  .ui-compact .sm\:p-3 { padding: 0.525rem; }
+  .ui-compact .sm\:p-3\.5 { padding: 0.6125rem; }
+  .ui-compact .sm\:p-4 { padding: 0.7rem; }
+  .ui-compact .sm\:px-3 { padding-left: 0.525rem; padding-right: 0.525rem; }
+  .ui-compact .sm\:px-4 { padding-left: 0.7rem; padding-right: 0.7rem; }
+  .ui-compact .sm\:px-5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+  .ui-compact .sm\:px-8 { padding-left: 1.4rem; padding-right: 1.4rem; }
+  .ui-compact .sm\:py-3 { padding-top: 0.525rem; padding-bottom: 0.525rem; }
+  .ui-compact .sm\:py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+  .ui-compact .sm\:pt-9 { padding-top: 1.575rem; }
+  .ui-compact .sm\:pb-7 { padding-bottom: 1.225rem; }
+}
+
+@media (min-width: 64rem) {
+  .ui-compact .lg\:p-3 { padding: 0.525rem; }
+  .ui-compact .lg\:p-4 { padding: 0.7rem; }
+  .ui-compact .lg\:px-4 { padding-left: 0.7rem; padding-right: 0.7rem; }
+  .ui-compact .lg\:px-6 { padding-left: 1.05rem; padding-right: 1.05rem; }
+  .ui-compact .lg\:py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+}

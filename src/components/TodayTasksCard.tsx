@@ -405,7 +405,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -2 }}
-      className={`ninja-task-card ui-motion-section p-2 sm:p-2.5 rounded-2xl border flex-1 flex flex-col transition-all ${
+      className={`system-task-card ui-motion-section p-2 sm:p-2.5 rounded-2xl border flex-1 flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'

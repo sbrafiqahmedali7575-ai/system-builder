@@ -344,7 +344,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
           </div>
 
           {/* Card 2 + 3: Today's Tasks and weekly productivity chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-2.5 items-stretch">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}

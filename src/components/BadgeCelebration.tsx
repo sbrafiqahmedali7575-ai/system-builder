@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Check, Shield, Sparkles, Star, X, Zap } from 'lucide-react';
 import { DashboardTheme } from '../types';
-import { LongTermBadge } from '../utils/badgeSystem';
+import { BadgeTier, LongTermBadge } from '../utils/badgeSystem';
 import { BadgeIcon } from './BadgeIcon';
 
 interface BadgeCelebrationProps {
@@ -13,11 +13,22 @@ interface BadgeCelebrationProps {
   onClose: () => void;
 }
 
-const badgeGradient: Record<LongTermBadge['accent'], string> = {
-  blue: 'from-blue-600 via-blue-500 to-cyan-400',
-  red: 'from-red-600 via-rose-500 to-amber-400',
-  amber: 'from-amber-500 via-yellow-400 to-orange-500',
-  violet: 'from-violet-600 via-purple-500 to-blue-500',
+const badgeTierGradient: Record<BadgeTier, string> = {
+  bronze: 'from-amber-800 via-amber-700 to-orange-500',
+  gold: 'from-yellow-500 via-yellow-400 to-amber-300',
+  success: 'from-emerald-700 via-emerald-500 to-green-400',
+};
+
+const badgeTierBorder: Record<BadgeTier, string> = {
+  bronze: 'border-amber-600/75',
+  gold: 'border-yellow-400/80',
+  success: 'border-emerald-400/80',
+};
+
+const badgeTierConfetti: Record<BadgeTier, string[]> = {
+  bronze: ['#92400e', '#b45309', '#d97706', '#f59e0b', '#ffffff'],
+  gold: ['#ca8a04', '#eab308', '#facc15', '#fde047', '#ffffff'],
+  success: ['#047857', '#059669', '#10b981', '#34d399', '#ffffff'],
 };
 
 const particlePositions = [
@@ -48,7 +59,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
       timers.push(window.setTimeout(() => setRevealStage(2), 520));
       timers.push(window.setTimeout(() => setRevealStage(3), 980));
 
-      const colors = ['#2563eb', '#ef4444', '#fbbf24', '#ffffff', '#38bdf8'];
+      const colors = badgeTierConfetti[badge.tier];
 
       // Opening side cannons.
       timers.push(window.setTimeout(() => {
@@ -208,7 +219,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
               isDark ? 'bg-slate-950 border-slate-700' : 'bg-white border-white'
             }`}
           >
-            <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${badgeGradient[badge.accent]}`} />
+            <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${badgeTierGradient[badge.tier]}`} />
             <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full bg-blue-500/18 blur-3xl" />
             <div className="absolute -bottom-24 -left-20 w-56 h-56 rounded-full bg-red-500/18 blur-3xl" />
 
@@ -274,12 +285,12 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
 
               <div className="relative mx-auto mt-5 w-36 h-36 flex items-center justify-center">
                 <motion.div
-                  className={`absolute inset-0 rounded-full bg-gradient-to-br ${badgeGradient[badge.accent]} opacity-25 blur-xl`}
+                  className={`absolute inset-0 rounded-full bg-gradient-to-br ${badgeTierGradient[badge.tier]} opacity-25 blur-xl`}
                   animate={{ scale: [0.9, 1.22, 0.9], opacity: [0.18, 0.42, 0.18] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <motion.div
-                  className={`absolute inset-2 rounded-full border-2 border-dashed ${badge.accent === 'red' ? 'border-red-400/70' : badge.accent === 'amber' ? 'border-amber-400/70' : badge.accent === 'violet' ? 'border-violet-400/70' : 'border-blue-400/70'}`}
+                  className={`absolute inset-2 rounded-full border-2 border-dashed ${badgeTierBorder[badge.tier]}`}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                 />
@@ -305,7 +316,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
                       initial={{ scale: 0.12, rotate: -42, opacity: 0 }}
                       animate={{ scale: [0.12, 1.32, 0.92, 1], rotate: [-42, 12, -4, 0], opacity: 1 }}
                       transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
-                      className={`ninja-celebration-badge relative w-24 h-24 rounded-[30px] bg-gradient-to-br ${badgeGradient[badge.accent]} shadow-[0_18px_45px_rgba(37,99,235,0.34)] flex items-center justify-center text-white ring-4 ring-white/80 dark:ring-slate-800 overflow-hidden`}
+                      className={`ninja-celebration-badge relative w-24 h-24 rounded-[30px] bg-gradient-to-br ${badgeTierGradient[badge.tier]} shadow-[0_18px_45px_rgba(37,99,235,0.34)] flex items-center justify-center text-white ring-4 ring-white/80 dark:ring-slate-800 overflow-hidden`}
                     >
                       <BadgeIcon badge={badge} className="relative z-10 w-11 h-11" />
                       <motion.div
@@ -353,7 +364,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
                   onClick={onClose}
                   whileHover={{ y: -2, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`mt-5 w-full rounded-2xl px-4 py-3 bg-gradient-to-r ${badgeGradient[badge.accent]} text-white font-black text-sm shadow-lg flex items-center justify-center gap-2`}
+                  className={`mt-5 w-full rounded-2xl px-4 py-3 bg-gradient-to-r ${badgeTierGradient[badge.tier]} text-white font-black text-sm shadow-lg flex items-center justify-center gap-2`}
                 >
                   <Check className="w-4 h-4" /> Continue the Mission
                 </motion.button>

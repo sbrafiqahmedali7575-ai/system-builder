@@ -280,8 +280,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       {last7Records.map((r) => {
                         const isToday = isTodayDate(r.date);
                         const timestamp = parseDateToTimestamp(r.date);
-                        const weekdayName = timestamp > 0
-                          ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(timestamp).getDay()]
+                        const pointDate = timestamp > 0 ? new Date(timestamp) : null;
+                        const weekdayName = pointDate
+                          ? pointDate.toLocaleDateString('en-US', { weekday: 'long' })
+                          : '';
+                        const compactDate = pointDate
+                          ? pointDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
                           : '';
                         return (
                           <motion.div
@@ -290,13 +294,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             className="flex-1 flex flex-col items-center gap-0.5"
                             title={`Day ${r.day} (${r.date}): ${r.isCompleted ? 'Completed' : 'Not Completed'}`}
                           >
-                            <span className={`text-[8px] font-bold uppercase tracking-wide ${
-                              isToday
-                                ? 'text-blue-600 dark:text-blue-300'
-                                : 'text-slate-400'
-                            }`}>
-                              {weekdayName}
-                            </span>
+                            <div className="min-h-[24px] flex flex-col items-center justify-end leading-none">
+                              <span className={`text-[7px] font-bold whitespace-nowrap ${
+                                isToday
+                                  ? 'text-blue-600 dark:text-blue-300'
+                                  : 'text-slate-500 dark:text-slate-400'
+                              }`}>
+                                {weekdayName}
+                              </span>
+                              <span className="mt-0.5 text-[7px] font-mono text-slate-400 whitespace-nowrap">
+                                {compactDate}
+                              </span>
+                            </div>
                             <span
                               className={`w-full h-2.5 rounded-full transition-all ${
                                 r.isCompleted

@@ -228,7 +228,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                               ? 'font-bold text-amber-700 dark:text-amber-300'
                               : 'text-slate-400'
                           }`}>
-                            {badge.horizon}
+                            {badge.minDays}
                           </span>
                         </motion.div>
                       );

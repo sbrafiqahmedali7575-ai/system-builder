@@ -21,7 +21,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import { readFile } from 'node:fs/promises';
-          import { initializeApp } from 'firebase/app';
+          import { deleteApp, initializeApp } from 'firebase/app';
           import { collection, doc, getDocs, getFirestore, setDoc } from 'firebase/firestore';
 
           const config = JSON.parse(await readFile('./firebase-applet-config.json', 'utf8'));
@@ -63,4 +63,6 @@ jobs:
           }
 
           console.log(`Updated ${matches.length} Day 17 record(s).`);
+          await deleteApp(app);
+          process.exit(0);
           NODE

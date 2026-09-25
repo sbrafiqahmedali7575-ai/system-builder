@@ -49,11 +49,6 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
   const initializedRef = useRef(false);
   const progress = useMemo(() => getBadgeProgress(totalDays, completionRate), [totalDays, completionRate]);
   const currentStyle = accentStyles[progress.current.accent];
-  const currentIndex = useMemo(
-    () => LONG_TERM_BADGES.findIndex((badge) => badge.id === progress.current.id),
-    [progress.current.id]
-  );
-
   const closeCelebration = useCallback(() => setCelebrationBadge(null), []);
 
   useEffect(() => {

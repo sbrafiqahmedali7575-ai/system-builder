@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Award } from 'lucide-react';
+import { Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
@@ -222,61 +222,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
               </motion.div>
 
-              {/* Metric 2: Active Streak */}
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.985 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.32, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.995 }}
-                className={`xl:col-span-2 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
-                  isDark
-                    ? 'bg-slate-900/60 border-slate-800 hover:border-amber-700/60'
-                    : 'bg-white border-slate-200/80 shadow-2xs hover:border-amber-300 hover:shadow-md'
-                }`}
-              >
-                <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-amber-500/8 group-hover:scale-125 transition-transform duration-500" />
-                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-red-500 opacity-70" />
-
-                <div className="relative flex items-center text-xs text-slate-400">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <motion.div
-                      initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
-                      className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center shrink-0"
-                    >
-                      <Flame className="w-3.5 h-3.5 text-amber-500" />
-                    </motion.div>
-                    <span className="font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-200">
-                      Active Streak
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative mt-1 flex flex-1 items-center">
-                  <div className="min-w-0 w-full text-left" style={{ paddingLeft: '10%' }}>
-                    <div className="flex items-baseline justify-start gap-1">
-                      <span className="text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400">
-                        {allKpis.currentStreak}
-                      </span>
-                      <span className="text-[10px] text-slate-400">active days</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                      Personal best: {allKpis.maxStreak} days
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Metric 3: Current Week Cadence */}
+              {/* Metric 2: Current Week Cadence */}
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.985 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.32, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`xl:col-span-3 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-4 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
@@ -364,8 +317,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
               </motion.div>
 
-              {/* Metric 4: Long-term Badge Rank */}
-              <div className="xl:col-span-3 min-w-0">
+              {/* Metric 3: Long-term Badge Rank */}
+              <div className="xl:col-span-4 min-w-0">
                 <NinjaBadgeProgress
                   completedDays={allKpis.completedDays}
                   theme={theme}

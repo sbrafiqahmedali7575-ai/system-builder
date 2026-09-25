@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { User } from 'firebase/auth';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
@@ -17,6 +18,9 @@ import {
   addTaskToCloud,
   updateTaskInCloud,
   deleteTaskFromCloud,
+  subscribeToAuthState,
+  signInWithAccessKey,
+  signOutOwner,
 } from './services/firebaseService';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
@@ -24,6 +28,12 @@ const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 
 export default function App() {
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [accessKey, setAccessKey] = useState('');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   // Check if current URL is a secure confirmation link
   const [confirmToken, setConfirmToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
@@ -89,6 +99,15 @@ export default function App() {
     dateRange: 'ALL',
   });
 
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthState((user) => {
+      setAuthUser(user);
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Listen to popstate in case of browser navigation
   useEffect(() => {
     const handleLocationChange = () => {
@@ -101,8 +120,10 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
-  // Subscribe to real-time Firestore updates for records
+  // Subscribe to real-time Firestore updates for records only after owner authentication.
   useEffect(() => {
+    if (!authUser) return;
+
     const unsubscribe = subscribeToRecords(
       (cloudRecords) => {
         if (cloudRecords && cloudRecords.length > 0) {
@@ -116,10 +137,12 @@ export default function App() {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [authUser]);
 
-  // Subscribe to real-time Firestore updates for tasks
+  // Subscribe to real-time Firestore updates for tasks only after owner authentication.
   useEffect(() => {
+    if (!authUser) return;
+
     const unsubscribe = subscribeToTasks(
       (cloudTasks) => {
         setTasks(cloudTasks);
@@ -131,7 +154,7 @@ export default function App() {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [authUser]);
 
   // Save records to local cache as immediate offline persistence
   useEffect(() => {
@@ -317,6 +340,32 @@ export default function App() {
     }
   };
 
+  const handleOwnerSignIn = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!accessKey.trim()) return;
+
+    try {
+      setAuthSubmitting(true);
+      setAuthError(null);
+      await signInWithAccessKey(accessKey.trim());
+      setAccessKey('');
+    } catch (err: any) {
+      setAuthError(err?.message || 'Unable to sign in.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleOwnerSignOut = async () => {
+    try {
+      await signOutOwner();
+      setRecords([]);
+      setTasks([]);
+    } catch (err) {
+      console.error('Unable to sign out:', err);
+    }
+  };
+
   const handleReturnToDashboard = () => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/');
@@ -333,6 +382,57 @@ export default function App() {
         theme={theme}
         onReturnToDashboard={handleReturnToDashboard}
       />
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+        <div className="text-sm font-semibold text-slate-400">Opening System Builder…</div>
+      </div>
+    );
+  }
+
+  if (!authUser) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+        <form
+          onSubmit={handleOwnerSignIn}
+          className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-2xl"
+        >
+          <div className="mb-4">
+            <h1 className="text-xl font-black text-white">System Builder</h1>
+            <p className="mt-1 text-sm text-slate-400">
+              Enter your private owner access key to continue.
+            </p>
+          </div>
+
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+            Access Key
+          </label>
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={accessKey}
+            onChange={(event) => setAccessKey(event.target.value)}
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none focus:border-blue-500"
+            placeholder="Private access key"
+            autoFocus
+          />
+
+          {authError && (
+            <p className="mt-2 text-xs font-semibold text-rose-400">{authError}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={authSubmitting || !accessKey.trim()}
+            className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {authSubmitting ? 'Signing in…' : 'Open Dashboard'}
+          </button>
+        </form>
+      </div>
     );
   }
 
@@ -395,6 +495,14 @@ export default function App() {
         onClose={() => setIsNotificationModalOpen(false)}
         theme={theme}
       />
+
+      <button
+        type="button"
+        onClick={handleOwnerSignOut}
+        className="fixed bottom-2 right-2 z-40 rounded-lg border border-slate-300/70 bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-500 shadow-sm backdrop-blur hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-400 dark:hover:text-white"
+      >
+        Sign out
+      </button>
     </div>
   );
 }

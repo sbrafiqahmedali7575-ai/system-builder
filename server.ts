@@ -499,8 +499,12 @@ pause
     .task-row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #273449;cursor:pointer}
     .task-row:last-child{border-bottom:0}.task-row input{width:20px;height:20px;margin-top:1px;accent-color:#2563eb}
     .task-row span{font-size:15px;line-height:1.45;font-weight:650}.empty{padding:18px;color:#94a3b8}
-    .submit{width:100%;margin-top:18px;border:0;border-radius:10px;background:#2563eb;color:white;padding:14px 18px;font-size:15px;font-weight:800;cursor:pointer}
-    .submit:disabled{opacity:.5;cursor:not-allowed}.back{display:block;text-align:center;margin-top:14px;color:#94a3b8;text-decoration:none;font-size:13px}
+    .submit{width:100%;margin-top:20px;border:1px solid #22c55e;border-radius:12px;background:#16a34a;color:white;padding:16px 20px;font-size:16px;font-weight:900;letter-spacing:.2px;cursor:pointer;box-shadow:0 8px 20px rgba(22,163,74,.28);transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
+    .submit:hover{background:#15803d;transform:translateY(-1px);box-shadow:0 10px 24px rgba(22,163,74,.34)}
+    .submit:active{transform:translateY(0)}
+    .submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .sync-note{margin-top:10px;text-align:center;color:#94a3b8;font-size:12px;line-height:1.45}
+    .back{display:block;text-align:center;margin-top:14px;color:#94a3b8;text-decoration:none;font-size:13px}
   </style>
 </head>
 <body>
@@ -513,8 +517,11 @@ pause
       <input type="hidden" name="token" value="${escapeHtml(token)}" />
       <div class="tasks">${taskMarkup}</div>
       <button class="submit" type="submit" ${dayTasks.length === 0 ? 'disabled' : ''}>
-        Submit
+        ✓ Submit Today
       </button>
+      <div class="sync-note">
+        Your checkbox selections are saved to Tasks, and today’s result is synced to Records.
+      </div>
     </form>
 
     <a class="back" href="/">Return to System Builder</a>

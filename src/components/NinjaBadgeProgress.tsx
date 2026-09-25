@@ -157,7 +157,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="font-extrabold text-slate-700 dark:text-slate-200 shrink-0">Next:</span>
                   <span className={`w-5 h-5 rounded-md flex items-center justify-center ring-1 shrink-0 ${nextStyle?.ring || ''} ${nextStyle?.soft || ''}`}>
-                    <BadgeIcon badge={nextTarget} className={`w-3 h-3 ${nextStyle?.text || ''}`} />
+                    <BadgeIcon badge={nextTarget} className={`w-3 h-3 stroke-[1.25] ${nextStyle?.text || ''}`} />
                   </span>
                   <span className="font-extrabold text-slate-800 dark:text-white truncate">{nextTarget.name}</span>
                 </div>
@@ -195,6 +195,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                     {LONG_TERM_BADGES.map((badge) => {
                       const unlocked = completedDays >= badge.minDays;
                       const isCurrent = badge.id === progress.current.id;
+                      const isNext = nextTarget?.id === badge.id;
                       return (
                         <motion.div
                           key={badge.id}
@@ -214,7 +215,10 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                                 : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
                             }`}
                           >
-                            <BadgeIcon badge={badge} className="w-2 h-2 shrink-0" />
+                            <BadgeIcon
+                              badge={badge}
+                              className={`w-2 h-2 shrink-0 ${isNext ? 'stroke-[3]' : 'stroke-2'}`}
+                            />
                           </motion.div>
 
                           <span className={`text-[7px] font-mono leading-none whitespace-nowrap ${

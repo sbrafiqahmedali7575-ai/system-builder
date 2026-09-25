@@ -1,11 +1,21 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 import { BadgeIcon } from './BadgeIcon';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
+
+const HEADER_QUOTES = [
+  'Build rare and valuable skills before chasing passion.',
+  'Career capital creates better options, autonomy, and opportunity.',
+  'Deliberate practice is where real professional growth happens.',
+  'Earn control by becoming valuable enough to deserve it.',
+  'A meaningful mission becomes clearer after mastering your craft.',
+  'Focus on craftsmanship: make your work difficult to ignore.',
+  'Ask what value you can create, not what work owes you.',
+] as const;
 
 interface PowerBiHeaderProps {
   onOpenAddModal?: () => void;
@@ -25,6 +35,12 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   currentBadge = null,
   isSyncing = false,
 }) => {
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  const showNextQuote = () => {
+    setQuoteIndex((current) => (current + 1) % HEADER_QUOTES.length);
+  };
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -10 }}
@@ -32,9 +48,9 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
       className="system-header w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs select-none sticky top-0 z-40 transition-colors"
     >
-      <div className="flex items-center justify-between px-2 sm:px-3 lg:px-4 h-16 max-w-7xl mx-auto">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 sm:px-3 lg:px-4 h-16 max-w-7xl mx-auto">
         {/* Brand Zone */}
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center space-x-1.5 min-w-0">
           <div className="flex items-center space-x-1.5 text-left rounded-lg p-0.5">
             <motion.div
               whileHover={{ y: -2, rotate: -2, scale: 1.04 }}
@@ -65,6 +81,34 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Dynamic Quotes */}
+        <div className="min-w-0 flex justify-center px-1 sm:px-3">
+          <motion.button
+            type="button"
+            onClick={showNextQuote}
+            whileTap={{ scale: 0.98 }}
+            className="group w-full max-w-xl min-w-0 rounded-xl px-2 sm:px-3 py-1 text-center cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-900/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            title="Click for next quote"
+            aria-label="Quotes. Click for next quote."
+          >
+            <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.16em] font-black text-blue-600 dark:text-blue-300 leading-none">
+              Quotes
+            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={quoteIndex}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.18 }}
+                className="mt-1 text-[9px] sm:text-[11px] lg:text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-clamp-2"
+              >
+                “{HEADER_QUOTES[quoteIndex]}”
+              </motion.div>
+            </AnimatePresence>
+          </motion.button>
         </div>
 
         {/* Right Desktop Controls */}

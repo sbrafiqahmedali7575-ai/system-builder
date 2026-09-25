@@ -100,6 +100,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const last7Records = useMemo(() => {
     return [...records].sort((a, b) => b.day - a.day).slice(0, 7).reverse();
   }, [records]);
+  const last7CompletedDays = last7Records.filter((record) => record.isCompleted).length;
+  const last7Performance = Math.min(100, (last7CompletedDays / 7) * 100);
 
   // Active streak targets the personal-best (max streak) by default.
   // Once the active streak reaches that target, the ring stays complete and
@@ -289,33 +291,56 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     Recent 7-Day Cadence
                   </span>
                   <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs">
-                    {last7Records.filter((r) => r.isCompleted).length}/7 Done
+                    {last7CompletedDays}/7 Done
                   </span>
                 </div>
 
-                <div className="relative flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
-                  {last7Records.map((r) => {
-                    const isToday = isTodayDate(r.date);
-                    return (
-                      <motion.div
-                        key={r.id}
-                        whileHover={{ y: -1, scale: 1.03 }}
-                        className="flex-1 flex flex-col items-center gap-0.5"
-                        title={`Day ${r.day} (${r.date}): ${r.isCompleted ? 'Completed' : 'Not Completed'}`}
-                      >
-                        <span
-                          className={`w-full h-2.5 rounded-full transition-all ${
-                            r.isCompleted
-                              ? 'bg-blue-500'
-                              : 'bg-slate-200 dark:bg-slate-800'
-                          } ${isToday ? 'ring-2 ring-blue-400 ring-offset-1 dark:ring-offset-slate-900' : ''}`}
-                        />
-                        <span className="text-[9px] font-mono text-slate-400">
-                          D{r.day}
-                        </span>
-                      </motion.div>
-                    );
-                  })}
+                <div className="relative flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
+                      {last7Records.map((r) => {
+                        const isToday = isTodayDate(r.date);
+                        return (
+                          <motion.div
+                            key={r.id}
+                            whileHover={{ y: -1, scale: 1.03 }}
+                            className="flex-1 flex flex-col items-center gap-0.5"
+                            title={`Day ${r.day} (${r.date}): ${r.isCompleted ? 'Completed' : 'Not Completed'}`}
+                          >
+                            <span
+                              className={`w-full h-2.5 rounded-full transition-all ${
+                                r.isCompleted
+                                  ? 'bg-blue-500'
+                                  : 'bg-slate-200 dark:bg-slate-800'
+                              } ${isToday ? 'ring-2 ring-blue-400 ring-offset-1 dark:ring-offset-slate-900' : ''}`}
+                            />
+                            <span className="text-[9px] font-mono text-slate-400">
+                              D{r.day}
+                            </span>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-1 text-[9px] text-slate-400">
+                      Latest 7 tracked days performance
+                    </p>
+                  </div>
+
+                  <AnimatedProgressRing
+                    value={last7Performance}
+                    size={56}
+                    strokeWidth={5}
+                    progressClassName={
+                      last7Performance >= 80
+                        ? 'text-blue-500'
+                        : last7Performance >= 50
+                        ? 'text-amber-500'
+                        : 'text-rose-500'
+                    }
+                    label={`${Math.round(last7Performance)}%`}
+                    sublabel="7 days"
+                    delay={0.18}
+                  />
                 </div>
               </motion.div>
 

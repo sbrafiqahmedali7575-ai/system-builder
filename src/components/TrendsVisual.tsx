@@ -115,7 +115,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className={`p-2.5 sm:p-3 rounded-2xl border space-y-3 ${
+      whileHover={{ y: -2 }}
+      className={`ui-motion-section p-2.5 sm:p-3 rounded-2xl border space-y-3 ${
         isDark
           ? 'bg-slate-900/60 border-slate-800'
           : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
@@ -124,7 +125,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
       {/* 1. Top Summary Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5">
         {/* Card 1: Current Moving Average */}
-        <div className={`p-2 rounded-xl border flex flex-col justify-between ${
+        <div className={`ui-motion-card p-2 rounded-xl border flex flex-col justify-between ${
           isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
         }`}>
           <div className="flex items-center justify-between text-xs text-slate-400">
@@ -169,7 +170,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         </div>
 
         {/* Card 2: Overall Target Benchmark */}
-        <div className={`p-2 rounded-xl border flex flex-col justify-between ${
+        <div className={`ui-motion-card p-2 rounded-xl border flex flex-col justify-between ${
           isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
         }`}>
           <div className="flex items-center justify-between text-xs text-slate-400">
@@ -192,7 +193,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         </div>
 
         {/* Card 3: High Productivity Periods */}
-        <div className={`p-2 rounded-xl border flex flex-col justify-between ${
+        <div className={`ui-motion-card p-2 rounded-xl border flex flex-col justify-between ${
           isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
         }`}>
           <div className="flex items-center justify-between text-xs text-slate-400">
@@ -215,7 +216,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         </div>
 
         {/* Card 4: Low Productivity / Dips */}
-        <div className={`p-2 rounded-xl border flex flex-col justify-between ${
+        <div className={`ui-motion-card p-2 rounded-xl border flex flex-col justify-between ${
           isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-200'
         }`}>
           <div className="flex items-center justify-between text-xs text-slate-400">

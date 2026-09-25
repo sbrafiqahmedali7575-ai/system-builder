@@ -270,6 +270,23 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
       }`}>
+        <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800">
+          <div className="min-w-0">
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+              Week Cadence Chart
+            </h2>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+              Weekly completion performance • fixed 7-day buckets
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="text-lg font-black font-mono text-blue-600 dark:text-blue-300">
+              {points.length > 0 ? Math.round(points[points.length - 1].movingAverageRate) : 0}%
+            </div>
+            <div className="text-[9px] font-bold text-slate-400">current week</div>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between mb-1 text-xs flex-wrap gap-1">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <div className="flex items-center space-x-1">

@@ -62,6 +62,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     return formatCalendarDate(activeDateKey);
   }, [activeDateKey]);
 
+  const activeFullDayName = useMemo(() => {
+    const [year, month, day] = activeDateKey.split('-').map(Number);
+    if (!year || !month || !day) return '';
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      timeZone: 'UTC',
+    }).format(new Date(Date.UTC(year, month - 1, day)));
+  }, [activeDateKey]);
+
   // Relative label for currently active date
   const activeDateLabel = activeDateTab === 'TODAY' ? 'Today' : 'Tomorrow';
 
@@ -300,7 +309,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               )}
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-              Mission Board • {activeFormattedDate}
+              Mission Board • {activeFormattedDate} • {activeFullDayName}
             </p>
           </div>
         </div>

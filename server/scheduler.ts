@@ -518,6 +518,7 @@ export function startBackgroundScheduler(): void {
 
   let isChecking = false;
   let localLastDispatchedDate = '';
+  let localLastFinalizedPreviousDate = '';
 
   const runCheck = async () => {
     if (isChecking) return;
@@ -525,12 +526,18 @@ export function startBackgroundScheduler(): void {
     try {
       const { timeStr, dateKey, formattedDate } = getKolkataTimeInfo();
 
-      // Catch a missed previous-day close whenever the server is awake.
-      // This makes the default Not Completed rule resilient to restarts/sleep.
-      try {
-        await finalizeDayIfNoResponse(new Date(Date.now() - 24 * 60 * 60 * 1000));
-      } catch (finalizeErr) {
-        console.warn('[Background Scheduler] Previous-day finalization warning:', sanitizeError(finalizeErr));
+      // Catch a missed previous-day close once per server process/day.
+      // This makes the default Not Completed rule resilient to restarts/sleep
+      // without repeatedly scanning Firestore every 30 seconds.
+      const previousDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const previousDateKey = getKolkataTimeInfo(previousDate).dateKey;
+      if (localLastFinalizedPreviousDate !== previousDateKey) {
+        try {
+          await finalizeDayIfNoResponse(previousDate);
+          localLastFinalizedPreviousDate = previousDateKey;
+        } catch (finalizeErr) {
+          console.warn('[Background Scheduler] Previous-day finalization warning:', sanitizeError(finalizeErr));
+        }
       }
 
       const [currentHour, currentMinute] = timeStr.split(':').map(Number);

@@ -126,7 +126,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <BadgeIcon badge={progress.current} className={`w-4 h-4 ${currentStyle.text}`} />
               </motion.div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.16em] font-extrabold text-slate-500 dark:text-slate-400">Current Badge</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] font-black text-slate-700 dark:text-slate-200">Current Badge</p>
                 <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate">{progress.current.name}</h4>
               </div>
             </div>

@@ -41,6 +41,27 @@ function escapeHtml(unsafe: string): string {
     .replace(/'/g, '&#039;');
 }
 
+function normalizeDateKey(value: string): string {
+  const raw = String(value || '').trim();
+
+  const iso = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (iso) {
+    return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
+  }
+
+  const named = raw.match(/^(\d{1,2})[-/ ]([A-Za-z]{3,9})[-/ ](\d{2,4})$/);
+  if (named) {
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const monthIndex = months.indexOf(named[2].slice(0, 3).toLowerCase());
+    if (monthIndex >= 0) {
+      const year = named[3].length === 2 ? `20${named[3]}` : named[3];
+      return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${named[1].padStart(2, '0')}`;
+    }
+  }
+
+  return raw.toLowerCase();
+}
+
 function renderErrorPage(res: express.Response, message: string, status: number = 400) {
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -410,6 +431,230 @@ pause
     res.setHeader('Content-Type', 'application/x-bat; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="sync_rafiq_commit_db.bat"');
     res.send(batchContent);
+  });
+
+  // 6. Daily email checklist review.
+  // GET is read-only and renders real checkboxes. POST saves each task independently,
+  // then marks the records row Completed only when every task is checked.
+  app.get('/api/daily-review', async (req, res) => {
+    try {
+      const token = String(req.query.token || '');
+      const verification = verifyConfirmationToken(token);
+
+      if (!verification.valid || !verification.payload) {
+        return renderErrorPage(res, verification.error || 'Invalid or expired daily review link.');
+      }
+
+      const { payload } = verification;
+      if (payload.action !== 'review') {
+        return renderErrorPage(res, 'This link is not a daily checklist review link.');
+      }
+
+      const targetDateKey = normalizeDateKey(payload.taskDate);
+      const tasksSnap = await getDocs(collection(db, 'tasks'));
+      const dayTasks: any[] = [];
+
+      tasksSnap.forEach((d) => {
+        const task = { id: d.id, ...(d.data() as any) };
+        if (normalizeDateKey(task.taskKey || task.date || '') === targetDateKey) {
+          dayTasks.push(task);
+        }
+      });
+
+      dayTasks.sort((a, b) =>
+        String(a.updatedAt || a.id).localeCompare(String(b.updatedAt || b.id))
+      );
+
+      const taskMarkup =
+        dayTasks.length > 0
+          ? dayTasks
+              .map(
+                (task) => `
+                  <label class="task-row">
+                    <input
+                      type="checkbox"
+                      name="completedTaskIds"
+                      value="${escapeHtml(task.id)}"
+                      ${task.isCompleted ? 'checked' : ''}
+                    />
+                    <span>${escapeHtml(task.taskOfTheDay || 'Daily Task')}</span>
+                  </label>`
+              )
+              .join('')
+          : '<div class="empty">No tasks were found for today.</div>';
+
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Today’s Tasks • System Builder</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0b0f19;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:24px 14px;display:flex;align-items:center;justify-content:center}
+    .card{width:100%;max-width:620px;background:#161f30;border:1px solid #283548;border-radius:18px;padding:26px;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+    h1{font-size:23px;margin:0 0 6px}.date{font-family:monospace;color:#93c5fd;margin-bottom:18px}
+    .help{font-size:13px;color:#94a3b8;line-height:1.55;margin-bottom:18px}
+    .tasks{border:1px solid #334155;border-radius:12px;overflow:hidden;background:#0f172a}
+    .task-row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #273449;cursor:pointer}
+    .task-row:last-child{border-bottom:0}.task-row input{width:20px;height:20px;margin-top:1px;accent-color:#2563eb}
+    .task-row span{font-size:15px;line-height:1.45;font-weight:650}.empty{padding:18px;color:#94a3b8}
+    .submit{width:100%;margin-top:18px;border:0;border-radius:10px;background:#2563eb;color:white;padding:14px 18px;font-size:15px;font-weight:800;cursor:pointer}
+    .submit:disabled{opacity:.5;cursor:not-allowed}.back{display:block;text-align:center;margin-top:14px;color:#94a3b8;text-decoration:none;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Today’s Tasks</h1>
+    <div class="date">${escapeHtml(payload.taskDate)}</div>
+    <p class="help">Tick the tasks you completed, then submit once. All checked = Completed. Any unchecked = Not Completed.</p>
+
+    <form method="POST" action="/api/daily-review">
+      <input type="hidden" name="token" value="${escapeHtml(token)}" />
+      <div class="tasks">${taskMarkup}</div>
+      <button class="submit" type="submit" ${dayTasks.length === 0 ? 'disabled' : ''}>
+        Submit
+      </button>
+    </form>
+
+    <a class="back" href="/">Return to System Builder</a>
+  </main>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8').send(html);
+    } catch (err: any) {
+      console.error('Daily review page error:', sanitizeError(err));
+      renderErrorPage(res, 'Unable to load today’s task checklist.', 500);
+    }
+  });
+
+  app.post('/api/daily-review', async (req, res) => {
+    try {
+      const token = String(req.body.token || '');
+      const verification = verifyConfirmationToken(token);
+
+      if (!verification.valid || !verification.payload) {
+        return renderErrorPage(res, verification.error || 'Invalid or expired daily review link.');
+      }
+
+      const { payload } = verification;
+      if (payload.action !== 'review') {
+        return renderErrorPage(res, 'This link is not a daily checklist review link.');
+      }
+
+      const selectedRaw = req.body.completedTaskIds;
+      const selectedIds = new Set<string>(
+        (Array.isArray(selectedRaw) ? selectedRaw : selectedRaw ? [selectedRaw] : []).map(String)
+      );
+
+      const targetDateKey = normalizeDateKey(payload.taskDate);
+      const nowIso = new Date().toISOString();
+
+      // Load every task for the signed date.
+      const tasksSnap = await getDocs(collection(db, 'tasks'));
+      const dayTasks: any[] = [];
+
+      tasksSnap.forEach((d) => {
+        const task = { id: d.id, ...(d.data() as any) };
+        if (normalizeDateKey(task.taskKey || task.date || '') === targetDateKey) {
+          dayTasks.push(task);
+        }
+      });
+
+      if (dayTasks.length === 0) {
+        return renderErrorPage(res, 'No tasks were found for this date, so the day was not submitted.');
+      }
+
+      // Save each checkbox independently.
+      await Promise.all(
+        dayTasks.map((task) => {
+          const completed = selectedIds.has(task.id);
+          return updateDoc(doc(db, 'tasks', task.id), {
+            isCompleted: completed,
+            completedAt: completed ? (task.completedAt || nowIso) : null,
+            updatedAt: nowIso,
+          });
+        })
+      );
+
+      const completedCount = dayTasks.filter((task) => selectedIds.has(task.id)).length;
+      const allCompleted = completedCount === dayTasks.length;
+
+      // Find the records row for the same date and update it, or create one when absent.
+      const recordsSnap = await getDocs(collection(db, 'records'));
+      const allRecords: any[] = [];
+      let matchedRecord: any = null;
+
+      recordsSnap.forEach((d) => {
+        const record = { id: d.id, ...(d.data() as any) };
+        allRecords.push(record);
+        if (normalizeDateKey(record.date || '') === targetDateKey) {
+          matchedRecord = record;
+        }
+      });
+
+      if (matchedRecord) {
+        await updateDoc(doc(db, 'records', matchedRecord.id), {
+          isCompleted: allCompleted,
+          result: allCompleted ? 'TRUE' : 'FALSE',
+          change: 0,
+          updatedAt: nowIso,
+        });
+      } else {
+        const highestDay = allRecords.reduce(
+          (maxDay, record) => Math.max(maxDay, Number(record.day) || 0),
+          0
+        );
+        const recordId =
+          payload.recordId && !payload.recordId.startsWith('review-')
+            ? payload.recordId
+            : `record-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+        await setDoc(doc(db, 'records', recordId), {
+          id: recordId,
+          day: highestDay + 1,
+          date: payload.taskDate,
+          isCompleted: allCompleted,
+          result: allCompleted ? 'TRUE' : 'FALSE',
+          change: 0,
+          skill: 'Daily Tasks',
+          summary: `${completedCount}/${dayTasks.length} tasks completed`,
+          notes: 'Submitted from daily email checklist',
+          updatedAt: nowIso,
+        });
+      }
+
+      const statusLabel = allCompleted ? 'Completed' : 'Not Completed';
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${statusLabel} • System Builder</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#0b0f19;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{max-width:500px;width:100%;background:#161f30;border:1px solid #283548;border-radius:18px;padding:30px;text-align:center}
+    .icon{font-size:40px;margin-bottom:12px}h1{font-size:23px;margin:0 0 10px}
+    p{color:#94a3b8;line-height:1.55}.btn{display:block;margin-top:22px;background:#2563eb;color:#fff;text-decoration:none;padding:13px;border-radius:10px;font-weight:800}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">${allCompleted ? '✓' : '◐'}</div>
+    <h1>Day marked ${statusLabel}</h1>
+    <p>${completedCount} of ${dayTasks.length} tasks were submitted as completed for ${escapeHtml(payload.taskDate)}.</p>
+    <a class="btn" href="/">Open System Builder</a>
+  </main>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8').send(html);
+    } catch (err: any) {
+      console.error('Daily review submission error:', sanitizeError(err));
+      renderErrorPage(res, 'Unable to save today’s task response.', 500);
+    }
   });
 
   // 6. Public production Task Confirmation GET endpoint & Landing Page

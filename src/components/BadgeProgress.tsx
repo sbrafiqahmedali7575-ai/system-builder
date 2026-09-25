@@ -8,6 +8,8 @@ import { BadgeIcon } from './BadgeIcon';
 
 interface BadgeProgressProps {
   completedDays: number;
+  currentStreak: number;
+  todayCompletionPercentage: number;
   theme: DashboardTheme;
 }
 
@@ -86,7 +88,12 @@ const achievedTierStyles: Record<
   },
 };
 
-export const BadgeProgress: React.FC<BadgeProgressProps> = ({ completedDays, theme }) => {
+export const BadgeProgress: React.FC<BadgeProgressProps> = ({
+  completedDays,
+  currentStreak,
+  todayCompletionPercentage,
+  theme,
+}) => {
   const isDark = theme === 'dark';
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [celebrationBadge, setCelebrationBadge] = useState<LongTermBadge | null>(null);
@@ -96,31 +103,46 @@ export const BadgeProgress: React.FC<BadgeProgressProps> = ({ completedDays, the
   const closeCelebration = useCallback(() => setCelebrationBadge(null), []);
 
   const aiInsight = useMemo(() => {
+    const streakText =
+      currentStreak > 0
+        ? `${currentStreak}-day streak`
+        : 'streak is ready to restart';
+    const todayText = `today is ${todayCompletionPercentage}% complete`;
+
     if (!progress.next) {
-      return `Excellent consistency — ${completedDays} completed days earned Analytics Master. Protect the habits that brought you here and keep the standard high.`;
+      return `Excellent work — your ${streakText}, ${todayText}, and ${completedDays} completed days show the consistency that earned Analytics Master. Your badge journey is 100% complete; keep protecting the standard you built.`;
     }
 
-    const percentage = Math.round(progress.unlockProgress);
+    const badgeProgress = Math.round(progress.unlockProgress);
     const nextName = progress.next.name;
 
     if (completedDays === 0) {
-      return `Your system is ready. Complete the first focused day and begin building evidence of consistency toward ${nextName}.`;
+      return `You are at the starting line: your ${streakText} and ${todayText}. Progress toward ${nextName} is ${badgeProgress}%. Finish today's priority tasks and make this the first completed day.`;
     }
 
-    if (percentage >= 80) {
-      return `Strong work — ${completedDays} completed days already. You are very close to ${nextName}; only ${progress.daysRemaining} more completed days remain.`;
+    if (badgeProgress >= 80) {
+      return `Strong momentum — you have a ${streakText}, ${todayText}, and you are ${badgeProgress}% of the way to ${nextName}. Only ${progress.daysRemaining} completed days remain; keep the routine steady.`;
     }
 
-    if (percentage >= 50) {
-      return `You have built real momentum with ${completedDays} completed days. You are past halfway to ${nextName}; keep protecting the routine that is working.`;
+    if (badgeProgress >= 50) {
+      return `Good consistency — your ${streakText} and ${todayText}. You are already ${badgeProgress}% toward ${nextName}, with ${progress.daysRemaining} completed days left. Keep stacking focused days.`;
     }
 
     if (completedDays === progress.current.minDays && completedDays > 0) {
-      return `Well earned — you reached ${progress.current.name}. That milestone came from completed days, not intention. Keep stacking the next one.`;
+      return `Well earned — you reached ${progress.current.name}. Your ${streakText}, ${todayText}, and ${badgeProgress}% progress toward ${nextName} show that the next level is already underway.`;
     }
 
-    return `Good progress — ${completedDays} completed days are already proof of effort. Stay consistent; every completed day moves you closer to ${nextName}.`;
-  }, [completedDays, progress.current.minDays, progress.current.name, progress.daysRemaining, progress.next, progress.unlockProgress]);
+    return `Keep going — your ${streakText}, ${todayText}, and ${completedDays} completed days are real evidence of effort. You are ${badgeProgress}% toward ${nextName}, with ${progress.daysRemaining} completed days remaining.`;
+  }, [
+    completedDays,
+    currentStreak,
+    todayCompletionPercentage,
+    progress.current.minDays,
+    progress.current.name,
+    progress.daysRemaining,
+    progress.next,
+    progress.unlockProgress,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

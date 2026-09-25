@@ -4,10 +4,8 @@ import { Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
-import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
-import { TrendsVisual } from './TrendsVisual';
+import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TodayTasksCard } from './TodayTasksCard';
-import { BadgeProgress } from './BadgeProgress';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -102,20 +100,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
   // Overall KPIs for hero visual (preserved calculations)
   const allKpis = useMemo(() => calculateKPIStats(records), [records]);
 
-  const todayTaskCompletion = useMemo(() => {
-    const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-    const todayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, todayDateKey));
-    const completedToday = todayTasks.filter((task) => task.isCompleted).length;
-    const percentage =
-      todayTasks.length > 0 ? Math.round((completedToday / todayTasks.length) * 100) : 0;
-
-    return {
-      total: todayTasks.length,
-      completed: completedToday,
-      percentage,
-    };
-  }, [tasks]);
-
   // Fixed tracked-week cadence:
   // Week 1 = D1-D7, Week 2 = D8-D14, Week 3 = D15-D21, etc.
   const recentWeekCadence = useMemo(() => {
@@ -189,7 +173,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`xl:col-span-2 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-6 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
@@ -331,47 +315,27 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
               </motion.div>
 
-              {/* Metric 3: Long-term Badge Rank */}
-              <div className="xl:col-span-4 min-w-0">
-                <BadgeProgress
-                  completedDays={allKpis.completedDays}
-                  currentStreak={allKpis.currentStreak}
-                  todayCompletionPercentage={todayTaskCompletion.percentage}
-                  theme={theme}
-                />
-              </div>
             </div>
           </div>
 
-          {/* Card 2 + 3: Today's Tasks and weekly productivity chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-2.5 items-stretch">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="min-w-0 flex flex-col"
-            >
-              <TodayTasksCard
-                tasks={tasks}
-                theme={theme}
-                onAddTask={onAddTask}
-                onUpdateTask={onUpdateTask}
-                onDeleteTask={onDeleteTask}
-                onToggleTaskStatus={onToggleTaskStatus}
-                onSubmitTaskDay={onSubmitTaskDay}
-                isSyncing={isSyncing}
-              />
-            </motion.div>
-
-            <div className="min-w-0 flex flex-col">
-              <TrendsVisual
-                records={filteredRecords}
-                theme={theme}
-                onToggleRecordStatus={onToggleRecordStatus}
-                variant="chart"
-              />
-            </div>
-          </div>
+          {/* Today's Tasks — full width */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+            className="min-w-0 flex flex-col"
+          >
+            <TodayTasksCard
+              tasks={tasks}
+              theme={theme}
+              onAddTask={onAddTask}
+              onUpdateTask={onUpdateTask}
+              onDeleteTask={onDeleteTask}
+              onToggleTaskStatus={onToggleTaskStatus}
+              onSubmitTaskDay={onSubmitTaskDay}
+              isSyncing={isSyncing}
+            />
+          </motion.div>
         </div>
       </section>
 

@@ -60,17 +60,15 @@ export function sanitizeError(rawMessage: any): string {
   return sanitized;
 }
 
+const CURRENT_APP_BASE_URL = 'https://systembuilder08.ai.studio';
+
 /**
- * Returns the public production base URL for all email links.
- * Strictly uses APP_BASE_URL (defaults to https://rafiqcommitdaily.ai.studio).
- * Never uses aistudio.google.com, localhost, or dynamically detected development URLs.
+ * Returns the canonical public production URL for all email links.
+ * Keep this authoritative so a stale APP_BASE_URL deployment variable cannot
+ * send users to the retired rafiqcommitdaily.ai.studio domain.
  */
 export function getAppBaseUrl(): string {
-  const envUrl = (process.env.APP_BASE_URL || '').trim();
-  if (envUrl) {
-    return envUrl.replace(/\/+$/, '');
-  }
-  return 'https://systembuilder08.ai.studio';
+  return CURRENT_APP_BASE_URL;
 }
 
 /**

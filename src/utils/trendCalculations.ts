@@ -4,6 +4,12 @@ export interface MovingAveragePoint {
   day: number;
   date: string;
   isCompleted: boolean;
+  weekNumber: number;
+  startDay: number;
+  endDay: number;
+  startDate: string;
+  endDate: string;
+  trackedDays: number;
   windowSize: number;
   completedInWindow: number;
   totalInWindow: number;
@@ -41,9 +47,11 @@ export interface TrendAnalysisResult {
 }
 
 /**
- * Calculates moving average of commitments met and identifies high/low productivity periods.
+ * Calculates fixed tracked-week productivity and identifies high/low periods.
+ * With the default 7-day size: Week 1 = D1-D7, Week 2 = D8-D14, etc.
+ * Incomplete current weeks still use the full 7-day denominator.
  * @param records List of daily commitment records
- * @param windowSize Rolling window span in days (e.g. 3, 5, 7)
+ * @param windowSize Fixed tracked-week span in days
  */
 export function calculateMovingAverageTrends(
   records: DailyRecord[],
@@ -67,42 +75,54 @@ export function calculateMovingAverageTrends(
     };
   }
 
-  // Sort chronological by day ascending
+  // Sort chronological by tracked day, then group into fixed week buckets.
   const sorted = [...records].sort((a, b) => a.day - b.day);
+  const weeklyBuckets = new Map<number, DailyRecord[]>();
 
-  const points: MovingAveragePoint[] = [];
+  sorted.forEach((record) => {
+    const weekNumber = Math.max(1, Math.ceil(record.day / windowSize));
+    const bucket = weeklyBuckets.get(weekNumber) ?? [];
+    bucket.push(record);
+    weeklyBuckets.set(weekNumber, bucket);
+  });
 
-  for (let i = 0; i < sorted.length; i++) {
-    const current = sorted[i];
-    // Window looks back up to `windowSize` records
-    const windowStart = Math.max(0, i - windowSize + 1);
-    const windowSlice = sorted.slice(windowStart, i + 1);
+  const points: MovingAveragePoint[] = [...weeklyBuckets.entries()]
+    .sort(([weekA], [weekB]) => weekA - weekB)
+    .map(([weekNumber, weekRecords]) => {
+      const orderedWeekRecords = [...weekRecords].sort((a, b) => a.day - b.day);
+      const startDay = (weekNumber - 1) * windowSize + 1;
+      const endDay = weekNumber * windowSize;
+      const firstRecord = orderedWeekRecords[0];
+      const lastRecord = orderedWeekRecords[orderedWeekRecords.length - 1];
+      const completedInWindow = orderedWeekRecords.filter((record) => record.isCompleted).length;
+      const totalInWindow = windowSize;
+      const movingAverageRate = Math.round((completedInWindow / totalInWindow) * 100);
 
-    const completedInWindow = windowSlice.filter((r) => r.isCompleted).length;
-    const totalInWindow = windowSlice.length;
-    const movingAverageRate = totalInWindow > 0
-      ? Math.round((completedInWindow / totalInWindow) * 100)
-      : 0;
+      let productivityLevel: 'HIGH' | 'STEADY' | 'LOW' = 'STEADY';
+      if (movingAverageRate >= 80) {
+        productivityLevel = 'HIGH';
+      } else if (movingAverageRate < 50) {
+        productivityLevel = 'LOW';
+      }
 
-    let productivityLevel: 'HIGH' | 'STEADY' | 'LOW' = 'STEADY';
-    if (movingAverageRate >= 80) {
-      productivityLevel = 'HIGH';
-    } else if (movingAverageRate < 50) {
-      productivityLevel = 'LOW';
-    }
-
-    points.push({
-      day: current.day,
-      date: current.date,
-      isCompleted: current.isCompleted,
-      windowSize,
-      completedInWindow,
-      totalInWindow,
-      movingAverageRate,
-      productivityLevel,
-      notes: current.notes,
+      return {
+        day: endDay,
+        date: lastRecord?.date ?? firstRecord?.date ?? '',
+        isCompleted: completedInWindow === totalInWindow,
+        weekNumber,
+        startDay,
+        endDay,
+        startDate: firstRecord?.date ?? '',
+        endDate: lastRecord?.date ?? '',
+        trackedDays: orderedWeekRecords.length,
+        windowSize,
+        completedInWindow,
+        totalInWindow,
+        movingAverageRate,
+        productivityLevel,
+        notes: lastRecord?.notes,
+      };
     });
-  }
 
   // Overall average
   const totalCompleted = sorted.filter((r) => r.isCompleted).length;
@@ -140,14 +160,14 @@ export function calculateMovingAverageTrends(
       if (currentHighStart && currentHighPoints.length > 0) {
         const lastHigh = currentHighPoints[currentHighPoints.length - 1];
         const sumRate = currentHighPoints.reduce((acc, p) => acc + p.movingAverageRate, 0);
-        const compCount = currentHighPoints.filter((p) => p.isCompleted).length;
+        const compCount = currentHighPoints.reduce((acc, p) => acc + p.completedInWindow, 0);
         highProductivityPeriods.push({
           id: `high-${currentHighStart.day}-${lastHigh.day}`,
           type: 'HIGH',
-          startDay: currentHighStart.day,
-          endDay: lastHigh.day,
-          startDate: currentHighStart.date,
-          endDate: lastHigh.date,
+          startDay: currentHighStart.startDay,
+          endDay: lastHigh.endDay,
+          startDate: currentHighStart.startDate,
+          endDate: lastHigh.endDate,
           avgRate: Math.round(sumRate / currentHighPoints.length),
           daysCount: currentHighPoints.length,
           completedDays: compCount,
@@ -167,14 +187,14 @@ export function calculateMovingAverageTrends(
       if (currentLowStart && currentLowPoints.length > 0) {
         const lastLow = currentLowPoints[currentLowPoints.length - 1];
         const sumRate = currentLowPoints.reduce((acc, p) => acc + p.movingAverageRate, 0);
-        const compCount = currentLowPoints.filter((p) => p.isCompleted).length;
+        const compCount = currentLowPoints.reduce((acc, p) => acc + p.completedInWindow, 0);
         lowProductivityPeriods.push({
           id: `low-${currentLowStart.day}-${lastLow.day}`,
           type: 'LOW',
-          startDay: currentLowStart.day,
-          endDay: lastLow.day,
-          startDate: currentLowStart.date,
-          endDate: lastLow.date,
+          startDay: currentLowStart.startDay,
+          endDay: lastLow.endDay,
+          startDate: currentLowStart.startDate,
+          endDate: lastLow.endDate,
           avgRate: Math.round(sumRate / currentLowPoints.length),
           daysCount: currentLowPoints.length,
           completedDays: compCount,
@@ -189,14 +209,14 @@ export function calculateMovingAverageTrends(
       if (currentHighStart && currentHighPoints.length > 0) {
         const lastHigh = currentHighPoints[currentHighPoints.length - 1];
         const sumRate = currentHighPoints.reduce((acc, p) => acc + p.movingAverageRate, 0);
-        const compCount = currentHighPoints.filter((p) => p.isCompleted).length;
+        const compCount = currentHighPoints.reduce((acc, p) => acc + p.completedInWindow, 0);
         highProductivityPeriods.push({
           id: `high-${currentHighStart.day}-${lastHigh.day}`,
           type: 'HIGH',
-          startDay: currentHighStart.day,
-          endDay: lastHigh.day,
-          startDate: currentHighStart.date,
-          endDate: lastHigh.date,
+          startDay: currentHighStart.startDay,
+          endDay: lastHigh.endDay,
+          startDate: currentHighStart.startDate,
+          endDate: lastHigh.endDate,
           avgRate: Math.round(sumRate / currentHighPoints.length),
           daysCount: currentHighPoints.length,
           completedDays: compCount,
@@ -206,14 +226,14 @@ export function calculateMovingAverageTrends(
       if (currentLowStart && currentLowPoints.length > 0) {
         const lastLow = currentLowPoints[currentLowPoints.length - 1];
         const sumRate = currentLowPoints.reduce((acc, p) => acc + p.movingAverageRate, 0);
-        const compCount = currentLowPoints.filter((p) => p.isCompleted).length;
+        const compCount = currentLowPoints.reduce((acc, p) => acc + p.completedInWindow, 0);
         lowProductivityPeriods.push({
           id: `low-${currentLowStart.day}-${lastLow.day}`,
           type: 'LOW',
-          startDay: currentLowStart.day,
-          endDay: lastLow.day,
-          startDate: currentLowStart.date,
-          endDate: lastLow.date,
+          startDay: currentLowStart.startDay,
+          endDay: lastLow.endDay,
+          startDate: currentLowStart.startDate,
+          endDate: lastLow.endDate,
           avgRate: Math.round(sumRate / currentLowPoints.length),
           daysCount: currentLowPoints.length,
           completedDays: compCount,

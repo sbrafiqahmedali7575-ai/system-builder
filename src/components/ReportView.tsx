@@ -169,7 +169,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     >
                       <Award className="w-3.5 h-3.5 text-blue-500" />
                     </motion.div>
-                    <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                    <span className="font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-200">
                       Overall Completion
                     </span>
                   </div>
@@ -238,7 +238,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     >
                       <Flame className="w-3.5 h-3.5 text-amber-500" />
                     </motion.div>
-                    <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                    <span className="font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-200">
                       Active Streak
                     </span>
                   </div>
@@ -291,10 +291,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 opacity-70" />
 
                 <div className="relative flex items-center justify-between text-xs mb-1 gap-2">
-                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                    Recent 7-Day Cadence
-                  </span>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <AnimatedProgressRing
                       value={last7Performance}
                       size={30}
@@ -309,10 +306,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       label={`${Math.round(last7Performance)}%`}
                       delay={0.12}
                     />
-                    <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs">
-                      {last7CompletedDays}/7 Done
+                    <span className="font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-200">
+                      Recent 7-Day Cadence
                     </span>
                   </div>
+                  <span className="text-blue-600 dark:text-blue-400 font-bold font-mono text-xs shrink-0">
+                    {last7CompletedDays}/7 Done
+                  </span>
                 </div>
 
                 <div className="relative">

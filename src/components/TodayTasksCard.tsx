@@ -233,8 +233,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
   // Submit the active day's task statuses to the records table.
   const handleSubmitDay = async () => {
+    if (activeDateTab !== 'TODAY') {
+      setCardError('Only the current day can be submitted.');
+      return;
+    }
+
     if (dateTasks.length === 0) {
-      setCardError('Add at least one task before submitting the day.');
+      setCardError('No tasks were created for today. The day will default to Not Completed.');
       return;
     }
 
@@ -414,13 +419,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             id="btn-submit-task-day"
             type="button"
             onClick={handleSubmitDay}
-            disabled={totalTasksCount === 0 || isSubmittingDay || isSyncing}
+            disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSubmittingDay || isSyncing}
             title={
-              totalTasksCount === 0
-                ? 'Add at least one task before submitting'
-                : `Submit ${activeDateLabel.toLowerCase()} task status`
+              activeDateTab !== 'TODAY'
+                ? 'Submit is available for the current day only'
+                : totalTasksCount === 0
+                ? 'No tasks created: today will default to Not Completed'
+                : 'Submit today task status'
             }
-            className="flex items-center space-x-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {isSubmittingDay ? (
               <Loader2 className="w-4 h-4 animate-spin" />

@@ -117,25 +117,27 @@ export function getKolkataTimeInfo(date = new Date()): {
 export async function findTodayTaskOrRecord(): Promise<{
   record?: any;
   task?: any;
+  tasks?: any[];
   taskDetails?: EmailTaskDetails;
 } | null> {
   const { dateKey, formattedDate } = getKolkataTimeInfo();
 
   try {
-    // 1. Check tasks collection
     const tasksSnap = await getDocs(collection(db, 'tasks'));
-    let matchedTask: any = null;
+    const matchedTasks: any[] = [];
     tasksSnap.forEach((d) => {
       const t = d.data();
-      if (t.taskKey === dateKey || t.taskKey === formattedDate) {
-        matchedTask = { id: d.id, ...t };
+      const taskKey = String(t.taskKey || t.date || '').trim();
+      if (taskKey === dateKey || taskKey === formattedDate) {
+        matchedTasks.push({ id: d.id, ...t });
       }
     });
+    matchedTasks.sort((x, y) =>
+      String(x.updatedAt || x.id).localeCompare(String(y.updatedAt || y.id))
+    );
 
-    // 2. Check records collection
     const recordsSnap = await getDocs(collection(db, 'records'));
     let matchedRecord: any = null;
-    let fallbackLatestRecord: any = null;
     let highestDay = -1;
 
     recordsSnap.forEach((d) => {
@@ -143,7 +145,6 @@ export async function findTodayTaskOrRecord(): Promise<{
       const rec = { id: d.id, ...r };
       const rDate = String(r.date || '').toLowerCase().trim();
       const targetDate = formattedDate.toLowerCase();
-
       const normRDate = rDate.replace(/^0(\d)/, '$1');
       const normTargetDate = targetDate.replace(/^0(\d)/, '$1');
 
@@ -156,37 +157,40 @@ export async function findTodayTaskOrRecord(): Promise<{
       }
 
       const dayNum = Number(r.day || 0);
-      if (dayNum > highestDay) {
-        highestDay = dayNum;
-        fallbackLatestRecord = rec;
-      }
+      if (dayNum > highestDay) highestDay = dayNum;
     });
 
-    const activeRecord = matchedRecord;
     const nextDayNum = highestDay > 0 ? highestDay + 1 : 1;
-
-    const taskDate = matchedTask?.taskKey || activeRecord?.date || formattedDate;
+    const primaryTask = matchedTasks[0];
     const taskName =
-      matchedTask?.taskOfTheDay ||
-      activeRecord?.summary ||
-      `Day ${activeRecord?.day || nextDayNum} Daily Task`;
-    const isCompleted = matchedTask
-      ? Boolean(matchedTask.isCompleted)
-      : Boolean(activeRecord?.isCompleted);
+      matchedTasks.length > 1
+        ? `${matchedTasks.length} tasks scheduled`
+        : primaryTask?.taskOfTheDay ||
+          matchedRecord?.summary ||
+          `Day ${matchedRecord?.day || nextDayNum} Daily Task`;
+
+    const allTasksCompleted =
+      matchedTasks.length > 0 && matchedTasks.every((task) => Boolean(task.isCompleted));
 
     return {
-      record: activeRecord || fallbackLatestRecord,
-      task: matchedTask,
+      record: matchedRecord,
+      task: primaryTask,
+      tasks: matchedTasks,
       taskDetails: {
-        recordId: activeRecord?.id || `rec-${dateKey}`,
-        taskId: matchedTask?.id || `task-${dateKey}`,
-        taskDate,
+        recordId: matchedRecord?.id || `rec-${dateKey}`,
+        taskId: primaryTask?.id || `review-${dateKey}`,
+        taskDate: formattedDate,
         taskName,
-        isCompleted,
+        isCompleted: matchedTasks.length > 0 ? allTasksCompleted : Boolean(matchedRecord?.isCompleted),
+        tasks: matchedTasks.map((task) => ({
+          id: task.id,
+          title: String(task.taskOfTheDay || 'Daily Task'),
+          isCompleted: Boolean(task.isCompleted),
+        })),
       },
     };
   } catch (err) {
-    console.error('Error finding today task or record:', sanitizeError(err));
+    console.error('Error finding today tasks or record:', sanitizeError(err));
     return null;
   }
 }
@@ -220,12 +224,46 @@ const activeDispatchPromises = new Map<string, Promise<TriggerDailyReminderResul
 export async function triggerDailyReminder(options?: {
   force?: boolean;
   recipientOverride?: string;
+  respectSchedule?: boolean;
 }): Promise<TriggerDailyReminderResult> {
   const { timeStr, dateKey, formattedDate } = getKolkataTimeInfo();
   const settings = await getNotificationSettings();
   const targetRecipient =
     options?.recipientOverride || settings.recipientEmail || 'sbrafiqahmedali7575@gmail.com';
   const force = Boolean(options?.force);
+  const respectSchedule = Boolean(options?.respectSchedule);
+
+  if (!force && !settings.enabled) {
+    return {
+      success: true,
+      alreadySent: false,
+      date: formattedDate,
+      taskId: '',
+      recipient: targetRecipient,
+      status: 'disabled',
+      message: 'Daily confirmation emails are disabled in notification settings.',
+    };
+  }
+
+  if (!force && respectSchedule) {
+    const scheduled = settings.scheduledTime || '21:00';
+    const [schedH, schedM] = scheduled.split(':').map(Number);
+    const [curH, curM] = timeStr.split(':').map(Number);
+    const schedMins = schedH * 60 + schedM;
+    const curMins = curH * 60 + curM;
+
+    if (curMins < schedMins) {
+      return {
+        success: true,
+        alreadySent: false,
+        date: formattedDate,
+        taskId: '',
+        recipient: targetRecipient,
+        status: 'not_due',
+        message: `Reminder is scheduled for ${scheduled} IST and is not due yet.`,
+      };
+    }
+  }
 
   // 1. In-process mutex: If a dispatch is currently running for this dateKey in this Node process, join it
   if (!force && activeDispatchPromises.has(dateKey)) {
@@ -324,27 +362,38 @@ export async function triggerDailyReminder(options?: {
     // 4. Send daily confirmation email
     const sendResult = await sendDailyConfirmationEmail(taskDetails, undefined, targetRecipient);
 
-    // 5. Handle failed send
-    if (!sendResult.success && sendResult.status === 'failed') {
-      const cleanError = sanitizeError(sendResult.error || 'Failed to dispatch email via SMTP provider.');
-      // Update lock document to failed so it can be retried if needed
+    // 5. Only a real SMTP delivery may seal the reminder as sent.
+    if (!sendResult.success || sendResult.status !== 'delivered') {
+      const cleanError = sanitizeError(
+        sendResult.error ||
+          (sendResult.status === 'pending_configuration'
+            ? 'Email provider is not configured.'
+            : 'Failed to dispatch email via SMTP provider.')
+      );
+
       try {
         await setDoc(
           doc(db, DAILY_REMINDERS_SENT_COLLECTION, dateKey),
-          { status: 'failed', error: cleanError, updatedAt: new Date().toISOString() },
+          {
+            status: sendResult.status === 'pending_configuration' ? 'pending_configuration' : 'failed',
+            error: cleanError,
+            updatedAt: new Date().toISOString(),
+          },
           { merge: true }
         );
       } catch (lockReleaseErr) {
-        console.warn('Failed to release lock after email failure:', lockReleaseErr);
+        console.warn('Failed to release reminder lock after email failure:', lockReleaseErr);
       }
+
       return {
         success: false,
         date: formattedDate,
         taskId: taskDetails.taskId || taskDetails.recordId,
         recipient: targetRecipient,
         taskName: taskDetails.taskName,
-        status: 'failed',
+        status: sendResult.status,
         error: cleanError,
+        previewLinks: sendResult.previewLinks,
       };
     }
 
@@ -444,7 +493,7 @@ export function startBackgroundScheduler(): void {
       if (curMins >= schedMins) {
         // Record date immediately to prevent repeating checks during async execution
         localLastDispatchedDate = dateKey;
-        const result = await triggerDailyReminder({ force: false });
+        const result = await triggerDailyReminder({ force: false, respectSchedule: false });
         if (result.success && !result.alreadySent) {
           console.log(
             `[Background Scheduler] Auto-dispatched daily reminder for ${formattedDate} (${timeStr} IST) to ${result.recipient}`

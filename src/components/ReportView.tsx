@@ -123,7 +123,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       <section
         id="today-focus-section"
         aria-label="Today's Commitments and Key Metrics"
-        className={`ninja-focus-panel p-2.5 sm:p-3.5 rounded-3xl border transition-all ${
+        className={`ninja-focus-panel ui-motion-section p-2.5 sm:p-3.5 rounded-3xl border transition-all ${
           isDark
             ? 'bg-slate-900/60 border-slate-800'
             : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
@@ -132,7 +132,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         <div className="space-y-2.5">
           {/* Card 1: KPI's — full-width horizontal summary */}
           <div
-            className={`ninja-kpi-shell p-2 sm:p-2.5 rounded-2xl border transition-all ${
+            className={`ninja-kpi-shell ui-motion-shell p-2 sm:p-2.5 rounded-2xl border transition-all ${
               isDark
                 ? 'bg-slate-900/80 border-slate-800'
                 : 'bg-slate-50/70 border-slate-200/80'
@@ -324,7 +324,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
           </div>
 
           {/* Card 2: Today's Tasks — full width below KPI's */}
-          <div className="flex flex-col">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col"
+          >
             <TodayTasksCard
               tasks={tasks}
               theme={theme}
@@ -334,7 +339,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               onToggleTaskStatus={onToggleTaskStatus}
               isSyncing={isSyncing}
             />
-          </div>
+          </motion.div>
         </div>
       </section>
 

@@ -4,7 +4,7 @@ import { Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
-import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
+import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
 import { TaskCompletionPerformance } from './TaskCompletionPerformance';
@@ -102,6 +102,20 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   // Overall KPIs for hero visual (preserved calculations)
   const allKpis = useMemo(() => calculateKPIStats(records), [records]);
+
+  const todayTaskCompletion = useMemo(() => {
+    const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+    const todayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, todayDateKey));
+    const completedToday = todayTasks.filter((task) => task.isCompleted).length;
+    const percentage =
+      todayTasks.length > 0 ? Math.round((completedToday / todayTasks.length) * 100) : 0;
+
+    return {
+      total: todayTasks.length,
+      completed: completedToday,
+      percentage,
+    };
+  }, [tasks]);
 
   // Fixed tracked-week cadence:
   // Week 1 = D1-D7, Week 2 = D8-D14, Week 3 = D15-D21, etc.
@@ -322,6 +336,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <div className="xl:col-span-4 min-w-0">
                 <BadgeProgress
                   completedDays={allKpis.completedDays}
+                  currentStreak={allKpis.currentStreak}
+                  todayCompletionPercentage={todayTaskCompletion.percentage}
                   theme={theme}
                 />
               </div>

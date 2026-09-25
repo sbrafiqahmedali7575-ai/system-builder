@@ -7,6 +7,7 @@ import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
+import { TaskCompletionPerformance } from './TaskCompletionPerformance';
 import { BadgeProgress } from './BadgeProgress';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 
@@ -327,24 +328,30 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
           </div>
 
-          {/* Card 2: Today's Tasks — full width below KPI's */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col"
-          >
-            <TodayTasksCard
-              tasks={tasks}
-              theme={theme}
-              onAddTask={onAddTask}
-              onUpdateTask={onUpdateTask}
-              onDeleteTask={onDeleteTask}
-              onToggleTaskStatus={onToggleTaskStatus}
-              onSubmitTaskDay={onSubmitTaskDay}
-              isSyncing={isSyncing}
-            />
-          </motion.div>
+          {/* Card 2 + 3: Today's Tasks and daily task completion performance */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 items-stretch">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="min-w-0 flex flex-col"
+            >
+              <TodayTasksCard
+                tasks={tasks}
+                theme={theme}
+                onAddTask={onAddTask}
+                onUpdateTask={onUpdateTask}
+                onDeleteTask={onDeleteTask}
+                onToggleTaskStatus={onToggleTaskStatus}
+                onSubmitTaskDay={onSubmitTaskDay}
+                isSyncing={isSyncing}
+              />
+            </motion.div>
+
+            <div className="min-w-0 flex flex-col">
+              <TaskCompletionPerformance tasks={tasks} theme={theme} />
+            </div>
+          </div>
         </div>
       </section>
 

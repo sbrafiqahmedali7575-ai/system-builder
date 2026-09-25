@@ -120,7 +120,7 @@ export const InteractiveAnalytics: React.FC<InteractiveAnalyticsProps> = ({
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                <h3 className="text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
                   Commitment Matrix
                 </h3>
                 <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -283,7 +283,7 @@ export const InteractiveAnalytics: React.FC<InteractiveAnalyticsProps> = ({
               <div className="p-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
                 <Target className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-bold tracking-tight">80% Target Trajectory</h3>
+              <h3 className="text-sm font-extrabold tracking-tight">80% Target Trajectory</h3>
             </div>
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
@@ -357,7 +357,7 @@ export const InteractiveAnalytics: React.FC<InteractiveAnalyticsProps> = ({
           }`}
         >
           <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-slate-800">
-            <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+            <span className="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
               Day-of-Week Consistency
             </span>

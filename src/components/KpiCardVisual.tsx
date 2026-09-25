@@ -33,7 +33,7 @@ export const KpiCardVisual: React.FC<KpiCardVisualProps> = ({ kpis, theme }) => 
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1 ${
+          <span className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-1 ${
             isDark ? 'text-slate-400' : 'text-slate-500'
           }`}>
             <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
@@ -98,7 +98,7 @@ export const KpiCardVisual: React.FC<KpiCardVisualProps> = ({ kpis, theme }) => 
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1 ${
+          <span className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-1 ${
             isDark ? 'text-slate-400' : 'text-slate-500'
           }`}>
             <Flame className="w-3.5 h-3.5 text-amber-500" />
@@ -158,7 +158,7 @@ export const KpiCardVisual: React.FC<KpiCardVisualProps> = ({ kpis, theme }) => 
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1 ${
+          <span className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-1 ${
             isDark ? 'text-slate-400' : 'text-slate-500'
           }`}>
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />

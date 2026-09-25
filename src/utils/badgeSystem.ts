@@ -9,6 +9,28 @@ export interface LongTermBadge {
   accent: 'blue' | 'red' | 'amber' | 'violet';
 }
 
+const QUARTERLY_ACCENTS: LongTermBadge['accent'][] = ['amber', 'blue', 'red', 'violet'];
+
+const QUARTERLY_BADGES: LongTermBadge[] = Array.from({ length: 18 }, (_, index) => {
+  const minDays = 270 + index * 90;
+  // Raise the completion standard gradually from 79% at 270 days to 88% at 1800 days.
+  const minRate = Math.min(88, 79 + Math.floor((index + 1) / 2));
+  const isFinalMilestone = minDays === 1800;
+
+  return {
+    id: `day-${minDays}`,
+    name: isFinalMilestone ? '1800-Day Ninja Legend' : `${minDays}-Day Shinobi`,
+    shortName: `${minDays}D`,
+    minDays,
+    minRate,
+    horizon: `${minDays}D`,
+    description: isFinalMilestone
+      ? 'Twenty 90-day quarters of long-horizon discipline with an 88%+ overall completion rate.'
+      : `Reach ${minDays} logged days while maintaining at least ${minRate}% overall completion.`,
+    accent: isFinalMilestone ? 'red' : QUARTERLY_ACCENTS[index % QUARTERLY_ACCENTS.length],
+  };
+});
+
 export const LONG_TERM_BADGES: LongTermBadge[] = [
   {
     id: 'trainee',
@@ -16,7 +38,7 @@ export const LONG_TERM_BADGES: LongTermBadge[] = [
     shortName: 'Trainee',
     minDays: 0,
     minRate: 0,
-    horizon: 'Start',
+    horizon: '0D',
     description: 'Your starting rank. Build the habit of showing up and logging the day.',
     accent: 'blue',
   },
@@ -60,56 +82,7 @@ export const LONG_TERM_BADGES: LongTermBadge[] = [
     description: 'Half a year of tracked execution and resilient consistency.',
     accent: 'red',
   },
-  {
-    id: 'year-one-shinobi',
-    name: 'Year-One Shinobi',
-    shortName: '1 Year',
-    minDays: 365,
-    minRate: 80,
-    horizon: '1Y',
-    description: 'A complete year with an 80%+ overall completion standard.',
-    accent: 'blue',
-  },
-  {
-    id: 'two-year-master',
-    name: 'Two-Year Master',
-    shortName: '2 Years',
-    minDays: 730,
-    minRate: 82,
-    horizon: '2Y',
-    description: 'Two years of sustained practice with a higher reliability bar.',
-    accent: 'violet',
-  },
-  {
-    id: 'three-year-elite',
-    name: 'Three-Year Elite',
-    shortName: '3 Years',
-    minDays: 1095,
-    minRate: 84,
-    horizon: '3Y',
-    description: 'Three years logged while keeping completion above 84%.',
-    accent: 'red',
-  },
-  {
-    id: 'four-year-grandmaster',
-    name: 'Four-Year Grandmaster',
-    shortName: '4 Years',
-    minDays: 1460,
-    minRate: 86,
-    horizon: '4Y',
-    description: 'Four years of long-horizon discipline at an elite completion rate.',
-    accent: 'violet',
-  },
-  {
-    id: 'five-year-legend',
-    name: 'Five-Year Ninja Legend',
-    shortName: '5Y Legend',
-    minDays: 1825,
-    minRate: 88,
-    horizon: '5Y',
-    description: 'Five years logged with an 88%+ all-time completion rate.',
-    accent: 'red',
-  },
+  ...QUARTERLY_BADGES,
 ];
 
 export function getBadgeProgress(totalDays: number, completionRate: number) {
@@ -135,8 +108,18 @@ export function getBadgeProgress(totalDays: number, completionRate: number) {
     };
   }
 
-  const dayProgress = Math.min(100, (totalDays / next.minDays) * 100);
-  const rateProgress = next.minRate === 0 ? 100 : Math.min(100, (completionRate / next.minRate) * 100);
+  // Progress is measured inside the current milestone interval so each 90-day
+  // quarter has a meaningful 0-100% journey instead of staying near 100%.
+  const daySpan = Math.max(1, next.minDays - current.minDays);
+  const dayProgress = Math.min(100, Math.max(0, ((totalDays - current.minDays) / daySpan) * 100));
+
+  const rateSpan = next.minRate - current.minRate;
+  const rateProgress =
+    rateSpan <= 0
+      ? completionRate >= next.minRate
+        ? 100
+        : 0
+      : Math.min(100, Math.max(0, ((completionRate - current.minRate) / rateSpan) * 100));
 
   return {
     current,

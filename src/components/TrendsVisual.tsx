@@ -255,7 +255,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           </div>
         </motion.div>
 
-        {/* Card 3: Low Productivity Dips */}
+        {/* Card 3: Low Productivity */}
         <motion.div
           initial={{ opacity: 0, y: 10, scale: 0.985 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -284,7 +284,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                 <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
               </motion.div>
               <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                Low Productivity Dips
+                Low Productivity
               </span>
             </div>
           </div>

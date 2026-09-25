@@ -101,14 +101,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return [...records].sort((a, b) => b.day - a.day).slice(0, 7).reverse();
   }, [records]);
 
-  // Streak ring shows the strongest streak value: use max streak whenever it
-  // exceeds the active streak, otherwise keep the active streak in the ring.
-  const streakRingDays = Math.max(allKpis.currentStreak, allKpis.maxStreak);
-  const streakRingUsesMax = allKpis.maxStreak > allKpis.currentStreak;
-  const streakRingTarget = Math.max(7, Math.ceil(Math.max(1, streakRingDays) / 7) * 7);
-  const streakRingProgress = streakRingDays === 0
-    ? 0
-    : Math.min(100, (streakRingDays / streakRingTarget) * 100);
+  // Active streak targets the personal-best (max streak) by default.
+  // Once the active streak reaches that target, the ring stays complete and
+  // the active streak can keep growing as the new personal best.
+  const streakTarget = Math.max(1, allKpis.maxStreak);
+  const streakTargetAchieved =
+    allKpis.currentStreak > 0 && allKpis.currentStreak >= allKpis.maxStreak;
+  const streakRingProgress =
+    allKpis.currentStreak === 0
+      ? 0
+      : Math.min(100, (allKpis.currentStreak / streakTarget) * 100);
 
   return (
     <motion.div
@@ -248,7 +250,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       Personal best: {allKpis.maxStreak} days
                     </p>
                     <p className="mt-0.5 text-[9px] text-slate-400">
-                      Ring shows {streakRingUsesMax ? 'max streak' : 'active streak'} · next {streakRingTarget}D milestone
+                      {streakTargetAchieved
+                        ? `Target achieved · keep building the active streak`
+                        : `Target: ${allKpis.maxStreak > 0 ? allKpis.maxStreak : 1}D max streak`}
                     </p>
                   </div>
 
@@ -257,8 +261,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     size={56}
                     strokeWidth={5}
                     progressClassName="text-amber-500"
-                    label={`${streakRingDays}D`}
-                    sublabel={streakRingUsesMax ? 'max' : 'active'}
+                    label={`${allKpis.currentStreak}D`}
+                    sublabel="active"
                     delay={0.13}
                   />
                 </div>

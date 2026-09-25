@@ -6,7 +6,8 @@ import { ReportView } from './components/ReportView';
 import { AddRecordModal } from './components/AddRecordModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
 import { ConfirmationPage } from './components/ConfirmationPage';
-import { isTodayDate } from './utils/dateUtils';
+import { isTodayDate, standardizeDate } from './utils/dateUtils';
+import { areDatesEqual, formatCalendarDate } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
 import {
   subscribeToRecords,
@@ -317,6 +318,81 @@ export default function App() {
     }
   };
 
+  // Submit the selected day's task response into the records table.
+  // All tasks checked => Completed; otherwise => Not Completed.
+  const handleSubmitTaskDay = async (
+    dateKey: string,
+    dayTasks: TaskItem[]
+  ): Promise<'COMPLETED' | 'NOT_COMPLETED'> => {
+    if (dayTasks.length === 0) {
+      throw new Error('Add at least one task before submitting the day.');
+    }
+
+    const allCompleted = dayTasks.every((task) => task.isCompleted);
+    const formattedDate = formatCalendarDate(dateKey);
+    const nowIso = new Date().toISOString();
+    const existingRecord = records.find((record) =>
+      areDatesEqual(record.date, formattedDate)
+    );
+
+    if (existingRecord) {
+      const updatedRecord: DailyRecord = {
+        ...existingRecord,
+        date: standardizeDate(existingRecord.date) || formattedDate,
+        isCompleted: allCompleted,
+        result: allCompleted ? 'TRUE' : 'FALSE',
+        change: 0,
+        updatedAt: nowIso,
+      };
+
+      const previousRecords = [...records];
+      setRecords((prev) =>
+        prev.map((record) => (record.id === updatedRecord.id ? updatedRecord : record))
+      );
+
+      try {
+        setIsSyncing(true);
+        await updateRecordInCloud(updatedRecord);
+      } catch (err) {
+        setRecords(previousRecords);
+        throw err;
+      } finally {
+        setIsSyncing(false);
+      }
+    } else {
+      const nextDay =
+        records.reduce((maxDay, record) => Math.max(maxDay, Number(record.day) || 0), 0) + 1;
+      const completedCount = dayTasks.filter((task) => task.isCompleted).length;
+      const newRecord: DailyRecord = {
+        id: `record-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        day: nextDay,
+        date: formattedDate,
+        isCompleted: allCompleted,
+        result: allCompleted ? 'TRUE' : 'FALSE',
+        change: 0,
+        skill: 'Daily Tasks',
+        summary: `${completedCount}/${dayTasks.length} tasks completed`,
+        notes: 'Submitted from Today Tasks card',
+        updatedAt: nowIso,
+      };
+
+      const previousRecords = [...records];
+      setRecords((prev) => [...prev, newRecord].sort((a, b) => a.day - b.day));
+
+      try {
+        setIsSyncing(true);
+        await addRecordToCloud(newRecord);
+      } catch (err) {
+        setRecords(previousRecords);
+        throw err;
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+
+    return allCompleted ? 'COMPLETED' : 'NOT_COMPLETED';
+  };
+
   const handleReturnToDashboard = () => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/');
@@ -376,6 +452,7 @@ export default function App() {
           onUpdateTask={handleUpdateTask}
           onDeleteTask={handleDeleteTask}
           onToggleTaskStatus={handleToggleTaskStatus}
+          onSubmitTaskDay={handleSubmitTaskDay}
           isSyncing={isSyncing}
         />
       </main>

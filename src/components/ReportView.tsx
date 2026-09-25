@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
@@ -77,6 +77,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
+  const [dateRefreshKey, setDateRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setDateRefreshKey((value) => value + 1);
+    }, 60_000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Apply filters to daily records
   const filteredRecords = useMemo(() => {
@@ -132,7 +141,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       formattedDate: formatCalendarDate(dateKey),
       fullDayName,
     };
-  }, []);
+  }, [dateRefreshKey]);
 
   return (
     <motion.div

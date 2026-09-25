@@ -30,7 +30,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className="ninja-header w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs select-none sticky top-0 z-40 transition-colors"
+      className="system-header w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs select-none sticky top-0 z-40 transition-colors"
     >
       <div className="flex items-center justify-between px-2 sm:px-3 lg:px-4 h-16 max-w-7xl mx-auto">
         {/* Brand Zone */}
@@ -39,7 +39,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             <motion.div
               whileHover={{ y: -2, rotate: -2, scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className="ninja-mark ui-motion-icon w-9 h-9 rounded-xl text-white flex items-center justify-center font-black shadow-md relative overflow-hidden"
+              className="system-mark ui-motion-icon w-9 h-9 rounded-xl text-white flex items-center justify-center font-black shadow-md relative overflow-hidden"
             >
               {currentBadge ? (
                 <BadgeIcon badge={currentBadge} className="relative z-10 w-5 h-5" />

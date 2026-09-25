@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ChevronDown, LockKeyhole, Trophy } from 'lucide-react';
+import { Award, ChevronDown, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
 import { BadgeCelebration } from './BadgeCelebration';
@@ -187,7 +187,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
             >
               <div className="p-2">
                 <div className="overflow-x-auto pb-0.5">
-                  <div className="grid grid-cols-9 gap-1 min-w-[630px] items-stretch">
+                  <div className="grid grid-cols-9 gap-1 min-w-[630px]">
                     {LONG_TERM_BADGES.map((badge) => {
                       const unlocked = completedDays >= badge.minDays;
                       const isCurrent = badge.id === progress.current.id;
@@ -197,48 +197,27 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                           layout
                           whileHover={{ y: -1, scale: 1.03 }}
                           title={`${badge.name}: ${badge.minDays} completed days`}
-                          className={`min-w-0 min-h-[52px] rounded-lg border px-1 py-1 flex flex-col items-center justify-center text-center gap-0.5 overflow-hidden transition-all ${
-                            isCurrent
-                              ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 ring-1 ring-blue-300/50'
-                              : unlocked
-                              ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/70'
-                              : 'bg-white/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
-                          }`}
+                          className="min-w-0 flex flex-col items-center gap-0.5"
                         >
                           <motion.div
                             animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 10px rgba(59,130,246,.38)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
                             transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
-                            className={`relative w-2.5 h-2.5 rounded-[3px] flex items-center justify-center border shrink-0 isolate ${
+                            className={`w-full h-5 rounded-md flex items-center justify-center transition-all ${
                               isCurrent
-                                ? 'bg-blue-600 text-white border-blue-500'
+                                ? 'bg-blue-500 text-white ring-2 ring-blue-400 ring-offset-1 dark:ring-offset-slate-900'
                                 : unlocked
-                                ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-600 border-amber-300 dark:border-amber-800'
-                                : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
+                                ? 'bg-amber-400/85 dark:bg-amber-500/70 text-white'
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
                             }`}
                           >
-                            <BadgeIcon badge={badge} className="w-[5px] h-[5px] shrink-0" />
-                            {!unlocked && !isCurrent && (
-                              <span className="absolute -right-0.5 -bottom-0.5 z-10 w-1.5 h-1.5 rounded-full bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-700 flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
-                                <LockKeyhole className="w-[3px] h-[3px]" />
-                              </span>
-                            )}
+                            <BadgeIcon badge={badge} className="w-2.5 h-2.5 shrink-0" />
                           </motion.div>
 
-                          <p className={`w-full text-[7px] leading-[1.05] font-extrabold truncate ${
+                          <span className={`text-[8px] font-mono leading-none ${
                             isCurrent
-                              ? 'text-blue-700 dark:text-blue-300'
+                              ? 'font-black text-blue-600 dark:text-blue-300'
                               : unlocked
-                              ? 'text-slate-700 dark:text-slate-200'
-                              : 'text-slate-400'
-                          }`}>
-                            {badge.shortName}
-                          </p>
-
-                          <span className={`text-[6px] leading-none font-black font-mono ${
-                            isCurrent
-                              ? 'text-blue-600 dark:text-blue-300'
-                              : unlocked
-                              ? 'text-amber-700 dark:text-amber-300'
+                              ? 'font-bold text-amber-700 dark:text-amber-300'
                               : 'text-slate-400'
                           }`}>
                             {badge.horizon}

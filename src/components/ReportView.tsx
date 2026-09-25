@@ -7,7 +7,6 @@ import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
-import { TaskCompletionPerformance } from './TaskCompletionPerformance';
 import { BadgeProgress } from './BadgeProgress';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 
@@ -344,7 +343,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
           </div>
 
-          {/* Card 2 + 3: Today's Tasks and daily task completion performance */}
+          {/* Card 2 + 3: Today's Tasks and weekly productivity chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 items-stretch">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -365,7 +364,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </motion.div>
 
             <div className="min-w-0 flex flex-col">
-              <TaskCompletionPerformance tasks={tasks} theme={theme} />
+              <TrendsVisual
+                records={filteredRecords}
+                theme={theme}
+                onToggleRecordStatus={onToggleRecordStatus}
+                variant="chart"
+              />
             </div>
           </div>
         </div>
@@ -374,12 +378,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           2. SECTION: TRENDS & MOVING AVERAGE
       ───────────────────────────────────────────────────────────── */}
-      <section aria-label="Consistency Trends & Moving Average">
-        <TrendsVisual
-          records={filteredRecords}
-          theme={theme}
-          onToggleRecordStatus={onToggleRecordStatus}
-        />
+      <section
+        aria-label="Weekly Productivity Summary"
+        className="flex justify-end"
+      >
+        <div className="w-full xl:max-w-5xl">
+          <TrendsVisual
+            records={filteredRecords}
+            theme={theme}
+            onToggleRecordStatus={onToggleRecordStatus}
+            variant="summary"
+          />
+        </div>
       </section>
     </motion.div>
   );

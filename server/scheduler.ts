@@ -205,8 +205,9 @@ export interface TriggerDailyReminderResult {
   taskName?: string;
   status?: string;
   previewLinks?: {
-    completedUrl: string;
-    notCompletedUrl: string;
+    reviewUrl?: string;
+    completedUrl?: string;
+    notCompletedUrl?: string;
   };
   error?: string;
   message?: string;

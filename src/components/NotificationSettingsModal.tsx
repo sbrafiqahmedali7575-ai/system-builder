@@ -14,6 +14,7 @@ import {
   Info,
 } from 'lucide-react';
 import { DashboardTheme } from '../types';
+import { authenticatedFetch } from '../services/firebaseService';
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
@@ -90,7 +91,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/notifications/settings');
+      const res = await authenticatedFetch('/api/notifications/settings');
       const data = await res.json();
       if (res.ok && data.settings) {
         setSettings(data.settings);
@@ -107,7 +108,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   const fetchLogs = async () => {
     try {
       setLoadingLogs(true);
-      const res = await fetch('/api/notifications/logs');
+      const res = await authenticatedFetch('/api/notifications/logs');
       const data = await res.json();
       if (res.ok && data.logs) {
         setLogs(data.logs);
@@ -132,7 +133,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     try {
       setSaving(true);
       setSaveSuccess(false);
-      const res = await fetch('/api/notifications/settings', {
+      const res = await authenticatedFetch('/api/notifications/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
@@ -152,7 +153,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     try {
       setTesting(true);
       setTestResult(null);
-      const res = await fetch('/api/notifications/send-test', {
+      const res = await authenticatedFetch('/api/notifications/send-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

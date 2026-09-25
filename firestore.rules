@@ -2,24 +2,39 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global shared records accessible from any device via the web link
+    function isOwner() {
+      return request.auth != null
+        && request.auth.uid == 'system-builder-owner'
+        && request.auth.token.role == 'owner';
+    }
+
     match /records/{recordId} {
-      allow read, write: if true;
+      allow read, write: if isOwner();
     }
+
     match /tasks/{taskId} {
-      allow read, write: if true;
+      allow read, write: if isOwner();
     }
-    match /notification_settings/{settingId} {
-      allow read, write: if true;
+
+    // Server-only collections. Firebase Admin bypasses Firestore Security Rules.
+    match /notification_settings/{document=**} {
+      allow read, write: if false;
     }
-    match /delivery_logs/{logId} {
-      allow read, write: if true;
+
+    match /delivery_logs/{document=**} {
+      allow read, write: if false;
     }
-    match /confirmation_tokens/{tokenId} {
-      allow read, write: if true;
+
+    match /confirmation_tokens/{document=**} {
+      allow read, write: if false;
     }
-    match /daily_reminders_sent/{dateKey} {
-      allow read, write: if true;
+
+    match /daily_reminders_sent/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

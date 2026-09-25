@@ -66,6 +66,10 @@ export function subscribeToRecords(
           skill: String(data.skill ?? 'Power BI'),
           summary: String(data.summary ?? ''),
           notes: data.notes ? String(data.notes) : '',
+          responseSubmittedAt: data.responseSubmittedAt ? String(data.responseSubmittedAt) : undefined,
+          responseSource: data.responseSource
+            ? (String(data.responseSource) as DailyRecord['responseSource'])
+            : undefined,
           updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
         });
       });
@@ -159,6 +163,8 @@ export async function addRecordToCloud(record: DailyRecord): Promise<void> {
     skill: record.skill || '',
     summary: record.summary || '',
     notes: record.notes || '',
+    ...(record.responseSubmittedAt ? { responseSubmittedAt: record.responseSubmittedAt } : {}),
+    ...(record.responseSource ? { responseSource: record.responseSource } : {}),
     updatedAt: new Date().toISOString(),
   });
 }
@@ -204,6 +210,8 @@ export async function updateRecordInCloud(record: DailyRecord): Promise<void> {
       skill: record.skill || '',
       summary: record.summary || '',
       notes: record.notes || '',
+      ...(record.responseSubmittedAt ? { responseSubmittedAt: record.responseSubmittedAt } : {}),
+      ...(record.responseSource ? { responseSource: record.responseSource } : {}),
       updatedAt: new Date().toISOString(),
     },
     { merge: true }

@@ -275,7 +275,7 @@ export const Achievements: React.FC<AchievementsProps> = ({ records, theme }) =>
           <div>
             <div className="flex items-center space-x-1">
               <h2
-                className={`text-base sm:text-lg font-bold tracking-tight ${
+                className={`text-base sm:text-lg font-extrabold tracking-tight ${
                   isDark ? 'text-slate-100' : 'text-slate-900'
                 }`}
               >
@@ -452,7 +452,7 @@ export const Achievements: React.FC<AchievementsProps> = ({ records, theme }) =>
 
                     <div>
                       <h3
-                        className={`text-sm font-bold tracking-tight line-clamp-0.5 ${
+                        className={`text-sm font-extrabold tracking-tight line-clamp-0.5 ${
                           badge.isUnlocked
                             ? isDark
                               ? 'text-slate-100'

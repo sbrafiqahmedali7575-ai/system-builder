@@ -167,7 +167,7 @@ export function buildDailyConfirmationEmail(
           .map(
             (task) => `
               <tr>
-                <td style="padding:11px 12px;border-bottom:1px solid #e2e8f0;width:38px;vertical-align:top;font-size:20px;">
+                <td class="email-check" style="padding:13px 12px;border-bottom:1px solid #e2e8f0;width:40px;vertical-align:top;font-size:22px;">
                   <a
                     href="${reviewUrl}"
                     target="_blank"
@@ -177,11 +177,11 @@ export function buildDailyConfirmationEmail(
                     ${task.isCompleted ? '☑' : '☐'}
                   </a>
                 </td>
-                <td style="padding:11px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;line-height:1.45;">
+                <td class="email-task" style="padding:13px 12px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;">
                   <a
                     href="${reviewUrl}"
                     target="_blank"
-                    style="color:#0f172a;text-decoration:none;font-weight:650;"
+                    style="color:#0f172a;text-decoration:none;font-weight:700;"
                   >
                     ${escapeHtml(task.title)}
                   </a>
@@ -201,26 +201,45 @@ export function buildDailyConfirmationEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>${escapeHtml(subject)}</title>
+  <style>
+    html,body{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
+    @media only screen and (max-width:520px){
+      .email-shell{padding:12px 6px!important}
+      .email-card{border-radius:12px!important}
+      .email-head{padding:18px 18px!important}
+      .email-body{padding:20px 18px!important}
+      .email-title{font-size:24px!important;line-height:1.25!important}
+      .email-copy{font-size:16px!important;line-height:1.6!important}
+      .email-help{font-size:14px!important;line-height:1.55!important}
+      .email-task{font-size:16px!important;line-height:1.55!important}
+      .email-check{font-size:24px!important;width:42px!important}
+      .email-cta{font-size:16px!important;padding:16px 18px!important}
+      .email-note{font-size:14px!important;line-height:1.55!important}
+      .email-footer{font-size:13px!important;padding:14px 18px!important}
+    }
+  </style>
 </head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;padding:28px 14px;">
+  <table class="email-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9;padding:28px 14px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #dbe3ee;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,.08);">
+        <table class="email-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #dbe3ee;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,.08);">
           <tr>
-            <td style="padding:22px 26px;border-bottom:1px solid #e2e8f0;background:#ffffff;">
+            <td class="email-head" style="padding:22px 26px;border-bottom:1px solid #e2e8f0;background:#ffffff;">
               <div style="font-size:20px;font-weight:900;color:#0f172a;">System Builder</div>
               <div style="margin-top:5px;font-size:12px;color:#64748b;font-family:monospace;">${escapeHtml(details.taskDate)}</div>
             </td>
           </tr>
           <tr>
-            <td style="padding:24px 26px;">
-              <h1 style="margin:0 0 8px;font-size:21px;line-height:1.3;color:#0f172a;">Today’s Tasks</h1>
-              <p style="margin:0 0 8px;color:#475569;font-size:14px;line-height:1.55;">
+            <td class="email-body" style="padding:24px 26px;">
+              <h1 class="email-title" style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#0f172a;font-weight:900;">Today’s Tasks</h1>
+              <p class="email-copy" style="margin:0 0 8px;color:#334155;font-size:15px;line-height:1.6;font-weight:600;">
                 ${completedCount} of ${tasks.length} currently checked.
               </p>
-              <p style="margin:0 0 18px;color:#64748b;font-size:12px;line-height:1.5;">
+              <p class="email-help" style="margin:0 0 18px;color:#475569;font-size:14px;line-height:1.55;">
                 Tap any checkbox or task below to open the live checklist, update the boxes, and submit.
               </p>
 
@@ -228,17 +247,17 @@ export function buildDailyConfirmationEmail(
                 ${taskRows}
               </table>
 
-              <a href="${reviewUrl}" target="_blank" style="display:block;background:#2563eb;color:#fff;text-decoration:none;text-align:center;font-size:14px;font-weight:800;padding:14px 18px;border-radius:10px;">
+              <a class="email-cta" href="${reviewUrl}" target="_blank" style="display:block;background:#2563eb;color:#fff;text-decoration:none;text-align:center;font-size:16px;font-weight:900;padding:16px 18px;border-radius:10px;">
                 Review Checkboxes &amp; Submit
               </a>
 
-              <p style="margin:16px 0 0;color:#64748b;font-size:12px;line-height:1.5;">
+              <p class="email-note" style="margin:16px 0 0;color:#475569;font-size:14px;line-height:1.55;">
                 If all tasks are checked when you submit, the day is marked Completed. If any task is unchecked, the day is marked Not Completed.
               </p>
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#64748b;font-size:12px;">
+            <td class="email-footer" style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#475569;font-size:13px;">
               System Builder • Daily task response
             </td>
           </tr>

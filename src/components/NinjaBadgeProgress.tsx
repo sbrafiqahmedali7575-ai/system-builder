@@ -7,13 +7,15 @@ import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { BadgeCelebration } from './BadgeCelebration';
 
 interface NinjaBadgeProgressProps {
-  totalDays: number;
-  completionRate: number;
+  completedDays: number;
   theme: DashboardTheme;
 }
 
-const BADGE_STORAGE_KEY = 'SYSTEM_BUILDER_HIGHEST_BADGE_DAY_V2';
-const LEGACY_BADGE_STORAGE_KEY = 'SYSTEM_BUILDER_HIGHEST_BADGE_V1';
+const BADGE_STORAGE_KEY = 'SYSTEM_BUILDER_HIGHEST_COMPLETED_BADGE_DAY_V3';
+const LEGACY_BADGE_STORAGE_KEYS = [
+  'SYSTEM_BUILDER_HIGHEST_BADGE_DAY_V2',
+  'SYSTEM_BUILDER_HIGHEST_BADGE_V1',
+];
 
 const accentStyles: Record<LongTermBadge['accent'], { ring: string; soft: string; text: string; glow: string }> = {
   blue: {
@@ -42,12 +44,12 @@ const accentStyles: Record<LongTermBadge['accent'], { ring: string; soft: string
   },
 };
 
-export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDays, completionRate, theme }) => {
+export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ completedDays, theme }) => {
   const isDark = theme === 'dark';
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [celebrationBadge, setCelebrationBadge] = useState<LongTermBadge | null>(null);
   const initializedRef = useRef(false);
-  const progress = useMemo(() => getBadgeProgress(totalDays, completionRate), [totalDays, completionRate]);
+  const progress = useMemo(() => getBadgeProgress(completedDays), [completedDays]);
   const currentStyle = accentStyles[progress.current.accent];
   const closeCelebration = useCallback(() => setCelebrationBadge(null), []);
 
@@ -66,10 +68,11 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
     // Migrate the old index-based tracker silently. Because the roadmap now has
     // many quarterly badges, old array indexes no longer map safely to ranks.
     if (storedMilestoneDays === null) {
-      const legacyStored = window.localStorage.getItem(LEGACY_BADGE_STORAGE_KEY);
-      if (legacyStored !== null) {
-        window.localStorage.removeItem(LEGACY_BADGE_STORAGE_KEY);
-      }
+      LEGACY_BADGE_STORAGE_KEYS.forEach((key) => {
+        if (window.localStorage.getItem(key) !== null) {
+          window.localStorage.removeItem(key);
+        }
+      });
     }
 
     // First visit after this roadmap upgrade: adopt the user's current milestone
@@ -133,12 +136,11 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
           <div className="relative mt-1.5 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <div>
-                <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{totalDays}</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">days logged</span>
+                <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
               </div>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="text-sm font-black text-red-500">{completionRate.toFixed(1)}%</span>
-                <span className="text-[9px] uppercase tracking-wider text-slate-400">completion</span>
+              <div className="mt-0.5 text-[9px] uppercase tracking-wider text-slate-400">
+                Badges unlock by done days only
               </div>
             </div>
 
@@ -193,17 +195,17 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
                   </div>
                   {nextTarget && (
                     <span className="text-[9px] text-slate-400 font-mono">
-                      Need {progress.daysRemaining}d + {progress.rateRemaining.toFixed(1)}pp
+                      Need {progress.daysRemaining} completed days
                     </span>
                   )}
                 </div>
 
                 <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-9 xl:grid-cols-12 gap-1">
                   {LONG_TERM_BADGES.map((badge, index) => {
-                    const unlocked = totalDays >= badge.minDays && completionRate >= badge.minRate;
+                    const unlocked = completedDays >= badge.minDays;
                     const isCurrent = badge.id === progress.current.id;
                     return (
-                      <div key={badge.id} className="min-w-0 text-center" title={`${badge.name}: ${badge.minDays} days + ${badge.minRate}% completion`}>
+                      <div key={badge.id} className="min-w-0 text-center" title={`${badge.name}: ${badge.minDays} completed days`}>
                         <motion.div
                           whileHover={{ y: -2, scale: 1.04 }}
                           animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 16px rgba(59,130,246,.42)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
@@ -232,53 +234,28 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
 
                 {nextTarget ? (
                   <div className="mt-2 grid grid-cols-[auto_1fr] gap-2 items-center">
-                    <div className="flex gap-1.5">
-                      <AnimatedProgressRing
-                        value={progress.dayProgress}
-                        size={48}
-                        strokeWidth={5}
-                        progressClassName="text-blue-500"
-                        label={`${Math.round(progress.dayProgress)}%`}
-                        sublabel="days"
-                        delay={0.1}
-                      />
-                      <AnimatedProgressRing
-                        value={progress.rateProgress}
-                        size={48}
-                        strokeWidth={5}
-                        progressClassName="text-red-500"
-                        label={`${Math.round(progress.rateProgress)}%`}
-                        sublabel="rate"
-                        delay={0.18}
-                      />
-                    </div>
+                    <AnimatedProgressRing
+                      value={progress.dayProgress}
+                      size={48}
+                      strokeWidth={5}
+                      progressClassName="text-blue-500"
+                      label={`${Math.round(progress.dayProgress)}%`}
+                      sublabel="done"
+                      delay={0.1}
+                    />
 
-                    <div className="space-y-1.5 min-w-0">
-                      <div>
-                        <div className="flex justify-between text-[9px] font-bold text-slate-500 mb-0.5">
-                          <span>Days requirement</span><span>{totalDays}/{nextTarget.minDays}</span>
-                        </div>
-                        <div className="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress.dayProgress}%` }}
-                            transition={{ duration: 0.8, delay: 0.08 }}
-                            className="h-full bg-blue-500 rounded-full"
-                          />
-                        </div>
+                    <div className="min-w-0">
+                      <div className="flex justify-between text-[9px] font-bold text-slate-500 mb-0.5">
+                        <span>Completed-days requirement</span>
+                        <span>{completedDays}/{nextTarget.minDays}</span>
                       </div>
-                      <div>
-                        <div className="flex justify-between text-[9px] font-bold text-slate-500 mb-0.5">
-                          <span>Completion requirement</span><span>{completionRate.toFixed(1)}/{nextTarget.minRate}%</span>
-                        </div>
-                        <div className="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress.rateProgress}%` }}
-                            transition={{ duration: 0.8, delay: 0.16 }}
-                            className="h-full bg-red-500 rounded-full"
-                          />
-                        </div>
+                      <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress.dayProgress}%` }}
+                          transition={{ duration: 0.8, delay: 0.08 }}
+                          className="h-full bg-blue-500 rounded-full"
+                        />
                       </div>
                     </div>
                   </div>
@@ -287,7 +264,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
                     <Award className="w-5 h-5 text-amber-500" />
                     <div>
                       <p className="text-[10px] font-black text-amber-700 dark:text-amber-300">Quarterly legend path complete</p>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400">Keep protecting the streak and your long-term completion standard.</p>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">Keep completing days to protect your long-term badge rank.</p>
                     </div>
                   </div>
                 )}
@@ -299,8 +276,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
 
       <BadgeCelebration
         badge={celebrationBadge}
-        totalDays={totalDays}
-        completionRate={completionRate}
+        completedDays={completedDays}
         theme={theme}
         onClose={closeCelebration}
       />

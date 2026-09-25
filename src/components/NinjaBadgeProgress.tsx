@@ -97,7 +97,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
 
   return (
     <>
-      <div className="space-y-2">
+      <motion.div layout className={`space-y-2 ${showRoadmap ? 'col-span-full' : ''}`}>
         <motion.button
           type="button"
           whileHover={{ y: -2 }}
@@ -172,7 +172,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
             </div>
           ) : (
             <div className="relative mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-amber-600 dark:text-amber-300">
-              <Trophy className="w-3 h-3" /> Quarterly path completed
+              <Trophy className="w-3 h-3" /> Analytics mastery path completed
             </div>
           )}
         </motion.button>
@@ -191,7 +191,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">5-Year Badge Roadmap</span>
+                    <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">Data Analyst Badge Roadmap</span>
                   </div>
                   {nextTarget && (
                     <span className="text-[9px] text-slate-400 font-mono">
@@ -200,19 +200,30 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   )}
                 </div>
 
-                <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-9 xl:grid-cols-12 gap-1">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-1.5 items-stretch">
                   {LONG_TERM_BADGES.map((badge, index) => {
                     const unlocked = completedDays >= badge.minDays;
                     const isCurrent = badge.id === progress.current.id;
                     return (
-                      <div key={badge.id} className="min-w-0 text-center" title={`${badge.name}: ${badge.minDays} completed days`}>
+                      <motion.div
+                        key={badge.id}
+                        layout
+                        whileHover={{ y: -2, scale: 1.015 }}
+                        title={`${badge.name}: ${badge.minDays} completed days`}
+                        className={`min-w-0 min-h-[82px] rounded-xl border p-1.5 flex flex-col items-center justify-between text-center transition-all ${
+                          isCurrent
+                            ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 ring-2 ring-blue-300/40'
+                            : unlocked
+                            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/70'
+                            : 'bg-white/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
+                        }`}
+                      >
                         <motion.div
-                          whileHover={{ y: -2, scale: 1.04 }}
                           animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 16px rgba(59,130,246,.42)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
                           transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
-                          className={`mx-auto w-7 h-7 rounded-lg flex items-center justify-center border ${
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
                             isCurrent
-                              ? 'bg-blue-600 text-white border-blue-500 ring-2 ring-blue-300/60'
+                              ? 'bg-blue-600 text-white border-blue-500'
                               : unlocked
                               ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-600 border-amber-300 dark:border-amber-800'
                               : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
@@ -226,8 +237,29 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                             <LockKeyhole className="w-3 h-3" />
                           )}
                         </motion.div>
-                        <p className="mt-0.5 text-[8px] font-bold text-slate-500 dark:text-slate-400 truncate">{badge.horizon}</p>
-                      </div>
+
+                        <div className="min-w-0 w-full flex-1 flex flex-col items-center justify-center px-0.5">
+                          <p className={`text-[8px] sm:text-[9px] leading-[1.15] font-extrabold line-clamp-2 ${
+                            isCurrent
+                              ? 'text-blue-700 dark:text-blue-300'
+                              : unlocked
+                              ? 'text-slate-700 dark:text-slate-200'
+                              : 'text-slate-400'
+                          }`}>
+                            {badge.shortName}
+                          </p>
+                        </div>
+
+                        <span className={`px-1.5 py-0.5 rounded-full text-[7px] font-black font-mono tracking-wide ${
+                          isCurrent
+                            ? 'bg-blue-600 text-white'
+                            : unlocked
+                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                        }`}>
+                          {badge.horizon}
+                        </span>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -263,7 +295,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   <div className="mt-2 rounded-xl border border-amber-300/70 dark:border-amber-900 bg-amber-50/80 dark:bg-amber-950/30 p-2 flex items-center gap-2">
                     <Award className="w-5 h-5 text-amber-500" />
                     <div>
-                      <p className="text-[10px] font-black text-amber-700 dark:text-amber-300">Quarterly legend path complete</p>
+                      <p className="text-[10px] font-black text-amber-700 dark:text-amber-300">Analytics mastery path complete</p>
                       <p className="text-[9px] text-slate-500 dark:text-slate-400">Keep completing days to protect your long-term badge rank.</p>
                     </div>
                   </div>
@@ -272,7 +304,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       <BadgeCelebration
         badge={celebrationBadge}

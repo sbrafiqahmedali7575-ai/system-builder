@@ -100,7 +100,11 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.18 }}
-                className="text-[11px] sm:text-[13px] lg:text-sm font-extrabold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2"
+                className="text-[13px] sm:text-[16px] lg:text-[18px] font-semibold text-slate-900 dark:text-slate-100 leading-tight line-clamp-2 tracking-[0.01em]"
+                style={{
+                  fontFamily:
+                    '"Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive',
+                }}
               >
                 “{HEADER_QUOTES[quoteIndex]}”
               </motion.div>

@@ -7,7 +7,7 @@ import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
-import { NinjaBadgeProgress } from './NinjaBadgeProgress';
+import { BadgeProgress } from './BadgeProgress';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -152,7 +152,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       <section
         id="today-focus-section"
         aria-label="Today's Commitments and Key Metrics"
-        className={`ninja-focus-panel ui-motion-section p-2.5 sm:p-3.5 rounded-3xl border transition-all ${
+        className={`system-focus-panel ui-motion-section p-2.5 sm:p-3.5 rounded-3xl border transition-all ${
           isDark
             ? 'bg-slate-900/60 border-slate-800'
             : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
@@ -161,7 +161,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         <div className="space-y-2.5">
           {/* Card 1: KPI's — full-width horizontal summary */}
           <div
-            className={`ninja-kpi-shell ui-motion-shell p-2 sm:p-2.5 rounded-2xl border transition-all ${
+            className={`system-kpi-shell ui-motion-shell p-2 sm:p-2.5 rounded-2xl border transition-all ${
               isDark
                 ? 'bg-slate-900/80 border-slate-800'
                 : 'bg-slate-50/70 border-slate-200/80'
@@ -319,7 +319,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
               {/* Metric 3: Long-term Badge Rank */}
               <div className="xl:col-span-4 min-w-0">
-                <NinjaBadgeProgress
+                <BadgeProgress
                   completedDays={allKpis.completedDays}
                   theme={theme}
                 />

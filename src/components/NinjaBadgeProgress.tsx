@@ -134,7 +134,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
           </div>
 
           <div className="relative mt-1.5">
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline justify-between gap-2" style={{ paddingLeft: '10%' }}>
               <div className="min-w-0">
                 <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>

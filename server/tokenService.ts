@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 
 function getSecretKey(): string {
-  return (
-    process.env.CONFIRMATION_SECRET ||
-    'commit-daily-rafiq-secure-token-secret-2026-auth-sign'
-  );
+  const secret = (process.env.CONFIRMATION_SECRET || '').trim();
+  if (secret.length < 32) {
+    throw new Error('CONFIRMATION_SECRET must be configured with at least 32 characters.');
+  }
+  return secret;
 }
 
 export interface ConfirmationTokenPayload {
@@ -12,10 +13,19 @@ export interface ConfirmationTokenPayload {
   taskId: string;
   recordId: string;
   taskDate: string;
-  status: 'completed' | 'pending';
-  action?: 'completed' | 'not_completed' | 'pending';
-  exp: number; // Unix timestamp ms
+  status?: 'completed' | 'pending';
+  action?: 'completed' | 'not_completed' | 'pending' | 'review';
+  taskIds?: string[];
+  exp: number;
   nonce: string;
+}
+
+function signPayload(payload: ConfirmationTokenPayload): string {
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const hmac = crypto.createHmac('sha256', getSecretKey());
+  hmac.update(payloadB64);
+  const signature = hmac.digest('base64url');
+  return `${payloadB64}.${signature}`;
 }
 
 export function generateConfirmationToken(
@@ -28,8 +38,6 @@ export function generateConfirmationToken(
   },
   expiresInDays: number = 30
 ): string {
-  const exp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
-  const nonce = crypto.randomBytes(8).toString('hex');
   const payload: ConfirmationTokenPayload = {
     userId: params.userId || 'rafiq',
     taskId: params.taskId,
@@ -37,16 +45,36 @@ export function generateConfirmationToken(
     taskDate: params.taskDate,
     status: params.status,
     action: params.status === 'completed' ? 'completed' : 'not_completed',
-    exp,
-    nonce,
+    exp: Date.now() + expiresInDays * 24 * 60 * 60 * 1000,
+    nonce: crypto.randomBytes(8).toString('hex'),
   };
 
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const hmac = crypto.createHmac('sha256', getSecretKey());
-  hmac.update(payloadB64);
-  const signature = hmac.digest('base64url');
+  return signPayload(payload);
+}
 
-  return `${payloadB64}.${signature}`;
+export function generateDailyReviewToken(
+  params: {
+    userId?: string;
+    taskDate: string;
+    recordId?: string;
+    taskIds?: string[];
+  },
+  expiresInDays: number = 7
+): string {
+  const taskIds = Array.from(new Set(params.taskIds || [])).filter(Boolean);
+  const reviewId = `review-${params.taskDate}`;
+  const payload: ConfirmationTokenPayload = {
+    userId: params.userId || 'rafiq',
+    taskId: reviewId,
+    recordId: params.recordId || reviewId,
+    taskDate: params.taskDate,
+    action: 'review',
+    taskIds,
+    exp: Date.now() + expiresInDays * 24 * 60 * 60 * 1000,
+    nonce: crypto.randomBytes(8).toString('hex'),
+  };
+
+  return signPayload(payload);
 }
 
 export function verifyConfirmationToken(token: string): {
@@ -83,9 +111,12 @@ export function verifyConfirmationToken(token: string): {
     const payloadJson = Buffer.from(payloadB64, 'base64url').toString('utf8');
     const payload: ConfirmationTokenPayload = JSON.parse(payloadJson);
 
-    // Normalize status if older token format
-    if (!payload.status && payload.action) {
+    if (payload.action !== 'review' && !payload.status && payload.action) {
       payload.status = payload.action === 'completed' ? 'completed' : 'pending';
+    }
+
+    if (!payload.taskDate || !payload.exp) {
+      return { valid: false, error: 'Confirmation token is missing required fields' };
     }
 
     if (Date.now() > payload.exp) {

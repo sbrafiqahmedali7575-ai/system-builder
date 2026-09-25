@@ -538,8 +538,11 @@ pause
   <title>Mark Current Day</title>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:rgba(15,23,42,.28);color:#000000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:16px;display:flex;align-items:center;justify-content:center}
-    .card{width:100%;max-width:430px;background:#ffffff;border:1px solid #dbe3ee;border-radius:18px;padding:22px;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+    body{margin:0;background:rgba(15,23,42,.58);color:#000000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:16px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+    .card{position:relative;width:100%;max-width:430px;background:#ffffff;border:1px solid #dbe3ee;border-radius:22px;padding:24px;box-shadow:0 28px 90px rgba(15,23,42,.38)}
+    .close-btn{position:absolute;top:12px;right:12px;width:38px;height:38px;border:0;border-radius:999px;background:#f1f5f9;color:#000000;font-size:24px;line-height:1;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s ease,transform .15s ease}
+    .close-btn:hover{background:#e2e8f0;transform:scale(1.04)}
+    .close-btn:active{transform:scale(.97)}
     .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;color:#2563eb;margin-bottom:6px}
     h1{font-size:24px;line-height:1.2;margin:0 0 6px;color:#000000;font-weight:900}
     .date{font-family:monospace;color:#000000;margin-bottom:16px;font-size:14px;font-weight:800}
@@ -557,8 +560,9 @@ pause
     .submit:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
     .rule{margin-top:12px;text-align:center;color:#000000;font-size:12px;line-height:1.45;font-weight:700}
     @media (max-width:520px){
-      body{padding:10px;align-items:flex-start}
-      .card{margin-top:10px;max-width:none;padding:18px 14px;border-radius:14px}
+      body{padding:12px;align-items:center;justify-content:center}
+      .card{margin:0;max-width:430px;padding:20px 16px;border-radius:18px}
+      .close-btn{top:10px;right:10px;width:40px;height:40px;font-size:25px}
       .eyebrow{font-size:11px}
       h1{font-size:26px}
       .date{font-size:15px}
@@ -572,6 +576,15 @@ pause
 </head>
 <body>
   <main class="card" role="dialog" aria-modal="true" aria-labelledby="mark-day-title">
+    <button
+      type="button"
+      class="close-btn"
+      aria-label="Close Mark Day"
+      title="Close"
+      onclick="if (window.opener) { window.close(); } else if (history.length > 1) { history.back(); } else { window.location.href = '/'; }"
+    >
+      ×
+    </button>
     <div class="eyebrow">Current Day Tasks</div>
     <h1 id="mark-day-title">Mark Current Day</h1>
     <div class="date">${escapeHtml(payload.taskDate)}</div>

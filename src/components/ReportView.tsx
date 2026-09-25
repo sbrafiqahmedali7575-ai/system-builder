@@ -291,7 +291,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 opacity-70" />
 
                 <div className="relative flex items-center justify-between text-xs mb-1 gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                    Recent 7-Day Cadence
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <AnimatedProgressRing
                       value={last7Performance}
                       size={30}
@@ -306,13 +309,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       label={`${Math.round(last7Performance)}%`}
                       delay={0.12}
                     />
-                    <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                      Recent 7-Day Cadence
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs">
+                      {last7CompletedDays}/7 Done
                     </span>
                   </div>
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs shrink-0">
-                    {last7CompletedDays}/7 Done
-                  </span>
                 </div>
 
                 <div className="relative">
@@ -341,9 +341,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         );
                       })}
                     </div>
-                    <p className="mt-1 text-[9px] text-slate-400">
-                      Latest 7 tracked days performance
-                    </p>
                   </div>
                 </div>
               </motion.div>

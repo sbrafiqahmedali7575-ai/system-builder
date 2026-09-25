@@ -1,0 +1,58 @@
+name: View Firestore Records
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  view-records:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Read records collection
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          import { deleteApp, initializeApp } from 'firebase/app';
+          import { collection, getDocs, getFirestore } from 'firebase/firestore';
+
+          const config = JSON.parse(await readFile('./firebase-applet-config.json', 'utf8'));
+          const app = initializeApp(config);
+          const db = config.firestoreDatabaseId && config.firestoreDatabaseId !== '(default)'
+            ? getFirestore(app, config.firestoreDatabaseId)
+            : getFirestore(app);
+
+          const snap = await getDocs(collection(db, 'records'));
+          const rows = [];
+          snap.forEach((d) => {
+            const x = d.data();
+            rows.push({
+              id: d.id,
+              day: Number(x.day || 0),
+              date: String(x.date || ''),
+              isCompleted: Boolean(x.isCompleted),
+              result: String(x.result || (x.isCompleted ? 'TRUE' : 'FALSE')),
+              summary: String(x.summary || ''),
+              notes: String(x.notes || ''),
+              responseSource: String(x.responseSource || ''),
+              responseSubmittedAt: String(x.responseSubmittedAt || ''),
+              updatedAt: String(x.updatedAt || '')
+            });
+          });
+
+          rows.sort((a,b) => a.day - b.day);
+          console.log('RECORDS_JSON_START');
+          console.log(JSON.stringify(rows));
+          console.log('RECORDS_JSON_END');
+          console.log(`TOTAL_RECORDS=${rows.length}`);
+          await deleteApp(app);
+          process.exit(0);
+          NODE

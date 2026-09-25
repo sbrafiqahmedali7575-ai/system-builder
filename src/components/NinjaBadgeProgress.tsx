@@ -98,7 +98,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
 
   return (
     <>
-      <motion.div layout className={`space-y-2 ${showRoadmap ? 'col-span-full' : ''}`}>
+      <motion.div layout className="space-y-2">
         <motion.button
           type="button"
           whileHover={{ y: -2 }}
@@ -198,7 +198,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-1.5 items-stretch">
+                <div className="grid grid-cols-3 gap-1.5 items-stretch">
                   {LONG_TERM_BADGES.map((badge, index) => {
                     const unlocked = completedDays >= badge.minDays;
                     const isCurrent = badge.id === progress.current.id;
@@ -208,7 +208,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                         layout
                         whileHover={{ y: -2, scale: 1.015 }}
                         title={`${badge.name}: ${badge.minDays} completed days`}
-                        className={`min-w-0 min-h-[82px] rounded-xl border p-1.5 flex flex-col items-center justify-between text-center transition-all ${
+                        className={`min-w-0 min-h-[76px] rounded-xl border p-1.5 flex flex-col items-center justify-between text-center gap-1 overflow-hidden transition-all ${
                           isCurrent
                             ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 ring-2 ring-blue-300/40'
                             : unlocked
@@ -219,7 +219,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                         <motion.div
                           animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 16px rgba(59,130,246,.42)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
                           transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
-                          className={`relative w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
+                          className={`relative w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 isolate ${
                             isCurrent
                               ? 'bg-blue-600 text-white border-blue-500'
                               : unlocked
@@ -227,15 +227,15 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                               : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
                           }`}
                         >
-                          <BadgeIcon badge={badge} className="w-3.5 h-3.5" />
+                          <BadgeIcon badge={badge} className="w-3.5 h-3.5 shrink-0" />
                           {!unlocked && !isCurrent && (
-                            <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 rounded-full bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-700 flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
-                              <LockKeyhole className="w-2 h-2" />
+                            <span className="absolute -right-1 -bottom-1 z-10 w-3 h-3 rounded-full bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-700 flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
+                              <LockKeyhole className="w-1.5 h-1.5" />
                             </span>
                           )}
                         </motion.div>
 
-                        <div className="min-w-0 w-full flex-1 flex flex-col items-center justify-center px-0.5">
+                        <div className="min-w-0 w-full flex-1 flex flex-col items-center justify-center px-0.5 overflow-hidden">
                           <p className={`text-[8px] sm:text-[9px] leading-[1.15] font-extrabold line-clamp-2 ${
                             isCurrent
                               ? 'text-blue-700 dark:text-blue-300'

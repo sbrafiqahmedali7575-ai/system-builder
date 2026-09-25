@@ -148,7 +148,7 @@ export async function finalizeDayIfNoResponse(targetDate = new Date()): Promise<
   let highestDay = 0;
 
   recordsSnap.forEach((d) => {
-    const record = { id: d.id, ...d.data() };
+    const record: any = { id: d.id, ...d.data() };
     records.push(record);
     highestDay = Math.max(highestDay, Number(record.day) || 0);
 

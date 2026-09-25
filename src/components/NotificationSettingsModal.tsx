@@ -354,8 +354,8 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                     External Webhook Trigger (cron-job.org / Cloud Scheduler):
                   </div>
                   <div className="overflow-x-auto select-all text-teal-300 bg-black/40 p-1 rounded border border-slate-800/80 break-all">
-                    curl -X POST {typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-vvkki5ofvlos77ccgutcla-146310585503.asia-east1.run.app'}/api/send-daily-reminder \<br />
-                    &nbsp;&nbsp;-H "Authorization: Bearer commit-daily-scheduler-secret-auth-key-2026"
+                    curl -X POST {typeof window !== 'undefined' ? window.location.origin : 'https://systembuilder08.ai.studio'}/api/send-daily-reminder \<br />
+                    &nbsp;&nbsp;-H "Authorization: Bearer $SCHEDULER_SECRET"
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-slate-400 font-sans pt-0.5">
                     <span>• Timezone: <strong className="text-slate-200">Asia/Kolkata (IST)</strong></span>
@@ -374,7 +374,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                       Daily Confirmation Emails
                     </label>
                     <p className="text-slate-400 text-xs">
-                      Dispatched daily at 09:00 PM IST via external scheduler
+                      Dispatched at your configured IST time via the scheduler
                     </p>
                   </div>
                   <button

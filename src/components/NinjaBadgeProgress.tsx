@@ -191,7 +191,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
             >
               <div className="p-2">
                 <div className="pb-0.5">
-                  <div className="grid grid-cols-7 gap-x-1 gap-y-1.5">
+                  <div className="grid grid-cols-9 gap-x-1 gap-y-1.5">
                     {LONG_TERM_BADGES.map((badge) => {
                       const unlocked = completedDays >= badge.minDays;
                       const isCurrent = badge.id === progress.current.id;

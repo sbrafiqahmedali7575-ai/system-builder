@@ -373,8 +373,7 @@ export async function sendDailyConfirmationEmail(
     provider: 'simulator',
     error: 'Awaiting Gmail SMTP credentials in Settings',
     previewLinks: {
-      completedUrl: emailContent.completedUrl,
-      notCompletedUrl: emailContent.notCompletedUrl,
+      reviewUrl: emailContent.reviewUrl,
     },
     emailHtml: emailContent.html,
   };

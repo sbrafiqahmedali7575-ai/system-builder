@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ChevronDown, LockKeyhole, Shield, Sparkles, Star, Trophy } from 'lucide-react';
+import { Award, ChevronDown, LockKeyhole, Sparkles, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { BadgeCelebration } from './BadgeCelebration';
+import { BadgeIcon } from './BadgeIcon';
 
 interface NinjaBadgeProgressProps {
   completedDays: number;
@@ -123,7 +124,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 transition={{ type: 'spring', stiffness: 320, damping: 18 }}
                 className={`w-8 h-8 rounded-xl flex items-center justify-center ring-2 ${currentStyle.ring} ${currentStyle.soft} shadow-lg ${currentStyle.glow}`}
               >
-                <Shield className={`w-4 h-4 ${currentStyle.text}`} />
+                <BadgeIcon badge={progress.current} className={`w-4 h-4 ${currentStyle.text}`} />
               </motion.div>
               <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.16em] font-extrabold text-slate-500 dark:text-slate-400">Current Badge</p>
@@ -221,7 +222,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                         <motion.div
                           animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 16px rgba(59,130,246,.42)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
                           transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
+                          className={`relative w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
                             isCurrent
                               ? 'bg-blue-600 text-white border-blue-500'
                               : unlocked
@@ -229,12 +230,11 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                               : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
                           }`}
                         >
-                          {index === LONG_TERM_BADGES.length - 1 ? (
-                            <Trophy className="w-3.5 h-3.5" />
-                          ) : unlocked ? (
-                            <Star className="w-3.5 h-3.5" />
-                          ) : (
-                            <LockKeyhole className="w-3 h-3" />
+                          <BadgeIcon badge={badge} className="w-3.5 h-3.5" />
+                          {!unlocked && !isCurrent && (
+                            <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 rounded-full bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-700 flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
+                              <LockKeyhole className="w-2 h-2" />
+                            </span>
                           )}
                         </motion.div>
 

@@ -12,8 +12,9 @@ export interface ConfirmationTokenPayload {
   taskId: string;
   recordId: string;
   taskDate: string;
-  status: 'completed' | 'pending';
-  action?: 'completed' | 'not_completed' | 'pending';
+  status?: 'completed' | 'pending';
+  action?: 'completed' | 'not_completed' | 'pending' | 'review';
+  taskIds?: string[];
   exp: number; // Unix timestamp ms
   nonce: string;
 }
@@ -37,6 +38,40 @@ export function generateConfirmationToken(
     taskDate: params.taskDate,
     status: params.status,
     action: params.status === 'completed' ? 'completed' : 'not_completed',
+    exp,
+    nonce,
+  };
+
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const hmac = crypto.createHmac('sha256', getSecretKey());
+  hmac.update(payloadB64);
+  const signature = hmac.digest('base64url');
+
+  return `${payloadB64}.${signature}`;
+}
+
+
+export function generateDailyReviewToken(
+  params: {
+    userId?: string;
+    taskDate: string;
+    recordId?: string;
+    taskIds?: string[];
+  },
+  expiresInDays: number = 7
+): string {
+  const exp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
+  const nonce = crypto.randomBytes(8).toString('hex');
+  const taskIds = Array.from(new Set(params.taskIds || [])).filter(Boolean);
+  const reviewId = `review-${params.taskDate}`;
+
+  const payload: ConfirmationTokenPayload = {
+    userId: params.userId || 'rafiq',
+    taskId: reviewId,
+    recordId: params.recordId || reviewId,
+    taskDate: params.taskDate,
+    action: 'review',
+    taskIds,
     exp,
     nonce,
   };
@@ -84,7 +119,7 @@ export function verifyConfirmationToken(token: string): {
     const payload: ConfirmationTokenPayload = JSON.parse(payloadJson);
 
     // Normalize status if older token format
-    if (!payload.status && payload.action) {
+    if (payload.action !== 'review' && !payload.status && payload.action) {
       payload.status = payload.action === 'completed' ? 'completed' : 'pending';
     }
 

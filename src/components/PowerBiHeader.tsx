@@ -93,9 +93,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             title="Click for next quote"
             aria-label="Quotes. Click for next quote."
           >
-            <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.16em] font-black text-blue-600 dark:text-blue-300 leading-none">
-              Quotes
-            </div>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={quoteIndex}
@@ -103,7 +100,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.18 }}
-                className="mt-1 text-[9px] sm:text-[11px] lg:text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight line-clamp-2"
+                className="text-[11px] sm:text-[13px] lg:text-sm font-extrabold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2"
               >
                 “{HEADER_QUOTES[quoteIndex]}”
               </motion.div>

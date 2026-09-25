@@ -46,7 +46,22 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const isDark = theme === 'dark';
 
   // Keep the main task view intentionally focused on only Today and Tomorrow.
-  const upcomingOptions = useMemo(() => getUpcomingDateOptions(CONFIGURED_TIMEZONE), []);
+  // Refresh the date options periodically so a tab left open across midnight
+  // automatically rolls over to the new Today/Tomorrow dates.
+  const [dateRefreshKey, setDateRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setDateRefreshKey((value) => value + 1);
+    }, 60_000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const upcomingOptions = useMemo(
+    () => getUpcomingDateOptions(CONFIGURED_TIMEZONE),
+    [dateRefreshKey]
+  );
   const todayOption = upcomingOptions[0];
   const tomorrowOption = upcomingOptions[1];
 

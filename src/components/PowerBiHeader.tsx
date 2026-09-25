@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Sparkles } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { DashboardTheme } from '../types';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -34,9 +34,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
                   System Builder
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border border-red-100 dark:border-red-900/60 text-[8px] font-black uppercase tracking-wider">
-                  <Sparkles className="w-2.5 h-2.5" /> Ninja Edition
-                </span>
               </div>
               <div className="flex items-center space-x-1 text-[11px] text-slate-500 dark:text-slate-400">
                 <span
@@ -45,7 +42,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                   }`}
                 />
                 <span className="font-mono text-[10px]">
-                  {isSyncing ? 'Syncing mission log...' : `${totalRecordsCount} days logged • Consistency Dojo`}
+                  {isSyncing ? 'Syncing...' : `${totalRecordsCount} days logged`}
                 </span>
               </div>
             </div>

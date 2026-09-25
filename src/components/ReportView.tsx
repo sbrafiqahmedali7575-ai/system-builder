@@ -227,8 +227,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
               {/* Metric 4: Long-term Badge Rank */}
               <NinjaBadgeProgress
-                totalDays={allKpis.totalDays}
-                completionRate={allKpis.completionRate}
+                completedDays={allKpis.completedDays}
                 theme={theme}
               />
             </div>

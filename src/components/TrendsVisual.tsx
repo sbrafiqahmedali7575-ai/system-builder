@@ -149,7 +149,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-70" />
 
           <div className="relative flex items-center justify-between text-xs">
-            <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
               High Productivity
             </span>
             <motion.div
@@ -209,7 +209,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-blue-500 opacity-70" />
 
           <div className="relative flex items-center justify-between text-xs">
-            <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
               Steady Productivity
             </span>
             <motion.div
@@ -269,7 +269,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-rose-500 via-red-400 to-amber-400 opacity-70" />
 
           <div className="relative flex items-center justify-between text-xs">
-            <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
               Low Productivity Dips
             </span>
             <motion.div

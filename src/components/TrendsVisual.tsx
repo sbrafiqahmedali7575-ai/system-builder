@@ -36,7 +36,6 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
 
   const {
     points,
-    overallAverage,
     highProductivityPeriods,
     lowProductivityPeriods,
     highProductivityDaysCount,
@@ -49,6 +48,10 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
     : 0;
   const lowProductivityShare = analyzedDaysCount > 0
     ? (lowProductivityDaysCount / analyzedDaysCount) * 100
+    : 0;
+  const steadyProductivityDaysCount = points.filter((point) => point.productivityLevel === 'STEADY').length;
+  const steadyProductivityShare = analyzedDaysCount > 0
+    ? (steadyProductivityDaysCount / analyzedDaysCount) * 100
     : 0;
 
   // Chart dimensions
@@ -223,32 +226,26 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="relative mt-1 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-baseline gap-1">
-                <span className={`text-2xl font-extrabold font-mono ${
-                  overallAverage >= 80
-                    ? 'text-blue-500'
-                    : overallAverage >= 50
-                    ? 'text-amber-500'
-                    : 'text-rose-500'
-                }`}>
-                  {overallAverage}%
+                <span className="text-2xl font-extrabold font-mono text-amber-500">
+                  {steadyProductivityDaysCount}
                 </span>
-                <span className="text-[10px] text-slate-400">overall avg</span>
+                <span className="text-[10px] text-slate-400">days 50–79%</span>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                Completed days ÷ total analyzed days
+                Days in the steady productivity range
               </p>
               <p className="mt-0.5 text-[9px] text-slate-400">
-                Current long-term productivity level
+                {Math.round(steadyProductivityShare)}% of analyzed days
               </p>
             </div>
 
             <AnimatedProgressRing
-              value={overallAverage}
+              value={steadyProductivityShare}
               size={56}
               strokeWidth={5}
-              progressClassName={overallAverage >= 80 ? 'text-blue-500' : overallAverage >= 50 ? 'text-amber-500' : 'text-rose-500'}
-              label={`${Math.round(overallAverage)}%`}
-              sublabel="avg"
+              progressClassName="text-amber-500"
+              label={`${steadyProductivityDaysCount}D`}
+              sublabel="steady"
               delay={0.13}
             />
           </div>

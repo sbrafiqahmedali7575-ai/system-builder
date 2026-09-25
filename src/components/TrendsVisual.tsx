@@ -293,7 +293,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             <div className="min-w-0" style={{ paddingLeft: '10%' }}>
               <div className="flex items-baseline gap-1">
                 <span className={`text-2xl font-extrabold font-mono ${
-                  lowProductivityDaysCount > 0 ? 'text-rose-500' : 'text-slate-400'
+                  lowProductivityWeeksCount > 0 ? 'text-rose-500' : 'text-slate-400'
                 }`}>
                   {lowProductivityWeeksCount}
                 </span>

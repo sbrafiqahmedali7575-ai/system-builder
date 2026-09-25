@@ -207,8 +207,17 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate">{progress.current.name}</h4>
               </div>
             </div>
-            <div className="flex items-start gap-2 shrink-0 max-w-[58%]">
-              <div className="text-right min-w-0">
+            <ChevronDown className={`w-4 h-4 mt-0.5 text-slate-400 transition-transform shrink-0 ${showRoadmap ? 'rotate-180' : ''}`} />
+          </div>
+
+          <div className="relative mt-1.5">
+            <div className="grid grid-cols-2 items-center gap-2">
+              <div className="min-w-0" style={{ paddingLeft: '20%' }}>
+                <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
+              </div>
+
+              <div className="min-w-0 pl-1 text-left">
                 <p className="text-[8px] uppercase tracking-[0.14em] font-black text-slate-400 dark:text-slate-500">
                   Daily Career Principle
                 </p>
@@ -219,17 +228,6 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   “{dailyCareerPrinciple}”
                 </p>
               </div>
-              <ChevronDown className={`w-4 h-4 mt-0.5 text-slate-400 transition-transform shrink-0 ${showRoadmap ? 'rotate-180' : ''}`} />
-            </div>
-          </div>
-
-          <div className="relative mt-1.5">
-            <div className="flex items-baseline justify-between gap-2" style={{ paddingLeft: '10%' }}>
-              <div className="min-w-0">
-                <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
-              </div>
-
             </div>
           </div>
 

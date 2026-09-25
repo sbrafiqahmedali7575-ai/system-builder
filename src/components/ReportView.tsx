@@ -264,7 +264,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
               </motion.div>
 
-              {/* Metric 3: Recent Week Cadence */}
+              {/* Metric 3: Current Week Cadence */}
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.985 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -297,7 +297,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       delay={0.12}
                     />
                     <span className="font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-200">
-                      Recent Week Cadence
+                      Current Week Cadence
                     </span>
                   </div>
                   <span className="text-blue-600 dark:text-blue-400 font-bold font-mono text-xs shrink-0">

@@ -538,20 +538,21 @@ pause
   <title>Today’s Tasks • System Builder</title>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:#0b0f19;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:24px 14px;display:flex;align-items:center;justify-content:center}
-    .card{width:100%;max-width:620px;background:#161f30;border:1px solid #283548;border-radius:18px;padding:26px;box-shadow:0 20px 40px rgba(0,0,0,.35)}
-    h1{font-size:23px;margin:0 0 6px}.date{font-family:monospace;color:#93c5fd;margin-bottom:18px}
-    .help{font-size:13px;color:#94a3b8;line-height:1.55;margin-bottom:18px}
-    .tasks{border:1px solid #334155;border-radius:12px;overflow:hidden;background:#0f172a}
-    .task-row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #273449;cursor:pointer}
-    .task-row:last-child{border-bottom:0}.task-row input{width:20px;height:20px;margin-top:1px;accent-color:#2563eb}
-    .task-row span{font-size:15px;line-height:1.45;font-weight:650}.empty{padding:18px;color:#94a3b8}
+    body{margin:0;background:#f1f5f9;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:24px 14px;display:flex;align-items:center;justify-content:center}
+    .card{width:100%;max-width:620px;background:#ffffff;border:1px solid #dbe3ee;border-radius:18px;padding:26px;box-shadow:0 20px 40px rgba(15,23,42,.10)}
+    h1{font-size:23px;margin:0 0 6px;color:#0f172a}.date{font-family:monospace;color:#2563eb;margin-bottom:18px}
+    .help{font-size:13px;color:#64748b;line-height:1.55;margin-bottom:18px}
+    .tasks{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#ffffff}
+    .task-row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #e2e8f0;cursor:pointer;background:#ffffff}
+    .task-row:hover{background:#f8fafc}
+    .task-row:last-child{border-bottom:0}.task-row input{width:20px;height:20px;margin-top:1px;accent-color:#2563eb;cursor:pointer}
+    .task-row span{font-size:15px;line-height:1.45;font-weight:650;color:#0f172a}.empty{padding:18px;color:#64748b}
     .submit{width:100%;margin-top:20px;border:1px solid #3b82f6;border-radius:12px;background:#2563eb;color:white;padding:16px 20px;font-size:16px;font-weight:900;letter-spacing:.2px;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,.28);transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
     .submit:hover{background:#3b82f6;transform:translateY(-1px);box-shadow:0 10px 24px rgba(37,99,235,.34)}
     .submit:active{transform:translateY(0)}
     .submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-    .sync-note{margin-top:10px;text-align:center;color:#94a3b8;font-size:12px;line-height:1.45}
-    .back{display:block;text-align:center;margin-top:14px;color:#94a3b8;text-decoration:none;font-size:13px}
+    .sync-note{margin-top:10px;text-align:center;color:#64748b;font-size:12px;line-height:1.45}
+    .back{display:block;text-align:center;margin-top:14px;color:#64748b;text-decoration:none;font-size:13px}
   </style>
 </head>
 <body>

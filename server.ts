@@ -535,58 +535,58 @@ pause
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Today’s Tasks • System Builder</title>
+  <title>Mark Current Day</title>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:#f1f5f9;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:24px 14px;display:flex;align-items:center;justify-content:center}
-    .card{width:100%;max-width:620px;background:#ffffff;border:1px solid #dbe3ee;border-radius:18px;padding:26px;box-shadow:0 20px 40px rgba(15,23,42,.10)}
-    h1{font-size:23px;margin:0 0 6px;color:#0f172a}.date{font-family:monospace;color:#2563eb;margin-bottom:18px}
-    .help{font-size:13px;color:#64748b;line-height:1.55;margin-bottom:18px}
+    body{margin:0;background:rgba(15,23,42,.28);color:#000000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;padding:16px;display:flex;align-items:center;justify-content:center}
+    .card{width:100%;max-width:430px;background:#ffffff;border:1px solid #dbe3ee;border-radius:18px;padding:22px;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+    .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;color:#2563eb;margin-bottom:6px}
+    h1{font-size:24px;line-height:1.2;margin:0 0 6px;color:#000000;font-weight:900}
+    .date{font-family:monospace;color:#000000;margin-bottom:16px;font-size:14px;font-weight:800}
+    .help{font-size:14px;color:#000000;line-height:1.55;margin:0 0 16px;font-weight:700}
     .tasks{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#ffffff}
-    .task-row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #e2e8f0;cursor:pointer;background:#ffffff}
+    .task-row{display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid #e2e8f0;cursor:pointer;background:#ffffff;min-height:54px}
     .task-row:hover{background:#f8fafc}
-    .task-row:last-child{border-bottom:0}.task-row input{width:20px;height:20px;margin-top:1px;accent-color:#2563eb;cursor:pointer}
-    .task-row span{font-size:15px;line-height:1.45;font-weight:650;color:#0f172a}.empty{padding:18px;color:#64748b}
-    .submit{width:100%;margin-top:20px;border:1px solid #3b82f6;border-radius:12px;background:#2563eb;color:white;padding:16px 20px;font-size:16px;font-weight:900;letter-spacing:.2px;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,.28);transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
-    .submit:hover{background:#3b82f6;transform:translateY(-1px);box-shadow:0 10px 24px rgba(37,99,235,.34)}
-    .submit:active{transform:translateY(0)}
-    .submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-    .sync-note{margin-top:10px;text-align:center;color:#64748b;font-size:12px;line-height:1.45}
-    .back{display:block;text-align:center;margin-top:14px;color:#475569;text-decoration:none;font-size:14px;font-weight:650}
+    .task-row:last-child{border-bottom:0}
+    .task-row input{width:22px;height:22px;min-width:22px;margin:0;accent-color:#2563eb;cursor:pointer}
+    .task-row span{font-size:16px;line-height:1.45;font-weight:800;color:#000000}
+    .empty{padding:18px;color:#000000;font-size:15px;font-weight:800}
+    .submit{width:100%;margin-top:18px;border:1px solid #1d4ed8;border-radius:12px;background:#2563eb;color:white;padding:16px 20px;font-size:17px;font-weight:900;letter-spacing:.2px;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,.22)}
+    .submit:hover{background:#1d4ed8}
+    .submit:active{transform:translateY(1px)}
+    .submit:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+    .rule{margin-top:12px;text-align:center;color:#000000;font-size:12px;line-height:1.45;font-weight:700}
     @media (max-width:520px){
-      body{padding:10px 8px;align-items:flex-start;color:#000000;font-weight:700}
-      .card{margin-top:8px;padding:20px 16px;border-radius:14px}
-      h1{font-size:27px;line-height:1.2;margin-bottom:8px;color:#000000;font-weight:900}
-      .date{font-size:15px;margin-bottom:16px;font-weight:900;color:#000000}
-      .help{font-size:16px;line-height:1.6;color:#000000;margin-bottom:18px;font-weight:800}
-      .task-row{gap:14px;padding:16px 14px;align-items:center;min-height:58px}
-      .task-row input{width:24px;height:24px;min-width:24px;margin:0}
-      .task-row span{font-size:17px;line-height:1.5;font-weight:900;color:#000000}
-      .empty{font-size:16px;padding:18px 14px;color:#000000;font-weight:800}
-      .submit{margin-top:18px;padding:17px 18px;font-size:18px;border-radius:12px;font-weight:900}
-      .sync-note{font-size:14px;line-height:1.55;color:#000000;margin-top:12px;font-weight:800}
-      .back{font-size:15px;margin-top:18px;padding:8px;color:#000000;font-weight:900}
-    }
-  </style>
+      body{padding:10px;align-items:flex-start}
+      .card{margin-top:10px;max-width:none;padding:18px 14px;border-radius:14px}
+      .eyebrow{font-size:11px}
+      h1{font-size:26px}
+      .date{font-size:15px}
+      .help{font-size:16px;line-height:1.6}
+      .task-row{padding:16px 13px;min-height:60px}
+      .task-row input{width:25px;height:25px;min-width:25px}
+      .task-row span{font-size:17px;line-height:1.5;font-weight:900}
+      .submit{font-size:18px;padding:17px 18px}
+      .rule{font-size:13px}
+    }  </style>
 </head>
 <body>
-  <main class="card">
-    <h1>Today’s Tasks</h1>
+  <main class="card" role="dialog" aria-modal="true" aria-labelledby="mark-day-title">
+    <div class="eyebrow">Current Day Tasks</div>
+    <h1 id="mark-day-title">Mark Current Day</h1>
     <div class="date">${escapeHtml(payload.taskDate)}</div>
-    <p class="help">Tick the tasks you completed, then submit once. All checked = Completed. Any unchecked = Not Completed.</p>
+    <p class="help">Check the tasks you completed. When finished, press <strong>Mark Day</strong>.</p>
 
     <form method="POST" action="/api/daily-review">
       <input type="hidden" name="token" value="${escapeHtml(token)}" />
       <div class="tasks">${taskMarkup}</div>
       <button class="submit" type="submit" ${dayTasks.length === 0 ? 'disabled' : ''}>
-        ✓ Submit Today
+        Mark Day
       </button>
-      <div class="sync-note">
-        Your checkbox selections are saved to Tasks, and today’s result is synced to Records.
+      <div class="rule">
+        All tasks checked = Completed. Any task unchecked = Not Completed.
       </div>
     </form>
-
-    <a class="back" href="/">Return to System Builder</a>
   </main>
 </body>
 </html>`;

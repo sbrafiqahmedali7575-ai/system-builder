@@ -238,11 +238,11 @@ export function buildDailyConfirmationEmail(
               </table>
 
               <a class="email-cta" href="${reviewUrl}" target="_blank" style="display:block;background:#2563eb;color:#fff;text-decoration:none;text-align:center;font-size:16px;font-weight:900;padding:16px 18px;border-radius:10px;">
-                Review Checkboxes &amp; Submit
+                Submit
               </a>
 
               <p class="email-note" style="margin:16px 0 0;color:#000000;font-size:14px;line-height:1.55;font-weight:800;">
-                If all tasks are checked when you submit, the day is marked Completed. If any task is unchecked, the day is marked Not Completed.
+                Tap Submit to open the compact task checklist. Check completed tasks, then press Mark Day.
               </p>
             </td>
           </tr>
@@ -271,7 +271,7 @@ Date: ${details.taskDate}
 
 ${taskText}
 
-Review checkboxes and submit:
+Open the task checklist:
 ${reviewUrl}
 
 All checked = Completed.

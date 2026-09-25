@@ -167,31 +167,20 @@ export function buildDailyConfirmationEmail(
           .map(
             (task) => `
               <tr>
-                <td class="email-check" style="padding:13px 12px;border-bottom:1px solid #e2e8f0;width:40px;vertical-align:top;font-size:22px;">
-                  <a
-                    href="${reviewUrl}"
-                    target="_blank"
-                    style="display:inline-block;color:#2563eb;text-decoration:none;font-weight:900;line-height:1;"
-                    aria-label="Open checklist for ${escapeHtml(task.title)}"
-                  >
-                    ${task.isCompleted ? '☑' : '☐'}
-                  </a>
+                <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
+                  ${escapeHtml(task.title)}
                 </td>
-                <td class="email-task" style="padding:13px 12px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;">
-                  <a
-                    href="${reviewUrl}"
-                    target="_blank"
-                    style="color:#0f172a;text-decoration:none;font-weight:700;"
-                  >
-                    ${escapeHtml(task.title)}
-                  </a>
+                <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
+                  <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${task.isCompleted ? '#bbf7d0' : '#fde68a'};">
+                    ${task.isCompleted ? 'Completed' : 'Not Completed'}
+                  </span>
                 </td>
               </tr>`
           )
           .join('')
       : `
         <tr>
-          <td style="padding:16px;color:#64748b;font-size:14px;">
+          <td colspan="2" class="email-task" style="padding:16px;color:#000000;font-size:15px;font-weight:800;">
             No tasks are scheduled for today.
           </td>
         </tr>`;
@@ -212,13 +201,14 @@ export function buildDailyConfirmationEmail(
       .email-head{padding:18px 18px!important}
       .email-body{padding:20px 18px!important}
       .email-title{font-size:24px!important;line-height:1.25!important}
-      .email-copy{font-size:16px!important;line-height:1.6!important}
-      .email-help{font-size:14px!important;line-height:1.55!important}
-      .email-task{font-size:16px!important;line-height:1.55!important}
-      .email-check{font-size:24px!important;width:42px!important}
+      .email-copy{font-size:16px!important;line-height:1.6!important;color:#000000!important;font-weight:800!important}
+      .email-help{font-size:15px!important;line-height:1.55!important;color:#000000!important;font-weight:800!important}
+      .email-section-title{font-size:16px!important;color:#000000!important;font-weight:900!important}
+      .email-task{font-size:16px!important;line-height:1.55!important;color:#000000!important;font-weight:900!important}
+      .email-status{font-size:14px!important;color:#000000!important;font-weight:900!important}
       .email-cta{font-size:16px!important;padding:16px 18px!important}
-      .email-note{font-size:14px!important;line-height:1.55!important}
-      .email-footer{font-size:13px!important;padding:14px 18px!important}
+      .email-note{font-size:14px!important;line-height:1.55!important;color:#000000!important;font-weight:800!important}
+      .email-footer{font-size:13px!important;padding:14px 18px!important;color:#000000!important;font-weight:800!important}
     }
   </style>
 </head>
@@ -236,13 +226,13 @@ export function buildDailyConfirmationEmail(
           <tr>
             <td class="email-body" style="padding:24px 26px;">
               <h1 class="email-title" style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#0f172a;font-weight:900;">Today’s Tasks</h1>
-              <p class="email-copy" style="margin:0 0 8px;color:#334155;font-size:15px;line-height:1.6;font-weight:600;">
-                ${completedCount} of ${tasks.length} currently checked.
-              </p>
-              <p class="email-help" style="margin:0 0 18px;color:#475569;font-size:14px;line-height:1.55;">
-                Tap any checkbox or task below to open the live checklist, update the boxes, and submit.
+              <p class="email-copy" style="margin:0 0 12px;color:#000000;font-size:15px;line-height:1.6;font-weight:800;">
+                ${completedCount} of ${tasks.length} tasks currently completed.
               </p>
 
+              <div class="email-section-title" style="margin:0 0 8px;color:#000000;font-size:15px;font-weight:900;">
+                Current Day Tasks &amp; Status
+              </div>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:22px;">
                 ${taskRows}
               </table>
@@ -251,13 +241,13 @@ export function buildDailyConfirmationEmail(
                 Review Checkboxes &amp; Submit
               </a>
 
-              <p class="email-note" style="margin:16px 0 0;color:#475569;font-size:14px;line-height:1.55;">
+              <p class="email-note" style="margin:16px 0 0;color:#000000;font-size:14px;line-height:1.55;font-weight:800;">
                 If all tasks are checked when you submit, the day is marked Completed. If any task is unchecked, the day is marked Not Completed.
               </p>
             </td>
           </tr>
           <tr>
-            <td class="email-footer" style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#475569;font-size:13px;">
+            <td class="email-footer" style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#000000;font-size:13px;font-weight:800;">
               System Builder • Daily task response
             </td>
           </tr>
@@ -270,7 +260,9 @@ export function buildDailyConfirmationEmail(
 
   const taskText =
     tasks.length > 0
-      ? tasks.map((task) => `${task.isCompleted ? '[x]' : '[ ]'} ${task.title}`).join('\n')
+      ? tasks
+          .map((task) => `${task.title} — ${task.isCompleted ? 'Completed' : 'Not Completed'}`)
+          .join('\n')
       : 'No tasks are scheduled for today.';
 
   const text = `System Builder — Today’s Tasks

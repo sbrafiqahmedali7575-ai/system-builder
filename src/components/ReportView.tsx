@@ -164,9 +164,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </div>
                 </div>
 
-                <div className="relative mt-1 flex flex-1 items-center justify-center text-center">
-                  <div className="min-w-0">
-                    <div className="flex items-baseline justify-center">
+                <div className="relative mt-1 flex flex-1 items-center">
+                  <div className="min-w-0 ml-[20%] text-left">
+                    <div className="flex items-baseline justify-start">
                       <span
                         className={`text-2xl font-extrabold font-mono ${
                           allKpis.completionRate >= 80
@@ -218,9 +218,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </div>
                 </div>
 
-                <div className="relative mt-1 flex flex-1 items-center justify-center text-center">
-                  <div className="min-w-0">
-                    <div className="flex items-baseline justify-center gap-1">
+                <div className="relative mt-1 flex flex-1 items-center">
+                  <div className="min-w-0 ml-[20%] text-left">
+                    <div className="flex items-baseline justify-start gap-1">
                       <span className="text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400">
                         {allKpis.currentStreak}
                       </span>

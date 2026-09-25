@@ -142,7 +142,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
-          className={`ui-motion-card w-full p-2.5 sm:p-3 rounded-xl border relative overflow-hidden ${
+          className={`ui-motion-card w-full p-2 sm:p-2.5 rounded-xl border relative overflow-hidden ${
             isDark
               ? 'bg-slate-900/70 border-slate-800'
               : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
@@ -169,8 +169,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800">
-            <div className="py-2 sm:py-0 sm:pr-3 min-w-0">
+          <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-800">
+            <div className="pr-2 sm:pr-3 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0">
                   <Flame className="w-3.5 h-3.5 text-blue-500" />
@@ -183,7 +183,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                 </div>
               </div>
               <div className="mt-1.5 flex items-baseline gap-1">
-                <span className="text-2xl font-black font-mono text-blue-500">
+                <span className="text-xl sm:text-2xl font-black font-mono text-blue-500">
                   {highProductivityWeeksCount}
                 </span>
                 <span className="text-[10px] text-slate-400">weeks</span>
@@ -196,7 +196,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
               </p>
             </div>
 
-            <div className="py-2 sm:py-0 sm:px-3 min-w-0">
+            <div className="px-2 sm:px-3 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center shrink-0">
                   <Gauge className="w-3.5 h-3.5 text-amber-500" />
@@ -209,7 +209,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                 </div>
               </div>
               <div className="mt-1.5 flex items-baseline gap-1">
-                <span className="text-2xl font-black font-mono text-amber-500">
+                <span className="text-xl sm:text-2xl font-black font-mono text-amber-500">
                   {steadyProductivityWeeksCount}
                 </span>
                 <span className="text-[10px] text-slate-400">weeks</span>
@@ -222,7 +222,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
               </p>
             </div>
 
-            <div className="py-2 sm:py-0 sm:pl-3 min-w-0">
+            <div className="pl-2 sm:pl-3 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 ring-2 ring-rose-400/30 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
@@ -235,7 +235,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                 </div>
               </div>
               <div className="mt-1.5 flex items-baseline gap-1">
-                <span className={`text-2xl font-black font-mono ${
+                <span className={`text-xl sm:text-2xl font-black font-mono ${
                   lowProductivityWeeksCount > 0 ? 'text-rose-500' : 'text-slate-400'
                 }`}>
                   {lowProductivityWeeksCount}

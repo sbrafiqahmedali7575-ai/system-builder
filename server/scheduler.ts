@@ -111,6 +111,107 @@ export function getKolkataTimeInfo(date = new Date()): {
   return { timeStr, dateKey, formattedDate };
 }
 
+function normalizeSchedulerDateKey(value: string): string {
+  const raw = String(value || '').trim();
+  const iso = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (iso) {
+    return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
+  }
+
+  const named = raw.match(/^(\d{1,2})[-/ ]([A-Za-z]{3,9})[-/ ](\d{2,4})$/);
+  if (named) {
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const monthIndex = months.indexOf(named[2].slice(0, 3).toLowerCase());
+    if (monthIndex >= 0) {
+      const year = named[3].length === 2 ? `20${named[3]}` : named[3];
+      return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${named[1].padStart(2, '0')}`;
+    }
+  }
+
+  return raw.toLowerCase();
+}
+
+export async function finalizeDayIfNoResponse(targetDate = new Date()): Promise<{
+  finalized: boolean;
+  dateKey: string;
+  formattedDate: string;
+  recordId?: string;
+  reason: string;
+}> {
+  const { dateKey, formattedDate } = getKolkataTimeInfo(targetDate);
+  const targetKey = normalizeSchedulerDateKey(dateKey);
+  const nowIso = new Date().toISOString();
+
+  const recordsSnap = await getDocs(collection(db, 'records'));
+  const records: any[] = [];
+  let matchedRecord: any = null;
+  let highestDay = 0;
+
+  recordsSnap.forEach((d) => {
+    const record = { id: d.id, ...d.data() };
+    records.push(record);
+    highestDay = Math.max(highestDay, Number(record.day) || 0);
+
+    if (normalizeSchedulerDateKey(record.date || '') === targetKey) {
+      matchedRecord = record;
+    }
+  });
+
+  if (
+    matchedRecord?.responseSubmittedAt &&
+    (matchedRecord.responseSource === 'APP' || matchedRecord.responseSource === 'EMAIL')
+  ) {
+    return {
+      finalized: false,
+      dateKey,
+      formattedDate,
+      recordId: matchedRecord.id,
+      reason: 'explicit_response_already_submitted',
+    };
+  }
+
+  const tasksSnap = await getDocs(collection(db, 'tasks'));
+  let totalTasks = 0;
+  let completedTasks = 0;
+
+  tasksSnap.forEach((d) => {
+    const task = d.data();
+    if (normalizeSchedulerDateKey(task.taskKey || task.date || '') === targetKey) {
+      totalTasks += 1;
+      if (Boolean(task.isCompleted)) completedTasks += 1;
+    }
+  });
+
+  const recordId = matchedRecord?.id || `record-${dateKey}`;
+  const payload = {
+    id: recordId,
+    day: matchedRecord?.day || highestDay + 1,
+    date: matchedRecord?.date || formattedDate,
+    isCompleted: false,
+    result: 'FALSE',
+    change: 0,
+    skill: matchedRecord?.skill || 'Daily Tasks',
+    summary:
+      totalTasks > 0
+        ? `${completedTasks}/${totalTasks} tasks completed — no daily response submitted`
+        : 'No tasks created — no daily response submitted',
+    notes: 'Auto-marked Not Completed because no explicit app/email response was submitted for the day.',
+    responseSubmittedAt: nowIso,
+    responseSource: 'AUTO_DEFAULT',
+    updatedAt: nowIso,
+  };
+
+  await setDoc(doc(db, 'records', recordId), payload, { merge: true });
+
+  return {
+    finalized: true,
+    dateKey,
+    formattedDate,
+    recordId,
+    reason: totalTasks === 0 ? 'no_tasks_created' : 'no_response_submitted',
+  };
+}
+
 /**
  * Find today's task or daily record from Firestore
  */
@@ -423,6 +524,31 @@ export function startBackgroundScheduler(): void {
     isChecking = true;
     try {
       const { timeStr, dateKey, formattedDate } = getKolkataTimeInfo();
+
+      // Catch a missed previous-day close whenever the server is awake.
+      // This makes the default Not Completed rule resilient to restarts/sleep.
+      try {
+        await finalizeDayIfNoResponse(new Date(Date.now() - 24 * 60 * 60 * 1000));
+      } catch (finalizeErr) {
+        console.warn('[Background Scheduler] Previous-day finalization warning:', sanitizeError(finalizeErr));
+      }
+
+      const [currentHour, currentMinute] = timeStr.split(':').map(Number);
+      const currentMinutes = currentHour * 60 + currentMinute;
+
+      // At 23:55 IST or later, close the current day if there was no explicit response.
+      if (currentMinutes >= 23 * 60 + 55) {
+        try {
+          const finalization = await finalizeDayIfNoResponse();
+          if (finalization.finalized) {
+            console.log(
+              `[Background Scheduler] Auto-marked ${finalization.formattedDate} Not Completed (${finalization.reason}).`
+            );
+          }
+        } catch (finalizeErr) {
+          console.warn('[Background Scheduler] Current-day finalization warning:', sanitizeError(finalizeErr));
+        }
+      }
 
       // If already dispatched today by this local instance, skip immediately
       if (localLastDispatchedDate === dateKey || localLastDispatchedDate === formattedDate) {

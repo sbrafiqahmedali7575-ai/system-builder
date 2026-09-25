@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
 import { DashboardTheme } from '../types';
+import { LongTermBadge } from '../utils/badgeSystem';
+import { BadgeIcon } from './BadgeIcon';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -11,6 +13,7 @@ interface PowerBiHeaderProps {
   theme?: DashboardTheme;
   onThemeChange?: (theme: DashboardTheme) => void;
   totalRecordsCount?: number;
+  currentBadge?: LongTermBadge | null;
   isSyncing?: boolean;
   activeTab?: NavTab;
   onTabChange?: (tab: NavTab) => void;
@@ -19,6 +22,7 @@ interface PowerBiHeaderProps {
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenNotificationModal,
   totalRecordsCount = 0,
+  currentBadge = null,
   isSyncing = false,
 }) => {
   return (
@@ -37,7 +41,11 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               whileTap={{ scale: 0.96 }}
               className="ninja-mark ui-motion-icon w-9 h-9 rounded-xl text-white flex items-center justify-center font-black shadow-md relative overflow-hidden"
             >
-              <span className="relative z-10 text-lg leading-none">忍</span>
+              {currentBadge ? (
+                <BadgeIcon badge={currentBadge} className="relative z-10 w-5 h-5" />
+              ) : (
+                <span className="relative z-10 text-base leading-none">S</span>
+              )}
             </motion.div>
             <div>
               <div className="flex items-center space-x-1">

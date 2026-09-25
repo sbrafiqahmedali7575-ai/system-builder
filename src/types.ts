@@ -8,6 +8,8 @@ export interface DailyRecord {
   skill?: string;
   summary?: string;
   notes?: string;
+  responseSubmittedAt?: string; // Explicit app/email response timestamp; auto-default uses this when day closes
+  responseSource?: 'APP' | 'EMAIL' | 'AUTO_DEFAULT';
   updatedAt?: string; // ISO 8601 UTC timestamp
 }
 

@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --ninja-blue: #2563eb;
-  --ninja-blue-dark: #1d4ed8;
-  --ninja-red: #ef4444;
-  --ninja-yellow: #fbbf24;
-  --ninja-ink: #0f172a;
-  --ninja-paper: #f8fafc;
+  --system-blue: #2563eb;
+  --system-blue-dark: #1d4ed8;
+  --system-red: #ef4444;
+  --system-yellow: #fbbf24;
+  --system-ink: #0f172a;
+  --system-paper: #f8fafc;
 }
 
 html {
@@ -19,7 +19,7 @@ body {
   min-height: 100vh;
 }
 
-.ninja-app-shell {
+.system-app-shell {
   position: relative;
   isolation: isolate;
   background-image:
@@ -28,7 +28,7 @@ body {
     linear-gradient(180deg, rgba(255,255,255,0.68), rgba(246,248,255,0.98));
 }
 
-.ninja-app-shell::before {
+.system-app-shell::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -41,29 +41,29 @@ body {
   mask-image: linear-gradient(to bottom, black, transparent 65%);
 }
 
-.ninja-header {
+.system-header {
   position: sticky;
   box-shadow: 0 6px 24px rgba(30, 64, 175, 0.06);
 }
 
-.ninja-header::after {
+.system-header::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   bottom: -1px;
   height: 2px;
-  background: linear-gradient(90deg, var(--ninja-blue) 0 58%, var(--ninja-yellow) 58% 72%, var(--ninja-red) 72% 100%);
+  background: linear-gradient(90deg, var(--system-blue) 0 58%, var(--system-yellow) 58% 72%, var(--system-red) 72% 100%);
   opacity: 0.82;
 }
 
-.ninja-mark {
+.system-mark {
   background:
     linear-gradient(135deg, #1d4ed8 0 68%, #ef4444 68% 100%);
   box-shadow: 0 6px 18px rgba(37, 99, 235, 0.26);
 }
 
-.ninja-mark::after {
+.system-mark::after {
   content: "";
   position: absolute;
   width: 18px;
@@ -74,13 +74,13 @@ body {
   transform: rotate(45deg);
 }
 
-.ninja-focus-panel {
+.system-focus-panel {
   position: relative;
   overflow: hidden;
   box-shadow: 0 12px 35px rgba(30, 64, 175, 0.055);
 }
 
-.ninja-focus-panel::before {
+.system-focus-panel::before {
   content: "";
   position: absolute;
   width: 130px;
@@ -93,12 +93,12 @@ body {
   pointer-events: none;
 }
 
-.ninja-kpi-shell {
+.system-kpi-shell {
   position: relative;
   background-image: linear-gradient(135deg, rgba(219, 234, 254, 0.22), rgba(255,255,255,0) 38%, rgba(254, 226, 226, 0.18));
 }
 
-.ninja-task-card {
+.system-task-card {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -107,12 +107,12 @@ body {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035);
 }
 
-.ninja-task-card > * {
+.system-task-card > * {
   position: relative;
   z-index: 1;
 }
 
-.ninja-task-card::before {
+.system-task-card::before {
   content: "";
   position: absolute;
   inset: -28%;
@@ -128,7 +128,7 @@ body {
   animation: task-card-background-drift 13s ease-in-out infinite alternate;
 }
 
-.dark .ninja-task-card::before {
+.dark .system-task-card::before {
   opacity: 0.48;
   background:
     radial-gradient(circle at 18% 28%, rgba(59, 130, 246, 0.22) 0 7%, transparent 24%),
@@ -136,7 +136,7 @@ body {
     radial-gradient(circle at 72% 78%, rgba(244, 63, 94, 0.12) 0 7%, transparent 23%);
 }
 
-.ninja-task-card::after {
+.system-task-card::after {
   content: "";
   position: absolute;
   z-index: 0;
@@ -174,31 +174,31 @@ body {
   }
 }
 
-.ninja-edition button,
-.ninja-edition [role="button"] {
+.system-edition button,
+.system-edition [role="button"] {
   transition-property: transform, box-shadow, background-color, border-color, color, opacity;
   transition-duration: 180ms;
 }
 
-.ninja-edition button:hover:not(:disabled),
-.ninja-edition [role="button"]:hover {
+.system-edition button:hover:not(:disabled),
+.system-edition [role="button"]:hover {
   transform: translateY(-1px);
 }
 
-.ninja-edition button:active:not(:disabled) {
+.system-edition button:active:not(:disabled) {
   transform: translateY(0) scale(0.985);
 }
 
-.ninja-edition ::-webkit-scrollbar {
+.system-edition ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
 }
 
-.ninja-edition ::-webkit-scrollbar-track {
+.system-edition ::-webkit-scrollbar-track {
   background: rgba(226, 232, 240, 0.6);
 }
 
-.ninja-edition ::-webkit-scrollbar-thumb {
+.system-edition ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(37, 99, 235, 0.65), rgba(239, 68, 68, 0.55));
   border-radius: 999px;
   border: 2px solid transparent;
@@ -206,9 +206,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ninja-edition *,
-  .ninja-edition *::before,
-  .ninja-edition *::after {
+  .system-edition *,
+  .system-edition *::before,
+  .system-edition *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -217,33 +217,33 @@ body {
 }
 
 /* Badge progression polish */
-.ninja-badge-shine {
+.system-badge-shine {
   position: relative;
   overflow: hidden;
 }
 
-.ninja-badge-shine::after {
+.system-badge-shine::after {
   content: "";
   position: absolute;
   inset: -60% auto -60% -35%;
   width: 22%;
   transform: rotate(18deg);
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent);
-  animation: ninja-badge-shine 2.8s ease-in-out infinite;
+  animation: system-badge-shine 2.8s ease-in-out infinite;
 }
 
-@keyframes ninja-badge-shine {
+@keyframes system-badge-shine {
   0%, 62% { left: -35%; opacity: 0; }
   72% { opacity: 0.9; }
   100% { left: 125%; opacity: 0; }
 }
 
 /* Dramatic badge reveal polish */
-.ninja-celebration-badge {
+.system-celebration-badge {
   isolation: isolate;
 }
 
-.ninja-celebration-badge::before {
+.system-celebration-badge::before {
   content: "";
   position: absolute;
   inset: -18%;
@@ -256,11 +256,11 @@ body {
     rgba(251, 191, 36, 0.34),
     rgba(255, 255, 255, 0)
   );
-  animation: ninja-celebration-halo 3.2s linear infinite;
+  animation: system-celebration-halo 3.2s linear infinite;
   mix-blend-mode: screen;
 }
 
-@keyframes ninja-celebration-halo {
+@keyframes system-celebration-halo {
   to { transform: rotate(360deg); }
 }
 
@@ -311,11 +311,11 @@ body {
   animation: system-builder-icon-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.ninja-app-shell::before {
+.system-app-shell::before {
   animation: system-builder-grid-drift 18s ease-in-out infinite alternate;
 }
 
-.ninja-focus-panel::before {
+.system-focus-panel::before {
   animation: system-builder-decoration-float 8s ease-in-out infinite;
 }
 

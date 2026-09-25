@@ -89,7 +89,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             type="button"
             onClick={showNextQuote}
             whileTap={{ scale: 0.98 }}
-            className="group w-full max-w-xl min-w-0 rounded-xl px-2 sm:px-3 py-1 text-center cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-900/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group w-full max-w-2xl min-w-0 rounded-xl px-2 sm:px-4 py-1.5 text-center cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-900/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             title="Click for next quote"
             aria-label="Quotes. Click for next quote."
           >
@@ -100,13 +100,15 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.18 }}
-                className="text-[13px] sm:text-[16px] lg:text-[18px] font-semibold text-slate-900 dark:text-slate-100 leading-tight line-clamp-2 tracking-[0.01em]"
+                className="text-[15px] sm:text-[18px] lg:text-[21px] font-bold text-slate-900 dark:text-slate-100 leading-[1.15] line-clamp-2 tracking-[0.015em] drop-shadow-[0_1px_1px_rgba(15,23,42,0.10)] dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.06)]"
                 style={{
                   fontFamily:
-                    '"Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive',
+                    '"Segoe Script", "Snell Roundhand", "Apple Chancery", "Lucida Handwriting", "Bradley Hand", cursive',
                 }}
               >
-                “{HEADER_QUOTES[quoteIndex]}”
+                <span className="text-blue-500/80 dark:text-blue-300/80">“</span>
+                {HEADER_QUOTES[quoteIndex]}
+                <span className="text-blue-500/80 dark:text-blue-300/80">”</span>
               </motion.div>
             </AnimatePresence>
           </motion.button>

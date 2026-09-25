@@ -25,6 +25,7 @@ import {
   findTodayTaskOrRecord,
   getKolkataTimeInfo,
   triggerDailyReminder,
+  finalizeDayIfNoResponse,
   startBackgroundScheduler,
 } from './server/scheduler';
 import {
@@ -307,6 +308,37 @@ async function startServer() {
     }
   });
 
+  // End-of-day fallback: no task creation or no explicit app/email response => Not Completed.
+  app.all('/api/finalize-current-day', async (req, res) => {
+    const authHeader = (req.headers.authorization || '').trim();
+    const providedToken = authHeader.startsWith('Bearer ')
+      ? authHeader.substring(7).trim()
+      : ((req.query?.secret as string) || '').trim();
+
+    const allowedTokens = [
+      'commit-daily-scheduler-secret-auth-key-2026',
+      (process.env.SCHEDULER_SECRET || '').trim(),
+      (process.env.CONFIRMATION_SECRET || '').trim(),
+      'yqgpolotjeyxwnjt',
+    ].filter(Boolean);
+
+    if (!providedToken || !allowedTokens.includes(providedToken)) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized: Invalid scheduler secret token.',
+      });
+    }
+
+    try {
+      const result = await finalizeDayIfNoResponse();
+      return res.status(200).json({ success: true, ...result });
+    } catch (err: any) {
+      const safeError = sanitizeError(err);
+      console.error('Unhandled failure in /api/finalize-current-day:', safeError);
+      return res.status(500).json({ success: false, error: safeError });
+    }
+  });
+
   // 4. Delivery logs audit history
   app.get('/api/notifications/logs', async (req, res) => {
     try {
@@ -450,7 +482,14 @@ pause
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
       }
 
+      const currentDateKey = normalizeDateKey(getKolkataTimeInfo().dateKey);
       const targetDateKey = normalizeDateKey(payload.taskDate);
+      if (targetDateKey !== currentDateKey) {
+        return renderErrorPage(
+          res,
+          'Only the current day can be reviewed or submitted. This daily checklist is now closed.'
+        );
+      }
       const tasksSnap = await getDocs(collection(db, 'tasks'));
       const dayTasks: any[] = [];
 
@@ -499,8 +538,8 @@ pause
     .task-row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #273449;cursor:pointer}
     .task-row:last-child{border-bottom:0}.task-row input{width:20px;height:20px;margin-top:1px;accent-color:#2563eb}
     .task-row span{font-size:15px;line-height:1.45;font-weight:650}.empty{padding:18px;color:#94a3b8}
-    .submit{width:100%;margin-top:20px;border:1px solid #22c55e;border-radius:12px;background:#16a34a;color:white;padding:16px 20px;font-size:16px;font-weight:900;letter-spacing:.2px;cursor:pointer;box-shadow:0 8px 20px rgba(22,163,74,.28);transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
-    .submit:hover{background:#15803d;transform:translateY(-1px);box-shadow:0 10px 24px rgba(22,163,74,.34)}
+    .submit{width:100%;margin-top:20px;border:1px solid #3b82f6;border-radius:12px;background:#2563eb;color:white;padding:16px 20px;font-size:16px;font-weight:900;letter-spacing:.2px;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,.28);transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
+    .submit:hover{background:#3b82f6;transform:translateY(-1px);box-shadow:0 10px 24px rgba(37,99,235,.34)}
     .submit:active{transform:translateY(0)}
     .submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
     .sync-note{margin-top:10px;text-align:center;color:#94a3b8;font-size:12px;line-height:1.45}
@@ -548,6 +587,15 @@ pause
       const { payload } = verification;
       if (payload.action !== 'review') {
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
+      }
+
+      const currentDateKey = normalizeDateKey(getKolkataTimeInfo().dateKey);
+      const submittedDateKey = normalizeDateKey(payload.taskDate);
+      if (submittedDateKey !== currentDateKey) {
+        return renderErrorPage(
+          res,
+          'Only the current day can be submitted. This daily checklist is now closed.'
+        );
       }
 
       const selectedRaw = req.body.completedTaskIds;
@@ -606,6 +654,9 @@ pause
           isCompleted: allCompleted,
           result: allCompleted ? 'TRUE' : 'FALSE',
           change: 0,
+          summary: `${completedCount}/${dayTasks.length} tasks completed`,
+          responseSubmittedAt: nowIso,
+          responseSource: 'EMAIL',
           updatedAt: nowIso,
         });
       } else {
@@ -628,6 +679,8 @@ pause
           skill: 'Daily Tasks',
           summary: `${completedCount}/${dayTasks.length} tasks completed`,
           notes: 'Submitted from daily email checklist',
+          responseSubmittedAt: nowIso,
+          responseSource: 'EMAIL',
           updatedAt: nowIso,
         });
       }

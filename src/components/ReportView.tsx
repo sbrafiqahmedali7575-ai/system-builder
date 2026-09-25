@@ -159,18 +159,20 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-70" />
 
-                <div className="relative flex items-center justify-between text-xs text-slate-400">
-                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                    Overall Completion
-                  </span>
-                  <motion.div
-                    initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-                    className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center"
-                  >
-                    <Award className="w-3.5 h-3.5 text-blue-500" />
-                  </motion.div>
+                <div className="relative flex items-center text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <motion.div
+                      initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+                      className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0"
+                    >
+                      <Award className="w-3.5 h-3.5 text-blue-500" />
+                    </motion.div>
+                    <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                      Overall Completion
+                    </span>
+                  </div>
                 </div>
 
                 <div className="relative mt-1 flex items-center justify-between gap-2">
@@ -226,18 +228,20 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-amber-500/8 group-hover:scale-125 transition-transform duration-500" />
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-red-500 opacity-70" />
 
-                <div className="relative flex items-center justify-between text-xs text-slate-400">
-                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                    Active Streak
-                  </span>
-                  <motion.div
-                    initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
-                    className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center"
-                  >
-                    <Flame className="w-3.5 h-3.5 text-amber-500" />
-                  </motion.div>
+                <div className="relative flex items-center text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <motion.div
+                      initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
+                      className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center shrink-0"
+                    >
+                      <Flame className="w-3.5 h-3.5 text-amber-500" />
+                    </motion.div>
+                    <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                      Active Streak
+                    </span>
+                  </div>
                 </div>
 
                 <div className="relative mt-1 flex items-center justify-between gap-2">
@@ -286,17 +290,33 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 opacity-70" />
 
-                <div className="relative flex items-center justify-between text-xs mb-1">
-                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                    Recent 7-Day Cadence
-                  </span>
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs">
+                <div className="relative flex items-center justify-between text-xs mb-1 gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <AnimatedProgressRing
+                      value={last7Performance}
+                      size={30}
+                      strokeWidth={3}
+                      progressClassName={
+                        last7Performance >= 80
+                          ? 'text-blue-500'
+                          : last7Performance >= 50
+                          ? 'text-amber-500'
+                          : 'text-rose-500'
+                      }
+                      label={`${Math.round(last7Performance)}%`}
+                      delay={0.12}
+                    />
+                    <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                      Recent 7-Day Cadence
+                    </span>
+                  </div>
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs shrink-0">
                     {last7CompletedDays}/7 Done
                   </span>
                 </div>
 
-                <div className="relative flex items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0">
+                <div className="relative">
+                  <div className="w-full min-w-0">
                     <div className="flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
                       {last7Records.map((r) => {
                         const isToday = isTodayDate(r.date);
@@ -325,22 +345,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       Latest 7 tracked days performance
                     </p>
                   </div>
-
-                  <AnimatedProgressRing
-                    value={last7Performance}
-                    size={56}
-                    strokeWidth={5}
-                    progressClassName={
-                      last7Performance >= 80
-                        ? 'text-blue-500'
-                        : last7Performance >= 50
-                        ? 'text-amber-500'
-                        : 'text-rose-500'
-                    }
-                    label={`${Math.round(last7Performance)}%`}
-                    sublabel="7 days"
-                    delay={0.18}
-                  />
                 </div>
               </motion.div>
 

@@ -148,19 +148,21 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-70" />
 
-          <div className="relative flex items-center justify-between text-xs">
-            <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-              High Productivity
-            </span>
-            <motion.div
-              initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-              whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-              className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center"
-            >
-              <Flame className="w-3.5 h-3.5 text-blue-500" />
-            </motion.div>
+          <div className="relative flex items-center text-xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <motion.div
+                initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+                className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0"
+              >
+                <Flame className="w-3.5 h-3.5 text-blue-500" />
+              </motion.div>
+              <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                High Productivity
+              </span>
+            </div>
           </div>
 
           <div className="relative mt-1 flex items-center justify-between gap-2">
@@ -208,19 +210,21 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-amber-500/8 group-hover:scale-125 transition-transform duration-500" />
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-blue-500 opacity-70" />
 
-          <div className="relative flex items-center justify-between text-xs">
-            <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-              Steady Productivity
-            </span>
-            <motion.div
-              initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-              whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
-              className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center"
-            >
-              <Gauge className="w-3.5 h-3.5 text-amber-500" />
-            </motion.div>
+          <div className="relative flex items-center text-xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <motion.div
+                initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
+                className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center shrink-0"
+              >
+                <Gauge className="w-3.5 h-3.5 text-amber-500" />
+              </motion.div>
+              <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                Steady Productivity
+              </span>
+            </div>
           </div>
 
           <div className="relative mt-1 flex items-center justify-between gap-2">
@@ -268,19 +272,21 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-rose-500/8 group-hover:scale-125 transition-transform duration-500" />
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-rose-500 via-red-400 to-amber-400 opacity-70" />
 
-          <div className="relative flex items-center justify-between text-xs">
-            <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-              Low Productivity Dips
-            </span>
-            <motion.div
-              initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-              whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.1 }}
-              className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 ring-2 ring-rose-400/30 flex items-center justify-center"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-            </motion.div>
+          <div className="relative flex items-center text-xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <motion.div
+                initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.1 }}
+                className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 ring-2 ring-rose-400/30 flex items-center justify-center shrink-0"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+              </motion.div>
+              <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
+                Low Productivity Dips
+              </span>
+            </div>
           </div>
 
           <div className="relative mt-1 flex items-center justify-between gap-2">

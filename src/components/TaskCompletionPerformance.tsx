@@ -47,6 +47,7 @@ export const TaskCompletionPerformance: React.FC<TaskCompletionPerformanceProps>
 }) => {
   const isDark = theme === 'dark';
   const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const currentMonthKey = todayKey.slice(0, 7);
 
   const chartData = useMemo<DailyTaskPerformance[]>(() => {
     const byDate = new Map<string, { total: number; completed: number }>();
@@ -55,6 +56,7 @@ export const TaskCompletionPerformance: React.FC<TaskCompletionPerformanceProps>
       const dateKey = toInputDateValue(task.taskKey);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
       if (dateKey > todayKey) return;
+      if (!dateKey.startsWith(currentMonthKey)) return;
 
       const current = byDate.get(dateKey) || { total: 0, completed: 0 };
       current.total += 1;
@@ -64,7 +66,6 @@ export const TaskCompletionPerformance: React.FC<TaskCompletionPerformanceProps>
 
     return Array.from(byDate.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-14)
       .map(([dateKey, counts]) => ({
         dateKey,
         label: formatShortDate(dateKey),
@@ -73,7 +74,7 @@ export const TaskCompletionPerformance: React.FC<TaskCompletionPerformanceProps>
         percentage:
           counts.total > 0 ? Math.round((counts.completed / counts.total) * 100) : 0,
       }));
-  }, [tasks, todayKey]);
+  }, [tasks, todayKey, currentMonthKey]);
 
   const latestPercentage =
     chartData.length > 0 ? chartData[chartData.length - 1].percentage : 0;
@@ -123,7 +124,7 @@ export const TaskCompletionPerformance: React.FC<TaskCompletionPerformanceProps>
 
       <div className="mt-2 flex items-center justify-between text-[10px]">
         <span className="font-bold text-slate-500 dark:text-slate-400">
-          Last {chartData.length || 0} active day{chartData.length === 1 ? '' : 's'}
+          {chartData.length || 0} active day{chartData.length === 1 ? '' : 's'} this month
         </span>
         <span className="font-black text-slate-700 dark:text-slate-200">
           Avg {averagePercentage}%

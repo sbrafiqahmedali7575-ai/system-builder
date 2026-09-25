@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Check, Shield, Sparkles, Star, Trophy, X, Zap } from 'lucide-react';
+import { Check, Shield, Sparkles, Star, X, Zap } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
+import { BadgeIcon } from './BadgeIcon';
 
 interface BadgeCelebrationProps {
   badge: LongTermBadge | null;
@@ -306,7 +307,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
                       transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
                       className={`ninja-celebration-badge relative w-24 h-24 rounded-[30px] bg-gradient-to-br ${badgeGradient[badge.accent]} shadow-[0_18px_45px_rgba(37,99,235,0.34)] flex items-center justify-center text-white ring-4 ring-white/80 dark:ring-slate-800 overflow-hidden`}
                     >
-                      {badge.minDays >= 1800 ? <Trophy className="relative z-10 w-11 h-11" /> : <Shield className="relative z-10 w-11 h-11" />}
+                      <BadgeIcon badge={badge} className="relative z-10 w-11 h-11" />
                       <motion.div
                         className="pointer-events-none absolute inset-y-[-35%] -left-12 z-20 w-9 rotate-[18deg] bg-gradient-to-r from-transparent via-white/95 to-transparent blur-[1px]"
                         animate={{ x: [-40, 180] }}

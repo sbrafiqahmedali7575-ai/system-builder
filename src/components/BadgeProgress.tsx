@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ChevronDown, Trophy } from 'lucide-react';
+import { Award, ChevronDown, Sparkles, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { BadgeTier, getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
-import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
 import { BadgeCelebration } from './BadgeCelebration';
 import { BadgeIcon } from './BadgeIcon';
 
@@ -18,15 +17,6 @@ const LEGACY_BADGE_STORAGE_KEYS = [
   'SYSTEM_BUILDER_HIGHEST_BADGE_V1',
 ];
 
-const WEEKLY_CAREER_PRINCIPLES = [
-  'Build rare and valuable skills before chasing passion.',
-  'Career capital creates better options, autonomy, and opportunity.',
-  'Deliberate practice is where real professional growth happens.',
-  'Earn control by becoming valuable enough to deserve it.',
-  'A meaningful mission becomes clearer after mastering your craft.',
-  'Focus on craftsmanship: make your work difficult to ignore.',
-  'Ask what value you can create, not what work owes you.',
-] as const;
 
 const accentStyles: Record<LongTermBadge['accent'], { ring: string; soft: string; text: string; glow: string }> = {
   blue: {
@@ -100,35 +90,37 @@ export const BadgeProgress: React.FC<BadgeProgressProps> = ({ completedDays, the
   const isDark = theme === 'dark';
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [celebrationBadge, setCelebrationBadge] = useState<LongTermBadge | null>(null);
-  const [quoteClock, setQuoteClock] = useState(() => Date.now());
   const initializedRef = useRef(false);
   const progress = useMemo(() => getBadgeProgress(completedDays), [completedDays]);
   const currentStyle = achievedTierStyles[progress.current.tier];
   const closeCelebration = useCallback(() => setCelebrationBadge(null), []);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setQuoteClock(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
+  const aiInsight = useMemo(() => {
+    if (!progress.next) {
+      return `Excellent consistency — ${completedDays} completed days earned Analytics Master. Protect the habits that brought you here and keep the standard high.`;
+    }
 
-  const dailyCareerPrinciple = useMemo(() => {
-    const weekday = new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      timeZone: CONFIGURED_TIMEZONE,
-    }).format(new Date(quoteClock));
+    const percentage = Math.round(progress.unlockProgress);
+    const nextName = progress.next.name;
 
-    const weekdayIndex: Record<string, number> = {
-      Sun: 0,
-      Mon: 1,
-      Tue: 2,
-      Wed: 3,
-      Thu: 4,
-      Fri: 5,
-      Sat: 6,
-    };
+    if (completedDays === 0) {
+      return `Your system is ready. Complete the first focused day and begin building evidence of consistency toward ${nextName}.`;
+    }
 
-    return WEEKLY_CAREER_PRINCIPLES[weekdayIndex[weekday] ?? 0];
-  }, [quoteClock]);
+    if (percentage >= 80) {
+      return `Strong work — ${completedDays} completed days already. You are very close to ${nextName}; only ${progress.daysRemaining} more completed days remain.`;
+    }
+
+    if (percentage >= 50) {
+      return `You have built real momentum with ${completedDays} completed days. You are past halfway to ${nextName}; keep protecting the routine that is working.`;
+    }
+
+    if (completedDays === progress.current.minDays && completedDays > 0) {
+      return `Well earned — you reached ${progress.current.name}. That milestone came from completed days, not intention. Keep stacking the next one.`;
+    }
+
+    return `Good progress — ${completedDays} completed days are already proof of effort. Stay consistent; every completed day moves you closer to ${nextName}.`;
+  }, [completedDays, progress.current.minDays, progress.current.name, progress.daysRemaining, progress.next, progress.unlockProgress]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -218,14 +210,14 @@ export const BadgeProgress: React.FC<BadgeProgressProps> = ({ completedDays, the
               </div>
 
               <div className="min-w-0 pl-1 text-left">
-                <p className="text-[8px] uppercase tracking-[0.14em] font-black text-slate-400 dark:text-slate-500">
-                  Daily Career Principle
-                </p>
-                <p
-                  className="mt-0.5 text-[9px] sm:text-[10px] font-semibold italic leading-snug text-slate-600 dark:text-slate-300"
-                  title="Paraphrased from core ideas in So Good They Can't Ignore You by Cal Newport"
-                >
-                  “{dailyCareerPrinciple}”
+                <div className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-blue-500 shrink-0" />
+                  <p className="text-[8px] uppercase tracking-[0.14em] font-black text-blue-600 dark:text-blue-300">
+                    AI Insight
+                  </p>
+                </div>
+                <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold leading-snug text-slate-700 dark:text-slate-200">
+                  {aiInsight}
                 </p>
               </div>
             </div>

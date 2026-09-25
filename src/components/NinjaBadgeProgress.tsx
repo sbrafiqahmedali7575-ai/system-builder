@@ -180,11 +180,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
               </div>
-              {nextTarget && (
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                  Need {progress.daysRemaining} completed days
-                </span>
-              )}
+
             </div>
           </div>
 
@@ -202,7 +198,14 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   </span>
                   <span className="font-extrabold text-slate-800 dark:text-white truncate">{nextTarget.name}</span>
                 </div>
-                <span className="font-mono font-extrabold text-blue-600 dark:text-blue-300 shrink-0">{Math.round(progress.unlockProgress)}%</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    Need {progress.daysRemaining} completed days
+                  </span>
+                  <span className="font-mono font-extrabold text-blue-600 dark:text-blue-300 whitespace-nowrap">
+                    {Math.round(progress.unlockProgress)}%
+                  </span>
+                </div>
               </div>
               <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                 <motion.div

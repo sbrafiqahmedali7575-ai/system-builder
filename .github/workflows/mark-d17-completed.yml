@@ -1,0 +1,66 @@
+name: One-time Mark D17 Completed
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Mark Day 17 completed in Firestore
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          import { initializeApp } from 'firebase/app';
+          import { collection, doc, getDocs, getFirestore, setDoc } from 'firebase/firestore';
+
+          const config = JSON.parse(await readFile('./firebase-applet-config.json', 'utf8'));
+          const app = initializeApp(config);
+          const db = config.firestoreDatabaseId && config.firestoreDatabaseId !== '(default)'
+            ? getFirestore(app, config.firestoreDatabaseId)
+            : getFirestore(app);
+
+          const snap = await getDocs(collection(db, 'records'));
+          const matches = [];
+          snap.forEach((d) => {
+            const data = d.data();
+            if (Number(data.day) === 17) {
+              matches.push({ id: d.id, ...data });
+            }
+          });
+
+          if (matches.length === 0) {
+            throw new Error('No Day 17 record was found.');
+          }
+
+          const now = new Date().toISOString();
+          for (const record of matches) {
+            await setDoc(doc(db, 'records', record.id), {
+              isCompleted: true,
+              result: 'TRUE',
+              change: 0,
+              responseSubmittedAt: now,
+              responseSource: 'APP',
+              updatedAt: now
+            }, { merge: true });
+
+            console.log(JSON.stringify({
+              id: record.id,
+              day: record.day,
+              date: record.date,
+              markedCompleted: true
+            }));
+          }
+
+          console.log(`Updated ${matches.length} Day 17 record(s).`);
+          NODE

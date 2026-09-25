@@ -186,8 +186,8 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
               }`}
             >
               <div className="p-2">
-                <div className="overflow-x-auto pb-0.5">
-                  <div className="grid grid-cols-9 gap-1 min-w-[630px]">
+                <div className="pb-0.5">
+                  <div className="grid grid-cols-7 gap-x-1 gap-y-1.5">
                     {LONG_TERM_BADGES.map((badge) => {
                       const unlocked = completedDays >= badge.minDays;
                       const isCurrent = badge.id === progress.current.id;
@@ -195,25 +195,25 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                         <motion.div
                           key={badge.id}
                           layout
-                          whileHover={{ y: -1, scale: 1.03 }}
+                          whileHover={{ y: -1, scale: 1.04 }}
                           title={`${badge.name}: ${badge.minDays} completed days`}
                           className="min-w-0 flex flex-col items-center gap-0.5"
                         >
                           <motion.div
-                            animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 10px rgba(59,130,246,.38)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
+                            animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 8px rgba(59,130,246,.38)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
                             transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
-                            className={`w-full h-5 rounded-md flex items-center justify-center transition-all ${
+                            className={`w-full h-4 rounded flex items-center justify-center transition-all ${
                               isCurrent
-                                ? 'bg-blue-500 text-white ring-2 ring-blue-400 ring-offset-1 dark:ring-offset-slate-900'
+                                ? 'bg-blue-500 text-white ring-1 ring-blue-400 ring-offset-1 dark:ring-offset-slate-900'
                                 : unlocked
                                 ? 'bg-amber-400/85 dark:bg-amber-500/70 text-white'
                                 : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
                             }`}
                           >
-                            <BadgeIcon badge={badge} className="w-2.5 h-2.5 shrink-0" />
+                            <BadgeIcon badge={badge} className="w-2 h-2 shrink-0" />
                           </motion.div>
 
-                          <span className={`text-[8px] font-mono leading-none ${
+                          <span className={`text-[7px] font-mono leading-none whitespace-nowrap ${
                             isCurrent
                               ? 'font-black text-blue-600 dark:text-blue-300'
                               : unlocked

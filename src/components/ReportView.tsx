@@ -375,22 +375,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────────────────────────
-          2. SECTION: TRENDS & MOVING AVERAGE
-      ───────────────────────────────────────────────────────────── */}
-      <section
-        aria-label="Weekly Productivity Summary"
-        className="flex justify-end"
-      >
-        <div className="w-full xl:max-w-5xl">
-          <TrendsVisual
-            records={filteredRecords}
-            theme={theme}
-            onToggleRecordStatus={onToggleRecordStatus}
-            variant="summary"
-          />
-        </div>
-      </section>
     </motion.div>
   );
 };

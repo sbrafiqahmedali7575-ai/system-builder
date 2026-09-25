@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Award, ChevronDown, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { BadgeTier, getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
+import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
 import { BadgeCelebration } from './BadgeCelebration';
 import { BadgeIcon } from './BadgeIcon';
 
@@ -16,6 +17,16 @@ const LEGACY_BADGE_STORAGE_KEYS = [
   'SYSTEM_BUILDER_HIGHEST_BADGE_DAY_V2',
   'SYSTEM_BUILDER_HIGHEST_BADGE_V1',
 ];
+
+const WEEKLY_CAREER_PRINCIPLES = [
+  'Build rare and valuable skills before chasing passion.',
+  'Career capital creates better options, autonomy, and opportunity.',
+  'Deliberate practice is where real professional growth happens.',
+  'Earn control by becoming valuable enough to deserve it.',
+  'A meaningful mission becomes clearer after mastering your craft.',
+  'Focus on craftsmanship: make your work difficult to ignore.',
+  'Ask what value you can create, not what work owes you.',
+] as const;
 
 const accentStyles: Record<LongTermBadge['accent'], { ring: string; soft: string; text: string; glow: string }> = {
   blue: {
@@ -89,10 +100,35 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
   const isDark = theme === 'dark';
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [celebrationBadge, setCelebrationBadge] = useState<LongTermBadge | null>(null);
+  const [quoteClock, setQuoteClock] = useState(() => Date.now());
   const initializedRef = useRef(false);
   const progress = useMemo(() => getBadgeProgress(completedDays), [completedDays]);
   const currentStyle = achievedTierStyles[progress.current.tier];
   const closeCelebration = useCallback(() => setCelebrationBadge(null), []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setQuoteClock(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const dailyCareerPrinciple = useMemo(() => {
+    const weekday = new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      timeZone: CONFIGURED_TIMEZONE,
+    }).format(new Date(quoteClock));
+
+    const weekdayIndex: Record<string, number> = {
+      Sun: 0,
+      Mon: 1,
+      Tue: 2,
+      Wed: 3,
+      Thu: 4,
+      Fri: 5,
+      Sat: 6,
+    };
+
+    return WEEKLY_CAREER_PRINCIPLES[weekdayIndex[weekday] ?? 0];
+  }, [quoteClock]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -171,7 +207,20 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate">{progress.current.name}</h4>
               </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${showRoadmap ? 'rotate-180' : ''}`} />
+            <div className="flex items-start gap-2 shrink-0 max-w-[58%]">
+              <div className="text-right min-w-0">
+                <p className="text-[8px] uppercase tracking-[0.14em] font-black text-slate-400 dark:text-slate-500">
+                  Daily Career Principle
+                </p>
+                <p
+                  className="mt-0.5 text-[9px] sm:text-[10px] font-semibold italic leading-snug text-slate-600 dark:text-slate-300"
+                  title="Paraphrased from core ideas in So Good They Can't Ignore You by Cal Newport"
+                >
+                  “{dailyCareerPrinciple}”
+                </p>
+              </div>
+              <ChevronDown className={`w-4 h-4 mt-0.5 text-slate-400 transition-transform shrink-0 ${showRoadmap ? 'rotate-180' : ''}`} />
+            </div>
           </div>
 
           <div className="relative mt-1.5">

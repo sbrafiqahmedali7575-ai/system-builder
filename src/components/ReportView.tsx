@@ -103,17 +103,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const last7CompletedDays = last7Records.filter((record) => record.isCompleted).length;
   const last7Performance = Math.min(100, (last7CompletedDays / 7) * 100);
 
-  // Active streak targets the personal-best (max streak) by default.
-  // Once the active streak reaches that target, the ring stays complete and
-  // the active streak can keep growing as the new personal best.
-  const streakTarget = Math.max(1, allKpis.maxStreak);
-  const streakTargetAchieved =
-    allKpis.currentStreak > 0 && allKpis.currentStreak >= allKpis.maxStreak;
-  const streakRingProgress =
-    allKpis.currentStreak === 0
-      ? 0
-      : Math.min(100, (allKpis.currentStreak / streakTarget) * 100);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -175,9 +164,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </div>
                 </div>
 
-                <div className="relative mt-1 flex items-center justify-between gap-2">
+                <div className="relative mt-1 flex flex-1 items-center justify-center text-center">
                   <div className="min-w-0">
-                    <div className="flex items-baseline space-x-1">
+                    <div className="flex items-baseline justify-center">
                       <span
                         className={`text-2xl font-extrabold font-mono ${
                           allKpis.completionRate >= 80
@@ -193,22 +182,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       {allKpis.completedDays}/{allKpis.totalDays} days completed
                     </p>
-                    <p className="mt-0.5 text-[9px] text-slate-400">
-                      {allKpis.completionRate >= 80
-                        ? 'Target ≥80% achieved'
-                        : `${(80 - allKpis.completionRate).toFixed(1)}% to 80% mastery`}
-                    </p>
                   </div>
-
-                  <AnimatedProgressRing
-                    value={allKpis.completionRate}
-                    size={56}
-                    strokeWidth={5}
-                    progressClassName={allKpis.completionRate >= 80 ? 'text-blue-500' : 'text-cyan-500'}
-                    label={`${Math.round(allKpis.completionRate)}%`}
-                    sublabel="complete"
-                    delay={0.08}
-                  />
                 </div>
               </motion.div>
 
@@ -244,9 +218,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </div>
                 </div>
 
-                <div className="relative mt-1 flex items-center justify-between gap-2">
+                <div className="relative mt-1 flex flex-1 items-center justify-center text-center">
                   <div className="min-w-0">
-                    <div className="flex items-baseline space-x-1">
+                    <div className="flex items-baseline justify-center gap-1">
                       <span className="text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400">
                         {allKpis.currentStreak}
                       </span>
@@ -255,22 +229,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       Personal best: {allKpis.maxStreak} days
                     </p>
-                    <p className="mt-0.5 text-[9px] text-slate-400">
-                      {streakTargetAchieved
-                        ? `Target achieved · keep building the active streak`
-                        : `Target: ${allKpis.maxStreak > 0 ? allKpis.maxStreak : 1}D max streak`}
-                    </p>
                   </div>
-
-                  <AnimatedProgressRing
-                    value={streakRingProgress}
-                    size={56}
-                    strokeWidth={5}
-                    progressClassName="text-amber-500"
-                    label={`${allKpis.currentStreak}D`}
-                    sublabel="active"
-                    delay={0.13}
-                  />
                 </div>
               </motion.div>
 

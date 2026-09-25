@@ -554,18 +554,18 @@ pause
     .sync-note{margin-top:10px;text-align:center;color:#64748b;font-size:12px;line-height:1.45}
     .back{display:block;text-align:center;margin-top:14px;color:#475569;text-decoration:none;font-size:14px;font-weight:650}
     @media (max-width:520px){
-      body{padding:10px 8px;align-items:flex-start}
+      body{padding:10px 8px;align-items:flex-start;color:#000000;font-weight:700}
       .card{margin-top:8px;padding:20px 16px;border-radius:14px}
-      h1{font-size:27px;line-height:1.2;margin-bottom:8px}
-      .date{font-size:15px;margin-bottom:16px;font-weight:700}
-      .help{font-size:16px;line-height:1.6;color:#334155;margin-bottom:18px}
+      h1{font-size:27px;line-height:1.2;margin-bottom:8px;color:#000000;font-weight:900}
+      .date{font-size:15px;margin-bottom:16px;font-weight:900;color:#000000}
+      .help{font-size:16px;line-height:1.6;color:#000000;margin-bottom:18px;font-weight:800}
       .task-row{gap:14px;padding:16px 14px;align-items:center;min-height:58px}
       .task-row input{width:24px;height:24px;min-width:24px;margin:0}
-      .task-row span{font-size:17px;line-height:1.5;font-weight:700;color:#0f172a}
-      .empty{font-size:16px;padding:18px 14px}
-      .submit{margin-top:18px;padding:17px 18px;font-size:18px;border-radius:12px}
-      .sync-note{font-size:14px;line-height:1.55;color:#475569;margin-top:12px}
-      .back{font-size:15px;margin-top:18px;padding:8px}
+      .task-row span{font-size:17px;line-height:1.5;font-weight:900;color:#000000}
+      .empty{font-size:16px;padding:18px 14px;color:#000000;font-weight:800}
+      .submit{margin-top:18px;padding:17px 18px;font-size:18px;border-radius:12px;font-weight:900}
+      .sync-note{font-size:14px;line-height:1.55;color:#000000;margin-top:12px;font-weight:800}
+      .back{font-size:15px;margin-top:18px;padding:8px;color:#000000;font-weight:900}
     }
   </style>
 </head>

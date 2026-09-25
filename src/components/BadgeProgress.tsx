@@ -205,7 +205,7 @@ export const BadgeProgress: React.FC<BadgeProgressProps> = ({
           <div className="absolute right-8 -bottom-8 w-16 h-16 rotate-45 border-8 border-red-500/8 rounded-xl" />
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 opacity-70" />
 
-          <div className="relative flex items-start justify-between gap-2">
+          <div className="relative grid grid-cols-[minmax(0,1fr)_minmax(180px,1.55fr)_auto] items-start gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               <motion.div
                 key={progress.current.id}
@@ -221,27 +221,26 @@ export const BadgeProgress: React.FC<BadgeProgressProps> = ({
                 <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate">{progress.current.name}</h4>
               </div>
             </div>
+
+            <div className="min-w-0 text-left">
+              <div className="flex items-center justify-end gap-1">
+                <Sparkles className="w-3 h-3 text-blue-500 shrink-0" />
+                <p className="text-[8px] uppercase tracking-[0.14em] font-black text-blue-600 dark:text-blue-300">
+                  AI Insight
+                </p>
+              </div>
+              <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold leading-snug text-right text-slate-700 dark:text-slate-200">
+                {aiInsight}
+              </p>
+            </div>
+
             <ChevronDown className={`w-4 h-4 mt-0.5 text-slate-400 transition-transform shrink-0 ${showRoadmap ? 'rotate-180' : ''}`} />
           </div>
 
           <div className="relative mt-1.5">
-            <div className="grid grid-cols-2 items-center gap-2">
-              <div className="min-w-0" style={{ paddingLeft: '20%' }}>
-                <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
-              </div>
-
-              <div className="min-w-0 pl-1 text-left">
-                <div className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-blue-500 shrink-0" />
-                  <p className="text-[8px] uppercase tracking-[0.14em] font-black text-blue-600 dark:text-blue-300">
-                    AI Insight
-                  </p>
-                </div>
-                <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold leading-snug text-slate-700 dark:text-slate-200">
-                  {aiInsight}
-                </p>
-              </div>
+            <div className="min-w-0" style={{ paddingLeft: '20%' }}>
+              <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
             </div>
           </div>
 

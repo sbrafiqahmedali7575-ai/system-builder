@@ -309,7 +309,7 @@ async function startServer() {
   });
 
   // End-of-day fallback: no task creation or no explicit app/email response => Not Completed.
-  app.all('/api/finalize-current-day', async (req, res) => {
+  app.all('/api/finalize-day', async (req, res) => {
     const authHeader = (req.headers.authorization || '').trim();
     const providedToken = authHeader.startsWith('Bearer ')
       ? authHeader.substring(7).trim()
@@ -330,11 +330,19 @@ async function startServer() {
     }
 
     try {
-      const result = await finalizeDayIfNoResponse();
-      return res.status(200).json({ success: true, ...result });
+      const usePreviousDay =
+        req.body?.previousDay === true ||
+        String(req.query?.target || '').toLowerCase() === 'previous';
+
+      const targetDate = usePreviousDay
+        ? new Date(Date.now() - 24 * 60 * 60 * 1000)
+        : new Date();
+
+      const result = await finalizeDayIfNoResponse(targetDate);
+      return res.status(200).json({ success: true, target: usePreviousDay ? 'previous' : 'current', ...result });
     } catch (err: any) {
       const safeError = sanitizeError(err);
-      console.error('Unhandled failure in /api/finalize-current-day:', safeError);
+      console.error('Unhandled failure in /api/finalize-day:', safeError);
       return res.status(500).json({ success: false, error: safeError });
     }
   });

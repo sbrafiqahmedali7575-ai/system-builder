@@ -117,25 +117,28 @@ export function getKolkataTimeInfo(date = new Date()): {
 export async function findTodayTaskOrRecord(): Promise<{
   record?: any;
   task?: any;
+  tasks?: any[];
   taskDetails?: EmailTaskDetails;
 } | null> {
   const { dateKey, formattedDate } = getKolkataTimeInfo();
 
   try {
-    // 1. Check tasks collection
     const tasksSnap = await getDocs(collection(db, 'tasks'));
-    let matchedTask: any = null;
+    const matchedTasks: any[] = [];
+
     tasksSnap.forEach((d) => {
       const t = d.data();
       if (t.taskKey === dateKey || t.taskKey === formattedDate) {
-        matchedTask = { id: d.id, ...t };
+        matchedTasks.push({ id: d.id, ...t });
       }
     });
 
-    // 2. Check records collection
+    matchedTasks.sort((x, y) =>
+      String(x.updatedAt || x.id).localeCompare(String(y.updatedAt || y.id))
+    );
+
     const recordsSnap = await getDocs(collection(db, 'records'));
     let matchedRecord: any = null;
-    let fallbackLatestRecord: any = null;
     let highestDay = -1;
 
     recordsSnap.forEach((d) => {
@@ -156,37 +159,40 @@ export async function findTodayTaskOrRecord(): Promise<{
       }
 
       const dayNum = Number(r.day || 0);
-      if (dayNum > highestDay) {
-        highestDay = dayNum;
-        fallbackLatestRecord = rec;
-      }
+      if (dayNum > highestDay) highestDay = dayNum;
     });
 
-    const activeRecord = matchedRecord;
     const nextDayNum = highestDay > 0 ? highestDay + 1 : 1;
+    const primaryTask = matchedTasks[0];
+    const allTasksCompleted =
+      matchedTasks.length > 0 && matchedTasks.every((task) => Boolean(task.isCompleted));
 
-    const taskDate = matchedTask?.taskKey || activeRecord?.date || formattedDate;
     const taskName =
-      matchedTask?.taskOfTheDay ||
-      activeRecord?.summary ||
-      `Day ${activeRecord?.day || nextDayNum} Daily Task`;
-    const isCompleted = matchedTask
-      ? Boolean(matchedTask.isCompleted)
-      : Boolean(activeRecord?.isCompleted);
+      matchedTasks.length > 1
+        ? `${matchedTasks.length} tasks scheduled`
+        : primaryTask?.taskOfTheDay ||
+          matchedRecord?.summary ||
+          `Day ${matchedRecord?.day || nextDayNum} Daily Tasks`;
 
     return {
-      record: activeRecord || fallbackLatestRecord,
-      task: matchedTask,
+      record: matchedRecord,
+      task: primaryTask,
+      tasks: matchedTasks,
       taskDetails: {
-        recordId: activeRecord?.id || `rec-${dateKey}`,
-        taskId: matchedTask?.id || `task-${dateKey}`,
-        taskDate,
+        recordId: matchedRecord?.id || `rec-${dateKey}`,
+        taskId: primaryTask?.id || `review-${dateKey}`,
+        taskDate: formattedDate,
         taskName,
-        isCompleted,
+        isCompleted: matchedTasks.length > 0 ? allTasksCompleted : Boolean(matchedRecord?.isCompleted),
+        tasks: matchedTasks.map((task) => ({
+          id: task.id,
+          title: String(task.taskOfTheDay || 'Daily Task'),
+          isCompleted: Boolean(task.isCompleted),
+        })),
       },
     };
   } catch (err) {
-    console.error('Error finding today task or record:', sanitizeError(err));
+    console.error('Error finding today tasks or record:', sanitizeError(err));
     return null;
   }
 }
@@ -201,8 +207,9 @@ export interface TriggerDailyReminderResult {
   taskName?: string;
   status?: string;
   previewLinks?: {
-    completedUrl: string;
-    notCompletedUrl: string;
+    reviewUrl?: string;
+    completedUrl?: string;
+    notCompletedUrl?: string;
   };
   error?: string;
   message?: string;
@@ -307,10 +314,11 @@ export async function triggerDailyReminder(options?: {
 
     const taskDetails: EmailTaskDetails = todayData?.taskDetails || {
       recordId: `rec-${dateKey}`,
-      taskId: `task-${dateKey}`,
+      taskId: `review-${dateKey}`,
       taskDate: formattedDate,
-      taskName: 'Daily Task: Show up every day to build lasting consistency',
+      taskName: 'Today’s Tasks',
       isCompleted: false,
+      tasks: [],
       recipientEmail: targetRecipient,
       recipientName: settings.recipientName || 'Rafiq Ahmed',
     };

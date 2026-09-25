@@ -7,6 +7,7 @@ import { isTodayDate } from '../utils/dateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
 import { NinjaBadgeProgress } from './NinjaBadgeProgress';
+import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -100,6 +101,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return [...records].sort((a, b) => b.day - a.day).slice(0, 7).reverse();
   }, [records]);
 
+  // Streak ring shows the strongest streak value: use max streak whenever it
+  // exceeds the active streak, otherwise keep the active streak in the ring.
+  const streakRingDays = Math.max(allKpis.currentStreak, allKpis.maxStreak);
+  const streakRingUsesMax = allKpis.maxStreak > allKpis.currentStreak;
+  const streakRingTarget = Math.max(7, Math.ceil(Math.max(1, streakRingDays) / 7) * 7);
+  const streakRingProgress = streakRingDays === 0
+    ? 0
+    : Math.min(100, (streakRingDays / streakRingTarget) * 100);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -130,68 +140,147 @@ export const ReportView: React.FC<ReportViewProps> = ({
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-1.5 sm:gap-2">
               {/* Metric 1: Overall Completion */}
-              <div
-                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] ${
-                  isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/80 shadow-2xs'
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.995 }}
+                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                  isDark
+                    ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
+                    : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs text-slate-400">
+                <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-70" />
+
+                <div className="relative flex items-center justify-between text-xs text-slate-400">
                   <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
                     Overall Completion
                   </span>
-                  <Award className="w-3.5 h-3.5 text-blue-500" />
-                </div>
-                <div className="my-1 flex items-baseline space-x-1">
-                  <span
-                    className={`text-2xl font-extrabold font-mono ${
-                      allKpis.completionRate >= 80
-                        ? 'text-blue-500'
-                        : isDark
-                        ? 'text-slate-200'
-                        : 'text-slate-800'
-                    }`}
+                  <motion.div
+                    initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+                    className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center"
                   >
-                    {allKpis.completionRate.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-slate-400 font-medium">Standard 80%</span>
+                    <Award className="w-3.5 h-3.5 text-blue-500" />
+                  </motion.div>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {allKpis.completionRate >= 80
-                    ? 'Target ≥80% achieved'
-                    : `${(80 - allKpis.completionRate).toFixed(1)}% to 80% mastery`}
-                </p>
-              </div>
+
+                <div className="relative mt-1 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-baseline space-x-1">
+                      <span
+                        className={`text-2xl font-extrabold font-mono ${
+                          allKpis.completionRate >= 80
+                            ? 'text-blue-500'
+                            : isDark
+                            ? 'text-slate-200'
+                            : 'text-slate-800'
+                        }`}
+                      >
+                        {allKpis.completionRate.toFixed(1)}%
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {allKpis.completedDays}/{allKpis.totalDays} days completed
+                    </p>
+                    <p className="mt-0.5 text-[9px] text-slate-400">
+                      {allKpis.completionRate >= 80
+                        ? 'Target ≥80% achieved'
+                        : `${(80 - allKpis.completionRate).toFixed(1)}% to 80% mastery`}
+                    </p>
+                  </div>
+
+                  <AnimatedProgressRing
+                    value={allKpis.completionRate}
+                    size={56}
+                    strokeWidth={5}
+                    progressClassName={allKpis.completionRate >= 80 ? 'text-blue-500' : 'text-cyan-500'}
+                    label={`${Math.round(allKpis.completionRate)}%`}
+                    sublabel="complete"
+                    delay={0.08}
+                  />
+                </div>
+              </motion.div>
 
               {/* Metric 2: Active Streak */}
-              <div
-                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] ${
-                  isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/80 shadow-2xs'
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.32, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.995 }}
+                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                  isDark
+                    ? 'bg-slate-900/60 border-slate-800 hover:border-amber-700/60'
+                    : 'bg-white border-slate-200/80 shadow-2xs hover:border-amber-300 hover:shadow-md'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs text-slate-400">
+                <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-amber-500/8 group-hover:scale-125 transition-transform duration-500" />
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-red-500 opacity-70" />
+
+                <div className="relative flex items-center justify-between text-xs text-slate-400">
                   <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
                     Active Streak
                   </span>
-                  <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  <motion.div
+                    initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
+                    className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center"
+                  >
+                    <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  </motion.div>
                 </div>
-                <div className="my-1 flex items-baseline space-x-1">
-                  <span className="text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400">
-                    {allKpis.currentStreak} Days
-                  </span>
-                  <span className="text-xs text-slate-400">active</span>
+
+                <div className="relative mt-1 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-baseline space-x-1">
+                      <span className="text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400">
+                        {allKpis.currentStreak}
+                      </span>
+                      <span className="text-[10px] text-slate-400">active days</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Personal best: {allKpis.maxStreak} days
+                    </p>
+                    <p className="mt-0.5 text-[9px] text-slate-400">
+                      Ring shows {streakRingUsesMax ? 'max streak' : 'active streak'} · next {streakRingTarget}D milestone
+                    </p>
+                  </div>
+
+                  <AnimatedProgressRing
+                    value={streakRingProgress}
+                    size={56}
+                    strokeWidth={5}
+                    progressClassName="text-amber-500"
+                    label={`${streakRingDays}D`}
+                    sublabel={streakRingUsesMax ? 'max' : 'active'}
+                    delay={0.13}
+                  />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Max: {allKpis.maxStreak} days
-                </p>
-              </div>
+              </motion.div>
 
               {/* Metric 3: Recent 7-Day Cadence */}
-              <div
-                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] ${
-                  isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200/80 shadow-2xs'
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.32, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.995 }}
+                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                  isDark
+                    ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
+                    : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs mb-1">
+                <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 opacity-70" />
+
+                <div className="relative flex items-center justify-between text-xs mb-1">
                   <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
                     Recent 7-Day Cadence
                   </span>
@@ -200,12 +289,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
+                <div className="relative flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
                   {last7Records.map((r) => {
                     const isToday = isTodayDate(r.date);
                     return (
-                      <div
+                      <motion.div
                         key={r.id}
+                        whileHover={{ y: -1, scale: 1.03 }}
                         className="flex-1 flex flex-col items-center gap-0.5"
                         title={`Day ${r.day} (${r.date}): ${r.isCompleted ? 'Completed' : 'Not Completed'}`}
                       >
@@ -219,11 +309,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         <span className="text-[9px] font-mono text-slate-400">
                           D{r.day}
                         </span>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
 
               {/* Metric 4: Long-term Badge Rank */}
               <NinjaBadgeProgress

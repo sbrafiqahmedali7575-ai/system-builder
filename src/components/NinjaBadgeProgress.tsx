@@ -12,7 +12,8 @@ interface NinjaBadgeProgressProps {
   theme: DashboardTheme;
 }
 
-const BADGE_STORAGE_KEY = 'SYSTEM_BUILDER_HIGHEST_BADGE_V1';
+const BADGE_STORAGE_KEY = 'SYSTEM_BUILDER_HIGHEST_BADGE_DAY_V2';
+const LEGACY_BADGE_STORAGE_KEY = 'SYSTEM_BUILDER_HIGHEST_BADGE_V1';
 
 const accentStyles: Record<LongTermBadge['accent'], { ring: string; soft: string; text: string; glow: string }> = {
   blue: {
@@ -58,29 +59,40 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    let storedIndex: number | null = null;
+    const currentMilestoneDays = progress.current.minDays;
+    let storedMilestoneDays: number | null = null;
+
     const stored = window.localStorage.getItem(BADGE_STORAGE_KEY);
     if (stored !== null) {
       const parsed = Number.parseInt(stored, 10);
-      if (Number.isFinite(parsed)) storedIndex = parsed;
+      if (Number.isFinite(parsed)) storedMilestoneDays = parsed;
     }
 
-    // First visit after this feature is installed: adopt the user's current rank silently.
-    // This prevents old achievements from replaying as "new" merely because the UI was upgraded.
+    // Migrate the old index-based tracker silently. Because the roadmap now has
+    // many quarterly badges, old array indexes no longer map safely to ranks.
+    if (storedMilestoneDays === null) {
+      const legacyStored = window.localStorage.getItem(LEGACY_BADGE_STORAGE_KEY);
+      if (legacyStored !== null) {
+        window.localStorage.removeItem(LEGACY_BADGE_STORAGE_KEY);
+      }
+    }
+
+    // First visit after this roadmap upgrade: adopt the user's current milestone
+    // silently so newly inserted historical quarter badges don't replay as "new".
     if (!initializedRef.current) {
       initializedRef.current = true;
-      if (storedIndex === null) {
-        window.localStorage.setItem(BADGE_STORAGE_KEY, String(Math.max(0, currentIndex)));
+      if (storedMilestoneDays === null) {
+        window.localStorage.setItem(BADGE_STORAGE_KEY, String(currentMilestoneDays));
         return;
       }
     }
 
-    const highestAcknowledged = storedIndex ?? 0;
-    if (currentIndex > highestAcknowledged) {
-      window.localStorage.setItem(BADGE_STORAGE_KEY, String(currentIndex));
-      setCelebrationBadge(LONG_TERM_BADGES[currentIndex]);
+    const highestAcknowledgedDays = storedMilestoneDays ?? 0;
+    if (currentMilestoneDays > highestAcknowledgedDays) {
+      window.localStorage.setItem(BADGE_STORAGE_KEY, String(currentMilestoneDays));
+      setCelebrationBadge(progress.current);
     }
-  }, [currentIndex]);
+  }, [progress.current]);
 
   const nextTarget = progress.next;
   const overallRingValue = nextTarget ? progress.unlockProgress : 100;
@@ -163,7 +175,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
             </div>
           ) : (
             <div className="relative mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-amber-600 dark:text-amber-300">
-              <Trophy className="w-3 h-3" /> Five-year path completed
+              <Trophy className="w-3 h-3" /> Quarterly path completed
             </div>
           )}
         </motion.button>
@@ -191,7 +203,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
                   )}
                 </div>
 
-                <div className="grid grid-cols-5 lg:grid-cols-10 gap-1">
+                <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-9 xl:grid-cols-12 gap-1">
                   {LONG_TERM_BADGES.map((badge, index) => {
                     const unlocked = totalDays >= badge.minDays && completionRate >= badge.minRate;
                     const isCurrent = badge.id === progress.current.id;
@@ -279,7 +291,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ totalDay
                   <div className="mt-2 rounded-xl border border-amber-300/70 dark:border-amber-900 bg-amber-50/80 dark:bg-amber-950/30 p-2 flex items-center gap-2">
                     <Award className="w-5 h-5 text-amber-500" />
                     <div>
-                      <p className="text-[10px] font-black text-amber-700 dark:text-amber-300">Legend path complete</p>
+                      <p className="text-[10px] font-black text-amber-700 dark:text-amber-300">Quarterly legend path complete</p>
                       <p className="text-[9px] text-slate-500 dark:text-slate-400">Keep protecting the streak and your long-term completion standard.</p>
                     </div>
                   </div>

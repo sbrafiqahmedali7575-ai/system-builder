@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Award, BarChart3 } from 'lucide-react';
+import { Flame, Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate } from '../utils/dateUtils';
@@ -128,25 +128,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 : 'bg-slate-50/70 border-slate-200/80'
             }`}
           >
-            <div className="flex items-center justify-between gap-2 pb-1.5 mb-2 border-b border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center space-x-1.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
-                <BarChart3 className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                  Ninja Performance Dojo
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Performance, consistency &amp; long-term badge rank
-                </p>
-              </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-[0.18em] text-red-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Ninja Edition
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-1.5 sm:gap-2">
               {/* Metric 1: Overall Completion */}
               <div

@@ -97,12 +97,28 @@ export const ReportView: React.FC<ReportViewProps> = ({
   // Overall KPIs for hero visual (preserved calculations)
   const allKpis = useMemo(() => calculateKPIStats(records), [records]);
 
-  // Last 7 days records for consistency cadence
-  const last7Records = useMemo(() => {
-    return [...records].sort((a, b) => b.day - a.day).slice(0, 7).reverse();
+  // Fixed tracked-week cadence:
+  // Week 1 = D1-D7, Week 2 = D8-D14, Week 3 = D15-D21, etc.
+  const recentWeekCadence = useMemo(() => {
+    const latestDay = records.reduce((maxDay, record) => Math.max(maxDay, record.day), 0);
+    const weekNumber = latestDay > 0 ? Math.ceil(latestDay / 7) : 1;
+    const startDay = (weekNumber - 1) * 7 + 1;
+    const endDay = weekNumber * 7;
+    const weekRecords = [...records]
+      .filter((record) => record.day >= startDay && record.day <= endDay)
+      .sort((a, b) => a.day - b.day);
+    const completedDays = weekRecords.filter((record) => record.isCompleted).length;
+    const performance = Math.min(100, (completedDays / 7) * 100);
+
+    return {
+      weekNumber,
+      startDay,
+      endDay,
+      records: weekRecords,
+      completedDays,
+      performance,
+    };
   }, [records]);
-  const last7CompletedDays = last7Records.filter((record) => record.isCompleted).length;
-  const last7Performance = Math.min(100, (last7CompletedDays / 7) * 100);
 
   const currentCadenceDay = useMemo(() => {
     const dateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
@@ -248,7 +264,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
               </motion.div>
 
-              {/* Metric 3: Recent 7-Day Cadence */}
+              {/* Metric 3: Recent Week Cadence */}
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.985 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -267,25 +283,25 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="relative flex items-center justify-between text-xs mb-1 gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <AnimatedProgressRing
-                      value={last7Performance}
+                      value={recentWeekCadence.performance}
                       size={30}
                       strokeWidth={3}
                       progressClassName={
-                        last7Performance >= 80
+                        recentWeekCadence.performance >= 80
                           ? 'text-blue-500'
-                          : last7Performance >= 50
+                          : recentWeekCadence.performance >= 50
                           ? 'text-amber-500'
                           : 'text-rose-500'
                       }
-                      label={`${Math.round(last7Performance)}%`}
+                      label={`${Math.round(recentWeekCadence.performance)}%`}
                       delay={0.12}
                     />
                     <span className="font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-200">
-                      Recent 7-Day Cadence
+                      Recent Week Cadence
                     </span>
                   </div>
                   <span className="text-blue-600 dark:text-blue-400 font-bold font-mono text-xs shrink-0">
-                    {last7CompletedDays}/7 Done
+                    {recentWeekCadence.completedDays}/7 Done
                   </span>
                 </div>
 
@@ -296,7 +312,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="relative">
                   <div className="w-full min-w-0">
                     <div className="flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
-                      {last7Records.map((r) => {
+                      {recentWeekCadence.records.map((r) => {
                         const isToday = isTodayDate(r.date);
                         const timestamp = parseDateToTimestamp(r.date);
                         const pointDate = timestamp > 0 ? new Date(timestamp) : null;

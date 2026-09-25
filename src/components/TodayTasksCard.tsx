@@ -31,6 +31,10 @@ interface TodayTasksCardProps {
   onUpdateTask: (task: TaskItem) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
+  onSubmitTaskDay: (
+    dateKey: string,
+    dayTasks: TaskItem[]
+  ) => Promise<'COMPLETED' | 'NOT_COMPLETED'>;
   isSyncing?: boolean;
 }
 
@@ -41,6 +45,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   onUpdateTask,
   onDeleteTask,
   onToggleTaskStatus,
+  onSubmitTaskDay,
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
@@ -113,6 +118,16 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   // General feedback status (e.g. "Saving...")
   const [savingStatusMsg, setSavingStatusMsg] = useState<string | null>(null);
   const [cardError, setCardError] = useState<string | null>(null);
+  const [isSubmittingDay, setIsSubmittingDay] = useState(false);
+  const [submitFeedback, setSubmitFeedback] = useState<{
+    message: string;
+    status: 'COMPLETED' | 'NOT_COMPLETED';
+  } | null>(null);
+
+  useEffect(() => {
+    setSubmitFeedback(null);
+    setCardError(null);
+  }, [activeDateKey]);
 
   // Compute panel target dateKey
   const panelTargetDateKey = useMemo(() => {
@@ -213,6 +228,46 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       console.error('Error toggling task:', err);
       setSavingStatusMsg(null);
       setCardError(err?.message || 'Failed to update task completion status.');
+    }
+  };
+
+  // Submit the active day's task statuses to the records table.
+  const handleSubmitDay = async () => {
+    if (dateTasks.length === 0) {
+      setCardError('Add at least one task before submitting the day.');
+      return;
+    }
+
+    try {
+      setIsSubmittingDay(true);
+      setCardError(null);
+      setSubmitFeedback(null);
+      setSavingStatusMsg(`Submitting ${activeDateLabel.toLowerCase()}...`);
+
+      const status = await onSubmitTaskDay(activeDateKey, dateTasks);
+      const message =
+        status === 'COMPLETED'
+          ? `${activeDateLabel} submitted as Completed.`
+          : `${activeDateLabel} submitted as Not Completed.`;
+
+      setSubmitFeedback({ message, status });
+
+      if (status === 'COMPLETED') {
+        try {
+          confetti({
+            particleCount: 65,
+            spread: 70,
+            origin: { y: 0.58 },
+            colors: ['#2563eb', '#10b981', '#fbbf24'],
+          });
+        } catch (_) {}
+      }
+    } catch (err: any) {
+      console.error('Error submitting daily task response:', err);
+      setCardError(err?.message || 'Failed to submit the day. Please try again.');
+    } finally {
+      setSavingStatusMsg(null);
+      setIsSubmittingDay(false);
     }
   };
 
@@ -354,6 +409,26 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add Task</span>
           </button>
+
+          <button
+            id="btn-submit-task-day"
+            type="button"
+            onClick={handleSubmitDay}
+            disabled={totalTasksCount === 0 || isSubmittingDay || isSyncing}
+            title={
+              totalTasksCount === 0
+                ? 'Add at least one task before submitting'
+                : `Submit ${activeDateLabel.toLowerCase()} task status`
+            }
+            className="flex items-center space-x-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            {isSubmittingDay ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+            )}
+            <span>Submit</span>
+          </button>
         </div>
       </div>
 
@@ -364,6 +439,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button onClick={() => setCardError(null)} className="p-0.5 cursor-pointer">
             <X className="w-3.5 h-3.5" />
           </button>
+        </div>
+      )}
+
+      {submitFeedback && (
+        <div
+          className={`mb-2 p-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 ${
+            submitFeedback.status === 'COMPLETED'
+              ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+              : 'border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+          }`}
+        >
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{submitFeedback.message}</span>
         </div>
       )}
 

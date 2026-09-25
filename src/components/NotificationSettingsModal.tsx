@@ -95,7 +95,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
       if (res.ok && data.settings) {
         setSettings(data.settings);
         setProvider(data.provider);
-        setCurrentKolkataTime(data.currentKolkataTime);
+        setCurrentKolkataTime(data.currentKolkataTime || data.kolkataTime?.timeStr || '');
       }
     } catch (e) {
       console.error('Failed to load notification settings:', e);

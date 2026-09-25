@@ -133,7 +133,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
                 ? 'bg-slate-900/60 border-slate-800'
                 : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
             }`
-          : 'w-full h-full'
+          : 'w-full h-full flex flex-col'
       }
     >
       {showSummary && (
@@ -264,11 +264,11 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         viewport={{ once: true, amount: 0.12 }}
         transition={{ duration: 0.42, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
         whileHover={{ y: -2 }}
-        className={`ui-motion-card p-2 rounded-xl border relative overflow-hidden ${
+        className={`system-task-card ui-motion-section h-full flex-1 p-2 sm:p-2.5 rounded-2xl border flex flex-col transition-all ${
 
         isDark
-          ? 'bg-gradient-to-br from-blue-950/20 via-slate-950/80 to-rose-950/20 border-slate-800'
-          : 'bg-gradient-to-br from-blue-50/80 via-white to-rose-50/70 border-slate-200'
+          ? 'bg-slate-900/80 border-slate-800'
+          : 'bg-slate-50/70 border-slate-200/80'
       }`}>
         <div className="flex items-center justify-between mb-1 text-xs flex-wrap gap-1">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -288,18 +288,6 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
               <div className="w-3 h-3 rounded-full bg-rose-500" />
               <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                 Low Productivity (&lt;50%)
-              </span>
-            </div>
-            <div className="hidden sm:flex items-center space-x-1 pl-1 border-l border-slate-200 dark:border-slate-800">
-              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500 text-white text-[9px] font-bold">✓</span>
-              <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                7/7 Complete
-              </span>
-            </div>
-            <div className="hidden sm:flex items-center space-x-1">
-              <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[9px] font-bold">✕</span>
-              <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Below 7/7
               </span>
             </div>
           </div>
@@ -325,7 +313,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         </div>
 
         {/* SVG Container */}
-        <div className="w-full overflow-hidden">
+        <div className="w-full flex-1 overflow-hidden flex items-center">
           <div className="w-full">
             <svg
               viewBox={`0 0 ${svgWidth} ${svgHeight}`}

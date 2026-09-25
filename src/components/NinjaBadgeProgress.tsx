@@ -140,9 +140,6 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                 <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
               </div>
-              <div className="mt-0.5 text-[9px] uppercase tracking-wider text-slate-400">
-                Badges unlock by done days only
-              </div>
             </div>
 
             <AnimatedProgressRing

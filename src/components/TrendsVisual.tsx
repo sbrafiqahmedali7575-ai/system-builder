@@ -141,8 +141,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           whileTap={{ scale: 0.995 }}
           className={`ui-motion-card p-2 rounded-xl border min-h-[118px] relative overflow-hidden group flex flex-col justify-between ${
             isDark
-              ? 'bg-slate-900/40 border-slate-800 hover:border-blue-700/60'
-              : 'bg-slate-50 border-slate-200 hover:border-blue-300 hover:shadow-md'
+              ? 'bg-blue-950/20 border-blue-900/50 hover:border-blue-700/70'
+              : 'bg-blue-50/70 border-blue-200/80 hover:border-blue-300 hover:shadow-md'
           }`}
         >
           <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
@@ -201,8 +201,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           whileTap={{ scale: 0.995 }}
           className={`ui-motion-card p-2 rounded-xl border min-h-[118px] relative overflow-hidden group flex flex-col justify-between ${
             isDark
-              ? 'bg-slate-900/40 border-slate-800 hover:border-amber-700/60'
-              : 'bg-slate-50 border-slate-200 hover:border-amber-300 hover:shadow-md'
+              ? 'bg-amber-950/20 border-amber-900/50 hover:border-amber-700/70'
+              : 'bg-amber-50/75 border-amber-200/80 hover:border-amber-300 hover:shadow-md'
           }`}
         >
           <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-amber-500/8 group-hover:scale-125 transition-transform duration-500" />
@@ -261,8 +261,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           whileTap={{ scale: 0.995 }}
           className={`ui-motion-card p-2 rounded-xl border min-h-[118px] relative overflow-hidden group flex flex-col justify-between ${
             isDark
-              ? 'bg-slate-900/40 border-slate-800 hover:border-rose-700/60'
-              : 'bg-slate-50 border-slate-200 hover:border-rose-300 hover:shadow-md'
+              ? 'bg-rose-950/20 border-rose-900/50 hover:border-rose-700/70'
+              : 'bg-rose-50/75 border-rose-200/80 hover:border-rose-300 hover:shadow-md'
           }`}
         >
           <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-rose-500/8 group-hover:scale-125 transition-transform duration-500" />
@@ -325,7 +325,9 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         whileHover={{ y: -2 }}
         className={`ui-motion-card p-2 rounded-xl border relative overflow-hidden ${
 
-        isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50/80 border-slate-200'
+        isDark
+          ? 'bg-gradient-to-br from-blue-950/20 via-slate-950/80 to-rose-950/20 border-slate-800'
+          : 'bg-gradient-to-br from-blue-50/80 via-white to-rose-50/70 border-slate-200'
       }`}>
         <div className="flex items-center justify-between mb-1 text-xs flex-wrap gap-1">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -378,9 +380,6 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
             >
               Data Labels: {showDataLabels ? 'On' : 'Off'}
             </button>
-            <span className="text-[11px] text-slate-400 italic hidden sm:inline">
-              Hover or tap points for details
-            </span>
           </div>
         </div>
 

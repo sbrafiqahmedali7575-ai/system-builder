@@ -1,0 +1,36 @@
+name: Email Current URL Build Verification
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript check
+        run: npm run lint
+      - name: Production build
+        run: npm run build
+      - name: Verify canonical email URL
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          const source = await readFile('./server/emailService.ts', 'utf8');
+          if (!source.includes("https://systembuilder08.ai.studio")) {
+            throw new Error('Current System Builder URL not found.');
+          }
+          if (source.includes("return envUrl.replace")) {
+            throw new Error('Environment override still controls email links.');
+          }
+          console.log('Canonical email URL is enforced.');
+          NODE

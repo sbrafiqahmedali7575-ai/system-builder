@@ -160,7 +160,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-70" />
 
                 <div className="relative flex items-center justify-between text-xs text-slate-400">
-                  <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
                     Overall Completion
                   </span>
                   <motion.div
@@ -227,7 +227,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-red-500 opacity-70" />
 
                 <div className="relative flex items-center justify-between text-xs text-slate-400">
-                  <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
                     Active Streak
                   </span>
                   <motion.div
@@ -287,7 +287,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 opacity-70" />
 
                 <div className="relative flex items-center justify-between text-xs mb-1">
-                  <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
                     Recent 7-Day Cadence
                   </span>
                   <span className="text-blue-600 dark:text-blue-400 font-semibold font-mono text-xs">

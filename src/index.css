@@ -441,3 +441,49 @@ body {
   .ui-compact .lg\:px-6 { padding-left: 1.05rem; padding-right: 1.05rem; }
   .ui-compact .lg\:py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
 }
+
+/* Readability pass: preserve the compact layout while making small UI copy easier to scan. */
+.ui-compact [class~="text-[7px]"] {
+  font-size: 0.5rem; /* 8px */
+  line-height: 1.3;
+}
+
+.ui-compact [class~="text-[8px]"] {
+  font-size: 0.5625rem; /* 9px */
+  line-height: 1.32;
+}
+
+.ui-compact [class~="text-[9px]"] {
+  font-size: 0.625rem; /* 10px */
+  line-height: 1.35;
+}
+
+.ui-compact [class~="text-[10px]"] {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.38;
+}
+
+.ui-compact [class~="text-[11px]"] {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.4;
+}
+
+.ui-compact .text-xs {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.42;
+}
+
+/* Improve contrast for helper text without making it visually dominant. */
+.ui-compact .text-slate-400 {
+  color: rgb(100 116 139);
+}
+
+.ui-compact .text-slate-500 {
+  color: rgb(71 85 105);
+}
+
+.dark .ui-compact .text-slate-400,
+.dark .ui-compact .text-slate-500 {
+  color: rgb(203 213 225);
+}
+

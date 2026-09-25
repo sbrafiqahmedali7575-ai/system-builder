@@ -165,7 +165,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
 
                 <div className="relative mt-1 flex flex-1 items-center">
-                  <div className="min-w-0 ml-[20%] text-left">
+                  <div className="min-w-0 w-full text-left" style={{ paddingLeft: '20%' }}>
                     <div className="flex items-baseline justify-start">
                       <span
                         className={`text-2xl font-extrabold font-mono ${
@@ -219,7 +219,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 </div>
 
                 <div className="relative mt-1 flex flex-1 items-center">
-                  <div className="min-w-0 ml-[20%] text-left">
+                  <div className="min-w-0 w-full text-left" style={{ paddingLeft: '20%' }}>
                     <div className="flex items-baseline justify-start gap-1">
                       <span className="text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400">
                         {allKpis.currentStreak}

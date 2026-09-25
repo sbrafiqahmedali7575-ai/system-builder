@@ -157,16 +157,16 @@ export async function finalizeDayIfNoResponse(targetDate = new Date()): Promise<
     }
   });
 
-  if (
-    matchedRecord?.responseSubmittedAt &&
-    (matchedRecord.responseSource === 'APP' || matchedRecord.responseSource === 'EMAIL')
-  ) {
+  if (matchedRecord?.responseSubmittedAt) {
     return {
       finalized: false,
       dateKey,
       formattedDate,
       recordId: matchedRecord.id,
-      reason: 'explicit_response_already_submitted',
+      reason:
+        matchedRecord.responseSource === 'AUTO_DEFAULT'
+          ? 'already_auto_finalized'
+          : 'explicit_response_already_submitted',
     };
   }
 
@@ -536,8 +536,8 @@ export function startBackgroundScheduler(): void {
       const [currentHour, currentMinute] = timeStr.split(':').map(Number);
       const currentMinutes = currentHour * 60 + currentMinute;
 
-      // At 23:55 IST or later, close the current day if there was no explicit response.
-      if (currentMinutes >= 23 * 60 + 55) {
+      // At 23:59 IST or later, close the current day if there was no explicit response.
+      if (currentMinutes >= 23 * 60 + 59) {
         try {
           const finalization = await finalizeDayIfNoResponse();
           if (finalization.finalized) {

@@ -21,6 +21,7 @@ import {
   getUpcomingDateOptions,
   formatCalendarDate,
   areDatesEqual,
+  toInputDateValue,
 } from '../utils/taskDateUtils';
 import confetti from 'canvas-confetti';
 
@@ -123,9 +124,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     message: string;
     status: 'COMPLETED' | 'NOT_COMPLETED';
   } | null>(null);
+  const [copyForwardFeedback, setCopyForwardFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     setSubmitFeedback(null);
+    setCopyForwardFeedback(null);
     setCardError(null);
   }, [activeDateKey]);
 
@@ -273,6 +276,66 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     } finally {
       setSavingStatusMsg(null);
       setIsSubmittingDay(false);
+    }
+  };
+
+  const getNextTaskDateKey = (taskDateKey: string): string => {
+    const isoDate = toInputDateValue(taskDateKey);
+    const [year, month, day] = isoDate.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      throw new Error('Unable to determine the next date for this task.');
+    }
+
+    const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
+    return [
+      nextDate.getUTCFullYear(),
+      String(nextDate.getUTCMonth() + 1).padStart(2, '0'),
+      String(nextDate.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+  };
+
+  // Copy a task forward one calendar day without changing the original task.
+  const handleCopyToNextDay = async (task: TaskItem) => {
+    try {
+      setCardError(null);
+      setCopyForwardFeedback(null);
+
+      const nextDateKey = getNextTaskDateKey(task.taskKey);
+      const duplicate = tasks.find(
+        (candidate) =>
+          areDatesEqual(candidate.taskKey, nextDateKey) &&
+          candidate.taskOfTheDay.trim().toLowerCase() ===
+            task.taskOfTheDay.trim().toLowerCase()
+      );
+
+      if (duplicate) {
+        setCardError(
+          `"${task.taskOfTheDay}" already exists for ${formatCalendarDate(nextDateKey)}.`
+        );
+        return;
+      }
+
+      setSavingStatusMsg(`Adding "${task.taskOfTheDay}" to next day...`);
+
+      await onAddTask({
+        taskKey: nextDateKey,
+        taskOfTheDay: task.taskOfTheDay,
+        isCompleted: false,
+        priority: task.priority || 'Normal',
+        timeEstimate: task.timeEstimate,
+        category: task.category,
+        notes: task.notes,
+      });
+
+      setCopyForwardFeedback(
+        `Added "${task.taskOfTheDay}" to ${formatCalendarDate(nextDateKey)}.`
+      );
+    } catch (err: any) {
+      console.error('Error copying task to next day:', err);
+      setCardError(err?.message || 'Failed to add the task to the next day.');
+    } finally {
+      setSavingStatusMsg(null);
     }
   };
 
@@ -462,6 +525,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         </div>
       )}
 
+      {copyForwardFeedback && (
+        <div className="mb-2 p-1.5 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-semibold flex items-center gap-1.5">
+          <ArrowRight className="w-4 h-4 shrink-0" />
+          <span>{copyForwardFeedback}</span>
+        </div>
+      )}
+
       {savingStatusMsg && (
         <div className="mb-1.5 text-[11px] font-mono text-blue-600 dark:text-blue-400 flex items-center gap-1 animate-pulse">
           <Loader2 className="w-3 h-3 animate-spin" />
@@ -599,7 +669,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     </div>
                   </div>
 
-                  {/* Right: Edit & Delete Actions */}
+                  {/* Right: Edit, Next Day & Delete Actions */}
                   <div className="flex items-center space-x-0.5 shrink-0">
                     <button
                       type="button"
@@ -609,6 +679,16 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       aria-label={`Edit task ${task.taskOfTheDay}`}
                     >
                       <Pencil className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyToNextDay(task)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
+                      title={`Add to next day (${formatCalendarDate(getNextTaskDateKey(task.taskKey))})`}
+                      aria-label={`Add task ${task.taskOfTheDay} to next day`}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
 
                     <button

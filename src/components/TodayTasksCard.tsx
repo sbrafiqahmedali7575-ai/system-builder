@@ -289,7 +289,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                 {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
               </h2>
               {isSyncing && (
@@ -551,7 +551,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     <Plus className="w-4 h-4 stroke-[3]" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                       Enter Tasks
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -732,7 +732,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               }`}
             >
               <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800">
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                   Edit Task
                 </h3>
                 <button
@@ -844,7 +844,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <Trash2 className="w-5 h-5" />
               </div>
 
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 mb-0.5">
                 Delete Task?
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">

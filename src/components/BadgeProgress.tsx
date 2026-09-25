@@ -229,8 +229,16 @@ export const BadgeProgress: React.FC<BadgeProgressProps> = ({
                   AI Insight
                 </p>
               </div>
-              <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold leading-snug text-right text-slate-700 dark:text-slate-200">
+              <p
+                className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-semibold leading-[1.18] text-right text-slate-800 dark:text-slate-100 tracking-[0.01em] drop-shadow-[0_1px_1px_rgba(15,23,42,0.08)] dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.05)]"
+                style={{
+                  fontFamily:
+                    '"Segoe Script", "Snell Roundhand", "Apple Chancery", "Lucida Handwriting", "Bradley Hand", cursive',
+                }}
+              >
+                <span className="text-blue-500/80 dark:text-blue-300/80">“</span>
                 {aiInsight}
+                <span className="text-blue-500/80 dark:text-blue-300/80">”</span>
               </p>
             </div>
 

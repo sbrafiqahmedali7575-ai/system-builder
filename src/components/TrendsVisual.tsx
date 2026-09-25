@@ -207,7 +207,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
 
           <div className="relative flex items-center justify-between text-xs">
             <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400">
-              Avg Productivity
+              Steady Productivity
             </span>
             <motion.div
               initial={{ scale: 0.72, rotate: -12, opacity: 0 }}

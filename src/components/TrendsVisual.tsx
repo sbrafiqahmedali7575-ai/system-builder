@@ -166,7 +166,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           </div>
 
           <div className="relative mt-1 flex items-center justify-between gap-2">
-            <div className="min-w-0">
+            <div className="min-w-0" style={{ paddingLeft: '10%' }}>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-extrabold font-mono text-blue-500">
                   {highProductivityDaysCount}
@@ -228,7 +228,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           </div>
 
           <div className="relative mt-1 flex items-center justify-between gap-2">
-            <div className="min-w-0">
+            <div className="min-w-0" style={{ paddingLeft: '10%' }}>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-extrabold font-mono text-amber-500">
                   {steadyProductivityDaysCount}
@@ -290,7 +290,7 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           </div>
 
           <div className="relative mt-1 flex items-center justify-between gap-2">
-            <div className="min-w-0">
+            <div className="min-w-0" style={{ paddingLeft: '10%' }}>
               <div className="flex items-baseline gap-1">
                 <span className={`text-2xl font-extrabold font-mono ${
                   lowProductivityDaysCount > 0 ? 'text-rose-500' : 'text-slate-400'

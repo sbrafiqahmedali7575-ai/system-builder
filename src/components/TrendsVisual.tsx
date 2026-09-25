@@ -11,20 +11,23 @@ import {
   MovingAveragePoint,
 } from '../utils/trendCalculations';
 import { standardizeDate } from '../utils/dateUtils';
-import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 interface TrendsVisualProps {
   records: DailyRecord[];
   theme: DashboardTheme;
   onToggleRecordStatus?: (id: string) => void;
+  variant?: 'full' | 'chart' | 'summary';
 }
 
 export const TrendsVisual: React.FC<TrendsVisualProps> = ({
   records,
   theme,
   onToggleRecordStatus,
+  variant = 'full',
 }) => {
   const isDark = theme === 'dark';
+  const showSummary = variant !== 'chart';
+  const showChart = variant !== 'summary';
   const [windowSize] = useState<number>(7);
   const [showDataLabels, setShowDataLabels] = useState<boolean>(true);
   const [selectedPoint, setSelectedPoint] = useState<MovingAveragePoint | null>(null);
@@ -123,206 +126,138 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
       viewport={{ once: true, amount: 0.1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -2 }}
-      className={`ui-motion-section p-2.5 sm:p-3 rounded-2xl border space-y-3 ${
-        isDark
-          ? 'bg-slate-900/60 border-slate-800'
-          : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
-      }`}
+      className={
+        variant === 'full'
+          ? `ui-motion-section p-2.5 sm:p-3 rounded-2xl border space-y-3 ${
+              isDark
+                ? 'bg-slate-900/60 border-slate-800'
+                : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
+            }`
+          : 'w-full h-full'
+      }
     >
-      {/* 1. Productivity Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 sm:gap-2">
-        {/* Card 1: High Productivity */}
+      {showSummary && (
         <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.985 }}
+          initial={{ opacity: 0, y: 10, scale: 0.99 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.995 }}
-          className={`ui-motion-card p-2 rounded-xl border min-h-[118px] relative overflow-hidden group flex flex-col justify-between ${
+          transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+          className={`ui-motion-card w-full p-2.5 sm:p-3 rounded-xl border relative overflow-hidden ${
             isDark
-              ? 'bg-blue-950/20 border-blue-900/50 hover:border-blue-700/70'
-              : 'bg-blue-50/70 border-blue-200/80 hover:border-blue-300 hover:shadow-md'
+              ? 'bg-slate-900/70 border-slate-800'
+              : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
           }`}
         >
-          <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-blue-500/8 group-hover:scale-125 transition-transform duration-500" />
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-70" />
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-400 to-rose-500 opacity-80" />
 
-          <div className="relative flex items-center text-xs">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <motion.div
-                initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-                className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0"
-              >
-                <Flame className="w-3.5 h-3.5 text-blue-500" />
-              </motion.div>
-              <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                High Productivity
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.15em] font-black text-slate-500 dark:text-slate-400">
+                Weekly Productivity Summary
+              </p>
+              <p className="text-[10px] text-slate-400">
+                Fixed 7-day performance buckets
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-lg font-black font-mono text-slate-800 dark:text-slate-100">
+                {analyzedWeeksCount}
+              </span>
+              <span className="ml-1 text-[10px] font-bold text-slate-400">
+                weeks analyzed
               </span>
             </div>
           </div>
 
-          <div className="relative mt-1 flex items-center justify-between gap-2">
-            <div className="min-w-0" style={{ paddingLeft: '10%' }}>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-extrabold font-mono text-blue-500">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800">
+            <div className="py-2 sm:py-0 sm:pr-3 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0">
+                  <Flame className="w-3.5 h-3.5 text-blue-500" />
+                </span>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider font-black text-blue-600 dark:text-blue-300">
+                    High
+                  </p>
+                  <p className="text-[9px] text-slate-400">≥80%</p>
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1">
+                <span className="text-2xl font-black font-mono text-blue-500">
                   {highProductivityWeeksCount}
                 </span>
-                <span className="text-[10px] text-slate-400">weeks ≥80%</span>
+                <span className="text-[10px] text-slate-400">weeks</span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                {highProductivityPeriods.length} peak streak{highProductivityPeriods.length === 1 ? '' : 's'} recorded
-              </p>
-              <p className="mt-0.5 text-[9px] text-slate-400">
+              <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
                 {Math.round(highProductivityShare)}% of analyzed weeks
               </p>
+              <p className="text-[9px] text-slate-400">
+                {highProductivityPeriods.length} peak streak{highProductivityPeriods.length === 1 ? '' : 's'}
+              </p>
             </div>
 
-            <AnimatedProgressRing
-              value={highProductivityShare}
-              size={56}
-              strokeWidth={5}
-              progressClassName="text-blue-500"
-              label={`${highProductivityWeeksCount}W`}
-              sublabel="high"
-              delay={0.08}
-            />
-          </div>
-        </motion.div>
-
-        {/* Card 2: Average Productivity */}
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.985 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.32, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.995 }}
-          className={`ui-motion-card p-2 rounded-xl border min-h-[118px] relative overflow-hidden group flex flex-col justify-between ${
-            isDark
-              ? 'bg-amber-950/20 border-amber-900/50 hover:border-amber-700/70'
-              : 'bg-amber-50/75 border-amber-200/80 hover:border-amber-300 hover:shadow-md'
-          }`}
-        >
-          <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-amber-500/8 group-hover:scale-125 transition-transform duration-500" />
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-400 to-blue-500 opacity-70" />
-
-          <div className="relative flex items-center text-xs">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <motion.div
-                initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.05 }}
-                className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center shrink-0"
-              >
-                <Gauge className="w-3.5 h-3.5 text-amber-500" />
-              </motion.div>
-              <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                Steady Productivity
-              </span>
-            </div>
-          </div>
-
-          <div className="relative mt-1 flex items-center justify-between gap-2">
-            <div className="min-w-0" style={{ paddingLeft: '10%' }}>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-extrabold font-mono text-amber-500">
+            <div className="py-2 sm:py-0 sm:px-3 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 ring-2 ring-amber-400/30 flex items-center justify-center shrink-0">
+                  <Gauge className="w-3.5 h-3.5 text-amber-500" />
+                </span>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider font-black text-amber-600 dark:text-amber-300">
+                    Steady
+                  </p>
+                  <p className="text-[9px] text-slate-400">50–79%</p>
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1">
+                <span className="text-2xl font-black font-mono text-amber-500">
                   {steadyProductivityWeeksCount}
                 </span>
-                <span className="text-[10px] text-slate-400">weeks 50–79%</span>
+                <span className="text-[10px] text-slate-400">weeks</span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                Weeks in the steady productivity range
-              </p>
-              <p className="mt-0.5 text-[9px] text-slate-400">
+              <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
                 {Math.round(steadyProductivityShare)}% of analyzed weeks
               </p>
+              <p className="text-[9px] text-slate-400">
+                Weeks maintaining steady progress
+              </p>
             </div>
 
-            <AnimatedProgressRing
-              value={steadyProductivityShare}
-              size={56}
-              strokeWidth={5}
-              progressClassName="text-amber-500"
-              label={`${steadyProductivityWeeksCount}W`}
-              sublabel="steady"
-              delay={0.13}
-            />
-          </div>
-        </motion.div>
-
-        {/* Card 3: Low Productivity */}
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.985 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.32, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.995 }}
-          className={`ui-motion-card p-2 rounded-xl border min-h-[118px] relative overflow-hidden group flex flex-col justify-between ${
-            isDark
-              ? 'bg-rose-950/20 border-rose-900/50 hover:border-rose-700/70'
-              : 'bg-rose-50/75 border-rose-200/80 hover:border-rose-300 hover:shadow-md'
-          }`}
-        >
-          <div className="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-rose-500/8 group-hover:scale-125 transition-transform duration-500" />
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-rose-500 via-red-400 to-amber-400 opacity-70" />
-
-          <div className="relative flex items-center text-xs">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <motion.div
-                initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                whileInView={{ scale: 1, rotate: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ type: 'spring', stiffness: 320, damping: 18, delay: 0.1 }}
-                className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 ring-2 ring-rose-400/30 flex items-center justify-center shrink-0"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-              </motion.div>
-              <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-600 dark:text-slate-300">
-                Low Productivity
-              </span>
-            </div>
-          </div>
-
-          <div className="relative mt-1 flex items-center justify-between gap-2">
-            <div className="min-w-0" style={{ paddingLeft: '10%' }}>
-              <div className="flex items-baseline gap-1">
-                <span className={`text-2xl font-extrabold font-mono ${
+            <div className="py-2 sm:py-0 sm:pl-3 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 ring-2 ring-rose-400/30 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                </span>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider font-black text-rose-600 dark:text-rose-300">
+                    Low
+                  </p>
+                  <p className="text-[9px] text-slate-400">&lt;50%</p>
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1">
+                <span className={`text-2xl font-black font-mono ${
                   lowProductivityWeeksCount > 0 ? 'text-rose-500' : 'text-slate-400'
                 }`}>
                   {lowProductivityWeeksCount}
                 </span>
-                <span className="text-[10px] text-slate-400">weeks &lt;50%</span>
+                <span className="text-[10px] text-slate-400">weeks</span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                {lowProductivityPeriods.length > 0
-                  ? `${lowProductivityPeriods.length} recovery window${lowProductivityPeriods.length === 1 ? '' : 's'}`
-                  : 'Zero low-productivity weeks detected'}
-              </p>
-              <p className="mt-0.5 text-[9px] text-slate-400">
+              <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
                 {Math.round(lowProductivityShare)}% of analyzed weeks
               </p>
+              <p className="text-[9px] text-slate-400">
+                {lowProductivityPeriods.length > 0
+                  ? `${lowProductivityPeriods.length} recovery window${lowProductivityPeriods.length === 1 ? '' : 's'}`
+                  : 'Zero low-productivity weeks'}
+              </p>
             </div>
-
-            <AnimatedProgressRing
-              value={lowProductivityShare}
-              size={56}
-              strokeWidth={5}
-              progressClassName="text-rose-500"
-              label={`${lowProductivityWeeksCount}W`}
-              sublabel="low"
-              delay={0.18}
-            />
           </div>
         </motion.div>
-      </div>
+      )}
 
-      {/* 3. Interactive SVG Trend Chart */}
+      {showChart && (
+      <>
+      {/* Weekly Interactive SVG Trend Chart */}
       <motion.div
         initial={{ opacity: 0, y: 14, scale: 0.992 }}
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -390,8 +325,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
         </div>
 
         {/* SVG Container */}
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-[700px]">
+        <div className="w-full overflow-hidden">
+          <div className="w-full">
             <svg
               viewBox={`0 0 ${svgWidth} ${svgHeight}`}
               className="w-full h-auto select-none"
@@ -738,6 +673,8 @@ export const TrendsVisual: React.FC<TrendsVisualProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      </>
+      )}
     </motion.div>
   );
 };

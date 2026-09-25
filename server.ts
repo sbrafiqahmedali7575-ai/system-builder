@@ -552,7 +552,21 @@ pause
     .submit:active{transform:translateY(0)}
     .submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
     .sync-note{margin-top:10px;text-align:center;color:#64748b;font-size:12px;line-height:1.45}
-    .back{display:block;text-align:center;margin-top:14px;color:#64748b;text-decoration:none;font-size:13px}
+    .back{display:block;text-align:center;margin-top:14px;color:#475569;text-decoration:none;font-size:14px;font-weight:650}
+    @media (max-width:520px){
+      body{padding:10px 8px;align-items:flex-start}
+      .card{margin-top:8px;padding:20px 16px;border-radius:14px}
+      h1{font-size:27px;line-height:1.2;margin-bottom:8px}
+      .date{font-size:15px;margin-bottom:16px;font-weight:700}
+      .help{font-size:16px;line-height:1.6;color:#334155;margin-bottom:18px}
+      .task-row{gap:14px;padding:16px 14px;align-items:center;min-height:58px}
+      .task-row input{width:24px;height:24px;min-width:24px;margin:0}
+      .task-row span{font-size:17px;line-height:1.5;font-weight:700;color:#0f172a}
+      .empty{font-size:16px;padding:18px 14px}
+      .submit{margin-top:18px;padding:17px 18px;font-size:18px;border-radius:12px}
+      .sync-note{font-size:14px;line-height:1.55;color:#475569;margin-top:12px}
+      .back{font-size:15px;margin-top:18px;padding:8px}
+    }
   </style>
 </head>
 <body>

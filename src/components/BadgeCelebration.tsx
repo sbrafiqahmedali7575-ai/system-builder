@@ -7,8 +7,7 @@ import { LongTermBadge } from '../utils/badgeSystem';
 
 interface BadgeCelebrationProps {
   badge: LongTermBadge | null;
-  totalDays: number;
-  completionRate: number;
+  completedDays: number;
   theme: DashboardTheme;
   onClose: () => void;
 }
@@ -27,8 +26,7 @@ const particlePositions = [
 
 export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
   badge,
-  totalDays,
-  completionRate,
+  completedDays,
   theme,
   onClose,
 }) => {
@@ -308,7 +306,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
                       transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
                       className={`ninja-celebration-badge relative w-24 h-24 rounded-[30px] bg-gradient-to-br ${badgeGradient[badge.accent]} shadow-[0_18px_45px_rgba(37,99,235,0.34)] flex items-center justify-center text-white ring-4 ring-white/80 dark:ring-slate-800 overflow-hidden`}
                     >
-                      {badge.id === 'five-year-legend' ? <Trophy className="relative z-10 w-11 h-11" /> : <Shield className="relative z-10 w-11 h-11" />}
+                      {badge.minDays >= 1800 ? <Trophy className="relative z-10 w-11 h-11" /> : <Shield className="relative z-10 w-11 h-11" />}
                       <motion.div
                         className="pointer-events-none absolute inset-y-[-35%] -left-12 z-20 w-9 rotate-[18deg] bg-gradient-to-r from-transparent via-white/95 to-transparent blur-[1px]"
                         animate={{ x: [-40, 180] }}
@@ -342,14 +340,10 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
                   {badge.description}
                 </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-blue-200/80 dark:border-blue-900/70 bg-blue-50/80 dark:bg-blue-950/30 px-3 py-2.5">
-                    <p className="text-[9px] uppercase tracking-[0.16em] font-extrabold text-blue-500">Days Logged</p>
-                    <p className="mt-0.5 text-xl font-black font-mono text-blue-700 dark:text-blue-300">{totalDays}</p>
-                  </div>
-                  <div className="rounded-2xl border border-red-200/80 dark:border-red-900/70 bg-red-50/80 dark:bg-red-950/30 px-3 py-2.5">
-                    <p className="text-[9px] uppercase tracking-[0.16em] font-extrabold text-red-500">Completion</p>
-                    <p className="mt-0.5 text-xl font-black font-mono text-red-600 dark:text-red-300">{completionRate.toFixed(1)}%</p>
+                <div className="mt-5">
+                  <div className="max-w-[220px] mx-auto rounded-2xl border border-blue-200/80 dark:border-blue-900/70 bg-blue-50/80 dark:bg-blue-950/30 px-4 py-3">
+                    <p className="text-[9px] uppercase tracking-[0.16em] font-extrabold text-blue-500">Completed Days</p>
+                    <p className="mt-0.5 text-2xl font-black font-mono text-blue-700 dark:text-blue-300">{completedDays}</p>
                   </div>
                 </div>
 

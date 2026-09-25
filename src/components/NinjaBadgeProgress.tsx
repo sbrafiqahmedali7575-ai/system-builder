@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Award, ChevronDown, LockKeyhole, Sparkles, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { getBadgeProgress, LONG_TERM_BADGES, LongTermBadge } from '../utils/badgeSystem';
-import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { BadgeCelebration } from './BadgeCelebration';
 import { BadgeIcon } from './BadgeIcon';
 
@@ -94,7 +93,7 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
   }, [progress.current]);
 
   const nextTarget = progress.next;
-  const overallRingValue = nextTarget ? progress.unlockProgress : 100;
+  const nextStyle = nextTarget ? accentStyles[nextTarget.accent] : null;
 
   return (
     <>
@@ -134,29 +133,30 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${showRoadmap ? 'rotate-180' : ''}`} />
           </div>
 
-          <div className="relative mt-1.5 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div>
+          <div className="relative mt-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <div className="min-w-0">
                 <span className="text-2xl font-black font-mono text-blue-600 dark:text-blue-300">{completedDays}</span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-1">completed days</span>
               </div>
+              {nextTarget && (
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                  Need {progress.daysRemaining} completed days
+                </span>
+              )}
             </div>
-
-            <AnimatedProgressRing
-              value={overallRingValue}
-              size={54}
-              strokeWidth={5}
-              progressClassName={nextTarget ? 'text-blue-500' : 'text-amber-500'}
-              label={`${Math.round(overallRingValue)}%`}
-              sublabel={nextTarget ? 'next' : 'done'}
-              delay={0.08}
-            />
           </div>
 
           {nextTarget ? (
             <div className="relative mt-1.5">
-              <div className="flex items-center justify-between text-[10px] mb-0.5 gap-1">
-                <span className="font-bold text-slate-600 dark:text-slate-300 truncate">Next: {nextTarget.name}</span>
+              <div className="flex items-center justify-between text-[10px] mb-1 gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-bold text-slate-500 dark:text-slate-400 shrink-0">Next:</span>
+                  <span className={`w-5 h-5 rounded-md flex items-center justify-center ring-1 shrink-0 ${nextStyle?.ring || ''} ${nextStyle?.soft || ''}`}>
+                    <BadgeIcon badge={nextTarget} className={`w-3 h-3 ${nextStyle?.text || ''}`} />
+                  </span>
+                  <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{nextTarget.name}</span>
+                </div>
                 <span className="font-mono text-slate-400 shrink-0">{Math.round(progress.unlockProgress)}%</span>
               </div>
               <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
@@ -198,45 +198,45 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 items-stretch">
-                  {LONG_TERM_BADGES.map((badge, index) => {
-                    const unlocked = completedDays >= badge.minDays;
-                    const isCurrent = badge.id === progress.current.id;
-                    return (
-                      <motion.div
-                        key={badge.id}
-                        layout
-                        whileHover={{ y: -2, scale: 1.015 }}
-                        title={`${badge.name}: ${badge.minDays} completed days`}
-                        className={`min-w-0 min-h-[76px] rounded-xl border p-1.5 flex flex-col items-center justify-between text-center gap-1 overflow-hidden transition-all ${
-                          isCurrent
-                            ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 ring-2 ring-blue-300/40'
-                            : unlocked
-                            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/70'
-                            : 'bg-white/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
-                        }`}
-                      >
+                <div className="overflow-x-auto pb-0.5">
+                  <div className="grid grid-cols-9 gap-1 min-w-[630px] items-stretch">
+                    {LONG_TERM_BADGES.map((badge) => {
+                      const unlocked = completedDays >= badge.minDays;
+                      const isCurrent = badge.id === progress.current.id;
+                      return (
                         <motion.div
-                          animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 16px rgba(59,130,246,.42)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
-                          transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
-                          className={`relative w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 isolate ${
+                          key={badge.id}
+                          layout
+                          whileHover={{ y: -1, scale: 1.03 }}
+                          title={`${badge.name}: ${badge.minDays} completed days`}
+                          className={`min-w-0 min-h-[52px] rounded-lg border px-1 py-1 flex flex-col items-center justify-center text-center gap-0.5 overflow-hidden transition-all ${
                             isCurrent
-                              ? 'bg-blue-600 text-white border-blue-500'
+                              ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 ring-1 ring-blue-300/50'
                               : unlocked
-                              ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-600 border-amber-300 dark:border-amber-800'
-                              : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
+                              ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/70'
+                              : 'bg-white/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
                           }`}
                         >
-                          <BadgeIcon badge={badge} className="w-3.5 h-3.5 shrink-0" />
-                          {!unlocked && !isCurrent && (
-                            <span className="absolute -right-1 -bottom-1 z-10 w-3 h-3 rounded-full bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-700 flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
-                              <LockKeyhole className="w-1.5 h-1.5" />
-                            </span>
-                          )}
-                        </motion.div>
+                          <motion.div
+                            animate={isCurrent ? { boxShadow: ['0 0 0 rgba(59,130,246,0)', '0 0 10px rgba(59,130,246,.38)', '0 0 0 rgba(59,130,246,0)'] } : undefined}
+                            transition={isCurrent ? { duration: 2.2, repeat: Infinity } : undefined}
+                            className={`relative w-5 h-5 rounded-md flex items-center justify-center border shrink-0 isolate ${
+                              isCurrent
+                                ? 'bg-blue-600 text-white border-blue-500'
+                                : unlocked
+                                ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-600 border-amber-300 dark:border-amber-800'
+                                : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'
+                            }`}
+                          >
+                            <BadgeIcon badge={badge} className="w-2.5 h-2.5 shrink-0" />
+                            {!unlocked && !isCurrent && (
+                              <span className="absolute -right-1 -bottom-1 z-10 w-2.5 h-2.5 rounded-full bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-700 flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
+                                <LockKeyhole className="w-1.5 h-1.5" />
+                              </span>
+                            )}
+                          </motion.div>
 
-                        <div className="min-w-0 w-full flex-1 flex flex-col items-center justify-center px-0.5 overflow-hidden">
-                          <p className={`text-[8px] sm:text-[9px] leading-[1.15] font-extrabold line-clamp-2 ${
+                          <p className={`w-full text-[7px] leading-[1.05] font-extrabold truncate ${
                             isCurrent
                               ? 'text-blue-700 dark:text-blue-300'
                               : unlocked
@@ -245,47 +245,35 @@ export const NinjaBadgeProgress: React.FC<NinjaBadgeProgressProps> = ({ complete
                           }`}>
                             {badge.shortName}
                           </p>
-                        </div>
 
-                        <span className={`px-1.5 py-0.5 rounded-full text-[7px] font-black font-mono tracking-wide ${
-                          isCurrent
-                            ? 'bg-blue-600 text-white'
-                            : unlocked
-                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                        }`}>
-                          {badge.horizon}
-                        </span>
-                      </motion.div>
-                    );
-                  })}
+                          <span className={`text-[6px] leading-none font-black font-mono ${
+                            isCurrent
+                              ? 'text-blue-600 dark:text-blue-300'
+                              : unlocked
+                              ? 'text-amber-700 dark:text-amber-300'
+                              : 'text-slate-400'
+                          }`}>
+                            {badge.horizon}
+                          </span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {nextTarget ? (
-                  <div className="mt-2 grid grid-cols-[auto_1fr] gap-2 items-center">
-                    <AnimatedProgressRing
-                      value={progress.dayProgress}
-                      size={48}
-                      strokeWidth={5}
-                      progressClassName="text-blue-500"
-                      label={`${Math.round(progress.dayProgress)}%`}
-                      sublabel="done"
-                      delay={0.1}
-                    />
-
-                    <div className="min-w-0">
-                      <div className="flex justify-between text-[9px] font-bold text-slate-500 mb-0.5">
-                        <span>Completed-days requirement</span>
-                        <span>{completedDays}/{nextTarget.minDays}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress.dayProgress}%` }}
-                          transition={{ duration: 0.8, delay: 0.08 }}
-                          className="h-full bg-blue-500 rounded-full"
-                        />
-                      </div>
+                  <div className="mt-1.5 min-w-0">
+                    <div className="flex justify-between text-[9px] font-bold text-slate-500 mb-0.5">
+                      <span>Completed-days requirement</span>
+                      <span>{completedDays}/{nextTarget.minDays}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress.dayProgress}%` }}
+                        transition={{ duration: 0.8, delay: 0.08 }}
+                        className="h-full bg-blue-500 rounded-full"
+                      />
                     </div>
                   </div>
                 ) : (

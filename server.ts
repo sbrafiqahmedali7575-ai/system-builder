@@ -560,18 +560,103 @@ pause
     .submit:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
     .rule{margin-top:12px;text-align:center;color:#000000;font-size:12px;line-height:1.45;font-weight:700}
     @media (max-width:520px){
-      body{padding:12px;align-items:center;justify-content:center}
-      .card{margin:0;max-width:430px;padding:20px 16px;border-radius:18px}
-      .close-btn{top:10px;right:10px;width:40px;height:40px;font-size:25px}
-      .eyebrow{font-size:11px}
-      h1{font-size:26px}
-      .date{font-size:15px}
-      .help{font-size:16px;line-height:1.6}
-      .task-row{padding:16px 13px;min-height:60px}
-      .task-row input{width:25px;height:25px;min-width:25px}
-      .task-row span{font-size:17px;line-height:1.5;font-weight:900}
-      .submit{font-size:18px;padding:17px 18px}
-      .rule{font-size:13px}
+      html,body{width:100%;max-width:100%;overflow-x:hidden}
+      body{padding:8px;align-items:center;justify-content:center}
+      .card{
+        margin:0;
+        width:100%;
+        max-width:100%;
+        padding:16px 12px 14px;
+        border-radius:16px;
+        overflow:hidden;
+      }
+      .close-btn{
+        top:8px;
+        right:8px;
+        width:44px;
+        height:44px;
+        font-size:26px;
+        touch-action:manipulation;
+      }
+      .eyebrow{
+        font-size:10px;
+        line-height:1.2;
+        margin-bottom:4px;
+        padding-right:48px;
+      }
+      h1{
+        font-size:23px;
+        line-height:1.15;
+        margin-bottom:4px;
+        padding-right:48px;
+        overflow-wrap:anywhere;
+      }
+      .date{
+        font-size:14px;
+        margin-bottom:12px;
+        overflow-wrap:anywhere;
+      }
+      .help{
+        font-size:14px;
+        line-height:1.45;
+        margin-bottom:12px;
+      }
+      .tasks{
+        width:100%;
+        max-width:100%;
+        overflow:hidden;
+      }
+      .task-row{
+        width:100%;
+        max-width:100%;
+        gap:12px;
+        padding:13px 10px;
+        min-height:58px;
+        align-items:center;
+      }
+      .task-row input{
+        width:28px;
+        height:28px;
+        min-width:28px;
+        flex:0 0 28px;
+        margin:0;
+        touch-action:manipulation;
+      }
+      .task-row span{
+        min-width:0;
+        max-width:100%;
+        font-size:16px;
+        line-height:1.4;
+        font-weight:900;
+        overflow-wrap:anywhere;
+        word-break:break-word;
+      }
+      .submit{
+        width:100%;
+        min-height:52px;
+        margin-top:14px;
+        padding:15px 16px;
+        font-size:18px;
+        border-radius:12px;
+        touch-action:manipulation;
+      }
+      .rule{
+        font-size:12px;
+        line-height:1.4;
+        margin-top:10px;
+        padding:0 2px;
+      }
+    }
+
+    @media (max-width:360px){
+      body{padding:6px}
+      .card{padding:14px 10px 12px}
+      .close-btn{width:42px;height:42px}
+      h1{font-size:21px}
+      .help{font-size:13px}
+      .task-row{padding:12px 9px}
+      .task-row span{font-size:15px}
+      .submit{font-size:17px;min-height:50px}
     }  </style>
 </head>
 <body>

@@ -20,6 +20,6 @@ View your app in AI Studio: https://ai.studio/apps/68c6ef1e-cce3-42f5-a93a-7da82
    `npm run dev`
 
 
-## Ninja Edition UI
+## System Builder UI
 
-This version includes a blue/red/yellow ninja-inspired visual system and a long-term KPI badge ladder. Badge ranks require both a minimum number of logged days and a minimum overall completion rate, with milestones extending through 1,825 logged days (five years).
+This version includes a clean blue/red/yellow visual system and a long-term professional badge ladder. Badge ranks are unlocked by completed days, with milestones progressing from Analytics Learner to Analytics Master.

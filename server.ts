@@ -1,9 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 import express from 'express';
+import crypto from 'crypto';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import {
+  adminApp,
   db,
   collection,
   doc,
@@ -144,12 +147,80 @@ function renderErrorPage(res: express.Response, message: string, status: number 
   res.status(status).setHeader('Content-Type', 'text/html; charset=utf-8').send(html);
 }
 
+const OWNER_UID = 'system-builder-owner';
+
+function configuredAccessKey(): string {
+  return (process.env.APP_ACCESS_KEY || '').trim();
+}
+
+function safeSecretEqual(provided: string, expected: string): boolean {
+  if (!provided || !expected) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+async function requireOwnerApi(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const accessKey = configuredAccessKey();
+    const directKey = String(req.headers['x-system-builder-key'] || '').trim();
+
+    if (accessKey && safeSecretEqual(directKey, accessKey)) {
+      return next();
+    }
+
+    const authHeader = String(req.headers.authorization || '').trim();
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Owner authentication required.' });
+    }
+
+    const idToken = authHeader.slice(7).trim();
+    const decoded = await getAdminAuth(adminApp).verifyIdToken(idToken);
+    if (decoded.uid !== OWNER_UID || decoded.role !== 'owner') {
+      return res.status(403).json({ error: 'Owner access required.' });
+    }
+
+    return next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Owner authentication is invalid or expired.' });
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  app.post('/api/auth/session', async (req, res) => {
+    try {
+      const expected = configuredAccessKey();
+      if (expected.length < 16) {
+        return res.status(503).json({
+          error: 'APP_ACCESS_KEY is not configured with at least 16 characters.',
+        });
+      }
+
+      const provided = String(req.body?.accessKey || '').trim();
+      if (!safeSecretEqual(provided, expected)) {
+        return res.status(401).json({ error: 'Invalid System Builder access key.' });
+      }
+
+      const customToken = await getAdminAuth(adminApp).createCustomToken(OWNER_UID, {
+        role: 'owner',
+      });
+
+      return res.json({ success: true, customToken });
+    } catch (err: any) {
+      console.error('Owner session error:', sanitizeError(err));
+      return res.status(500).json({ error: 'Unable to create owner session.' });
+    }
+  });
 
   // 1. Health check & current time in Asia/Kolkata
   app.get('/api/health', (req, res) => {
@@ -166,7 +237,7 @@ async function startServer() {
   });
 
   // 2. Notification settings API
-  app.get('/api/notifications/settings', async (req, res) => {
+  app.get('/api/notifications/settings', requireOwnerApi, async (req, res) => {
     try {
       const settings = await getNotificationSettings();
       const provider = getEmailProviderStatus();
@@ -183,7 +254,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/notifications/settings', async (req, res) => {
+  app.post('/api/notifications/settings', requireOwnerApi, async (req, res) => {
     try {
       const updated = await saveNotificationSettings(req.body);
       res.json({ success: true, settings: updated });
@@ -193,7 +264,7 @@ async function startServer() {
   });
 
   // 3. Send test confirmation email directly via Gmail SMTP (Admin test action)
-  app.post('/api/notifications/send-test', async (req, res) => {
+  app.post('/api/notifications/send-test', requireOwnerApi, async (req, res) => {
     try {
       const recipientOverride = req.body?.recipientEmail || req.body?.recipient || undefined;
       const result = await triggerDailyReminder({ force: true, recipientOverride });
@@ -311,7 +382,7 @@ async function startServer() {
   });
 
   // 4. Delivery logs audit history
-  app.get('/api/notifications/logs', async (req, res) => {
+  app.get('/api/notifications/logs', requireOwnerApi, async (req, res) => {
     try {
       const snap = await getDocs(collection(db, 'delivery_logs'));
       const logs: any[] = [];
@@ -514,7 +585,7 @@ async function startServer() {
 
   // 5. One-Click Records CSV Backup & Export Endpoint (records.csv ONLY)
   // Cleaned columns: id, day, date, isCompleted, notes
-  app.get('/api/backup/export', async (req, res) => {
+  app.get('/api/backup/export', requireOwnerApi, async (req, res) => {
     try {
       const format = String(req.query.format || 'csv').toLowerCase();
 
@@ -563,7 +634,7 @@ async function startServer() {
 
   // Windows batch sync script generator for automated replacement of records.csv
   // Hardcoded default target: D:\My Projects\SQL\DataSet\RafiqCommitDB\csv_files
-  app.get('/api/backup/sync-script', (req, res) => {
+  app.get('/api/backup/sync-script', requireOwnerApi, (req, res) => {
     const baseUrl = getAppBaseUrl();
     const rootDir = 'D:\\My Projects\\SQL\\DataSet\\RafiqCommitDB';
     const targetDir = 'D:\\My Projects\\SQL\\DataSet\\RafiqCommitDB\\csv_files';
@@ -578,6 +649,12 @@ echo ======================================================================
 
 set "ROOT_DIR=${rootDir}"
 set "TARGET_DIR=${targetDir}"
+
+if "%SYSTEM_BUILDER_ACCESS_KEY%"=="" (
+  echo [Error] SYSTEM_BUILDER_ACCESS_KEY environment variable is not set.
+  echo Set it to the same private APP_ACCESS_KEY configured on the server.
+  exit /b 1
+)
 
 if not exist "%ROOT_DIR%" (
   echo [Info] Root project directory does not exist. Creating "%ROOT_DIR%"...

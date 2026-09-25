@@ -29,6 +29,10 @@ interface ReportViewProps {
   onUpdateTask: (task: TaskItem) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
+  onSubmitTaskDay: (
+    dateKey: string,
+    dayTasks: TaskItem[]
+  ) => Promise<'COMPLETED' | 'NOT_COMPLETED'>;
   isSyncing?: boolean;
 }
 
@@ -74,6 +78,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   onUpdateTask,
   onDeleteTask,
   onToggleTaskStatus,
+  onSubmitTaskDay,
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
@@ -383,6 +388,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               onUpdateTask={onUpdateTask}
               onDeleteTask={onDeleteTask}
               onToggleTaskStatus={onToggleTaskStatus}
+              onSubmitTaskDay={onSubmitTaskDay}
               isSyncing={isSyncing}
             />
           </motion.div>

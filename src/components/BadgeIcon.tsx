@@ -37,14 +37,14 @@ interface BadgeIconProps {
 
 const badgeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   trainee: Search,
-  'first-scroll': Database,
+  'data-trainee': Database,
   'day-15': Table2,
-  'shuriken-bronze': Code2,
+  'analytics-associate': Code2,
   'day-45': Eraser,
   'day-60': Wrench,
   'day-75': BarChart3,
-  'silent-scout': Terminal,
-  'crimson-guardian': LayoutDashboard,
+  'bi-analyst': Terminal,
+  'data-analyst-ii': LayoutDashboard,
   'day-270': Monitor,
   'day-360': Sigma,
   'day-450': Network,

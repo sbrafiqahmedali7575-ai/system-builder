@@ -7,6 +7,7 @@ import { AddRecordModal } from './components/AddRecordModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
 import { ConfirmationPage } from './components/ConfirmationPage';
 import { isTodayDate } from './utils/dateUtils';
+import { getBadgeProgress } from './utils/badgeSystem';
 import {
   subscribeToRecords,
   addRecordToCloud,
@@ -336,6 +337,8 @@ export default function App() {
   }
 
   const isDark = theme === 'dark';
+  const completedDaysForBadge = records.filter((record) => record.isCompleted).length;
+  const currentBadge = getBadgeProgress(completedDaysForBadge).current;
 
   return (
     <div
@@ -352,6 +355,7 @@ export default function App() {
         theme={theme}
         onThemeChange={setTheme}
         totalRecordsCount={records.length}
+        currentBadge={currentBadge}
         isSyncing={isSyncing}
       />
 

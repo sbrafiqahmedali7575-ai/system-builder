@@ -173,7 +173,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`xl:col-span-6 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-4 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
@@ -227,7 +227,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 transition={{ duration: 0.32, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`xl:col-span-4 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-6 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'

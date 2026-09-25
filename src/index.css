@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+:root {
+  --ninja-blue: #2563eb;
+  --ninja-blue-dark: #1d4ed8;
+  --ninja-red: #ef4444;
+  --ninja-yellow: #fbbf24;
+  --ninja-ink: #0f172a;
+  --ninja-paper: #f8fafc;
+}
+
+html {
+  background: #f6f8ff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.ninja-app-shell {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    radial-gradient(circle at 7% 4%, rgba(37, 99, 235, 0.10), transparent 23rem),
+    radial-gradient(circle at 92% 9%, rgba(239, 68, 68, 0.08), transparent 18rem),
+    linear-gradient(180deg, rgba(255,255,255,0.68), rgba(246,248,255,0.98));
+}
+
+.ninja-app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.26;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(37, 99, 235, 0.14) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black, transparent 65%);
+}
+
+.ninja-header {
+  position: sticky;
+  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.06);
+}
+
+.ninja-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--ninja-blue) 0 58%, var(--ninja-yellow) 58% 72%, var(--ninja-red) 72% 100%);
+  opacity: 0.82;
+}
+
+.ninja-mark {
+  background:
+    linear-gradient(135deg, #1d4ed8 0 68%, #ef4444 68% 100%);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.26);
+}
+
+.ninja-mark::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  right: -7px;
+  top: -7px;
+  border: 5px solid rgba(251, 191, 36, 0.9);
+  transform: rotate(45deg);
+}
+
+.ninja-focus-panel {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(30, 64, 175, 0.055);
+}
+
+.ninja-focus-panel::before {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  right: -70px;
+  top: -72px;
+  border: 18px solid rgba(37, 99, 235, 0.055);
+  border-radius: 34px;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.ninja-kpi-shell {
+  position: relative;
+  background-image: linear-gradient(135deg, rgba(219, 234, 254, 0.22), rgba(255,255,255,0) 38%, rgba(254, 226, 226, 0.18));
+}
+
+.ninja-task-card {
+  position: relative;
+  overflow: hidden;
+  border-left-width: 3px !important;
+  border-left-color: rgba(37, 99, 235, 0.8) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035);
+}
+
+.ninja-task-card::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -20px;
+  width: 42px;
+  height: 42px;
+  border: 8px solid rgba(239, 68, 68, 0.05);
+  transform: rotate(45deg);
+  border-radius: 9px;
+  pointer-events: none;
+}
+
+.ninja-edition button,
+.ninja-edition [role="button"] {
+  transition-property: transform, box-shadow, background-color, border-color, color, opacity;
+  transition-duration: 180ms;
+}
+
+.ninja-edition button:hover:not(:disabled),
+.ninja-edition [role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+.ninja-edition button:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.ninja-edition ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.ninja-edition ::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+}
+
+.ninja-edition ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.65), rgba(239, 68, 68, 0.55));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ninja-edition *,
+  .ninja-edition *::before,
+  .ninja-edition *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Badge progression polish */
+.ninja-badge-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.ninja-badge-shine::after {
+  content: "";
+  position: absolute;
+  inset: -60% auto -60% -35%;
+  width: 22%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent);
+  animation: ninja-badge-shine 2.8s ease-in-out infinite;
+}
+
+@keyframes ninja-badge-shine {
+  0%, 62% { left: -35%; opacity: 0; }
+  72% { opacity: 0.9; }
+  100% { left: 125%; opacity: 0; }
+}
+
+/* Dramatic badge reveal polish */
+.ninja-celebration-badge {
+  isolation: isolate;
+}
+
+.ninja-celebration-badge::before {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.42),
+    rgba(251, 191, 36, 0.34),
+    rgba(255, 255, 255, 0)
+  );
+  animation: ninja-celebration-halo 3.2s linear infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes ninja-celebration-halo {
+  to { transform: rotate(360deg); }
+}

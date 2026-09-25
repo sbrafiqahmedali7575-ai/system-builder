@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global shared records accessible from any device via the web link
+    match /records/{recordId} {
+      allow read, write: if true;
+    }
+    match /tasks/{taskId} {
+      allow read, write: if true;
+    }
+    match /notification_settings/{settingId} {
+      allow read, write: if true;
+    }
+    match /delivery_logs/{logId} {
+      allow read, write: if true;
+    }
+    match /confirmation_tokens/{tokenId} {
+      allow read, write: if true;
+    }
+    match /daily_reminders_sent/{dateKey} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "System Builder",
+  "description": "System Builder: Personal growth system built on keeping daily commitments, developing discipline, and building lasting consistency.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

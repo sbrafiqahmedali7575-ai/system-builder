@@ -1,0 +1,27 @@
+name: Daily Commitment Reminder (09:00 PM IST)
+
+on:
+  schedule:
+    # 15:30 UTC = 21:00 IST (Asia/Kolkata) every day
+    - cron: '30 15 * * *'
+  workflow_dispatch: # Allows manual testing from GitHub Actions tab
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger CommitDaily Reminder Endpoint
+        run: |
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST https://rafiqcommitdaily.ai.studio/api/send-daily-reminder \
+            -H "Authorization: Bearer ${{ secrets.SCHEDULER_SECRET || 'commit-daily-scheduler-secret-auth-key-2026' }}")
+          
+          body=$(echo "$response" | sed -e '$d')
+          status=$(echo "$response" | tail -n1 | cut -d':' -f2)
+
+          echo "Response: $body"
+          echo "Status: $status"
+
+          if [ "$status" -ne 200 ]; then
+            echo "Error: Failed with status $status"
+            exit 1
+          fi

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Flame, Award } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
-import { isTodayDate } from '../utils/dateUtils';
+import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
 import { TrendsVisual } from './TrendsVisual';
 import { TodayTasksCard } from './TodayTasksCard';
 import { NinjaBadgeProgress } from './NinjaBadgeProgress';
@@ -131,7 +131,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 : 'bg-slate-50/70 border-slate-200/80'
             }`}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-1.5 sm:gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-10 gap-1.5 sm:gap-2">
               {/* Metric 1: Overall Completion */}
               <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.985 }}
@@ -139,7 +139,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-2 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
@@ -193,7 +193,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 transition={{ duration: 0.32, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-2 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-amber-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-amber-300 hover:shadow-md'
@@ -240,7 +240,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 transition={{ duration: 0.32, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.995 }}
-                className={`p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
+                className={`xl:col-span-3 p-2 rounded-xl border flex flex-col justify-between min-h-[118px] relative overflow-hidden group transition-all ${
                   isDark
                     ? 'bg-slate-900/60 border-slate-800 hover:border-blue-700/60'
                     : 'bg-white border-slate-200/80 shadow-2xs hover:border-blue-300 hover:shadow-md'
@@ -279,6 +279,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <div className="flex items-center justify-between gap-1 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800">
                       {last7Records.map((r) => {
                         const isToday = isTodayDate(r.date);
+                        const timestamp = parseDateToTimestamp(r.date);
+                        const weekdayName = timestamp > 0
+                          ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(timestamp).getDay()]
+                          : '';
                         return (
                           <motion.div
                             key={r.id}
@@ -286,6 +290,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             className="flex-1 flex flex-col items-center gap-0.5"
                             title={`Day ${r.day} (${r.date}): ${r.isCompleted ? 'Completed' : 'Not Completed'}`}
                           >
+                            <span className={`text-[8px] font-bold uppercase tracking-wide ${
+                              isToday
+                                ? 'text-blue-600 dark:text-blue-300'
+                                : 'text-slate-400'
+                            }`}>
+                              {weekdayName}
+                            </span>
                             <span
                               className={`w-full h-2.5 rounded-full transition-all ${
                                 r.isCompleted
@@ -305,10 +316,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </motion.div>
 
               {/* Metric 4: Long-term Badge Rank */}
-              <NinjaBadgeProgress
-                completedDays={allKpis.completedDays}
-                theme={theme}
-              />
+              <div className="xl:col-span-3 min-w-0">
+                <NinjaBadgeProgress
+                  completedDays={allKpis.completedDays}
+                  theme={theme}
+                />
+              </div>
             </div>
           </div>
 

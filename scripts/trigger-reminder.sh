@@ -3,7 +3,7 @@
 # Runs against the public production endpoint for System Builder
 # Timezone target: 09:00 PM IST (Asia/Kolkata)
 
-BASE_URL="${APP_BASE_URL:-https://rafiqcommitdaily.ai.studio}"
+BASE_URL="${APP_BASE_URL:-https://systembuilder08.ai.studio}"
 SECRET="${SCHEDULER_SECRET:-commit-daily-scheduler-secret-auth-key-2026}"
 
 echo "[$(date -u)] Triggering System Builder Reminder at ${BASE_URL}..."

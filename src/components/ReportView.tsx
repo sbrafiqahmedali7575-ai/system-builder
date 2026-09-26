@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { FormEvent, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Award, Hourglass } from 'lucide-react';
+import { Award, Hourglass, RotateCcw, X } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
@@ -9,6 +10,9 @@ import { TodayTasksCard } from './TodayTasksCard';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
+
+const COUNTDOWN_TARGET_DATE_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_DATE';
+const COUNTDOWN_TARGET_REASON_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_REASON';
 
 interface ReportViewProps {
   records: DailyRecord[];
@@ -82,6 +86,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
+  const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
+  const [customCountdownDate, setCustomCountdownDate] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return window.localStorage.getItem(COUNTDOWN_TARGET_DATE_KEY) || '';
+  });
+  const [customCountdownReason, setCustomCountdownReason] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return window.localStorage.getItem(COUNTDOWN_TARGET_REASON_KEY) || '';
+  });
+  const [draftCountdownDate, setDraftCountdownDate] = useState('');
+  const [draftCountdownReason, setDraftCountdownReason] = useState('');
 
   // Apply filters to daily records
   const filteredRecords = useMemo(() => {
@@ -139,9 +154,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
     };
   }, []);
 
-  // Countdown to the app's 1,800-day long-term mastery horizon.
-  // It begins from the earliest valid logged date and decreases by calendar day.
-  const longTermCountdown = useMemo(() => {
+  // Default countdown = the app's 1,800-day mastery horizon.
+  // A saved custom date/reason overrides the default until reset.
+  const defaultCountdownTarget = useMemo(() => {
     const DAY_MS = 24 * 60 * 60 * 1000;
     const HORIZON_DAYS = 1800;
 
@@ -150,12 +165,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       .filter((timestamp) => timestamp > 0)
       .sort((a, b) => a - b)[0];
 
-    if (!firstTimestamp) {
-      return {
-        daysRemaining: HORIZON_DAYS,
-        targetDateLabel: 'Start logging to begin',
-      };
-    }
+    if (!firstTimestamp) return '';
 
     const firstDate = new Date(firstTimestamp);
     const startUtc = Date.UTC(
@@ -163,17 +173,37 @@ export const ReportView: React.FC<ReportViewProps> = ({
       firstDate.getMonth(),
       firstDate.getDate()
     );
+    const targetDate = new Date(startUtc + HORIZON_DAYS * DAY_MS);
+
+    return [
+      targetDate.getUTCFullYear(),
+      String(targetDate.getUTCMonth() + 1).padStart(2, '0'),
+      String(targetDate.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+  }, [records]);
+
+  const longTermCountdown = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const HORIZON_DAYS = 1800;
+    const targetDateKey = customCountdownDate || defaultCountdownTarget;
+
+    if (!targetDateKey) {
+      return {
+        daysRemaining: HORIZON_DAYS,
+        targetDateLabel: 'Start logging to begin',
+        reason: customCountdownReason || '1,800-day mastery goal',
+        isCustom: Boolean(customCountdownDate),
+      };
+    }
+
+    const [targetYear, targetMonth, targetDay] = targetDateKey.split('-').map(Number);
+    const targetUtc = Date.UTC(targetYear, targetMonth - 1, targetDay);
 
     const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
     const [todayYear, todayMonth, todayDay] = todayKey.split('-').map(Number);
     const todayUtc = Date.UTC(todayYear, todayMonth - 1, todayDay);
 
-    const targetUtc = startUtc + HORIZON_DAYS * DAY_MS;
-    const daysRemaining = Math.max(
-      0,
-      Math.ceil((targetUtc - todayUtc) / DAY_MS)
-    );
-
+    const daysRemaining = Math.max(0, Math.ceil((targetUtc - todayUtc) / DAY_MS));
     const targetDateLabel = new Intl.DateTimeFormat('en-US', {
       day: '2-digit',
       month: 'short',
@@ -181,8 +211,51 @@ export const ReportView: React.FC<ReportViewProps> = ({
       timeZone: 'UTC',
     }).format(new Date(targetUtc));
 
-    return { daysRemaining, targetDateLabel };
-  }, [records]);
+    return {
+      daysRemaining,
+      targetDateLabel,
+      reason: customCountdownReason || '1,800-day mastery goal',
+      isCustom: Boolean(customCountdownDate),
+    };
+  }, [customCountdownDate, customCountdownReason, defaultCountdownTarget]);
+
+  const openCountdownEditor = () => {
+    setDraftCountdownDate(customCountdownDate || defaultCountdownTarget);
+    setDraftCountdownReason(
+      customCountdownReason || (customCountdownDate ? '' : '1,800-day mastery goal')
+    );
+    setIsCountdownEditorOpen(true);
+  };
+
+  const saveCountdownTarget = (event: FormEvent) => {
+    event.preventDefault();
+    if (!draftCountdownDate) return;
+
+    const reason = draftCountdownReason.trim();
+    setCustomCountdownDate(draftCountdownDate);
+    setCustomCountdownReason(reason);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(COUNTDOWN_TARGET_DATE_KEY, draftCountdownDate);
+      window.localStorage.setItem(COUNTDOWN_TARGET_REASON_KEY, reason);
+    }
+
+    setIsCountdownEditorOpen(false);
+  };
+
+  const resetCountdownTarget = () => {
+    setCustomCountdownDate('');
+    setCustomCountdownReason('');
+    setDraftCountdownDate(defaultCountdownTarget);
+    setDraftCountdownReason('1,800-day mastery goal');
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(COUNTDOWN_TARGET_DATE_KEY);
+      window.localStorage.removeItem(COUNTDOWN_TARGET_REASON_KEY);
+    }
+
+    setIsCountdownEditorOpen(false);
+  };
 
   return (
     <motion.div
@@ -270,13 +343,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     </div>
                   </div>
 
-                  <motion.div
+                  <motion.button
+                    type="button"
+                    onClick={openCountdownEditor}
                     initial={{ opacity: 0, x: 8, scale: 0.96 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-                    className="shrink-0 min-w-[82px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2.5 py-2 text-center"
-                    title={`1,800-day goal target: ${longTermCountdown.targetDateLabel}`}
-                    aria-label={`${longTermCountdown.daysRemaining} days remaining in the 1,800-day goal`}
+                    className="shrink-0 min-w-[82px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 hover:bg-blue-100/80 dark:hover:bg-blue-950/45 px-2.5 py-2 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    title={`${longTermCountdown.reason} • Target: ${longTermCountdown.targetDateLabel} • Click to edit`}
+                    aria-label={`${longTermCountdown.daysRemaining} days remaining. Click to edit countdown target.`}
                   >
                     <div className="mx-auto w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-300">
                       <Hourglass className="w-3.5 h-3.5" />
@@ -287,7 +362,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <div className="mt-0.5 text-[8px] uppercase tracking-[0.12em] font-black text-slate-400">
                       days left
                     </div>
-                  </motion.div>
+                  </motion.button>
                 </div>
 
                 <div className="mt-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
@@ -417,6 +492,128 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       </section>
 
+      {isCountdownEditorOpen && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-[2px]"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Edit countdown target"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) setIsCountdownEditorOpen(false);
+              }}
+            >
+              <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                      Countdown Target
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      Enter a date or choose one from the calendar, then add the target or reason.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsCountdownEditorOpen(false)}
+                    className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label="Close countdown editor"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <form onSubmit={saveCountdownTarget} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="countdown-target-date"
+                      className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5"
+                    >
+                      Target date
+                    </label>
+                    <input
+                      id="countdown-target-date"
+                      type="date"
+                      required
+                      autoFocus
+                      value={draftCountdownDate}
+                      onChange={(event) => setDraftCountdownDate(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Escape') setIsCountdownEditorOpen(false);
+                      }}
+                      className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-sm font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400">
+                      You can type the date or use the calendar picker.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="countdown-target-reason"
+                      className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5"
+                    >
+                      Target / reason
+                    </label>
+                    <textarea
+                      id="countdown-target-reason"
+                      rows={3}
+                      maxLength={160}
+                      value={draftCountdownReason}
+                      onChange={(event) => setDraftCountdownReason(event.target.value)}
+                      placeholder="e.g. Become job-ready Data Analyst"
+                      className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-blue-500"
+                    />
+                    <div className="mt-1 text-right text-[9px] font-mono text-slate-400">
+                      {draftCountdownReason.length}/160
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-blue-100 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 p-3">
+                    <div className="text-[10px] uppercase tracking-wider font-black text-slate-400">
+                      Current countdown
+                    </div>
+                    <div className="mt-1 flex items-baseline justify-between gap-3">
+                      <span className="text-xl font-black font-mono text-blue-600 dark:text-blue-300">
+                        {longTermCountdown.daysRemaining} days
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                        {longTermCountdown.targetDateLabel}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={resetCountdownTarget}
+                      className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center justify-center gap-1.5"
+                      title="Reset to the default 1,800-day goal"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Default
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCountdownEditorOpen(false)}
+                      className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!draftCountdownDate}
+                      className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-xs font-black"
+                    >
+                      Save Countdown
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </motion.div>
   );
 };

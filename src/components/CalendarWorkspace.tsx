@@ -27,7 +27,7 @@ interface CalendarWorkspaceProps {
   density?: ToolsDensity;
 }
 
-type CalendarView = 'month' | 'week' | 'agenda';
+type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 
 type CalendarDragItem =
   | { kind: 'task'; id: string; sourceDate: string }
@@ -229,13 +229,31 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
     selectDate(next);
   };
 
+  const changeView = (nextView: CalendarView) => {
+    setView(nextView);
+
+    const selected = parseKey(selectedDate);
+    setCursor(
+      new Date(Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), 1))
+    );
+  };
+
   const navigatePeriod = (offset: number) => {
     if (view === 'week') {
       changeWeek(offset);
       return;
     }
+
+    if (view === 'day') {
+      changeSelectedDay(offset);
+      return;
+    }
+
     changeMonth(offset);
   };
+
+  const navigationUnit =
+    view === 'week' ? 'week' : view === 'day' ? 'day' : 'month';
 
   const jumpToday = () => {
     setCursor(
@@ -451,6 +469,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           year: 'numeric',
           timeZone: 'UTC',
         })}`
+      : view === 'day'
+      ? longDate(selectedDate)
       : cursor.toLocaleDateString('en-US', {
           month: 'long',
           year: 'numeric',
@@ -1031,7 +1051,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
             <button
               type="button"
-              onClick={() => setView('month')}
+              onClick={() => changeView('month')}
               className={`${compact ? 'h-7 px-2 rounded-md text-[11px]' : 'h-9 px-3 rounded-lg text-xs'} font-black inline-flex items-center gap-1.5 ${
                 view === 'month'
                   ? 'bg-blue-600 text-white'
@@ -1043,7 +1063,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setView('week')}
+              onClick={() => changeView('week')}
               className={`${compact ? 'h-7 px-2 rounded-md text-[11px]' : 'h-9 px-3 rounded-lg text-xs'} font-black inline-flex items-center gap-1.5 ${
                 view === 'week'
                   ? 'bg-blue-600 text-white'
@@ -1055,7 +1075,19 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setView('agenda')}
+              onClick={() => changeView('day')}
+              className={`${compact ? 'h-7 px-2 rounded-md text-[11px]' : 'h-9 px-3 rounded-lg text-xs'} font-black inline-flex items-center gap-1.5 ${
+                view === 'day'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
+              }'}`}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              Day
+            </button>
+            <button
+              type="button"
+              onClick={() => changeView('agenda')}
               className={`${compact ? 'h-7 px-2 rounded-md text-[11px]' : 'h-9 px-3 rounded-lg text-xs'} font-black inline-flex items-center gap-1.5 ${
                 view === 'agenda'
                   ? 'bg-blue-600 text-white'
@@ -1089,8 +1121,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               type="button"
               onClick={() => navigatePeriod(-1)}
               className={`${compact ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl'} border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition`}
-              title={view === 'week' ? 'Previous week' : 'Previous month'}
-              aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
+              title={`Previous ${navigationUnit}`}
+              aria-label={`Previous ${navigationUnit}`}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -1105,15 +1137,32 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               type="button"
               onClick={() => navigatePeriod(1)}
               className={`${compact ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl'} border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition`}
-              title={view === 'week' ? 'Next week' : 'Next month'}
-              aria-label={view === 'week' ? 'Next week' : 'Next month'}
+              title={`Next ${navigationUnit}`}
+              aria-label={`Next ${navigationUnit}`}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="text-lg sm:text-xl font-black sm:text-right">
-            {periodLabel}
+          <div className="flex items-center gap-2 sm:justify-end min-w-0">
+            <div className="text-sm sm:text-lg xl:text-xl font-black sm:text-right truncate">
+              {periodLabel}
+            </div>
+            <label
+              className={`${compact ? 'h-8 px-2 rounded-lg' : 'h-10 px-3 rounded-xl'} shrink-0 border border-slate-200 bg-white inline-flex items-center gap-1.5 hover:border-blue-300 transition cursor-pointer`}
+              title="Jump to date"
+            >
+              <CalendarDays className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(event) => {
+                  if (event.target.value) selectDate(event.target.value);
+                }}
+                className="w-[118px] sm:w-[132px] bg-transparent text-[10px] sm:text-xs font-black text-slate-700 outline-none cursor-pointer"
+                aria-label="Jump to date"
+              />
+            </label>
           </div>
         </div>
 
@@ -1241,6 +1290,14 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             </div>
 
             <div className="mt-2">
+              {renderSelectedDayPanel()}
+            </div>
+          </div>
+        )}
+
+        {view === 'day' && (
+          <div className="p-2 sm:p-3 bg-slate-50/60">
+            <div className="max-w-3xl mx-auto">
               {renderSelectedDayPanel()}
             </div>
           </div>

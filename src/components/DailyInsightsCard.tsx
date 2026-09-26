@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Check, Clock3, Flame, Lightbulb, Repeat2, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Check, Lightbulb, Repeat2, Target, TrendingUp } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -78,22 +78,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
     [tasks, today]
   );
 
-  const topStreaks = useMemo(
-    () =>
-      habits
-        .map((habit) => ({
-          habit,
-          currentStreak: getHabitStats(habit, today).currentStreak,
-        }))
-        .sort(
-          (a, b) =>
-            b.currentStreak - a.currentStreak ||
-            a.habit.name.localeCompare(b.habit.name)
-        )
-        .slice(0, 3),
-    [habits, today]
-  );
-
   const weekHabitTrend = useMemo(() => {
     const todayDate = parseHabitDateKey(today);
     const day = todayDate.getUTCDay();
@@ -134,12 +118,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
       rate: due ? Math.round((completed / due) * 100) : 0,
     };
   }, [weekHabitTrend]);
-
-  const daysOverdue = (dateKey: string) => {
-    const start = parseHabitDateKey(dateKey).getTime();
-    const end = parseHabitDateKey(today).getTime();
-    return Math.max(1, Math.round((end - start) / 86400000));
-  };
 
   return (
     <div
@@ -265,92 +243,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             ))}
           </div>
 
-          <div className="mt-1.5 text-[9px] font-semibold text-slate-400">
-            {weekHabitSummary.completed}/{weekHabitSummary.due} scheduled habit check-ins completed this week
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-0">
-          <div className="rounded-xl border border-orange-200 dark:border-orange-900/50 bg-orange-50/60 dark:bg-orange-950/20 p-2">
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <div className="flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-orange-500" />
-                <span className="text-[10px] uppercase tracking-wider font-black text-orange-700 dark:text-orange-300">
-                  Streaks
-                </span>
-              </div>
-              <span className="text-[9px] font-bold text-orange-500">
-                current
-              </span>
-            </div>
-
-            {topStreaks.length === 0 ? (
-              <div className="text-[10px] font-semibold text-slate-400">
-                No habit streaks yet.
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {topStreaks.map(({ habit, currentStreak }) => (
-                  <div
-                    key={habit.id}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/75 dark:bg-slate-950/40 px-1.5 py-1"
-                  >
-                    <span className="text-sm leading-none shrink-0">
-                      {habit.emoji}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-slate-700 dark:text-slate-200">
-                      {habit.name}
-                    </span>
-                    <span className="text-[10px] font-black text-orange-600 dark:text-orange-400 shrink-0">
-                      {currentStreak}d
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-2">
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <div className="flex items-center gap-1.5">
-                <Clock3 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span className="text-[10px] uppercase tracking-wider font-black text-amber-700 dark:text-amber-300">
-                  Overdue tasks
-                </span>
-              </div>
-              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">
-                {overdueTasks.length}
-              </span>
-            </div>
-
-            {overdueTasks.length === 0 ? (
-              <div className="text-[10px] font-semibold text-slate-400">
-                No overdue unfinished tasks.
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {overdueTasks.slice(0, 3).map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/75 dark:bg-slate-950/40 px-1.5 py-1"
-                    title={task.taskOfTheDay}
-                  >
-                    <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-slate-700 dark:text-slate-200">
-                      {task.taskOfTheDay}
-                    </span>
-                    <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 shrink-0">
-                      {daysOverdue(task.taskKey)}d
-                    </span>
-                  </div>
-                ))}
-                {overdueTasks.length > 3 && (
-                  <div className="text-[9px] font-bold text-amber-600/80 dark:text-amber-400/80">
-                    +{overdueTasks.length - 3} more
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         </div>
 
         <div>

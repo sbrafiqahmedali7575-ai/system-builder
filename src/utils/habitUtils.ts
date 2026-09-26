@@ -48,6 +48,13 @@ export function normalizeRepeatDays(habit: HabitItem): number[] {
 
 export function isHabitDue(habit: HabitItem, dateKey: string): boolean {
   if (dateKey < getHabitStartKey(habit)) return false;
+
+  const skipped = new Set(habit.skippedDates || []);
+  const extras = new Set(habit.extraDates || []);
+
+  if (extras.has(dateKey)) return true;
+  if (skipped.has(dateKey)) return false;
+
   return normalizeRepeatDays(habit).includes(parseHabitDateKey(dateKey).getUTCDay());
 }
 

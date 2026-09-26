@@ -21,9 +21,9 @@ export const CalendarYearView: React.FC<CalendarYearViewProps> = ({
 }) => (
   <section
     aria-label={`${year} year calendar`}
-    className="h-full overflow-auto overscroll-contain bg-white px-2.5 sm:px-4 py-3 sm:py-4"
+    className="h-full overflow-auto bg-white px-3 sm:px-5 py-4 sm:py-5"
   >
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 xl:gap-x-7 gap-y-5 sm:gap-y-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7 xl:gap-x-9 gap-y-7">
       {Array.from({ length: 12 }, (_, month) => (
         <CalendarMiniMonth
           key={month}
@@ -38,7 +38,7 @@ export const CalendarYearView: React.FC<CalendarYearViewProps> = ({
       ))}
     </div>
 
-    <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-3 gap-y-2 text-[9px] font-semibold text-slate-400">
+    <div className="mt-6 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-3 gap-y-2 text-[9px] font-semibold text-slate-400">
       <span>Completion intensity</span>
 
       <span className="inline-flex items-center gap-1">

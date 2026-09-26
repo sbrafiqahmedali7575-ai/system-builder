@@ -410,7 +410,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 type="button"
                 onClick={() => setDraft((current) => ({ ...current, color: item }))}
                 className={`w-7 h-7 rounded-full ${colorClasses[item].dot} ${
-                  draft.color === item ? 'ring-2 ring-offset-2 ring-[#3f3426]' : ''
+                  draft.color === item ? 'ring-2 ring-offset-2 ring-[#0f172a]' : ''
                 }`}
                 aria-label={`Use ${item} habit color`}
               />

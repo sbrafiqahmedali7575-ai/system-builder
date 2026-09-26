@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, ClipboardCheck } from 'lucide-react';
+import { Bell, BookOpen, ClipboardCheck } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 import { BadgeIcon } from './BadgeIcon';
@@ -20,6 +20,7 @@ const HEADER_QUOTES = [
 interface PowerBiHeaderProps {
   onOpenAddModal?: () => void;
   onOpenNotificationModal?: () => void;
+  onOpenLibrary?: () => void;
   onOpenDayReview?: () => void;
   theme?: DashboardTheme;
   onThemeChange?: (theme: DashboardTheme) => void;
@@ -32,6 +33,7 @@ interface PowerBiHeaderProps {
 
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenNotificationModal,
+  onOpenLibrary,
   onOpenDayReview,
   totalRecordsCount = 0,
   currentBadge = null,
@@ -151,6 +153,20 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               <span>9 PM Alerts</span>
             </motion.button>
           )}
+
+          {onOpenLibrary && (
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onOpenLibrary}
+              className="flex items-center space-x-1 px-1.5 py-1 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
+              title="Open Cal Newport reading library"
+              aria-label="Open Cal Newport reading library"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Books</span>
+            </motion.button>
+          )}
         </div>
 
         {/* Mobile Header Right Controls */}
@@ -165,6 +181,19 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               aria-label="Email Alerts"
             >
               <Bell className="w-4 h-4" />
+            </motion.button>
+          )}
+
+          {onOpenLibrary && (
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenLibrary}
+              className="p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition cursor-pointer"
+              title="Open Cal Newport books"
+              aria-label="Open Cal Newport books"
+            >
+              <BookOpen className="w-4 h-4" />
             </motion.button>
           )}
         </div>

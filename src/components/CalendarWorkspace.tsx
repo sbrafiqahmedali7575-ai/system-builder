@@ -457,7 +457,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
   const renderSelectedDayPanel = () => (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-3">
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-[0.14em] font-black text-blue-700">
@@ -489,7 +489,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => changeSelectedDay(-1)}
-              className="w-8 h-8 rounded-lg border border-blue-200 bg-white flex items-center justify-center hover:bg-white"
+              className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition"
               title="Previous day"
               aria-label="Previous day"
             >
@@ -498,7 +498,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => changeSelectedDay(1)}
-              className="w-8 h-8 rounded-lg border border-blue-200 bg-white flex items-center justify-center hover:bg-white"
+              className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition"
               title="Next day"
               aria-label="Next day"
             >
@@ -509,7 +509,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
         {(selectedTasks.length > 0 || selectedHabits.length > 0) && (
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-white/80 bg-white px-3 py-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <div className="text-lg font-black">
                 {selectedDoneTasks}/{selectedTasks.length}
               </div>
@@ -517,7 +517,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 Tasks done
               </div>
             </div>
-            <div className="rounded-xl border border-white/80 bg-white px-3 py-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <div className="text-lg font-black">
                 {selectedDoneHabits}/{selectedHabits.length}
               </div>
@@ -565,7 +565,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               key={task.id}
               type="button"
               onClick={() => void onToggleTaskStatus(task.id)}
-              className="w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left hover:border-blue-200 hover:bg-white transition"
+              className="w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-xs hover:border-blue-300 hover:bg-slate-50 transition"
             >
               <span
                 className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
@@ -599,7 +599,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 type="button"
                 disabled={future}
                 onClick={() => void toggleHabit(habit, selectedDate)}
-                className="w-full flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2.5 text-left hover:bg-emerald-50 transition disabled:opacity-55 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-xs hover:border-emerald-300 hover:bg-slate-50 transition disabled:opacity-55 disabled:cursor-not-allowed"
               >
                 <span
                   className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
@@ -636,7 +636,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         key={dateKey}
         className={`rounded-2xl border overflow-hidden transition ${
           isSelected
-            ? 'border-blue-300 bg-blue-50/35 shadow-sm ring-1 ring-blue-200'
+            ? 'border-blue-300 bg-white shadow-sm ring-2 ring-blue-100'
             : 'border-slate-200 bg-white'
         }`}
       >
@@ -728,7 +728,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 type="button"
                 disabled={future}
                 onClick={() => void toggleHabit(habit, dateKey)}
-                className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/45 px-3 py-2.5 text-left disabled:opacity-55"
+                className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-xs hover:border-emerald-300 hover:bg-slate-50 transition disabled:opacity-55"
               >
                 <span
                   className={`w-5 h-5 rounded-full border flex items-center justify-center ${
@@ -784,7 +784,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           isDropTarget
             ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-300 shadow-md -translate-y-0.5'
             : isSelected
-            ? 'border-blue-300 bg-blue-50/45 ring-1 ring-blue-200'
+            ? 'border-blue-300 bg-white ring-2 ring-blue-100'
             : 'border-slate-200 bg-white'
         }`}
       >
@@ -855,7 +855,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 })
               }
               onDragEnd={endDrag}
-              className="rounded-xl border border-blue-100 bg-blue-50/70 px-2.5 py-2 shadow-sm"
+              className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm hover:border-blue-300 transition"
             >
               <div className="flex items-start gap-2">
                 <span
@@ -925,7 +925,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                   })
                 }
                 onDragEnd={endDrag}
-                className="rounded-xl border border-emerald-100 bg-emerald-50/65 px-2.5 py-2 shadow-sm"
+                className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm hover:border-emerald-300 transition"
               >
                 <div className="flex items-start gap-2">
                   <span
@@ -1009,7 +1009,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
+          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition">
             <input
               type="checkbox"
               checked={showCompleted}
@@ -1017,7 +1017,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             />
             Completed
           </label>
-          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
+          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 transition">
             <input
               type="checkbox"
               checked={showHabits}
@@ -1033,7 +1033,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               className={`h-8 px-2.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 ${
                 view === 'month'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-slate-100'
+                  : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
               <CalendarDays className="w-3.5 h-3.5" />
@@ -1045,7 +1045,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               className={`h-8 px-2.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 ${
                 view === 'week'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-slate-100'
+                  : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
               <CalendarRange className="w-3.5 h-3.5" />
@@ -1057,7 +1057,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               className={`h-8 px-2.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 ${
                 view === 'agenda'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-slate-100'
+                  : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -1080,13 +1080,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
         <div className="px-3 sm:px-4 py-3 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50">
           <div className="flex items-center justify-between sm:justify-start gap-2">
             <button
               type="button"
               onClick={() => navigatePeriod(-1)}
-              className="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-white"
+              className="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition"
               title={view === 'week' ? 'Previous week' : 'Previous month'}
               aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
             >
@@ -1095,14 +1095,14 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={jumpToday}
-              className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black hover:bg-white"
+              className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-700 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => navigatePeriod(1)}
-              className="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-white"
+              className="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition"
               title={view === 'week' ? 'Next week' : 'Next month'}
               aria-label={view === 'week' ? 'Next week' : 'Next month'}
             >
@@ -1212,7 +1212,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               </div>
             </div>
 
-            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200/80 bg-slate-50/55 p-3 sm:p-4">
+            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200 bg-slate-50 p-3 sm:p-4">
               <div className="xl:sticky xl:top-24">
                 {renderSelectedDayPanel()}
               </div>
@@ -1276,7 +1276,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               )}
             </div>
 
-            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200/80 bg-slate-50/55 p-3 sm:p-4">
+            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200 bg-slate-50 p-3 sm:p-4">
               <div className="xl:sticky xl:top-24">
                 {renderSelectedDayPanel()}
               </div>

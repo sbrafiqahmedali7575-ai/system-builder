@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
-  CalendarDays,
   Grid2X2,
   ListChecks,
   Repeat2,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
-import { CalendarWorkspace } from './CalendarWorkspace';
 import { EisenhowerMatrix } from './EisenhowerMatrix';
 import { HabitTracker } from './HabitTracker';
 import { TaskTracker } from './TaskTracker';
 
-type MoreTab = 'eisenhower' | 'habits' | 'tasks' | 'calendar';
+type MoreTab = 'eisenhower' | 'habits' | 'tasks';
 
 interface MoreWorkspaceProps {
   theme: DashboardTheme;
@@ -38,7 +36,6 @@ const TABS: Array<{
   { id: 'eisenhower', label: 'Eisenhower Matrix', icon: Grid2X2 },
   { id: 'habits', label: 'Habit Tracker', icon: Repeat2 },
   { id: 'tasks', label: 'Task Tracker', icon: ListChecks },
-  { id: 'calendar', label: 'Calendar', icon: CalendarDays },
 ];
 
 const TOOL_TAB_BASE =
@@ -97,9 +94,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                   ? 'Matrix'
                   : tab.id === 'habits'
                   ? 'Habits'
-                  : tab.id === 'tasks'
-                  ? 'Tasks'
-                  : 'Calendar';
+                  : 'Tasks';
 
               return (
                 <button
@@ -185,33 +180,17 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             >
             <TaskTracker
               tasks={tasks}
-              onAddTask={onAddTask}
-              onUpdateTask={onUpdateTask}
-              onDeleteTask={onDeleteTask}
-              onToggleTaskStatus={onToggleTaskStatus}
-              density="compact"
-            />
-            </div>
-          )}
-
-          {activeTab === 'calendar' && (
-            <div
-              id="tools-panel-calendar"
-              role="tabpanel"
-              className="h-full"
-              aria-labelledby="tools-tab-calendar"
-            >
-            <CalendarWorkspace
-              tasks={tasks}
               habits={habits}
               onAddTask={onAddTask}
               onUpdateTask={onUpdateTask}
+              onDeleteTask={onDeleteTask}
               onToggleTaskStatus={onToggleTaskStatus}
               onUpdateHabit={onUpdateHabit}
               density="compact"
             />
             </div>
           )}
+
         </section>
       </main>
     </div>

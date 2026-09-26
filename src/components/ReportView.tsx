@@ -481,12 +481,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
           </motion.div>
 
           {/* Today's Tasks + Daily Insights — 50/50 on desktop */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-stretch lg:h-[430px]">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="min-w-0 flex flex-col"
+              className="min-w-0 min-h-0 h-full flex flex-col"
             >
               <TodayTasksCard
                 tasks={tasks}
@@ -504,7 +504,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.36, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="min-w-0 flex flex-col"
+              className="min-w-0 min-h-0 h-full flex flex-col"
             >
               <DailyInsightsCard tasks={tasks} habits={habits} theme={theme} />
             </motion.div>

@@ -511,6 +511,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 habits={habits}
                 theme={theme}
                 currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
+                overallCompletionPercentage={allKpis.completionRate}
+                completedDays={allKpis.completedDays}
+                totalDays={allKpis.totalDays}
+                countdownDaysRemaining={longTermCountdown.daysRemaining}
+                countdownReason={longTermCountdown.reason}
+                countdownTargetLabel={longTermCountdown.targetDateLabel}
+                onOpenCountdown={openCountdownEditor}
               />
             </motion.div>
           </div>

@@ -145,6 +145,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               tasks={tasks}
               habits={habits}
               onAddTask={onAddTask}
+              onUpdateTask={onUpdateTask}
               onToggleTaskStatus={onToggleTaskStatus}
               onUpdateHabit={onUpdateHabit}
             />

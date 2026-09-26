@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Check, Flame, Lightbulb, Repeat2, Siren, Target } from 'lucide-react';
+import { AlertTriangle, Check, Clock3, Flame, Lightbulb, Repeat2, Siren, Target, TrendingUp } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -7,9 +7,11 @@ import {
   getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
 import {
+  addHabitDays,
   getHabitScheduleLabel,
   getHabitStats,
   isHabitDue,
+  parseHabitDateKey,
 } from '../utils/habitUtils';
 
 interface DailyInsightsCardProps {
@@ -76,6 +78,77 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
     [habits, today]
   );
 
+  const overdueTasks = useMemo(
+    () =>
+      tasks
+        .filter((task) => !task.isCompleted && task.taskKey < today)
+        .sort((a, b) => a.taskKey.localeCompare(b.taskKey)),
+    [tasks, today]
+  );
+
+  const topStreaks = useMemo(
+    () =>
+      habits
+        .map((habit) => ({
+          habit,
+          currentStreak: getHabitStats(habit, today).currentStreak,
+        }))
+        .sort(
+          (a, b) =>
+            b.currentStreak - a.currentStreak ||
+            a.habit.name.localeCompare(b.habit.name)
+        )
+        .slice(0, 3),
+    [habits, today]
+  );
+
+  const weekHabitTrend = useMemo(() => {
+    const todayDate = parseHabitDateKey(today);
+    const day = todayDate.getUTCDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = addHabitDays(today, mondayOffset);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const dateKey = addHabitDays(monday, index);
+      const date = parseHabitDateKey(dateKey);
+      const due = habits.filter((habit) => isHabitDue(habit, dateKey));
+      const completed = due.filter((habit) =>
+        habit.checkIns.includes(dateKey)
+      ).length;
+      const future = dateKey > today;
+
+      return {
+        dateKey,
+        label: date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          timeZone: 'UTC',
+        }).slice(0, 1),
+        due: due.length,
+        completed,
+        rate: due.length ? Math.round((completed / due.length) * 100) : 0,
+        future,
+      };
+    });
+  }, [habits, today]);
+
+  const weekHabitSummary = useMemo(() => {
+    const elapsed = weekHabitTrend.filter((day) => !day.future);
+    const due = elapsed.reduce((sum, day) => sum + day.due, 0);
+    const completed = elapsed.reduce((sum, day) => sum + day.completed, 0);
+
+    return {
+      due,
+      completed,
+      rate: due ? Math.round((completed / due) * 100) : 0,
+    };
+  }, [weekHabitTrend]);
+
+  const daysOverdue = (dateKey: string) => {
+    const start = parseHabitDateKey(dateKey).getTime();
+    const end = parseHabitDateKey(today).getTime();
+    return Math.max(1, Math.round((end - start) / 86400000));
+  };
+
   return (
     <div
       aria-label="Daily Insights"
@@ -108,7 +181,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5 mb-2">
+      <div className="grid grid-cols-3 gap-1.5 mb-2">
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
             <Target className="w-3 h-3 text-blue-500" />
@@ -127,7 +200,166 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             {completedHabitsToday}/{dueHabits.length}
           </div>
         </div>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5">
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
+            <AlertTriangle className="w-3 h-3 text-amber-500" />
+            Overdue
+          </div>
+          <div className={`mt-0.5 text-sm font-black ${
+            overdueTasks.length > 0
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-slate-800 dark:text-slate-100'
+          }`}>
+            {overdueTasks.length}
+          </div>
+        </div>
       </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
+
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 mb-2">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
+                This week · habits
+              </span>
+            </div>
+            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">
+              {weekHabitSummary.rate}%
+            </span>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {weekHabitTrend.map((day) => (
+              <div
+                key={day.dateKey}
+                className="min-w-0 text-center"
+                title={
+                  day.future
+                    ? `${day.dateKey}: future`
+                    : `${day.dateKey}: ${day.completed}/${day.due} habits completed (${day.rate}%)`
+                }
+              >
+                <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
+                  {!day.future && (
+                    <div
+                      className={`w-full rounded-t-sm transition-all ${
+                        day.rate >= 80
+                          ? 'bg-emerald-500'
+                          : day.rate >= 50
+                          ? 'bg-blue-500'
+                          : day.due > 0
+                          ? 'bg-amber-400'
+                          : 'bg-slate-300 dark:bg-slate-700'
+                      }`}
+                      style={{
+                        height:
+                          day.due === 0
+                            ? '4px'
+                            : `${Math.max(8, day.rate)}%`,
+                      }}
+                    />
+                  )}
+                </div>
+                <div className={`mt-0.5 text-[8px] font-black ${
+                  day.dateKey === today
+                    ? 'text-blue-600 dark:text-blue-300'
+                    : 'text-slate-400'
+                }`}>
+                  {day.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-1.5 text-[9px] font-semibold text-slate-400">
+            {weekHabitSummary.completed}/{weekHabitSummary.due} scheduled habit check-ins completed this week
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-2">
+          <div className="rounded-xl border border-orange-200 dark:border-orange-900/50 bg-orange-50/60 dark:bg-orange-950/20 p-2">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-orange-500" />
+                <span className="text-[10px] uppercase tracking-wider font-black text-orange-700 dark:text-orange-300">
+                  Streaks
+                </span>
+              </div>
+              <span className="text-[9px] font-bold text-orange-500">
+                current
+              </span>
+            </div>
+
+            {topStreaks.length === 0 ? (
+              <div className="text-[10px] font-semibold text-slate-400">
+                No habit streaks yet.
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {topStreaks.map(({ habit, currentStreak }) => (
+                  <div
+                    key={habit.id}
+                    className="flex items-center gap-1.5 rounded-lg bg-white/75 dark:bg-slate-950/40 px-1.5 py-1"
+                  >
+                    <span className="text-sm leading-none shrink-0">
+                      {habit.emoji}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                      {habit.name}
+                    </span>
+                    <span className="text-[10px] font-black text-orange-600 dark:text-orange-400 shrink-0">
+                      {currentStreak}d
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-2">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Clock3 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span className="text-[10px] uppercase tracking-wider font-black text-amber-700 dark:text-amber-300">
+                  Overdue tasks
+                </span>
+              </div>
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400">
+                {overdueTasks.length}
+              </span>
+            </div>
+
+            {overdueTasks.length === 0 ? (
+              <div className="text-[10px] font-semibold text-slate-400">
+                No overdue unfinished tasks.
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {overdueTasks.slice(0, 3).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-1.5 rounded-lg bg-white/75 dark:bg-slate-950/40 px-1.5 py-1"
+                    title={task.taskOfTheDay}
+                  >
+                    <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                      {task.taskOfTheDay}
+                    </span>
+                    <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 shrink-0">
+                      {daysOverdue(task.taskKey)}d
+                    </span>
+                  </div>
+                ))}
+                {overdueTasks.length > 3 && (
+                  <div className="text-[9px] font-bold text-amber-600/80 dark:text-amber-400/80">
+                    +{overdueTasks.length - 3} more
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
       <div className="rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/20 p-2 mb-2">
         <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -167,7 +399,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
         )}
       </div>
 
-      <div className="min-h-0 flex-1">
+        <div>
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5">
             <Flame className="w-3.5 h-3.5 text-orange-500" />
@@ -233,6 +465,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

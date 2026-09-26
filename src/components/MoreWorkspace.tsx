@@ -149,8 +149,8 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3">
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-2.5 sm:p-3 lg:p-4 min-h-[calc(100vh-64px)]">
+      <main className="max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 lg:h-[calc(100vh-49px)] lg:overflow-hidden">
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-2.5 sm:p-3 lg:p-3 lg:h-full lg:overflow-hidden">
           {activeTab === 'eisenhower' && (
             <div
               id="tools-panel-eisenhower"

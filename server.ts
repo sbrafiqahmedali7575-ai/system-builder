@@ -38,23 +38,180 @@ function getSchedulerSecret(): string {
   return (process.env.SCHEDULER_SECRET || '').trim();
 }
 
-function isValidSchedulerBearer(authHeader: string | undefined): boolean {
-  const expected = getSchedulerSecret();
-  if (!expected) return false;
+const GITHUB_OIDC_ISSUER = 'https://token.actions.githubusercontent.com';
+const GITHUB_OIDC_AUDIENCE = 'systembuilder08.ai.studio';
+const GITHUB_REPOSITORY = 'sbrafiqahmedali7575-ai/system-builder';
+const GITHUB_MAIN_REF = 'refs/heads/main';
+const GITHUB_SCHEDULER_WORKFLOWS = new Set([
+  `${GITHUB_REPOSITORY}/.github/workflows/daily-reminder.yml@${GITHUB_MAIN_REF}`,
+  `${GITHUB_REPOSITORY}/.github/workflows/daily-finalize.yml@${GITHUB_MAIN_REF}`,
+]);
 
+type GithubOidcJwk = {
+  kid?: string;
+  kty?: string;
+  alg?: string;
+  use?: string;
+  n?: string;
+  e?: string;
+  [key: string]: unknown;
+};
+
+let githubOidcJwksCache:
+  | {
+      fetchedAt: number;
+      keys: GithubOidcJwk[];
+    }
+  | null = null;
+
+function getBearerToken(authHeader: string | undefined): string {
   const raw = String(authHeader || '').trim();
-  if (!raw.startsWith('Bearer ')) return false;
+  if (!raw.startsWith('Bearer ')) return '';
+  return raw.slice(7).trim();
+}
 
-  const provided = raw.slice(7).trim();
-  if (!provided) return false;
+function matchesSchedulerSecret(token: string): boolean {
+  const expected = getSchedulerSecret();
+  if (!expected || !token) return false;
 
   const expectedBuffer = Buffer.from(expected);
-  const providedBuffer = Buffer.from(provided);
+  const providedBuffer = Buffer.from(token);
 
   return (
     expectedBuffer.length === providedBuffer.length &&
     crypto.timingSafeEqual(expectedBuffer, providedBuffer)
   );
+}
+
+async function getGithubOidcJwks(): Promise<GithubOidcJwk[]> {
+  const now = Date.now();
+  if (
+    githubOidcJwksCache &&
+    now - githubOidcJwksCache.fetchedAt < 60 * 60 * 1000
+  ) {
+    return githubOidcJwksCache.keys;
+  }
+
+  const response = await fetch(
+    `${GITHUB_OIDC_ISSUER}/.well-known/jwks`,
+    {
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to load GitHub Actions OIDC signing keys (${response.status}).`
+    );
+  }
+
+  const body = (await response.json()) as { keys?: GithubOidcJwk[] };
+  const keys = Array.isArray(body.keys) ? body.keys : [];
+
+  if (keys.length === 0) {
+    throw new Error('GitHub Actions OIDC signing keys are unavailable.');
+  }
+
+  githubOidcJwksCache = {
+    fetchedAt: now,
+    keys,
+  };
+
+  return keys;
+}
+
+function decodeJwtJson(segment: string): Record<string, unknown> | null {
+  try {
+    return JSON.parse(
+      Buffer.from(segment, 'base64url').toString('utf8')
+    ) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+async function isValidGithubActionsOidcToken(token: string): Promise<boolean> {
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = decodeJwtJson(encodedHeader);
+  const payload = decodeJwtJson(encodedPayload);
+
+  if (!header || !payload) return false;
+  if (header.alg !== 'RS256' || typeof header.kid !== 'string') return false;
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const exp = Number(payload.exp);
+  const nbf = payload.nbf === undefined ? null : Number(payload.nbf);
+  const iat = payload.iat === undefined ? null : Number(payload.iat);
+
+  if (!Number.isFinite(exp) || exp <= nowSeconds) return false;
+  if (nbf !== null && Number.isFinite(nbf) && nbf > nowSeconds + 30) {
+    return false;
+  }
+  if (iat !== null && Number.isFinite(iat) && iat > nowSeconds + 30) {
+    return false;
+  }
+
+  if (payload.iss !== GITHUB_OIDC_ISSUER) return false;
+
+  const audience = payload.aud;
+  const hasExpectedAudience =
+    audience === GITHUB_OIDC_AUDIENCE ||
+    (Array.isArray(audience) && audience.includes(GITHUB_OIDC_AUDIENCE));
+
+  if (!hasExpectedAudience) return false;
+  if (payload.repository !== GITHUB_REPOSITORY) return false;
+  if (payload.ref !== GITHUB_MAIN_REF) return false;
+
+  const workflowRef =
+    typeof payload.workflow_ref === 'string'
+      ? payload.workflow_ref
+      : typeof payload.job_workflow_ref === 'string'
+      ? payload.job_workflow_ref
+      : '';
+
+  if (!GITHUB_SCHEDULER_WORKFLOWS.has(workflowRef)) return false;
+
+  const keys = await getGithubOidcJwks();
+  const jwk = keys.find((key) => key.kid === header.kid);
+  if (!jwk) return false;
+
+  const publicKey = crypto.createPublicKey({
+    key: jwk as any,
+    format: 'jwk',
+  });
+
+  return crypto.verify(
+    'RSA-SHA256',
+    Buffer.from(`${encodedHeader}.${encodedPayload}`),
+    publicKey,
+    Buffer.from(encodedSignature, 'base64url')
+  );
+}
+
+async function isValidSchedulerBearer(
+  authHeader: string | undefined
+): Promise<boolean> {
+  const token = getBearerToken(authHeader);
+  if (!token) return false;
+
+  if (matchesSchedulerSecret(token)) {
+    return true;
+  }
+
+  try {
+    return await isValidGithubActionsOidcToken(token);
+  } catch (error) {
+    console.warn(
+      'GitHub Actions OIDC validation warning:',
+      sanitizeError(error)
+    );
+    return false;
+  }
 }
 
 function escapeHtml(unsafe: string): string {
@@ -255,25 +412,17 @@ async function startServer() {
   });
 
   // 4. Production endpoint for external scheduler: GET/POST /api/send-daily-reminder
-  // Protected only with Authorization: Bearer <SCHEDULER_SECRET>.
+  // Protected with Authorization: Bearer <token>. Accepts either the optional
+  // SCHEDULER_SECRET or a verified GitHub Actions OIDC token from an approved
+  // scheduler workflow on this repository's main branch.
   // Sends daily commitment reminder to sbrafiqahmedali7575@gmail.com.
   // Retrieves today's task in Asia/Kolkata timezone with Completed & Not Completed buttons.
   // Enforces persistent deduplication preventing double-sends for the same IST date.
   app.all('/api/send-daily-reminder', async (req, res) => {
-    if (!getSchedulerSecret()) {
-      console.error(
-        'SCHEDULER_SECRET is not configured; refusing external scheduler request.'
-      );
-      return res.status(503).json({
-        success: false,
-        error: 'Scheduler authentication is not configured.',
-      });
-    }
-
-    if (!isValidSchedulerBearer(req.headers.authorization)) {
+    if (!(await isValidSchedulerBearer(req.headers.authorization))) {
       return res.status(401).json({
         success: false,
-        error: 'Unauthorized: Invalid scheduler bearer token.',
+        error: 'Unauthorized: Invalid scheduler authentication.',
       });
     }
 
@@ -332,20 +481,10 @@ async function startServer() {
 
   // End-of-day fallback: no task creation or no explicit app/email response => Not Completed.
   app.all('/api/finalize-day', async (req, res) => {
-    if (!getSchedulerSecret()) {
-      console.error(
-        'SCHEDULER_SECRET is not configured; refusing external scheduler request.'
-      );
-      return res.status(503).json({
-        success: false,
-        error: 'Scheduler authentication is not configured.',
-      });
-    }
-
-    if (!isValidSchedulerBearer(req.headers.authorization)) {
+    if (!(await isValidSchedulerBearer(req.headers.authorization))) {
       return res.status(401).json({
         success: false,
-        error: 'Unauthorized: Invalid scheduler bearer token.',
+        error: 'Unauthorized: Invalid scheduler authentication.',
       });
     }
 

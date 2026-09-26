@@ -27,7 +27,7 @@ import {
   areDatesEqual,
   toInputDateValue,
 } from '../utils/taskDateUtils';
-import { isHabitDue } from '../utils/habitUtils';
+import { addHabitDays, isHabitDue, parseHabitDateKey } from '../utils/habitUtils';
 import confetti from 'canvas-confetti';
 
 const TASK_QUADRANT_OPTIONS: Array<{
@@ -101,6 +101,7 @@ interface TodayTasksCardProps {
   onOpenDayReview: () => void;
   currentDayFormatted: string;
   currentDayName: string;
+  currentWeekCadencePercentage: number;
   isSyncing?: boolean;
 }
 
@@ -115,6 +116,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   onOpenDayReview,
   currentDayFormatted,
   currentDayName,
+  currentWeekCadencePercentage,
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
@@ -163,6 +165,34 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ).length,
     [tasks, todayOption.dateKey]
   );
+
+
+  const weekTaskTrend = useMemo(() => {
+    const todayDate = parseHabitDateKey(todayOption.dateKey);
+    const day = todayDate.getUTCDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = addHabitDays(todayOption.dateKey, mondayOffset);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const dateKey = addHabitDays(monday, index);
+      const date = parseHabitDateKey(dateKey);
+      const dayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, dateKey));
+      const completed = dayTasks.filter((task) => task.isCompleted).length;
+      const future = dateKey > todayOption.dateKey;
+
+      return {
+        dateKey,
+        label: date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          timeZone: 'UTC',
+        }).slice(0, 1),
+        total: dayTasks.length,
+        completed,
+        rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
+        future,
+      };
+    });
+  }, [tasks, todayOption.dateKey]);
 
   // UI state for "Enter Tasks" panel
   const [isEnterPanelOpen, setIsEnterPanelOpen] = useState(false);
@@ -566,6 +596,78 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           >
             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
           </button>
+        </div>
+      </div>
+
+      <div className="shrink-0 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-white/80 dark:bg-slate-950/50 p-1.5 mb-1.5">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Target className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="truncate text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
+              This week · tasks
+            </span>
+          </div>
+          <div
+            className="text-right shrink-0"
+            title={`Current week cadence: ${currentWeekCadencePercentage}%`}
+          >
+            <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
+              {currentWeekCadencePercentage}%
+            </div>
+            <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
+              cadence
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+          {weekTaskTrend.map((day) => (
+            <div
+              key={day.dateKey}
+              className="min-w-0 text-center"
+              title={
+                day.future
+                  ? `${day.dateKey}: future`
+                  : `${day.dateKey}: ${day.completed}/${day.total} tasks completed (${day.rate}%)`
+              }
+            >
+              <div className="relative h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
+                {!day.future && (
+                  <div
+                    className={`w-full rounded-t-sm transition-all ${
+                      day.total > 0
+                        ? 'bg-blue-500'
+                        : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
+                    style={{
+                      height:
+                        day.total === 0
+                          ? '4px'
+                          : `${Math.max(8, day.rate)}%`,
+                    }}
+                  />
+                )}
+                <span
+                  className={`absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums ${
+                    day.future
+                      ? 'text-slate-300 dark:text-slate-600'
+                      : day.rate >= 45 && day.total > 0
+                      ? 'text-white'
+                      : 'text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {day.future ? '—' : `${day.rate}%`}
+                </span>
+              </div>
+              <div className={`mt-0.5 text-[8px] font-black ${
+                day.dateKey === todayOption.dateKey
+                  ? 'text-blue-600 dark:text-blue-300'
+                  : 'text-slate-400'
+              }`}>
+                {day.label}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

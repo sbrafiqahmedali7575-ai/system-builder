@@ -21,7 +21,7 @@ import {
   UsersRound,
   X,
 } from 'lucide-react';
-import { MatrixQuadrant, TaskItem } from '../types';
+import { MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
 import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 
 interface EisenhowerMatrixProps {
@@ -31,6 +31,7 @@ interface EisenhowerMatrixProps {
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
   isSyncing?: boolean;
+  density?: ToolsDensity;
 }
 
 type QuadrantColor =
@@ -332,6 +333,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   onDeleteTask,
   onToggleTaskStatus,
   isSyncing = false,
+  density = 'compact',
 }) => {
   const [drafts, setDrafts] = useState<Record<MatrixQuadrant, string>>({
     'urgent-important': '',
@@ -351,6 +353,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   const [dragOver, setDragOver] = useState<MatrixQuadrant | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const compact = density === 'compact';
 
   const quadrants = useMemo(
     () =>
@@ -531,16 +534,20 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   };
 
   return (
-    <div className="space-y-2 lg:max-h-full lg:overflow-hidden">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+    <div
+      className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:flex lg:flex-col lg:overflow-hidden`}
+    >
+      <div className={`flex flex-col lg:flex-row lg:items-center justify-between ${
+          compact ? 'gap-2' : 'gap-3'
+        } lg:shrink-0`}>
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
             Priority workspace
           </p>
-          <h2 className="mt-0.5 text-xl sm:text-2xl font-black tracking-tight">
+          <h2 className={`${compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'} font-black tracking-tight`}>
             Eisenhower Matrix
           </h2>
-          <p className="mt-0.5 text-xs font-semibold text-slate-600 hidden md:block">
+          <p className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-semibold text-slate-600 hidden md:block`}>
             Drag with the grip handle, or use Move to on touch devices. Quadrant and priority are controlled separately.
           </p>
         </div>
@@ -573,7 +580,9 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 lg:min-h-0 lg:h-[calc(100vh-145px)]">
+      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 ${
+          compact ? 'gap-2' : 'gap-3'
+        } lg:flex-1 lg:min-h-0`}>
         {quadrants.map((quadrant) => {
           const theme = QUADRANT_THEMES[quadrant.color];
           const QuadrantIconComponent =
@@ -607,7 +616,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[230px] rounded-xl border transition-all overflow-hidden flex flex-col ${theme.border} ${theme.surface} ${
+              className={`relative ${compact ? 'min-h-[230px] rounded-xl' : 'min-h-[320px] rounded-2xl'} border transition-all overflow-hidden flex flex-col ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'
@@ -635,7 +644,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               )}
 
-              <div className="px-3 py-2 border-b border-slate-200/80 flex items-start justify-between gap-2 shrink-0">
+              <div className={`${compact ? 'px-3 py-2' : 'px-4 py-3'} border-b border-slate-200/80 flex items-start justify-between gap-2 shrink-0`}>
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                   <div className="relative shrink-0 mt-0.5">
                     <span
@@ -813,7 +822,9 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               </div>
 
-              <div className="p-2 space-y-1.5 flex-1 min-h-0 overflow-y-auto">
+              <div
+                className={`${compact ? 'p-2 space-y-1.5' : 'p-3 space-y-2.5'} flex-1 min-h-0 overflow-y-auto`}
+              >
                 <div className="flex gap-2">
                   <input
                     value={drafts[quadrant.id]}

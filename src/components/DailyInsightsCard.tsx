@@ -32,9 +32,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   );
 
   const completedToday = todayTasks.filter((task) => task.isCompleted).length;
-  const taskProgress = todayTasks.length
-    ? Math.round((completedToday / todayTasks.length) * 100)
-    : 0;
 
   const dueHabits = useMemo(
     () => habits.filter((habit) => isHabitDue(habit, today)),
@@ -43,6 +40,12 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   const completedHabitsToday = dueHabits.filter((habit) =>
     habit.checkIns.includes(today)
   ).length;
+
+  const overallItemsToday = todayTasks.length + dueHabits.length;
+  const completedOverallToday = completedToday + completedHabitsToday;
+  const overallCompletion = overallItemsToday
+    ? Math.round((completedOverallToday / overallItemsToday) * 100)
+    : 0;
 
   const overdueTasks = useMemo(
     () =>
@@ -156,11 +159,16 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           </div>
         </div>
 
-        <div className="text-right shrink-0">
+        <div
+          className="text-right shrink-0"
+          title={`Overall today: ${completedOverallToday}/${overallItemsToday} tasks + due habits completed`}
+        >
           <div className="text-lg font-black font-mono text-blue-600 dark:text-blue-300">
-            {taskProgress}%
+            {overallCompletion}%
           </div>
-          <div className="text-[9px] font-bold text-slate-400">tasks done</div>
+          <div className="text-[9px] font-bold text-slate-400">
+            overall completion
+          </div>
         </div>
       </div>
 

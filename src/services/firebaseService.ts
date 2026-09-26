@@ -503,6 +503,12 @@ export function subscribeToHabits(
                 .map((value: unknown) => Number(value))
                 .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
             : undefined,
+          skippedDates: Array.isArray(data.skippedDates)
+            ? data.skippedDates.map((value: unknown) => String(value))
+            : [],
+          extraDates: Array.isArray(data.extraDates)
+            ? data.extraDates.map((value: unknown) => String(value))
+            : [],
           color: (['blue', 'emerald', 'amber', 'rose', 'violet'].includes(String(data.color))
             ? String(data.color)
             : 'blue') as HabitItem['color'],
@@ -530,6 +536,8 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
     emoji: habit.emoji,
     frequency: habit.frequency,
     repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
+    skippedDates: habit.skippedDates || [],
+    extraDates: habit.extraDates || [],
     color: habit.color,
     checkIns: habit.checkIns || [],
     createdAt: habit.createdAt,

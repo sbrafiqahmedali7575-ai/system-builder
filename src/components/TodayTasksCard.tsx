@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Target,
   Repeat2,
+  AlertTriangle,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
@@ -154,6 +155,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const completedHabitCount = dateHabits.filter((habit) =>
     habit.checkIns.includes(activeDateKey)
   ).length;
+
+  const overdueTasksCount = useMemo(
+    () =>
+      tasks.filter(
+        (task) => !task.isCompleted && task.taskKey < todayOption.dateKey
+      ).length,
+    [tasks, todayOption.dateKey]
+  );
 
   // UI state for "Enter Tasks" panel
   const [isEnterPanelOpen, setIsEnterPanelOpen] = useState(false);
@@ -480,6 +489,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <span className="uppercase tracking-wide font-black text-slate-400">Habits</span>
                 <span className="font-mono font-black text-slate-700 dark:text-slate-200">
                   {completedHabitCount}/{dateHabits.length}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5">
+                <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                <span className="uppercase tracking-wide font-black text-slate-400">Overdue</span>
+                <span className={`font-mono font-black ${
+                  overdueTasksCount > 0
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-slate-700 dark:text-slate-200'
+                }`}>
+                  {overdueTasksCount}
                 </span>
               </span>
             </div>

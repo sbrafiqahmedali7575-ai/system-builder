@@ -14,6 +14,7 @@ interface CommandCenterSidebarProps {
   countdownDaysRemaining: number;
   countdownReason: string;
   countdownTargetLabel: string;
+  currentTaskTitle: string;
   onOpenCountdown?: () => void;
 }
 
@@ -27,6 +28,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   countdownDaysRemaining,
   countdownReason,
   countdownTargetLabel,
+  currentTaskTitle,
   onOpenCountdown,
 }) => {
   const isDark = theme === 'dark';
@@ -104,13 +106,12 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         </button>
       </div>
 
-      <div className="mt-1.5 min-h-0 flex-1 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
-        <div className="text-[8px] uppercase tracking-wide font-black text-slate-400 mb-1.5">
-          Focus Timer
-        </div>
-        <div className="flex items-center justify-center">
-          <PomodoroTimer />
-        </div>
+      <div className="mt-1.5 min-h-0 flex-1">
+        <PomodoroTimer
+          className="h-full"
+          currentTaskTitle={currentTaskTitle}
+          integrated
+        />
       </div>
     </aside>
   );

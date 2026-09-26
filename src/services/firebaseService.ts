@@ -492,7 +492,17 @@ export function subscribeToHabits(
           id: docSnap.id,
           name: String(data.name ?? ''),
           emoji: String(data.emoji ?? '✓'),
-          frequency: data.frequency === 'weekdays' ? 'weekdays' : 'daily',
+          frequency:
+            data.frequency === 'custom'
+              ? 'custom'
+              : data.frequency === 'weekdays'
+              ? 'weekdays'
+              : 'daily',
+          repeatDays: Array.isArray(data.repeatDays)
+            ? data.repeatDays
+                .map((value: unknown) => Number(value))
+                .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
+            : undefined,
           color: (['blue', 'emerald', 'amber', 'rose', 'violet'].includes(String(data.color))
             ? String(data.color)
             : 'blue') as HabitItem['color'],

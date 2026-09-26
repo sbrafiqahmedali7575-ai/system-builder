@@ -9,6 +9,9 @@ service cloud.firestore {
     match /tasks/{taskId} {
       allow read, write: if true;
     }
+    match /habits/{habitId} {
+      allow read, write: if true;
+    }
     match /notification_settings/{settingId} {
       allow read, write: if true;
     }

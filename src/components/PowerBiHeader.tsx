@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BookOpen, ClipboardCheck, Database } from 'lucide-react';
+import { Bell, BookOpen, Database } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 
@@ -20,7 +20,6 @@ interface PowerBiHeaderProps {
   onOpenAddModal?: () => void;
   onOpenNotificationModal?: () => void;
   onOpenLibrary?: () => void;
-  onOpenDayReview?: () => void;
   theme?: DashboardTheme;
   onThemeChange?: (theme: DashboardTheme) => void;
   totalRecordsCount?: number;
@@ -33,7 +32,6 @@ interface PowerBiHeaderProps {
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenNotificationModal,
   onOpenLibrary,
-  onOpenDayReview,
   totalRecordsCount = 0,
   isSyncing = false,
 }) => {
@@ -51,7 +49,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       className="system-header w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs select-none sticky top-0 z-40 transition-colors"
     >
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 sm:px-3 lg:px-4 h-16 max-w-7xl mx-auto">
-        {/* Brand + Review Zone */}
+        {/* Brand Zone */}
         <div className="flex items-center space-x-1.5 min-w-0">
           <a
             href="/"
@@ -85,20 +83,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             </div>
           </a>
 
-          {onOpenDayReview && (
-            <motion.button
-              type="button"
-              whileHover={{ y: -2, scale: 1.03 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={onOpenDayReview}
-              className="inline-flex items-center justify-center gap-1 h-9 px-2 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              title="Review and mark current day"
-              aria-label="Review current day"
-            >
-              <ClipboardCheck className="w-4 h-4" />
-              <span className="hidden lg:inline text-[11px] font-black">Review</span>
-            </motion.button>
-          )}
         </div>
 
         {/* Dynamic Quotes */}

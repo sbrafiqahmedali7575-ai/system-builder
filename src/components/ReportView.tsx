@@ -1,4 +1,4 @@
-import React, { FormEvent, useMemo, useState } from 'react';
+import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { RotateCcw, X } from 'lucide-react';
@@ -9,6 +9,10 @@ import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
 import { WeeklyProgressCards } from './WeeklyProgressCards';
+import {
+  saveCountdownSettings,
+  subscribeToCountdownSettings,
+} from '../services/firebaseService';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -100,6 +104,60 @@ export const ReportView: React.FC<ReportViewProps> = ({
   });
   const [draftCountdownDate, setDraftCountdownDate] = useState('');
   const [draftCountdownReason, setDraftCountdownReason] = useState('');
+
+  useEffect(() => {
+    const unsubscribe = subscribeToCountdownSettings(
+      (settings) => {
+        if (typeof window === 'undefined') return;
+
+        if (!settings) {
+          const localDate =
+            window.localStorage.getItem(COUNTDOWN_TARGET_DATE_KEY) || '';
+          const localReason =
+            window.localStorage.getItem(COUNTDOWN_TARGET_REASON_KEY) || '';
+
+          if (localDate || localReason) {
+            void saveCountdownSettings({
+              targetDate: localDate,
+              reason: localReason,
+            }).catch((error) => {
+              console.warn('Unable to seed countdown settings to cloud:', error);
+            });
+          }
+          return;
+        }
+
+        setCustomCountdownDate(settings.targetDate);
+        setCustomCountdownReason(settings.reason);
+
+        if (settings.targetDate) {
+          window.localStorage.setItem(
+            COUNTDOWN_TARGET_DATE_KEY,
+            settings.targetDate
+          );
+        } else {
+          window.localStorage.removeItem(COUNTDOWN_TARGET_DATE_KEY);
+        }
+
+        if (settings.reason) {
+          window.localStorage.setItem(
+            COUNTDOWN_TARGET_REASON_KEY,
+            settings.reason
+          );
+        } else {
+          window.localStorage.removeItem(COUNTDOWN_TARGET_REASON_KEY);
+        }
+      },
+      (error) => {
+        console.warn(
+          'Using local countdown settings because cloud sync is unavailable:',
+          error
+        );
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   // Apply filters to daily records
   const filteredRecords = useMemo(() => {
@@ -216,7 +274,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
     setIsCountdownEditorOpen(true);
   };
 
-  const saveCountdownTarget = (event: FormEvent) => {
+  const saveCountdownTarget = async (event: FormEvent) => {
     event.preventDefault();
     if (!draftCountdownDate) return;
 
@@ -229,10 +287,22 @@ export const ReportView: React.FC<ReportViewProps> = ({
       window.localStorage.setItem(COUNTDOWN_TARGET_REASON_KEY, reason);
     }
 
+    try {
+      await saveCountdownSettings({
+        targetDate: draftCountdownDate,
+        reason,
+      });
+    } catch (error) {
+      console.warn(
+        'Countdown saved locally; cloud persistence is temporarily unavailable:',
+        error
+      );
+    }
+
     setIsCountdownEditorOpen(false);
   };
 
-  const resetCountdownTarget = () => {
+  const resetCountdownTarget = async () => {
     setCustomCountdownDate('');
     setCustomCountdownReason('');
     setDraftCountdownDate(defaultCountdownTarget);
@@ -241,6 +311,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(COUNTDOWN_TARGET_DATE_KEY);
       window.localStorage.removeItem(COUNTDOWN_TARGET_REASON_KEY);
+    }
+
+    try {
+      await saveCountdownSettings({
+        targetDate: '',
+        reason: '',
+      });
+    } catch (error) {
+      console.warn(
+        'Countdown reset locally; cloud persistence is temporarily unavailable:',
+        error
+      );
     }
 
     setIsCountdownEditorOpen(false);

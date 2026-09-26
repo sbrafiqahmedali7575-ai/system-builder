@@ -11,10 +11,8 @@ import {
   X,
 } from 'lucide-react';
 import { HabitItem, MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
-import {
-  CONFIGURED_TIMEZONE,
-  getIsoDateKeyInTimezone,
-} from '../utils/taskDateUtils';
+import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { addHabitDays, parseHabitDateKey } from '../utils/habitUtils';
 import { CalendarWorkspace } from './CalendarWorkspace';
 
@@ -87,7 +85,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
   onUpdateHabit,
   density = 'compact',
 }) => {
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const compact = density === 'compact';
   const [weekAnchor, setWeekAnchor] = useState(today);
   const [formOpen, setFormOpen] = useState(false);

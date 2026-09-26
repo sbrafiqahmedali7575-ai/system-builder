@@ -7,6 +7,7 @@ import { AddRecordModal } from './components/AddRecordModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
 import { ConfirmationPage } from './components/ConfirmationPage';
 import { DayReviewModal } from './components/DayReviewModal';
+import { CalNewportLibrary } from './components/CalNewportLibrary';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
@@ -87,6 +88,10 @@ export default function App() {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('review') === '1';
   });
+  const [isLibraryOpen, setIsLibraryOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname === '/books/cal-newport';
+  });
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -101,6 +106,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       setConfirmToken(params.get('token'));
       setConfirmAction(params.get('action') || undefined);
+      setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -408,6 +414,22 @@ export default function App() {
     return allCompleted ? 'COMPLETED' : 'NOT_COMPLETED';
   };
 
+  const handleOpenLibrary = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/books/cal-newport');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsLibraryOpen(true);
+  };
+
+  const handleCloseLibrary = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsLibraryOpen(false);
+  };
+
   const handleCloseDayReview = () => {
     setIsDayReviewOpen(false);
     if (typeof window !== 'undefined') {
@@ -438,6 +460,10 @@ export default function App() {
     );
   }
 
+  if (isLibraryOpen) {
+    return <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />;
+  }
+
   const isDark = theme === 'dark';
   const completedDaysForBadge = records.filter((record) => record.isCompleted).length;
   const currentBadge = getBadgeProgress(completedDaysForBadge).current;
@@ -454,6 +480,7 @@ export default function App() {
       <PowerBiHeader
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
+        onOpenLibrary={handleOpenLibrary}
         onOpenDayReview={() => setIsDayReviewOpen(true)}
         theme={theme}
         onThemeChange={setTheme}

@@ -276,11 +276,6 @@ export default function App() {
 
     if (!target) return;
 
-    if (!target.isCompleted && target.result === 'FALSE') {
-      window.localStorage.setItem(FRIDAY_2026_09_25_REPAIR_KEY, 'done');
-      return;
-    }
-
     fridayRepairInFlightRef.current = true;
 
     const corrected: DailyRecord = {

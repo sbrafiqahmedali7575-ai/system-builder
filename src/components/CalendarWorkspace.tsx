@@ -9,7 +9,6 @@ import {
   GripVertical,
   List,
   Plus,
-  Repeat2,
 } from 'lucide-react';
 import { HabitItem, TaskItem, ToolsDensity } from '../types';
 import {
@@ -1288,16 +1287,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center gap-2">
-          <ClipboardList className="w-3.5 h-3.5 text-blue-600" />
-          Blue items are tasks. Week view can reschedule them.
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center gap-2">
-          <Repeat2 className="w-3.5 h-3.5 text-emerald-600" />
-          Green items are habits. Moving one changes only that occurrence.
-        </div>
-      </div>
     </div>
   );
 };

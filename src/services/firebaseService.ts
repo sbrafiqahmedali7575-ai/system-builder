@@ -554,6 +554,8 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
       emoji: habit.emoji,
       frequency: habit.frequency,
       repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
+      skippedDates: habit.skippedDates || [],
+      extraDates: habit.extraDates || [],
       color: habit.color,
       checkIns: habit.checkIns || [],
       createdAt: habit.createdAt,

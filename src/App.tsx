@@ -12,6 +12,7 @@ import { MoreWorkspace } from './components/MoreWorkspace';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
+import { isHabitDue } from './utils/habitUtils';
 import {
   subscribeToRecords,
   addRecordToCloud,
@@ -496,25 +497,37 @@ export default function App() {
     }
   };
 
-  // Submit the selected day's task response into the records table.
-  // All tasks checked => Completed; otherwise => Not Completed.
+  // Submit the current-day review into the records table.
+  // All tasks and all habits due today checked => Completed.
   const handleSubmitTaskDay = async (
     dateKey: string,
-    dayTasks: TaskItem[]
+    dayTasks: TaskItem[],
+    reviewedHabits?: HabitItem[]
   ): Promise<'COMPLETED' | 'NOT_COMPLETED'> => {
     const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
     if (!areDatesEqual(dateKey, todayDateKey)) {
       throw new Error('Only the current day can be submitted.');
     }
 
-    if (dayTasks.length === 0) {
-      throw new Error('No tasks were created for today. The day will default to Not Completed.');
+    const dayHabits =
+      reviewedHabits ?? habits.filter((habit) => isHabitDue(habit, dateKey));
+
+    if (dayTasks.length === 0 && dayHabits.length === 0) {
+      throw new Error('No tasks or habits are scheduled for today.');
     }
 
-    const allCompleted = dayTasks.every((task) => task.isCompleted);
-    const completedCount = dayTasks.filter((task) => task.isCompleted).length;
+    const completedTaskCount = dayTasks.filter((task) => task.isCompleted).length;
+    const completedHabitCount = dayHabits.filter((habit) =>
+      habit.checkIns.includes(dateKey)
+    ).length;
+    const allTasksCompleted =
+      dayTasks.length === 0 || completedTaskCount === dayTasks.length;
+    const allHabitsCompleted =
+      dayHabits.length === 0 || completedHabitCount === dayHabits.length;
+    const allCompleted = allTasksCompleted && allHabitsCompleted;
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
+    const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
     const existingRecord = records.find((record) =>
       areDatesEqual(record.date, formattedDate)
     );
@@ -526,7 +539,7 @@ export default function App() {
         isCompleted: allCompleted,
         result: allCompleted ? 'TRUE' : 'FALSE',
         change: 0,
-        summary: `${completedCount}/${dayTasks.length} tasks completed`,
+        summary,
         responseSubmittedAt: nowIso,
         responseSource: 'APP',
         updatedAt: nowIso,
@@ -556,9 +569,9 @@ export default function App() {
         isCompleted: allCompleted,
         result: allCompleted ? 'TRUE' : 'FALSE',
         change: 0,
-        skill: 'Daily Tasks',
-        summary: `${completedCount}/${dayTasks.length} tasks completed`,
-        notes: 'Submitted from Today Tasks card',
+        skill: 'Daily Review',
+        summary,
+        notes: 'Submitted from current-day Review checklist',
         responseSubmittedAt: nowIso,
         responseSource: 'APP',
         updatedAt: nowIso,
@@ -736,10 +749,12 @@ export default function App() {
       <DayReviewModal
         isOpen={isDayReviewOpen}
         tasks={tasks}
+        habits={habits}
         theme={theme}
         isSyncing={isSyncing}
         onClose={handleCloseDayReview}
         onToggleTaskStatus={handleToggleTaskStatus}
+        onUpdateHabit={handleUpdateHabit}
         onSubmitTaskDay={handleSubmitTaskDay}
       />
     </div>

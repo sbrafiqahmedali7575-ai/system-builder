@@ -588,6 +588,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 const isSelected = selectedQuadrant === quadrant.id;
                 const isTabDropTarget =
                   draggedTaskId && dragOver === quadrant.id;
+                const taskCount = grouped[quadrant.id].length;
 
                 return (
                   <button
@@ -620,10 +621,18 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                         ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                         : ''
                     }`}
-                    title={`Quadrant ${quadrant.roman} — ${quadrant.title}`}
-                    aria-label={`Show Quadrant ${quadrant.roman}: ${quadrant.title}`}
+                    title={`Quadrant ${quadrant.roman} — ${quadrant.title} · ${taskCount} task${taskCount === 1 ? '' : 's'}`}
+                    aria-label={`Show Quadrant ${quadrant.roman}: ${quadrant.title}. ${taskCount} task${taskCount === 1 ? '' : 's'}.`}
                   >
                     <TabIcon className="w-4 h-4" aria-hidden="true" />
+
+                    <span
+                      className="absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center justify-center text-[8px] font-black shadow-sm"
+                      aria-label={`${taskCount} task${taskCount === 1 ? '' : 's'}`}
+                    >
+                      {taskCount}
+                    </span>
+
                     <span
                       className={`absolute -right-1 -bottom-1 min-w-4 h-4 px-1 rounded-full ${tabTheme.dot} text-white flex items-center justify-center text-[8px] font-black shadow-sm`}
                       aria-hidden="true"

@@ -298,6 +298,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 onOpenDayReview={onOpenDayReview}
                 currentDayFormatted={currentCadenceDay.formattedDate}
                 currentDayName={currentCadenceDay.fullDayName}
+                currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
                 isSyncing={isSyncing}
               />
             </motion.div>

@@ -10,20 +10,22 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import { MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
+import { HabitItem, MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
 import {
   CONFIGURED_TIMEZONE,
   getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
 import { addHabitDays, parseHabitDateKey } from '../utils/habitUtils';
-import { TaskTrackerCalendar } from './calendar/TaskTrackerCalendar';
+import { CalendarWorkspace } from './CalendarWorkspace';
 
 interface TaskTrackerProps {
   tasks: TaskItem[];
+  habits: HabitItem[];
   onAddTask: (task: Omit<TaskItem, 'id'>) => Promise<void>;
   onUpdateTask: (task: TaskItem) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
+  onUpdateHabit: (habit: HabitItem) => Promise<void>;
   density?: ToolsDensity;
 }
 
@@ -77,10 +79,12 @@ function getDailyTaskRate(tasks: TaskItem[], dateKey: string): number {
 
 export const TaskTracker: React.FC<TaskTrackerProps> = ({
   tasks,
+  habits,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
   onToggleTaskStatus,
+  onUpdateHabit,
   density = 'compact',
 }) => {
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
@@ -357,11 +361,17 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
         </div>
       </div>
 
-      <TaskTrackerCalendar
-        tasks={tasks}
-        today={today}
-        onToggleTaskStatus={onToggleTaskStatus}
-      />
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden min-h-[640px]">
+        <CalendarWorkspace
+          tasks={tasks}
+          habits={habits}
+          onAddTask={onAddTask}
+          onUpdateTask={onUpdateTask}
+          onToggleTaskStatus={onToggleTaskStatus}
+          onUpdateHabit={onUpdateHabit}
+          density="compact"
+        />
+      </div>
 
       {formOpen && (
         <div

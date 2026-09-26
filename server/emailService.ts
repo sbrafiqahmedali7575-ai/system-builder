@@ -77,6 +77,31 @@ export function getAppBaseUrl(): string {
   return CURRENT_APP_BASE_URL;
 }
 
+function normalizeEmailAddress(value: unknown): string {
+  const raw = String(value || '').trim().toLowerCase();
+  const angleMatch = raw.match(/<([^>]+)>/);
+  return (angleMatch ? angleMatch[1] : raw).trim();
+}
+
+function wasRecipientAccepted(
+  accepted: unknown,
+  rejected: unknown,
+  recipient: string
+): boolean {
+  const target = normalizeEmailAddress(recipient);
+  const acceptedList = Array.isArray(accepted) ? accepted : [];
+  const rejectedList = Array.isArray(rejected) ? rejected : [];
+
+  const acceptedTarget = acceptedList.some(
+    (value) => normalizeEmailAddress(value) === target
+  );
+  const rejectedTarget = rejectedList.some(
+    (value) => normalizeEmailAddress(value) === target
+  );
+
+  return acceptedTarget && !rejectedTarget;
+}
+
 /**
  * Check whether Gmail SMTP is configured via environment variables.
  * Never exposes passwords or sensitive credentials.
@@ -431,6 +456,17 @@ export async function sendDailyConfirmationEmail(
         text: emailContent.text,
       });
 
+      if (!wasRecipientAccepted(info.accepted, info.rejected, recipient)) {
+        const rejected = Array.isArray(info.rejected)
+          ? info.rejected.map((value) => normalizeEmailAddress(value)).filter(Boolean)
+          : [];
+        throw new Error(
+          rejected.length > 0
+            ? `SMTP rejected recipient: ${rejected.join(', ')}`
+            : 'SMTP did not confirm acceptance for the recipient.'
+        );
+      }
+
       await logDeliveryToCloud({
         id: logId,
         recipient,
@@ -491,7 +527,7 @@ export async function sendDailyConfirmationEmail(
   });
 
   return {
-    success: true,
+    success: false,
     status: 'pending_configuration',
     provider: 'simulator',
     error: 'Awaiting Gmail SMTP credentials in Settings',

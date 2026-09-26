@@ -463,8 +463,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
 
         <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
-          <div className="min-w-[860px]">
-            <div className="grid grid-cols-[300px_repeat(7,1fr)_72px_72px] border-b border-slate-200/80 bg-slate-50">
+          <div className="min-w-[790px]">
+            <div className="grid grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-black text-slate-500">
                 Habit
               </div>
@@ -493,9 +493,6 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               <div className="p-3 text-center text-[10px] uppercase tracking-wider font-black text-slate-500">
                 Streak
               </div>
-              <div className="p-3 text-center text-[10px] uppercase tracking-wider font-black text-slate-500">
-                30 Day
-              </div>
             </div>
 
             {habits.length === 0 ? (
@@ -512,25 +509,11 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
-                    className={`grid grid-cols-[300px_repeat(7,1fr)_72px_72px] border-b last:border-b-0 border-slate-200/80 ${
+                    className={`grid grid-cols-[300px_repeat(7,1fr)_72px] border-b last:border-b-0 border-slate-200/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
                     }`}
                   >
                     <div className="p-2.5 flex items-center gap-2 min-w-0">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setHistoryHabitId((current) =>
-                            current === habit.id ? null : habit.id
-                          )
-                        }
-                        className={`w-9 h-9 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
-                          colorClasses[habit.color].soft
-                        }`}
-                        title="Open habit history"
-                      >
-                        {habit.emoji}
-                      </button>
                       <div className="min-w-0 flex-1">
                         <button
                           type="button"
@@ -542,9 +525,6 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                           className="block w-full min-w-0 text-left"
                         >
                           <div className="text-sm font-black leading-snug whitespace-normal break-words">{habit.name}</div>
-                          <div className="mt-0.5 text-[10px] leading-snug font-bold text-slate-500 whitespace-normal break-words">
-                            {getHabitScheduleLabel(habit)}
-                          </div>
                         </button>
                       </div>
                       <button
@@ -625,12 +605,6 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       <span className="inline-flex items-center gap-1 text-xs font-black">
                         <Flame className="w-3.5 h-3.5 text-orange-500" />
                         {stats.currentStreak}
-                      </span>
-                    </div>
-                    <div className="border-l border-slate-200/60 flex items-center justify-center">
-                      <span className="inline-flex items-center gap-1 text-xs font-black">
-                        <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-                        {stats.thirty.rate}%
                       </span>
                     </div>
                   </div>

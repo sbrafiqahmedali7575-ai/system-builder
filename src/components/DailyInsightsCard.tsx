@@ -1,22 +1,9 @@
-import React, { useMemo } from 'react';
-import { Award, Hourglass, Repeat2, Target } from 'lucide-react';
-import { DashboardTheme, HabitItem, TaskItem } from '../types';
-import {
-  CONFIGURED_TIMEZONE,
-  areDatesEqual,
-  getIsoDateKeyInTimezone,
-} from '../utils/taskDateUtils';
-import {
-  addHabitDays,
-  isHabitDue,
-  parseHabitDateKey,
-} from '../utils/habitUtils';
+import React from 'react';
+import { Award, Hourglass } from 'lucide-react';
+import { DashboardTheme } from '../types';
 
 interface DailyInsightsCardProps {
-  tasks: TaskItem[];
-  habits: HabitItem[];
   theme: DashboardTheme;
-  currentWeekCadencePercentage: number;
   overallCompletionPercentage: number;
   completedDays: number;
   totalDays: number;
@@ -27,10 +14,7 @@ interface DailyInsightsCardProps {
 }
 
 export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
-  tasks,
-  habits,
   theme,
-  currentWeekCadencePercentage,
   overallCompletionPercentage,
   completedDays,
   totalDays,
@@ -40,102 +24,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   onOpenCountdown,
 }) => {
   const isDark = theme === 'dark';
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-
-  const weekTaskTrend = useMemo(() => {
-    const todayDate = parseHabitDateKey(today);
-    const day = todayDate.getUTCDay();
-    const mondayOffset = day === 0 ? -6 : 1 - day;
-    const monday = addHabitDays(today, mondayOffset);
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const dateKey = addHabitDays(monday, index);
-      const date = parseHabitDateKey(dateKey);
-      const dayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, dateKey));
-      const completed = dayTasks.filter((task) => task.isCompleted).length;
-      const future = dateKey > today;
-
-      return {
-        dateKey,
-        label: date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          timeZone: 'UTC',
-        }).slice(0, 1),
-        total: dayTasks.length,
-        completed,
-        rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
-        future,
-      };
-    });
-  }, [tasks, today]);
-
-  const weekTaskSummary = useMemo(() => {
-    const elapsedDays = weekTaskTrend.filter((day) => !day.future);
-    const scheduled = elapsedDays.reduce((sum, day) => sum + day.total, 0);
-    const completed = elapsedDays.reduce((sum, day) => sum + day.completed, 0);
-
-    return {
-      scheduled,
-      completed,
-      rate: scheduled ? Math.round((completed / scheduled) * 100) : 0,
-    };
-  }, [weekTaskTrend]);
-
-  const weekHabitTrend = useMemo(() => {
-    const todayDate = parseHabitDateKey(today);
-    const day = todayDate.getUTCDay();
-    const mondayOffset = day === 0 ? -6 : 1 - day;
-    const monday = addHabitDays(today, mondayOffset);
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const dateKey = addHabitDays(monday, index);
-      const date = parseHabitDateKey(dateKey);
-      const due = habits.filter((habit) => isHabitDue(habit, dateKey));
-      const completed = due.filter((habit) =>
-        habit.checkIns.includes(dateKey)
-      ).length;
-      const future = dateKey > today;
-
-      return {
-        dateKey,
-        label: date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          timeZone: 'UTC',
-        }).slice(0, 1),
-        due: due.length,
-        completed,
-        rate: due.length ? Math.round((completed / due.length) * 100) : 0,
-        future,
-      };
-    });
-  }, [habits, today]);
-
-  const weekHabitSummary = useMemo(() => {
-    const elapsedDays = weekHabitTrend.filter((day) => !day.future);
-    const due = elapsedDays.reduce((sum, day) => sum + day.due, 0);
-    const completed = elapsedDays.reduce((sum, day) => sum + day.completed, 0);
-
-    return {
-      due,
-      completed,
-      rate: due ? Math.round((completed / due) * 100) : 0,
-    };
-  }, [weekHabitTrend]);
-
-
-  const overallWeekSummary = useMemo(() => {
-    const totalItems = weekTaskSummary.scheduled + weekHabitSummary.due;
-    const completedItems =
-      weekTaskSummary.completed + weekHabitSummary.completed;
-
-    return {
-      totalItems,
-      completedItems,
-      rate: totalItems
-        ? Math.round((completedItems / totalItems) * 100)
-        : 0,
-    };
-  }, [weekTaskSummary, weekHabitSummary]);
 
   return (
     <div
@@ -146,7 +34,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
-      <div className="shrink-0 grid grid-cols-2 gap-1 mb-1.5">
+      <div className="shrink-0 grid grid-cols-2 gap-1">
         <div
           className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5"
           title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
@@ -162,6 +50,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             {completedDays}/{totalDays} days
           </div>
         </div>
+
         <button
           type="button"
           onClick={onOpenCountdown}
@@ -181,157 +70,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             days left
           </div>
         </button>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto pr-0.5 space-y-1.5">
-
-        <div className="grid grid-cols-2 gap-1.5">
-          <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-white/80 dark:bg-slate-950/50 p-1.5">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Target className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span className="truncate text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
-                  This week · tasks
-                </span>
-              </div>
-              <div
-                className="text-right shrink-0"
-                title={`Current week cadence: ${currentWeekCadencePercentage}%`}
-              >
-                <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
-                  {currentWeekCadencePercentage}%
-                </div>
-                <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-                  cadence
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-              {weekTaskTrend.map((day) => (
-                <div
-                  key={day.dateKey}
-                  className="min-w-0 text-center"
-                  title={
-                    day.future
-                      ? `${day.dateKey}: future`
-                      : `${day.dateKey}: ${day.completed}/${day.total} tasks completed (${day.rate}%)`
-                  }
-                >
-                  <div className="relative h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
-                    {!day.future && (
-                      <div
-                        className={`w-full rounded-t-sm transition-all ${
-                          day.total > 0
-                            ? 'bg-blue-500'
-                            : 'bg-slate-300 dark:bg-slate-700'
-                        }`}
-                        style={{
-                          height:
-                            day.total === 0
-                              ? '4px'
-                              : `${Math.max(8, day.rate)}%`,
-                        }}
-                      />
-                    )}
-                    <span
-                      className={`absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums ${
-                        day.future
-                          ? 'text-slate-300 dark:text-slate-600'
-                          : day.rate >= 45 && day.total > 0
-                          ? 'text-white'
-                          : 'text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {day.future ? '—' : `${day.rate}%`}
-                    </span>
-                  </div>
-                  <div className={`mt-0.5 text-[8px] font-black ${
-                    day.dateKey === today
-                      ? 'text-blue-600 dark:text-blue-300'
-                      : 'text-slate-400'
-                  }`}>
-                    {day.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-white/80 dark:bg-slate-950/50 p-1.5">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Repeat2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="truncate text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
-                  This week · habits
-                </span>
-              </div>
-              <div
-                className="text-right shrink-0"
-                title={`Overall week: ${overallWeekSummary.completedItems}/${overallWeekSummary.totalItems} tasks + due habits completed`}
-              >
-                <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">
-                  {overallWeekSummary.rate}%
-                </div>
-                <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-                  overall week
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-              {weekHabitTrend.map((day) => (
-                <div
-                  key={day.dateKey}
-                  className="min-w-0 text-center"
-                  title={
-                    day.future
-                      ? `${day.dateKey}: future`
-                      : `${day.dateKey}: ${day.completed}/${day.due} habits completed (${day.rate}%)`
-                  }
-                >
-                  <div className="relative h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
-                    {!day.future && (
-                      <div
-                        className={`w-full rounded-t-sm transition-all ${
-                          day.due > 0
-                            ? 'bg-emerald-500'
-                            : 'bg-slate-300 dark:bg-slate-700'
-                        }`}
-                        style={{
-                          height:
-                            day.due === 0
-                              ? '4px'
-                              : `${Math.max(8, day.rate)}%`,
-                        }}
-                      />
-                    )}
-                    <span
-                      className={`absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums ${
-                        day.future
-                          ? 'text-slate-300 dark:text-slate-600'
-                          : day.rate >= 45 && day.due > 0
-                          ? 'text-white'
-                          : 'text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {day.future ? '—' : `${day.rate}%`}
-                    </span>
-                  </div>
-                  <div className={`mt-0.5 text-[8px] font-black ${
-                    day.dateKey === today
-                      ? 'text-emerald-600 dark:text-emerald-300'
-                      : 'text-slate-400'
-                  }`}>
-                    {day.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-
       </div>
     </div>
   );

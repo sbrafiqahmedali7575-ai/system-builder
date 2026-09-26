@@ -6,10 +6,8 @@ import {
   Plus,
 } from 'lucide-react';
 import type { HabitItem, TaskItem, ToolsDensity } from '../types';
-import {
-  CONFIGURED_TIMEZONE,
-  getIsoDateKeyInTimezone,
-} from '../utils/taskDateUtils';
+import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { isHabitDue } from '../utils/habitUtils';
 import { CalendarYearView } from './calendar/CalendarYearView';
 import { CalendarMonthView } from './calendar/CalendarMonthView';
@@ -118,7 +116,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   onUpdateHabit,
   density = 'compact',
 }) => {
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const todayDate = useMemo(() => parseKey(today), [today]);
 
   const [view, setView] = useState<CalendarView>('month');

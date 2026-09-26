@@ -4,8 +4,8 @@ import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
   areDatesEqual,
-  getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import {
   addHabitDays,
   isHabitDue,
@@ -27,7 +27,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
   theme,
 }) => {
   const isDark = theme === 'dark';
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
 
   const weekTaskTrend = useMemo(() => {
     const todayDate = parseHabitDateKey(today);

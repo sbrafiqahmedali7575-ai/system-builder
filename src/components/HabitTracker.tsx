@@ -17,8 +17,10 @@ import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateU
 import {
   HABIT_WEEKDAYS,
   addHabitDays,
+  getHabitMonthlySummaries,
   getHabitScheduleLabel,
   getHabitStats,
+  getHabitWeeklyTrend,
   isHabitDue,
   parseHabitDateKey,
 } from '../utils/habitUtils';
@@ -220,6 +222,45 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   }, [historyHabit, today]);
 
   const historyStats = historyHabit ? getHabitStats(historyHabit, today) : null;
+
+  const monthlySummaries = useMemo(
+    () => (historyHabit ? getHabitMonthlySummaries(historyHabit, today, 6) : []),
+    [historyHabit, today]
+  );
+
+  const weeklyTrend = useMemo(
+    () => (historyHabit ? getHabitWeeklyTrend(historyHabit, today, 12) : []),
+    [historyHabit, today]
+  );
+
+  const heatmapDates = useMemo(() => {
+    if (!historyHabit) return [];
+    const approximateStart = addHabitDays(today, -364);
+    const startDate = parseHabitDateKey(approximateStart);
+    const gridStart = addHabitDays(approximateStart, -startDate.getUTCDay());
+    const todayDate = parseHabitDateKey(today);
+    const gridEnd = addHabitDays(today, 6 - todayDate.getUTCDay());
+    const startMs = parseHabitDateKey(gridStart).getTime();
+    const endMs = parseHabitDateKey(gridEnd).getTime();
+    const dayCount = Math.round((endMs - startMs) / 86400000) + 1;
+    return Array.from({ length: dayCount }, (_, index) =>
+      addHabitDays(gridStart, index)
+    );
+  }, [historyHabit, today]);
+
+  const trendDelta = useMemo(() => {
+    const valid = weeklyTrend.filter((item) => item.due > 0);
+    if (valid.length < 2) return 0;
+
+    const recent = valid.slice(-4);
+    const previous = valid.slice(Math.max(0, valid.length - 8), -4);
+    const average = (items: typeof valid) =>
+      items.length
+        ? items.reduce((sum, item) => sum + item.rate, 0) / items.length
+        : 0;
+
+    return Math.round(average(recent) - average(previous));
+  }, [weeklyTrend]);
 
   return (
     <div className="space-y-4">
@@ -613,7 +654,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   {historyHabit.name} History
                 </div>
                 <div className="text-[11px] font-semibold text-[#8b7a66]">
-                  {getHabitScheduleLabel(historyHabit)} • Last 84 days shown
+                  {getHabitScheduleLabel(historyHabit)} • Detailed streak, trend, monthly & heatmap history
                 </div>
               </div>
             </div>
@@ -669,6 +710,200 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 <div className="mt-2 text-xl font-black">{historyStats.totalCheckIns}</div>
                 <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
                   Check-ins
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-3">
+              <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <div className="text-sm font-black">Completion Trend</div>
+                    <div className="text-[11px] font-semibold text-[#8b7a66]">
+                      Weekly completion rate across the last 12 weeks.
+                    </div>
+                  </div>
+                  <div
+                    className={`rounded-lg px-2.5 py-1 text-xs font-black ${
+                      trendDelta > 0
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : trendDelta < 0
+                        ? 'bg-rose-50 text-rose-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                    title="Recent 4-week average compared with the previous 4 weeks"
+                  >
+                    {trendDelta > 0 ? '+' : ''}
+                    {trendDelta} pp
+                  </div>
+                </div>
+
+                <div className="h-40 flex items-end gap-1.5 border-b border-[#dfd1b6] px-1">
+                  {weeklyTrend.map((week) => (
+                    <div
+                      key={week.key}
+                      className="flex-1 min-w-0 h-full flex flex-col justify-end items-center group"
+                      title={`${week.label}: ${week.completed}/${week.due} completed (${week.rate}%)`}
+                    >
+                      <div className="w-full h-[112px] flex items-end justify-center">
+                        <div
+                          className={`w-full max-w-[28px] rounded-t-md transition-all ${
+                            week.due === 0
+                              ? 'bg-slate-200'
+                              : week.rate >= 80
+                              ? 'bg-emerald-500'
+                              : week.rate >= 50
+                              ? 'bg-blue-500'
+                              : 'bg-amber-400'
+                          }`}
+                          style={{
+                            height: week.due === 0 ? '4px' : `${Math.max(6, week.rate)}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="mt-1 text-[9px] font-black text-[#8b7a66] truncate w-full text-center">
+                        {week.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-bold text-[#8b7a66]">
+                  <span>80–100% strong</span>
+                  <span>50–79% moderate</span>
+                  <span>&lt;50% needs attention</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+                <div className="mb-3">
+                  <div className="text-sm font-black">Monthly Summary</div>
+                  <div className="text-[11px] font-semibold text-[#8b7a66]">
+                    Completion by calendar month.
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {monthlySummaries.map((month) => (
+                    <div
+                      key={month.key}
+                      className="rounded-lg bg-[#fbf4e3] px-3 py-2.5"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-xs font-black">{month.label}</div>
+                          <div className="text-[10px] font-semibold text-[#8b7a66]">
+                            {month.completed}/{month.due} done • {month.missed} missed
+                          </div>
+                        </div>
+                        <div className="text-sm font-black">{month.rate}%</div>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-[#e9dfcd] overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            month.rate >= 80
+                              ? 'bg-emerald-500'
+                              : month.rate >= 50
+                              ? 'bg-blue-500'
+                              : 'bg-amber-400'
+                          }`}
+                          style={{ width: `${month.rate}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div>
+                  <div className="text-sm font-black">Calendar Heatmap</div>
+                  <div className="text-[11px] font-semibold text-[#8b7a66]">
+                    Past 12 months • one square per calendar day.
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-[#8b7a66]">
+                  <span className="inline-flex items-center gap-1">
+                    <span className={`w-3 h-3 rounded-sm ${colorClasses[historyHabit.color].dot}`} />
+                    Done
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-3 h-3 rounded-sm bg-rose-100 border border-rose-200" />
+                    Missed
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200" />
+                    Not scheduled
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-12 gap-1 mb-1 pl-8 min-w-[760px] text-[9px] font-black text-[#8b7a66]">
+                {Array.from({ length: 12 }, (_, index) => {
+                  const date = parseHabitDateKey(
+                    addHabitDays(today, -Math.round(((11 - index) * 365) / 12))
+                  );
+                  return (
+                    <span key={index} className="text-left">
+                      {date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        timeZone: 'UTC',
+                      })}
+                    </span>
+                  );
+                })}
+              </div>
+
+              <div className="overflow-x-auto pb-1">
+                <div className="flex gap-1 min-w-max">
+                  <div className="grid grid-rows-7 gap-1 pr-1 text-[9px] font-bold text-[#8b7a66]">
+                    {['Sun', '', 'Tue', '', 'Thu', '', 'Sat'].map((label, index) => (
+                      <div key={index} className="w-7 h-[14px] leading-[14px]">
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-flow-col grid-rows-7 auto-cols-[14px] gap-1">
+                    {heatmapDates.map((dateKey) => {
+                      const isFuture = dateKey > today;
+                      const due = !isFuture && isHabitDue(historyHabit, dateKey);
+                      const checked =
+                        !isFuture && historyHabit.checkIns.includes(dateKey);
+                      const date = parseHabitDateKey(dateKey);
+                      const status = isFuture
+                        ? 'Future'
+                        : !due
+                        ? 'Not scheduled'
+                        : checked
+                        ? 'Completed'
+                        : 'Missed';
+
+                      return (
+                        <div
+                          key={dateKey}
+                          title={`${date.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: 'UTC',
+                          })}: ${status}`}
+                          className={`w-[14px] h-[14px] rounded-[3px] border ${
+                            isFuture
+                              ? 'bg-transparent border-transparent'
+                              : !due
+                              ? 'bg-slate-100 border-slate-200'
+                              : checked
+                              ? `${colorClasses[historyHabit.color].dot} border-transparent`
+                              : 'bg-rose-100 border-rose-200'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

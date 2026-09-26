@@ -616,6 +616,7 @@ export default function App() {
         <ReportView
           records={records}
           tasks={tasks}
+          habits={habits}
           filterState={filterState}
           onFilterChange={(newFilters) =>
             setFilterState((prev) => ({ ...prev, ...newFilters }))

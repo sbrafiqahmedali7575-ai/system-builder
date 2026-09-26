@@ -135,14 +135,35 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             </span>
           </div>
           <div
-            className="text-right shrink-0"
+            className="w-[150px] sm:w-[180px] shrink-0"
             title={`Weekly task score: ${weekTaskScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
-            <div className="text-xs font-black text-blue-600 dark:text-blue-400">
-              {weekTaskScore.toFixed(1)}%
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+                {weekTaskScore.toFixed(1)}%
+              </span>
+              <span className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
+                Target {WEEKLY_TARGET_PERCENTAGE}%
+              </span>
             </div>
-            <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-              Target {WEEKLY_TARGET_PERCENTAGE}%
+            <div
+              className="relative h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-visible"
+              role="progressbar"
+              aria-label="Weekly task progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={weekTaskScore}
+              aria-valuetext={`${weekTaskScore.toFixed(1)}%, target ${WEEKLY_TARGET_PERCENTAGE}%`}
+            >
+              <div
+                className="h-full rounded-full bg-blue-500 transition-all"
+                style={{ width: `${Math.min(100, Math.max(0, weekTaskScore))}%` }}
+              />
+              <span
+                className="absolute -top-1 h-4 w-0.5 rounded-full bg-slate-700 dark:bg-slate-200"
+                style={{ left: `${WEEKLY_TARGET_PERCENTAGE}%` }}
+                aria-hidden="true"
+              />
             </div>
           </div>
         </div>
@@ -215,14 +236,35 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             </span>
           </div>
           <div
-            className="text-right shrink-0"
+            className="w-[150px] sm:w-[180px] shrink-0"
             title={`Weekly habit score: ${weekHabitScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
-            <div className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-              {weekHabitScore.toFixed(1)}%
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                {weekHabitScore.toFixed(1)}%
+              </span>
+              <span className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
+                Target {WEEKLY_TARGET_PERCENTAGE}%
+              </span>
             </div>
-            <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-              Target {WEEKLY_TARGET_PERCENTAGE}%
+            <div
+              className="relative h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-visible"
+              role="progressbar"
+              aria-label="Weekly habit progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={weekHabitScore}
+              aria-valuetext={`${weekHabitScore.toFixed(1)}%, target ${WEEKLY_TARGET_PERCENTAGE}%`}
+            >
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all"
+                style={{ width: `${Math.min(100, Math.max(0, weekHabitScore))}%` }}
+              />
+              <span
+                className="absolute -top-1 h-4 w-0.5 rounded-full bg-slate-700 dark:bg-slate-200"
+                style={{ left: `${WEEKLY_TARGET_PERCENTAGE}%` }}
+                aria-hidden="true"
+              />
             </div>
           </div>
         </div>

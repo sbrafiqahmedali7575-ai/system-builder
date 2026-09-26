@@ -60,7 +60,10 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     );
     setError(null);
     setResult(null);
-  }, [isOpen, todayTasks]);
+    // Initialize only when the popup opens or the calendar day changes.
+    // Task writes during Mark Day must not reset the final result screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, todayDateKey]);
 
   useEffect(() => {
     if (!isOpen) return;

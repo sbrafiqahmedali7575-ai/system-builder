@@ -1238,7 +1238,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               {weekDates.map((dateKey) => renderWeekDay(dateKey))}
             </div>
 
-            <div className="mt-3 xl:hidden">
+            <div className="mt-3">
               {renderSelectedDayPanel()}
             </div>
           </div>

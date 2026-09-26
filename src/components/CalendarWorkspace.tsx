@@ -1006,7 +1006,7 @@ const CalendarYearView: React.FC<CalendarYearViewProps> = ({
                     return (
                       <div
                         key={`blank-${cellIndex}`}
-                        className="h-7"
+                        className="h-9"
                         aria-hidden="true"
                       />
                     );
@@ -1018,34 +1018,74 @@ const CalendarYearView: React.FC<CalendarYearViewProps> = ({
                   const summary = getDaySummary(dateKey);
                   const isSelected = dateKey === selectedDate;
                   const isToday = dateKey === today;
+                  const taskCount = summary.tasks.length;
+                  const habitCount = summary.habits.length;
+
+                  const detailText = [
+                    taskCount
+                      ? `${taskCount} task${taskCount === 1 ? '' : 's'} (${summary.completedTasks} done)`
+                      : null,
+                    habitCount
+                      ? `${habitCount} habit${habitCount === 1 ? '' : 's'} (${summary.completedHabits} done)`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' • ');
 
                   return (
-                    <button
+                    <div
                       key={dateKey}
-                      type="button"
-                      onClick={() => onSelectDate(dateKey)}
-                      aria-label={`${longDate(dateKey)}. ${summary.completedItems} of ${summary.totalItems} items completed.`}
-                      aria-pressed={isSelected}
-                      aria-current={isToday ? 'date' : undefined}
-                      title={
-                        summary.totalItems
-                          ? `${longDate(dateKey)} • ${summary.completedItems}/${summary.totalItems} completed`
-                          : longDate(dateKey)
-                      }
-                      className={`mx-auto w-7 h-7 rounded-[4px] inline-flex items-center justify-center text-[10px] font-semibold transition-all ${
-                        activityClass(
-                          dateKey,
-                          summary.totalItems,
-                          summary.completionRate
-                        )
-                      } ${
-                        isSelected && !isToday
-                          ? 'ring-2 ring-blue-500 ring-offset-1'
-                          : ''
-                      }`}
+                      className="h-9 flex flex-col items-center justify-start"
                     >
-                      {dayNumber}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => onSelectDate(dateKey)}
+                        aria-label={`${longDate(dateKey)}. ${summary.completedItems} of ${summary.totalItems} items completed.${
+                          detailText ? ` ${detailText}.` : ''
+                        }`}
+                        aria-pressed={isSelected}
+                        aria-current={isToday ? 'date' : undefined}
+                        title={
+                          summary.totalItems
+                            ? `${longDate(dateKey)} • ${summary.completedItems}/${summary.totalItems} completed • ${detailText}`
+                            : longDate(dateKey)
+                        }
+                        className={`mx-auto w-6 h-6 rounded-[4px] inline-flex items-center justify-center text-[10px] font-semibold transition-all ${
+                          activityClass(
+                            dateKey,
+                            summary.totalItems,
+                            summary.completionRate
+                          )
+                        } ${
+                          isSelected && !isToday
+                            ? 'ring-2 ring-blue-500 ring-offset-1'
+                            : ''
+                        }`}
+                      >
+                        {dayNumber}
+                      </button>
+
+                      {(taskCount > 0 || habitCount > 0) && (
+                        <div
+                          className="mt-0.5 h-2 flex items-center justify-center gap-0.5 leading-none"
+                          aria-hidden="true"
+                        >
+                          {taskCount > 0 && (
+                            <span className="inline-flex items-center gap-[1px] text-[6px] font-black text-blue-600">
+                              <span className="w-1 h-1 rounded-full bg-blue-500" />
+                              T{taskCount > 9 ? '9+' : taskCount}
+                            </span>
+                          )}
+
+                          {habitCount > 0 && (
+                            <span className="inline-flex items-center gap-[1px] text-[6px] font-black text-emerald-600">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                              H{habitCount > 9 ? '9+' : habitCount}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1054,23 +1094,39 @@ const CalendarYearView: React.FC<CalendarYearViewProps> = ({
         })}
       </div>
 
-      <div className="mt-6 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3 text-[9px] font-semibold text-slate-400">
+      <div className="mt-6 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-3 gap-y-2 text-[9px] font-semibold text-slate-400">
         <span>Completion intensity</span>
+
         <span className="inline-flex items-center gap-1">
           <span className="w-3 h-3 rounded-[3px] bg-blue-50 border border-blue-100" />
           0%
         </span>
+
         <span className="inline-flex items-center gap-1">
           <span className="w-3 h-3 rounded-[3px] bg-blue-100" />
           1–49%
         </span>
+
         <span className="inline-flex items-center gap-1">
           <span className="w-3 h-3 rounded-[3px] bg-blue-300" />
           50–79%
         </span>
+
         <span className="inline-flex items-center gap-1">
           <span className="w-3 h-3 rounded-[3px] bg-blue-600" />
           80–100%
+        </span>
+
+        <span className="ml-1 text-slate-300">•</span>
+
+        <span className="inline-flex items-center gap-1 text-blue-600">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          T = Tasks
+        </span>
+
+        <span className="inline-flex items-center gap-1 text-emerald-600">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          H = Habits
         </span>
       </div>
     </section>

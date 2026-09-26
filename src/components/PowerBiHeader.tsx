@@ -20,6 +20,7 @@ interface PowerBiHeaderProps {
   onOpenAddModal?: () => void;
   onOpenNotificationModal?: () => void;
   onOpenLibrary?: () => void;
+  onOpenMore?: () => void;
   theme?: DashboardTheme;
   onThemeChange?: (theme: DashboardTheme) => void;
   totalRecordsCount?: number;
@@ -32,6 +33,7 @@ interface PowerBiHeaderProps {
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenNotificationModal,
   onOpenLibrary,
+  onOpenMore,
   totalRecordsCount = 0,
   isSyncing = false,
 }) => {
@@ -145,6 +147,20 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               <span>Books</span>
             </motion.button>
           )}
+
+          {onOpenMore && (
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onOpenMore}
+              className="flex items-center space-x-1 px-1.5 py-1 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
+              title="Open more System Builder tools"
+              aria-label="Open more System Builder tools"
+            >
+              <span className="text-base leading-none font-black text-blue-600 dark:text-blue-400">•••</span>
+              <span>More</span>
+            </motion.button>
+          )}
         </div>
 
         {/* Mobile Header Right Controls */}
@@ -172,6 +188,19 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               aria-label="Open Cal Newport books"
             >
               <BookOpen className="w-4 h-4" />
+            </motion.button>
+          )}
+
+          {onOpenMore && (
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenMore}
+              className="p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition cursor-pointer"
+              title="Open more System Builder tools"
+              aria-label="Open more System Builder tools"
+            >
+              <span className="block w-4 h-4 text-sm leading-[14px] font-black text-center">•••</span>
             </motion.button>
           )}
         </div>

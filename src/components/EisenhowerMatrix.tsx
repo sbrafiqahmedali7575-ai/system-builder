@@ -96,6 +96,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   });
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<MatrixQuadrant | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
@@ -105,12 +106,15 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       urgent: [],
       neither: [],
     };
-    tasks.forEach((task) => result[inferQuadrant(task)].push(task));
+    tasks.forEach((task) => {
+      if (!showCompleted && task.isCompleted) return;
+      result[inferQuadrant(task)].push(task);
+    });
     Object.values(result).forEach((items) =>
       items.sort((a, b) => Number(a.isCompleted) - Number(b.isCompleted) || b.taskKey.localeCompare(a.taskKey))
     );
     return result;
-  }, [tasks]);
+  }, [tasks, showCompleted]);
 
   const addTask = async (quadrant: MatrixQuadrant) => {
     const title = drafts[quadrant].trim();
@@ -167,8 +171,18 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
             Drag tasks between quadrants. Changes stay attached to the same System Builder task.
           </p>
         </div>
-        <div className="text-xs font-bold text-[#766653]">
-          {tasks.filter((task) => !task.isCompleted).length} active • {tasks.filter((task) => task.isCompleted).length} done
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-bold text-[#766653]">
+            {tasks.filter((task) => !task.isCompleted).length} active • {tasks.filter((task) => task.isCompleted).length} done
+          </div>
+          <label className="inline-flex items-center gap-2 rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 h-9 text-xs font-black">
+            <input
+              type="checkbox"
+              checked={showCompleted}
+              onChange={(event) => setShowCompleted(event.target.checked)}
+            />
+            Show completed
+          </label>
         </div>
       </div>
 

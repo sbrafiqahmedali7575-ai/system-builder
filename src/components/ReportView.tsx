@@ -362,6 +362,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <div className="mt-0.5 text-[8px] uppercase tracking-[0.12em] font-black text-slate-400">
                       days left
                     </div>
+                    <div
+                      className="mt-1 max-w-[110px] truncate text-[9px] font-black text-slate-700 dark:text-slate-200 normal-case tracking-normal"
+                      title={longTermCountdown.reason}
+                    >
+                      {longTermCountdown.reason}
+                    </div>
                   </motion.button>
                 </div>
 

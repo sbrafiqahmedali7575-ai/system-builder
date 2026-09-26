@@ -133,6 +133,18 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
     0
   );
 
+  const dueToday = habits.filter((habit) => isHabitDue(habit, today));
+  const completedToday = dueToday.filter((habit) =>
+    habit.checkIns.includes(today)
+  ).length;
+  const weekCompletionRate = dueThisWeek
+    ? Math.round((completedThisWeek / dueThisWeek) * 100)
+    : 0;
+  const bestCurrentStreak = habits.reduce(
+    (best, habit) => Math.max(best, getHabitStats(habit, today).currentStreak),
+    0
+  );
+
   const openAdd = () => {
     setEditingHabitId(null);
     setDraft(EMPTY_DRAFT);
@@ -281,14 +293,6 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className={`${compact ? 'rounded-lg px-2.5 py-1.5' : 'rounded-xl px-3 py-2'} border border-slate-200 bg-white text-right`}>
-            <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
-              This week
-            </div>
-            <div className="text-sm font-black text-slate-900">
-              {completedThisWeek}/{dueThisWeek || 0}
-            </div>
-          </div>
           <button
             type="button"
             onClick={formOpen && !editingHabitId ? closeForm : openAdd}
@@ -297,6 +301,57 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             {formOpen && !editingHabitId ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {formOpen && !editingHabitId ? 'Cancel' : 'Add Habit'}
           </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="rounded-xl border border-blue-200/80 bg-blue-50/60 px-3 py-2">
+          <div className="text-[9px] uppercase tracking-wider font-black text-blue-600">
+            Today
+          </div>
+          <div className="mt-1 text-lg font-black text-slate-900">
+            {completedToday}/{dueToday.length}
+          </div>
+          <div className="text-[9px] font-bold text-slate-500">
+            due habits done
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 px-3 py-2">
+          <div className="text-[9px] uppercase tracking-wider font-black text-emerald-600">
+            This week
+          </div>
+          <div className="mt-1 text-lg font-black text-slate-900">
+            {weekCompletionRate}%
+          </div>
+          <div className="text-[9px] font-bold text-slate-500">
+            {completedThisWeek}/{dueThisWeek} check-ins
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-orange-200/80 bg-orange-50/60 px-3 py-2">
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-orange-600">
+            <Flame className="w-3 h-3" />
+            Best streak
+          </div>
+          <div className="mt-1 text-lg font-black text-slate-900">
+            {bestCurrentStreak}
+          </div>
+          <div className="text-[9px] font-bold text-slate-500">
+            current days
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-violet-200/80 bg-violet-50/60 px-3 py-2">
+          <div className="text-[9px] uppercase tracking-wider font-black text-violet-600">
+            Active habits
+          </div>
+          <div className="mt-1 text-lg font-black text-slate-900">
+            {habits.length}
+          </div>
+          <div className="text-[9px] font-bold text-slate-500">
+            tracked habits
+          </div>
         </div>
       </div>
 
@@ -422,7 +477,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
         <div className="px-3 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
           <button
             type="button"

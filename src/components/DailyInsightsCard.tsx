@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Lightbulb, Repeat2, Target } from 'lucide-react';
+import { AlertTriangle, Award, Hourglass, Lightbulb, Repeat2, Target } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -17,6 +17,13 @@ interface DailyInsightsCardProps {
   habits: HabitItem[];
   theme: DashboardTheme;
   currentWeekCadencePercentage: number;
+  overallCompletionPercentage: number;
+  completedDays: number;
+  totalDays: number;
+  countdownDaysRemaining: number;
+  countdownReason: string;
+  countdownTargetLabel: string;
+  onOpenCountdown?: () => void;
 }
 
 export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
@@ -24,6 +31,13 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   habits,
   theme,
   currentWeekCadencePercentage,
+  overallCompletionPercentage,
+  completedDays,
+  totalDays,
+  countdownDaysRemaining,
+  countdownReason,
+  countdownTargetLabel,
+  onOpenCountdown,
 }) => {
   const isDark = theme === 'dark';
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
@@ -42,12 +56,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   const completedHabitsToday = dueHabits.filter((habit) =>
     habit.checkIns.includes(today)
   ).length;
-
-  const overallItemsToday = todayTasks.length + dueHabits.length;
-  const completedOverallToday = completedToday + completedHabitsToday;
-  const overallCompletion = overallItemsToday
-    ? Math.round((completedOverallToday / overallItemsToday) * 100)
-    : 0;
 
   const overdueTasks = useMemo(
     () =>
@@ -176,16 +184,42 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           </div>
         </div>
 
-        <div
-          className="text-right shrink-0"
-          title={`Overall today: ${completedOverallToday}/${overallItemsToday} tasks + due habits completed`}
-        >
-          <div className="text-lg font-black font-mono text-blue-600 dark:text-blue-300">
-            {overallCompletion}%
+        <div className="flex items-stretch gap-1.5 shrink-0">
+          <div
+            className="min-w-[88px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5 text-right"
+            title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
+          >
+            <div className="flex items-center justify-end gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
+              <Award className="w-3 h-3 text-blue-500" />
+              Overall
+            </div>
+            <div className="mt-0.5 text-base leading-none font-black font-mono text-blue-600 dark:text-blue-300">
+              {overallCompletionPercentage.toFixed(1)}%
+            </div>
+            <div className="mt-0.5 text-[8px] font-bold text-slate-400">
+              {completedDays}/{totalDays} days
+            </div>
           </div>
-          <div className="text-[9px] font-bold text-slate-400">
-            overall completion
-          </div>
+
+          <button
+            type="button"
+            onClick={onOpenCountdown}
+            disabled={!onOpenCountdown}
+            className="min-w-[82px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5 text-right transition-colors enabled:hover:bg-blue-100/80 dark:enabled:hover:bg-blue-950/45 disabled:cursor-default"
+            title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
+            aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
+          >
+            <div className="flex items-center justify-end gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
+              <Hourglass className="w-3 h-3 text-blue-500" />
+              Countdown
+            </div>
+            <div className="mt-0.5 text-base leading-none font-black font-mono text-blue-600 dark:text-blue-300">
+              {countdownDaysRemaining}
+            </div>
+            <div className="mt-0.5 text-[8px] font-bold text-slate-400">
+              days left
+            </div>
+          </button>
         </div>
       </div>
 

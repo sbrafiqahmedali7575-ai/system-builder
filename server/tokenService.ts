@@ -1,10 +1,15 @@
 import crypto from 'crypto';
 
 function getSecretKey(): string {
-  return (
-    process.env.CONFIRMATION_SECRET ||
-    'commit-daily-rafiq-secure-token-secret-2026-auth-sign'
-  );
+  const secret = (process.env.CONFIRMATION_SECRET || '').trim();
+
+  if (!secret) {
+    throw new Error(
+      'CONFIRMATION_SECRET is not configured. Refusing to sign or verify confirmation links.'
+    );
+  }
+
+  return secret;
 }
 
 export interface ConfirmationTokenPayload {

@@ -318,8 +318,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 countdownDaysRemaining={longTermCountdown.daysRemaining}
                 countdownReason={longTermCountdown.reason}
                 countdownTargetLabel={longTermCountdown.targetDateLabel}
-                currentDayFormatted={currentCadenceDay.formattedDate}
-                currentDayName={currentCadenceDay.fullDayName}
                 onOpenCountdown={openCountdownEditor}
               />
             </motion.div>

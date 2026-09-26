@@ -85,6 +85,36 @@ function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
   }
 }
 
+function getTaskTimelineAccent(quadrant?: MatrixQuadrant) {
+  switch (quadrant) {
+    case 'urgent-important':
+      return {
+        dot: 'bg-rose-500 ring-rose-100 dark:ring-rose-950/60',
+        line: 'bg-rose-200/80 dark:bg-rose-900/50',
+      };
+    case 'important':
+      return {
+        dot: 'bg-amber-500 ring-amber-100 dark:ring-amber-950/60',
+        line: 'bg-amber-200/80 dark:bg-amber-900/50',
+      };
+    case 'urgent':
+      return {
+        dot: 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-950/60',
+        line: 'bg-indigo-200/80 dark:bg-indigo-900/50',
+      };
+    case 'neither':
+      return {
+        dot: 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950/60',
+        line: 'bg-emerald-200/80 dark:bg-emerald-900/50',
+      };
+    default:
+      return {
+        dot: 'bg-slate-400 ring-slate-100 dark:ring-slate-800',
+        line: 'bg-slate-200 dark:bg-slate-800',
+      };
+  }
+}
+
 interface TodayTasksCardProps {
   tasks: TaskItem[];
   theme: DashboardTheme;
@@ -573,11 +603,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </button>
         </div>
       ) : (
-        <div className="space-y-1">
+        <div className="relative pl-0.5 sm:pl-1">
           <AnimatePresence initial={false}>
-            {sortedTasks.map((task) => {
+            {sortedTasks.map((task, index) => {
               const isTaskCompleted = task.isCompleted;
               const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
+              const timelineAccent = getTaskTimelineAccent(task.matrixQuadrant);
+              const timelineLabel = task.timeEstimate?.trim() || `Step ${index + 1}`;
+              const priorityLabel = task.priority || 'Normal';
+              const isLastTask = index === sortedTasks.length - 1;
 
               return (
                 <motion.div
@@ -585,149 +619,167 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   layout
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  whileHover={{ y: -2, scale: 1.005 }}
-                  whileTap={{ scale: 0.995 }}
-                  className={`group ui-motion-card flex items-center justify-between p-1.5 sm:p-2 rounded-xl border transition-all ${
-                    isTaskCompleted
-                      ? isDark
-                        ? 'bg-slate-950/40 border-slate-800/60 opacity-85'
-                        : 'bg-slate-50/70 border-slate-200/60 opacity-90'
-                      : isDark
-                      ? 'bg-slate-800/50 border-slate-700/80 hover:border-slate-600'
-                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
-                  }`}
+                  className="relative grid grid-cols-[48px_minmax(0,1fr)] sm:grid-cols-[58px_minmax(0,1fr)] gap-2"
                 >
-                  {/* Left: Checkbox + flexible title + aligned quadrant/status columns */}
-                  <div className="flex items-start sm:items-center gap-1.5 flex-1 min-w-0 pr-1">
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={isTaskCompleted}
-                      onClick={() => handleToggleTask(task)}
-                      className={`mt-0.5 sm:mt-0 w-5 h-5 rounded-lg flex items-center justify-center transition shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                        isTaskCompleted
-                          ? 'bg-blue-600 text-white shadow-2xs'
-                          : isDark
-                          ? 'border-2 border-slate-600 hover:border-blue-400 bg-slate-900'
-                          : 'border-2 border-slate-300 hover:border-blue-500 bg-white'
-                      }`}
-                      title={isTaskCompleted ? 'Mark task as Not completed' : 'Mark task as Completed'}
-                    >
-                      {isTaskCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </button>
+                  {/* Timeline rail */}
+                  <div className="relative flex flex-col items-center">
+                    <div
+                      className={`mt-2.5 z-10 w-3 h-3 rounded-full ring-4 ${timelineAccent.dot}`}
+                      title={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
+                      aria-hidden="true"
+                    />
+                    {!isLastTask && (
+                      <div
+                        className={`absolute top-6 bottom-0 w-px ${timelineAccent.line}`}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="mt-1 max-w-[54px] truncate text-center text-[9px] font-black font-mono text-slate-400">
+                      {timelineLabel}
+                    </span>
+                  </div>
 
-                    <div className="min-w-0 flex-1">
-                      <span
+                  {/* Task row */}
+                  <motion.div
+                    whileHover={{ x: 2 }}
+                    whileTap={{ scale: 0.995 }}
+                    className={`group ui-motion-card mb-1.5 min-w-0 rounded-xl border p-2 transition-all ${
+                      isTaskCompleted
+                        ? isDark
+                          ? 'bg-slate-950/40 border-slate-800/60 opacity-80'
+                          : 'bg-slate-50/70 border-slate-200/60 opacity-85'
+                        : isDark
+                        ? 'bg-slate-800/50 border-slate-700/80 hover:border-slate-600'
+                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={isTaskCompleted}
                         onClick={() => handleToggleTask(task)}
-                        className={`block text-sm font-medium cursor-pointer break-words select-none ${
+                        className={`mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center transition shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           isTaskCompleted
-                            ? 'line-through text-slate-400 dark:text-slate-500'
-                            : 'text-slate-900 dark:text-slate-100'
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : isDark
+                            ? 'border-2 border-slate-600 hover:border-blue-400 bg-slate-900'
+                            : 'border-2 border-slate-300 hover:border-blue-500 bg-white'
                         }`}
+                        title={
+                          isTaskCompleted
+                            ? 'Mark task as Not completed'
+                            : 'Mark task as Completed'
+                        }
                       >
-                        {task.taskOfTheDay}
-                      </span>
+                        {isTaskCompleted && (
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        )}
+                      </button>
 
-                      {/* On small screens keep metadata together below the title. */}
-                      <div className="mt-1 flex items-center gap-1 sm:hidden">
-                        <span
-                          className={`inline-flex w-7 items-center justify-center px-1 py-0.5 rounded-md border text-[10px] font-black shrink-0 select-none ${quadrantMeta.classes}`}
-                          title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
-                          aria-label={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
-                        >
-                          {quadrantMeta.roman}
-                        </span>
-                        <span
-                          className={`inline-flex min-w-[104px] items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold shrink-0 select-none ${
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTask(task)}
+                          className={`block w-full text-left text-sm font-semibold leading-snug break-words select-none ${
                             isTaskCompleted
-                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                              ? 'line-through text-slate-400 dark:text-slate-500'
+                              : 'text-slate-900 dark:text-slate-100'
                           }`}
                         >
-                          {isTaskCompleted ? (
-                            <>
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Completed</span>
-                            </>
-                          ) : (
-                            <>
-                              <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                              <span>Not completed</span>
-                            </>
+                          {task.taskOfTheDay}
+                        </button>
+
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                          <span
+                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-black ${quadrantMeta.classes}`}
+                            title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
+                          >
+                            {quadrantMeta.roman}
+                          </span>
+
+                          <span
+                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black ${
+                              priorityLabel === 'High'
+                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                                : priorityLabel === 'Medium'
+                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                            }`}
+                            title={`Priority: ${priorityLabel}`}
+                          >
+                            {priorityLabel}
+                          </span>
+
+                          <span
+                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                              isTaskCompleted
+                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                            }`}
+                          >
+                            {isTaskCompleted ? (
+                              <>
+                                <CheckCircle2 className="w-3 h-3" />
+                                Completed
+                              </>
+                            ) : (
+                              <>
+                                <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                                To do
+                              </>
+                            )}
+                          </span>
+
+                          {task.category && task.category !== 'General' && (
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:text-slate-400">
+                              {task.category}
+                            </span>
                           )}
-                        </span>
+                        </div>
+                      </div>
+
+                      {/* Existing task actions are preserved. */}
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(task)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          title="Edit Task"
+                          aria-label={`Edit task ${task.taskOfTheDay}`}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleCopyToNextDay(task)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
+                          title={`Add to next day (${formatCalendarDate(
+                            getNextTaskDateKey(task.taskKey)
+                          )})`}
+                          aria-label={`Add task ${task.taskOfTheDay} to next day`}
+                        >
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeletingTask(task);
+                            setDeleteError(null);
+                          }}
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                          title="Delete Task"
+                          aria-label={`Delete task ${task.taskOfTheDay}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Fixed desktop columns keep every quadrant and status aligned. */}
-                    <div className="hidden sm:grid grid-cols-[32px_108px] items-center gap-1.5 shrink-0">
-                      <span
-                        className={`inline-flex w-7 items-center justify-center px-1 py-0.5 rounded-md border text-[10px] font-black select-none ${quadrantMeta.classes}`}
-                        title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
-                        aria-label={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
-                      >
-                        {quadrantMeta.roman}
-                      </span>
-
-                      <span
-                        className={`inline-flex w-[108px] items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold select-none ${
-                          isTaskCompleted
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                            : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                        }`}
-                      >
-                        {isTaskCompleted ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Completed</span>
-                          </>
-                        ) : (
-                          <>
-                            <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                            <span>Not completed</span>
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Right: Edit, Next Day & Delete Actions */}
-                  <div className="flex items-center space-x-0.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleStartEdit(task)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                      title="Edit Task"
-                      aria-label={`Edit task ${task.taskOfTheDay}`}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleCopyToNextDay(task)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
-                      title={`Add to next day (${formatCalendarDate(getNextTaskDateKey(task.taskKey))})`}
-                      aria-label={`Add task ${task.taskOfTheDay} to next day`}
-                    >
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDeletingTask(task);
-                        setDeleteError(null);
-                      }}
-                      className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                      title="Delete Task"
-                      aria-label={`Delete task ${task.taskOfTheDay}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  </motion.div>
                 </motion.div>
               );
             })}

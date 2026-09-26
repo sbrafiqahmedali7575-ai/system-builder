@@ -16,6 +16,7 @@ import {
   getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
 import { addHabitDays, parseHabitDateKey } from '../utils/habitUtils';
+import { TaskTrackerCalendar } from './calendar/TaskTrackerCalendar';
 
 interface TaskTrackerProps {
   tasks: TaskItem[];
@@ -355,6 +356,12 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
           </div>
         </div>
       </div>
+
+      <TaskTrackerCalendar
+        tasks={tasks}
+        today={today}
+        onToggleTaskStatus={onToggleTaskStatus}
+      />
 
       {formOpen && (
         <div

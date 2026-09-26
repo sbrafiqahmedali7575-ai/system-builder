@@ -13,15 +13,9 @@ import {
   CalendarDays,
   Sparkles,
   ArrowRight,
-  Target,
-  Repeat2,
-  AlertTriangle,
-  Award,
-  Hourglass,
 } from 'lucide-react';
-import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
+import { DashboardTheme, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
-import { PomodoroTimer } from './PomodoroTimer';
 import {
   CONFIGURED_TIMEZONE,
   getUpcomingDateOptions,
@@ -29,7 +23,6 @@ import {
   areDatesEqual,
   toInputDateValue,
 } from '../utils/taskDateUtils';
-import { addHabitDays, isHabitDue, parseHabitDateKey } from '../utils/habitUtils';
 import confetti from 'canvas-confetti';
 
 const TASK_QUADRANT_OPTIONS: Array<{
@@ -94,7 +87,6 @@ function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
 
 interface TodayTasksCardProps {
   tasks: TaskItem[];
-  habits: HabitItem[];
   theme: DashboardTheme;
   onAddTask: (task: Omit<TaskItem, 'id'>) => Promise<void>;
   onUpdateTask: (task: TaskItem) => Promise<void>;
@@ -103,20 +95,11 @@ interface TodayTasksCardProps {
   onOpenDayReview: () => void;
   currentDayFormatted: string;
   currentDayName: string;
-  currentWeekCadencePercentage: number;
-  overallCompletionPercentage: number;
-  completedDays: number;
-  totalDays: number;
-  countdownDaysRemaining: number;
-  countdownReason: string;
-  countdownTargetLabel: string;
-  onOpenCountdown?: () => void;
   isSyncing?: boolean;
 }
 
 export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   tasks,
-  habits,
   theme,
   onAddTask,
   onUpdateTask,
@@ -125,14 +108,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   onOpenDayReview,
   currentDayFormatted,
   currentDayName,
-  currentWeekCadencePercentage,
-  overallCompletionPercentage,
-  completedDays,
-  totalDays,
-  countdownDaysRemaining,
-  countdownReason,
-  countdownTargetLabel,
-  onOpenCountdown,
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
@@ -165,50 +140,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const totalTasksCount = dateTasks.length;
   const completedCount = completedTasks.length;
   const progressPercent = totalTasksCount > 0 ? Math.round((completedCount / totalTasksCount) * 100) : 0;
-
-  const dateHabits = useMemo(
-    () => habits.filter((habit) => isHabitDue(habit, activeDateKey)),
-    [habits, activeDateKey]
-  );
-  const completedHabitCount = dateHabits.filter((habit) =>
-    habit.checkIns.includes(activeDateKey)
-  ).length;
-
-  const overdueTasksCount = useMemo(
-    () =>
-      tasks.filter(
-        (task) => !task.isCompleted && task.taskKey < todayOption.dateKey
-      ).length,
-    [tasks, todayOption.dateKey]
-  );
-
-
-  const weekTaskTrend = useMemo(() => {
-    const todayDate = parseHabitDateKey(todayOption.dateKey);
-    const day = todayDate.getUTCDay();
-    const mondayOffset = day === 0 ? -6 : 1 - day;
-    const monday = addHabitDays(todayOption.dateKey, mondayOffset);
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const dateKey = addHabitDays(monday, index);
-      const date = parseHabitDateKey(dateKey);
-      const dayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, dateKey));
-      const completed = dayTasks.filter((task) => task.isCompleted).length;
-      const future = dateKey > todayOption.dateKey;
-
-      return {
-        dateKey,
-        label: date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          timeZone: 'UTC',
-        }).slice(0, 1),
-        total: dayTasks.length,
-        completed,
-        rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
-        future,
-      };
-    });
-  }, [tasks, todayOption.dateKey]);
 
   // UI state for "Enter Tasks" panel
   const [isEnterPanelOpen, setIsEnterPanelOpen] = useState(false);
@@ -515,7 +446,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[9px] font-semibold text-slate-400">
+            <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
+              <span>Current day</span>
               <span className="font-mono font-black text-slate-600 dark:text-slate-300">
                 {currentDayFormatted}
               </span>
@@ -523,66 +455,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               <span className="font-black text-slate-600 dark:text-slate-300">
                 {currentDayName}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5">
-                <Target className="w-2.5 h-2.5 text-blue-500" />
-                <span className="uppercase tracking-wide font-black text-slate-400">Tasks</span>
-                <span className="font-mono font-black text-slate-700 dark:text-slate-200">
-                  {completedCount}/{totalTasksCount}
-                </span>
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5">
-                <Repeat2 className="w-2.5 h-2.5 text-emerald-500" />
-                <span className="uppercase tracking-wide font-black text-slate-400">Habits</span>
-                <span className="font-mono font-black text-slate-700 dark:text-slate-200">
-                  {completedHabitCount}/{dateHabits.length}
-                </span>
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5">
-                <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
-                <span className="uppercase tracking-wide font-black text-slate-400">Overdue</span>
-                <span className={`font-mono font-black ${
-                  overdueTasksCount > 0
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-slate-700 dark:text-slate-200'
-                }`}>
-                  {overdueTasksCount}
-                </span>
-              </span>
-              <span
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5"
-                title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
-              >
-                <Award className="w-2.5 h-2.5 text-blue-500" />
-                <span className="uppercase tracking-wide font-black text-slate-400">Overall</span>
-                <span className="font-mono font-black text-blue-600 dark:text-blue-300">
-                  {overallCompletionPercentage.toFixed(1)}%
-                </span>
-                <span className="font-mono text-slate-400">
-                  {completedDays}/{totalDays}
-                </span>
-              </span>
-              <button
-                type="button"
-                onClick={onOpenCountdown}
-                disabled={!onOpenCountdown}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5 text-left transition-colors enabled:hover:bg-slate-100/80 dark:enabled:hover:bg-slate-800/80 disabled:cursor-default"
-                title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
-                aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
-              >
-                <Hourglass className="w-2.5 h-2.5 text-blue-500" />
-                <span className="uppercase tracking-wide font-black text-slate-400">Countdown</span>
-                <span className="font-mono font-black text-blue-600 dark:text-blue-300">
-                  {countdownDaysRemaining}
-                </span>
-                <span className="text-slate-400">days left</span>
-              </button>
-            </div>
+            </div>            </div>
           </div>
         </div>
 
-        {/* Pomodoro + date tabs + task actions grouped in the card header */}
+        {/* Date tabs + task actions grouped in the card header */}
         <div className="flex flex-wrap items-center justify-end gap-1">
-          <PomodoroTimer className="mr-1" />
 
           <button
             type="button"
@@ -640,78 +518,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           >
             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
           </button>
-        </div>
-      </div>
-
-      <div className="shrink-0 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-white/80 dark:bg-slate-950/50 p-1.5 mb-1.5">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Target className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="truncate text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
-              This week · tasks
-            </span>
-          </div>
-          <div
-            className="text-right shrink-0"
-            title={`Current week cadence: ${currentWeekCadencePercentage}%`}
-          >
-            <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
-              {currentWeekCadencePercentage}%
-            </div>
-            <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-              cadence
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-          {weekTaskTrend.map((day) => (
-            <div
-              key={day.dateKey}
-              className="min-w-0 text-center"
-              title={
-                day.future
-                  ? `${day.dateKey}: future`
-                  : `${day.dateKey}: ${day.completed}/${day.total} tasks completed (${day.rate}%)`
-              }
-            >
-              <div className="relative h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
-                {!day.future && (
-                  <div
-                    className={`w-full rounded-t-sm transition-all ${
-                      day.total > 0
-                        ? 'bg-blue-500'
-                        : 'bg-slate-300 dark:bg-slate-700'
-                    }`}
-                    style={{
-                      height:
-                        day.total === 0
-                          ? '4px'
-                          : `${Math.max(8, day.rate)}%`,
-                    }}
-                  />
-                )}
-                <span
-                  className={`absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums ${
-                    day.future
-                      ? 'text-slate-300 dark:text-slate-600'
-                      : day.rate >= 45 && day.total > 0
-                      ? 'text-white'
-                      : 'text-slate-600 dark:text-slate-300'
-                  }`}
-                >
-                  {day.future ? '—' : `${day.rate}%`}
-                </span>
-              </div>
-              <div className={`mt-0.5 text-[8px] font-black ${
-                day.dateKey === todayOption.dateKey
-                  ? 'text-blue-600 dark:text-blue-300'
-                  : 'text-slate-400'
-              }`}>
-                {day.label}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 

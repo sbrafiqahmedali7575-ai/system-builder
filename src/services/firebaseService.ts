@@ -11,7 +11,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { DailyRecord, TaskItem } from '../types';
+import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS, INITIAL_TASKS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
 
@@ -27,6 +27,7 @@ export const db =
 
 const RECORDS_COLLECTION = 'records';
 const TASKS_COLLECTION = 'tasks';
+const HABITS_COLLECTION = 'habits';
 
 /**
  * Subscribe to real-time updates from Firestore.
@@ -311,6 +312,9 @@ export function subscribeToTasks(
           notes: data.notes ? String(data.notes) : '',
           updatedAt: data.updatedAt ? String(data.updatedAt) : '',
           completedAt: data.completedAt ? String(data.completedAt) : undefined,
+          matrixQuadrant: data.matrixQuadrant
+            ? (String(data.matrixQuadrant) as TaskItem['matrixQuadrant'])
+            : undefined,
         });
       });
 
@@ -343,6 +347,7 @@ export async function seedInitialTasks(tasks: TaskItem[]): Promise<void> {
       notes: t.notes || '',
       updatedAt: new Date().toISOString(),
       completedAt: t.completedAt || null,
+      matrixQuadrant: t.matrixQuadrant || null,
     });
   }
   await batch.commit();
@@ -388,6 +393,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
     notes: task.notes || '',
     updatedAt: new Date().toISOString(),
     completedAt: task.completedAt || null,
+    matrixQuadrant: task.matrixQuadrant || null,
   });
 }
 
@@ -427,6 +433,7 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
       notes: task.notes || '',
       updatedAt: new Date().toISOString(),
       completedAt: task.completedAt || null,
+    matrixQuadrant: task.matrixQuadrant || null,
     },
     { merge: true }
   );
@@ -462,9 +469,72 @@ export async function resetTasksInCloud(initialTasks: TaskItem[]): Promise<void>
       notes: t.notes || '',
       updatedAt: new Date().toISOString(),
       completedAt: t.completedAt || null,
+      matrixQuadrant: t.matrixQuadrant || null,
     });
   }
   await batch.commit();
+}
+
+/**
+ * Subscribe to real-time habit updates.
+ */
+export function subscribeToHabits(
+  onUpdate: (habits: HabitItem[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  return onSnapshot(
+    collection(db, HABITS_COLLECTION),
+    (snapshot) => {
+      const habits: HabitItem[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        habits.push({
+          id: docSnap.id,
+          name: String(data.name ?? ''),
+          emoji: String(data.emoji ?? '✓'),
+          frequency: data.frequency === 'weekdays' ? 'weekdays' : 'daily',
+          color: (['blue', 'emerald', 'amber', 'rose', 'violet'].includes(String(data.color))
+            ? String(data.color)
+            : 'blue') as HabitItem['color'],
+          checkIns: Array.isArray(data.checkIns)
+            ? data.checkIns.map((value: unknown) => String(value))
+            : [],
+          createdAt: String(data.createdAt ?? new Date().toISOString()),
+          updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+        });
+      });
+      habits.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      onUpdate(habits);
+    },
+    (err) => {
+      console.error('Firestore habits real-time subscription error:', err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+export async function addHabitToCloud(habit: HabitItem): Promise<void> {
+  await setDoc(doc(db, HABITS_COLLECTION, habit.id), {
+    ...habit,
+    checkIns: habit.checkIns || [],
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
+  await setDoc(
+    doc(db, HABITS_COLLECTION, habit.id),
+    {
+      ...habit,
+      checkIns: habit.checkIns || [],
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
+
+export async function deleteHabitFromCloud(habitId: string): Promise<void> {
+  await deleteDoc(doc(db, HABITS_COLLECTION, habitId));
 }
 
 /**
@@ -511,6 +581,7 @@ export async function syncAllDataInCloud(
         notes: t.notes || '',
         updatedAt: new Date().toISOString(),
         completedAt: t.completedAt || null,
+      matrixQuadrant: t.matrixQuadrant || null,
       },
       { merge: true }
     );

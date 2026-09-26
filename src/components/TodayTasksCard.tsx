@@ -45,6 +45,47 @@ function priorityForQuadrant(
   return 'Normal';
 }
 
+
+function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
+  switch (quadrant) {
+    case 'urgent-important':
+      return {
+        roman: 'I',
+        label: 'Urgent & Important',
+        classes:
+          'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300',
+      };
+    case 'important':
+      return {
+        roman: 'II',
+        label: 'Not Urgent & Important',
+        classes:
+          'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300',
+      };
+    case 'urgent':
+      return {
+        roman: 'III',
+        label: 'Urgent & Unimportant',
+        classes:
+          'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300',
+      };
+    case 'neither':
+      return {
+        roman: 'IV',
+        label: 'Not Urgent & Unimportant',
+        classes:
+          'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300',
+      };
+    default:
+      return {
+        roman: '—',
+        label: 'Unassigned',
+        classes:
+          'border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400',
+      };
+  }
+}
+
 interface TodayTasksCardProps {
   tasks: TaskItem[];
   theme: DashboardTheme;
@@ -524,6 +565,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <AnimatePresence initial={false}>
             {sortedTasks.map((task) => {
               const isTaskCompleted = task.isCompleted;
+              const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
 
               return (
                 <motion.div
@@ -576,6 +618,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         }`}
                       >
                         {task.taskOfTheDay}
+                      </span>
+
+                      <span
+                        className={`inline-flex items-center justify-center min-w-6 px-1 py-0.5 rounded-md border text-[10px] font-black shrink-0 select-none ${quadrantMeta.classes}`}
+                        title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
+                        aria-label={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
+                      >
+                        {quadrantMeta.roman}
                       </span>
 
                       {/* Clear Status text */}
@@ -897,14 +947,37 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               </div>
 
               <form onSubmit={handleSaveEdit} className="space-y-2">
-                {/* Date is locked to preserve historical record date */}
+                {/* Date and quadrant details are visible while editing. */}
                 <div className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
-                  <span className="text-slate-500 dark:text-slate-400 block mb-0.5">Recorded Date:</span>
-                  <span className="font-semibold font-mono text-slate-800 dark:text-slate-200">
-                    {formatCalendarDate(editingTask.taskKey)}
-                  </span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">
-                    (Task date and ID {editingTask.id.slice(0, 10)}... are strictly preserved)
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5">
+                        Recorded Date:
+                      </span>
+                      <span className="font-semibold font-mono text-slate-800 dark:text-slate-200">
+                        {formatCalendarDate(editingTask.taskKey)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5">
+                        Quadrant:
+                      </span>
+                      {(() => {
+                        const quadrantMeta = getTaskQuadrantMeta(editingTask.matrixQuadrant);
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 font-black ${quadrantMeta.classes}`}
+                          >
+                            <span>{quadrantMeta.roman}</span>
+                            <span className="font-semibold">{quadrantMeta.label}</span>
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-400 block mt-1">
+                    Task date and ID {editingTask.id.slice(0, 10)}... are preserved.
                   </span>
                 </div>
 

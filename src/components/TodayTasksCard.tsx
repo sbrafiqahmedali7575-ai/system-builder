@@ -14,7 +14,7 @@ import {
   Sparkles,
   ArrowRight,
 } from 'lucide-react';
-import { TaskItem, DashboardTheme } from '../types';
+import { DashboardTheme, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { PomodoroTimer } from './PomodoroTimer';
 import {
@@ -25,6 +25,25 @@ import {
   toInputDateValue,
 } from '../utils/taskDateUtils';
 import confetti from 'canvas-confetti';
+
+const TASK_QUADRANT_OPTIONS: Array<{
+  value: MatrixQuadrant;
+  roman: 'I' | 'II' | 'III' | 'IV';
+  label: string;
+}> = [
+  { value: 'urgent-important', roman: 'I', label: 'Urgent & Important' },
+  { value: 'important', roman: 'II', label: 'Not Urgent & Important' },
+  { value: 'urgent', roman: 'III', label: 'Urgent & Unimportant' },
+  { value: 'neither', roman: 'IV', label: 'Not Urgent & Unimportant' },
+];
+
+function priorityForQuadrant(
+  quadrant: MatrixQuadrant
+): NonNullable<TaskItem['priority']> {
+  if (quadrant === 'urgent-important') return 'High';
+  if (quadrant === 'important' || quadrant === 'urgent') return 'Medium';
+  return 'Normal';
+}
 
 interface TodayTasksCardProps {
   tasks: TaskItem[];
@@ -83,6 +102,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   // Panel date selection mirrors the two main tabs.
   const [panelDateTab, setPanelDateTab] = useState<'TODAY' | 'TOMORROW'>('TODAY');
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskQuadrant, setNewTaskQuadrant] = useState<MatrixQuadrant | ''>('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [recentlyAddedInSession, setRecentlyAddedInSession] = useState<string[]>([]);
@@ -126,6 +146,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     const tabToUse = preselectedTab || activeDateTab;
     setPanelDateTab(tabToUse);
     setNewTaskTitle('');
+    setNewTaskQuadrant('');
     setPanelError(null);
     setRecentlyAddedInSession([]);
     setIsEnterPanelOpen(true);
@@ -149,6 +170,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       return;
     }
 
+    if (!newTaskQuadrant) {
+      setPanelError('Please select a quadrant from I to IV.');
+      return;
+    }
+
     // Guard: duplicate within same date
     const duplicate = tasks.find(
       (t) =>
@@ -167,8 +193,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         taskKey: panelTargetDateKey,
         taskOfTheDay: trimmedTitle,
         isCompleted: false,
-        priority: 'Normal',
+        priority: priorityForQuadrant(newTaskQuadrant),
         category: 'General',
+        matrixQuadrant: newTaskQuadrant,
       });
 
       // Keep panel open, add to session list, clear input and refocus!
@@ -259,6 +286,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         timeEstimate: task.timeEstimate,
         category: task.category,
         notes: task.notes,
+        matrixQuadrant: task.matrixQuadrant,
       });
 
       setCopyForwardFeedback(
@@ -707,12 +735,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </div>
               </div>
 
-              {/* Task Title Input Form */}
+              {/* Task Title + Quadrant Input Form */}
               <form onSubmit={handleCreateTask} className="space-y-2">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Task Title / Objective
-                  </label>
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_190px] gap-2">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                      Task Title / Objective
+                    </label>
                   <div className="flex items-center space-x-1">
                     <input
                       ref={taskInputRef}
@@ -735,9 +764,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                     <button
                       type="submit"
-                      disabled={isAddingTask || !newTaskTitle.trim()}
+                      disabled={isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant}
                       className={`px-2 py-1.5 rounded-xl font-semibold text-xs flex items-center space-x-1 transition shadow-xs shrink-0 ${
-                        isAddingTask || !newTaskTitle.trim()
+                        isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant
                           ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
                           : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'
                       }`}
@@ -758,6 +787,40 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     Press <kbd className="font-mono bg-slate-200 dark:bg-slate-800 px-0.5 py-0.5 rounded text-[10px]">Enter</kbd> to add. Panel remains open so you can add multiple tasks.
                   </p>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="new-task-quadrant"
+                      className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
+                    >
+                      Quadrant
+                    </label>
+                    <select
+                      id="new-task-quadrant"
+                      value={newTaskQuadrant}
+                      onChange={(event) => {
+                        setNewTaskQuadrant(event.target.value as MatrixQuadrant | '');
+                        if (panelError) setPanelError(null);
+                      }}
+                      className={`w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${
+                        isDark
+                          ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500'
+                          : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'
+                      }`}
+                      aria-label="Select task quadrant"
+                    >
+                      <option value="">Select quadrant</option>
+                      {TASK_QUADRANT_OPTIONS.map((quadrant) => (
+                        <option key={quadrant.value} value={quadrant.value}>
+                          {quadrant.roman} — {quadrant.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      I = do first · II = schedule · III = delegate · IV = eliminate
+                    </p>
+                  </div>
                 </div>
 
                 {/* Panel Error message */}

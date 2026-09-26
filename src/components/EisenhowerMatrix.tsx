@@ -395,6 +395,22 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     return result;
   }, [todayTasks, showCompleted]);
 
+  const selectedQuadrantData =
+    quadrants.find((quadrant) => quadrant.id === selectedQuadrant) ||
+    quadrants[0];
+  const selectedQuadrantTasks = todayTasks.filter(
+    (task) => inferQuadrant(task) === selectedQuadrant
+  );
+  const selectedActiveCount = selectedQuadrantTasks.filter(
+    (task) => !task.isCompleted
+  ).length;
+  const selectedDoneCount = selectedQuadrantTasks.filter(
+    (task) => task.isCompleted
+  ).length;
+  const selectedHighCount = selectedQuadrantTasks.filter(
+    (task) => (task.priority || 'Normal') === 'High'
+  ).length;
+
   const persistQuadrantLabels = (
     next: Record<MatrixQuadrant, EditableQuadrant>
   ) => {
@@ -652,24 +668,61 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="w-full lg:w-auto lg:min-w-[300px]">
           {draggedTaskId && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 h-9 inline-flex items-center text-xs font-black text-blue-700">
+            <div className="mb-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 h-8 inline-flex items-center text-[10px] font-black text-blue-700">
               Dragging task • drop on a quadrant tab
             </div>
           )}
-          <div className="text-xs font-bold text-slate-600">
-            {todayTasks.filter((task) => !task.isCompleted).length} active •{' '}
-            {todayTasks.filter((task) => task.isCompleted).length} done
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="min-w-0">
+                <div className="text-[9px] uppercase tracking-wider font-black text-slate-400">
+                  Selected quadrant
+                </div>
+                <div className="truncate text-xs font-black text-slate-800">
+                  {selectedQuadrantData.roman}. {selectedQuadrantData.title}
+                </div>
+              </div>
+
+              <label className="inline-flex items-center gap-1.5 text-[10px] font-black text-slate-600 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={showCompleted}
+                  onChange={(event) => setShowCompleted(event.target.checked)}
+                />
+                Completed
+              </label>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              <div className="rounded-lg border border-blue-200 bg-white px-2 py-1.5">
+                <div className="text-sm font-black text-blue-700">
+                  {selectedActiveCount}
+                </div>
+                <div className="text-[8px] uppercase tracking-wide font-black text-slate-400">
+                  Active
+                </div>
+              </div>
+              <div className="rounded-lg border border-emerald-200 bg-white px-2 py-1.5">
+                <div className="text-sm font-black text-emerald-700">
+                  {selectedDoneCount}
+                </div>
+                <div className="text-[8px] uppercase tracking-wide font-black text-slate-400">
+                  Done
+                </div>
+              </div>
+              <div className="rounded-lg border border-rose-200 bg-white px-2 py-1.5">
+                <div className="text-sm font-black text-rose-700">
+                  {selectedHighCount}
+                </div>
+                <div className="text-[8px] uppercase tracking-wide font-black text-slate-400">
+                  High
+                </div>
+              </div>
+            </div>
           </div>
-          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
-            <input
-              type="checkbox"
-              checked={showCompleted}
-              onChange={(event) => setShowCompleted(event.target.checked)}
-            />
-            Show completed
-          </label>
         </div>
       </div>
 

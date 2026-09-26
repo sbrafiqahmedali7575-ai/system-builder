@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   CalendarDays,
-  Sun,
   Grid2X2,
   Repeat2,
 } from 'lucide-react';
@@ -40,13 +39,13 @@ const TABS: Array<{
 ];
 
 const TOOL_TAB_BASE =
-  'h-8 min-w-0 rounded-lg border px-1.5 sm:px-2.5 text-[10px] sm:text-xs font-black inline-flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-150 select-none whitespace-nowrap overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200';
+  'relative h-10 min-w-0 px-2 sm:px-3 text-[11px] sm:text-xs font-black inline-flex items-center justify-center gap-1.5 transition-colors select-none whitespace-nowrap overflow-hidden border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40';
 
 const TOOL_TAB_ACTIVE =
-  'bg-blue-600 text-white border-blue-600 shadow-sm hover:bg-blue-700 hover:border-blue-700 active:bg-blue-800';
+  'border-blue-600 text-blue-700 bg-blue-50/50';
 
 const TOOL_TAB_INACTIVE =
-  'bg-white text-slate-700 border-slate-200 shadow-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm active:bg-blue-100';
+  'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300';
 
 export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   theme: _theme,
@@ -67,14 +66,14 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   return (
     <div
       data-tools-density="compact"
-      className="min-h-screen lg:h-screen bg-slate-50 text-slate-900 transition-colors duration-200 flex flex-col"
+      className="min-h-screen lg:h-screen bg-white text-slate-900 transition-colors duration-200 flex flex-col"
     >
-      <header className="sticky top-0 z-[60] border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-sm">
-        <div className="max-w-[1500px] mx-auto px-1.5 sm:px-4 lg:px-5 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2">
+      <header className="sticky top-0 z-[60] border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+        <div className="max-w-[1600px] mx-auto px-2 sm:px-4 lg:px-5 flex items-center gap-2">
           <button
             type="button"
             onClick={onBack}
-            className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            className="h-9 w-9 rounded-lg text-slate-500 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
             aria-label="Back to dashboard"
             title="Back to dashboard"
           >
@@ -84,7 +83,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
           <div
             role="tablist"
             aria-label="System Builder tools"
-            className="flex items-center justify-start gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-hidden"
+            className="flex items-center justify-start gap-1 min-w-0 flex-1 overflow-hidden"
           >
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -116,8 +115,8 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                   }`}
                 >
                   <Icon
-                    className={`w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 ${
-                      isActive ? 'text-white' : 'text-blue-600'
+                    className={`w-3.5 h-3.5 shrink-0 ${
+                      isActive ? 'text-blue-600' : 'text-slate-400'
                     }`}
                     aria-hidden="true"
                   />
@@ -131,20 +130,11 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
           </div>
 
 
-          <div
-            className="hidden sm:flex h-8 w-8 shrink-0 rounded-lg border border-slate-200 bg-slate-50 items-center justify-center"
-            title={isSyncing ? 'Syncing data…' : 'Light workspace theme'}
-            aria-label={isSyncing ? 'Syncing data' : 'Light workspace theme'}
-          >
-            <Sun className={`w-3.5 h-3.5 ${
-              isSyncing ? 'text-amber-500 animate-pulse' : 'text-blue-600'
-            }`} />
-          </div>
-        </div>
+       </div>
       </header>
 
-      <main className="max-w-[1600px] w-full mx-auto px-2 sm:px-3 lg:px-4 py-2 flex-1 min-h-0 lg:overflow-hidden">
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-2.5 sm:p-3 lg:p-3 lg:h-full lg:overflow-hidden">
+      <main className="max-w-[1600px] w-full mx-auto px-2 sm:px-4 lg:px-5 py-3 flex-1 min-h-0 lg:overflow-hidden">
+        <section className="lg:h-full lg:overflow-hidden">
           {activeTab === 'eisenhower' && (
             <div
               id="tools-panel-eisenhower"

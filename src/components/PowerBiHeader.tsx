@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BookOpen, Database } from 'lucide-react';
+import { Bell, BookOpen, Database, Wrench } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 
@@ -157,7 +157,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               title="Open System Builder tools"
               aria-label="Open System Builder tools"
             >
-              <span className="text-base leading-none font-black text-blue-600 dark:text-blue-400">•••</span>
+              <Wrench className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>Tools</span>
             </motion.button>
           )}
@@ -200,7 +200,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               title="Open System Builder tools"
               aria-label="Open System Builder tools"
             >
-              <span className="block w-4 h-4 text-sm leading-[14px] font-black text-center">•••</span>
+              <Wrench className="w-4 h-4" />
             </motion.button>
           )}
         </div>

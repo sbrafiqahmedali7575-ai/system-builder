@@ -44,8 +44,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
         .filter(
           (task) =>
             !task.isCompleted &&
-            (task.matrixQuadrant === 'urgent-important' ||
-              (!task.matrixQuadrant && task.priority === 'High'))
+            task.matrixQuadrant === 'urgent-important'
         )
         .slice(0, 4),
     [todayTasks]
@@ -376,7 +375,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
 
         {quadrantOneTasks.length === 0 ? (
           <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-            No unfinished urgent & important tasks for today.
+            No unfinished Quadrant I tasks scheduled for today.
           </div>
         ) : (
           <div className="space-y-1">
@@ -391,7 +390,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                   {task.taskOfTheDay}
                 </span>
                 <span className="text-[9px] font-black text-rose-600 dark:text-rose-400 shrink-0">
-                  High
+                  I
                 </span>
               </div>
             ))}

@@ -22,7 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import { MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
-import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
+import { areDatesEqual, CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 
 interface EisenhowerMatrixProps {
   tasks: TaskItem[];
@@ -320,7 +320,7 @@ function loadQuadrantLabels(): Record<MatrixQuadrant, EditableQuadrant> {
 
     localStorage.setItem(MATRIX_SETTINGS_KEY, JSON.stringify(defaults));
   } catch (error) {
-    console.warn('Unable to load Eisenhower Matrix settings:', error);
+    console.warn('Unable to load Today's Eisenhower Matrix settings:', error);
   }
 
   return defaults;
@@ -354,6 +354,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   const [showCompleted, setShowCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const compact = density === 'compact';
+  const todayTaskKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
 
   const quadrants = useMemo(
     () =>
@@ -373,6 +374,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     };
 
     tasks.forEach((task) => {
+      if (!areDatesEqual(task.taskKey, todayTaskKey)) return;
       if (!showCompleted && task.isCompleted) return;
       result[inferQuadrant(task)].push(task);
     });
@@ -386,7 +388,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     );
 
     return result;
-  }, [tasks, showCompleted]);
+  }, [tasks, showCompleted, todayTaskKey]);
 
   const persistQuadrantLabels = (
     next: Record<MatrixQuadrant, EditableQuadrant>

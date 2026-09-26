@@ -525,8 +525,14 @@ export function subscribeToHabits(
 
 export async function addHabitToCloud(habit: HabitItem): Promise<void> {
   await setDoc(doc(db, HABITS_COLLECTION, habit.id), {
-    ...habit,
+    id: habit.id,
+    name: habit.name,
+    emoji: habit.emoji,
+    frequency: habit.frequency,
+    repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
+    color: habit.color,
     checkIns: habit.checkIns || [],
+    createdAt: habit.createdAt,
     updatedAt: new Date().toISOString(),
   });
 }
@@ -535,8 +541,14 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
   await setDoc(
     doc(db, HABITS_COLLECTION, habit.id),
     {
-      ...habit,
+      id: habit.id,
+      name: habit.name,
+      emoji: habit.emoji,
+      frequency: habit.frequency,
+      repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
+      color: habit.color,
       checkIns: habit.checkIns || [],
+      createdAt: habit.createdAt,
       updatedAt: new Date().toISOString(),
     },
     { merge: true }

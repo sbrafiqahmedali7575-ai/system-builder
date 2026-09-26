@@ -13,7 +13,8 @@ import {
   X,
 } from 'lucide-react';
 import { HabitFrequency, HabitItem, ToolsDensity } from '../types';
-import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
+import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import {
   HABIT_WEEKDAYS,
   addHabitDays,
@@ -103,7 +104,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   onDeleteHabit,
   density = 'compact',
 }) => {
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const [weekAnchor, setWeekAnchor] = useState(today);
   const [formOpen, setFormOpen] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);

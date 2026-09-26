@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Award, Hourglass, Lightbulb, Repeat2, Target } from 'lucide-react';
+import { AlertTriangle, Award, Hourglass, Repeat2, Target } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -169,17 +169,8 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
-      <div className="shrink-0 flex items-center gap-2 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
-        <span className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 flex items-center justify-center shrink-0">
-          <Lightbulb className="w-4 h-4" />
-        </span>
-        <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-          Daily Insights
-        </h2>
-      </div>
-
       <div className="shrink-0 grid grid-cols-3 sm:grid-cols-5 gap-1 mb-1.5">
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5">
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
             <Target className="w-3 h-3 text-blue-500" />
             Tasks
@@ -188,7 +179,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             {completedToday}/{todayTasks.length}
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5">
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
             <Repeat2 className="w-3 h-3 text-emerald-500" />
             Habits
@@ -197,7 +188,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             {completedHabitsToday}/{dueHabits.length}
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5">
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
             <AlertTriangle className="w-3 h-3 text-amber-500" />
             Overdue
@@ -211,7 +202,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           </div>
         </div>
         <div
-          className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5"
+          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5"
           title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
         >
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
@@ -229,7 +220,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           type="button"
           onClick={onOpenCountdown}
           disabled={!onOpenCountdown}
-          className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5 text-left transition-colors enabled:hover:bg-blue-100/80 dark:enabled:hover:bg-blue-950/45 disabled:cursor-default"
+          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5 text-left transition-colors enabled:hover:bg-slate-100/80 dark:enabled:hover:bg-slate-800/80 disabled:cursor-default"
           title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
           aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
         >

@@ -25,6 +25,27 @@ const SETTINGS_DOC_ID = 'daily-settings';
 const DAILY_REMINDERS_SENT_COLLECTION = 'daily_reminders_sent';
 const SMTP_RETRY_BACKOFF_MS = 2 * 60 * 1000;
 
+function parseScheduledMinutes(value: string | undefined): number {
+  const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return 21 * 60;
+
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+
+  if (
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute) ||
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59
+  ) {
+    return 21 * 60;
+  }
+
+  return hour * 60 + minute;
+}
+
 export const DEFAULT_SETTINGS: NotificationSettingsData = {
   id: SETTINGS_DOC_ID,
   enabled: true,
@@ -396,6 +417,38 @@ export async function triggerDailyReminder(options?: {
   const targetRecipient =
     options?.recipientOverride || settings.recipientEmail || 'sbrafiqahmedali7575@gmail.com';
   const force = Boolean(options?.force);
+
+  // Every non-forced caller must obey the same notification switch and scheduled time.
+  // This includes the in-process timer, GitHub Actions, shell scripts, and external schedulers.
+  if (!force) {
+    if (!settings.enabled) {
+      return {
+        success: true,
+        alreadySent: false,
+        date: formattedDate,
+        taskId: '',
+        recipient: targetRecipient,
+        status: 'disabled',
+        message: 'Daily confirmation emails are disabled in notification settings.',
+      };
+    }
+
+    const [currentHour, currentMinute] = timeStr.split(':').map(Number);
+    const currentMinutes = currentHour * 60 + currentMinute;
+    const scheduledMinutes = parseScheduledMinutes(settings.scheduledTime);
+
+    if (currentMinutes < scheduledMinutes) {
+      return {
+        success: true,
+        alreadySent: false,
+        date: formattedDate,
+        taskId: '',
+        recipient: targetRecipient,
+        status: 'not_due',
+        message: `Reminder is scheduled for ${settings.scheduledTime || '21:00'} Asia/Kolkata.`,
+      };
+    }
+  }
 
   // 1. In-process mutex: If a dispatch is currently running for this dateKey in this Node process, join it
   if (!force && activeDispatchPromises.has(dateKey)) {

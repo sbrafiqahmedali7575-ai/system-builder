@@ -23,6 +23,8 @@ export interface HabitItem {
   emoji: string;
   frequency: HabitFrequency;
   repeatDays?: number[]; // 0=Sunday ... 6=Saturday; used when frequency='custom'
+  skippedDates?: string[]; // One-off dates removed from the recurring schedule
+  extraDates?: string[]; // One-off dates added to the recurring schedule
   color: 'blue' | 'emerald' | 'amber' | 'rose' | 'violet';
   checkIns: string[]; // YYYY-MM-DD date keys
   createdAt: string;

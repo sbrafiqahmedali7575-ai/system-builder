@@ -5,36 +5,43 @@ import {
   Circle,
   ClipboardCheck,
   Loader2,
+  Repeat2,
   X,
 } from 'lucide-react';
-import { DashboardTheme, TaskItem } from '../types';
+import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   areDatesEqual,
   CONFIGURED_TIMEZONE,
   formatCalendarDate,
   getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
+import { isHabitDue } from '../utils/habitUtils';
 
 interface DayReviewModalProps {
   isOpen: boolean;
   tasks: TaskItem[];
+  habits: HabitItem[];
   theme: DashboardTheme;
   isSyncing?: boolean;
   onClose: () => void;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
+  onUpdateHabit: (habit: HabitItem) => Promise<void>;
   onSubmitTaskDay: (
     dateKey: string,
-    dayTasks: TaskItem[]
+    dayTasks: TaskItem[],
+    dayHabits: HabitItem[]
   ) => Promise<'COMPLETED' | 'NOT_COMPLETED'>;
 }
 
 export const DayReviewModal: React.FC<DayReviewModalProps> = ({
   isOpen,
   tasks,
+  habits,
   theme,
   isSyncing = false,
   onClose,
   onToggleTaskStatus,
+  onUpdateHabit,
   onSubmitTaskDay,
 }) => {
   const isDark = theme === 'dark';
@@ -43,27 +50,42 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     () => tasks.filter((task) => areDatesEqual(task.taskKey, todayDateKey)),
     [tasks, todayDateKey]
   );
+  const todayHabits = useMemo(
+    () => habits.filter((habit) => isHabitDue(habit, todayDateKey)),
+    [habits, todayDateKey]
+  );
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [selectedHabitIds, setSelectedHabitIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
     status: 'COMPLETED' | 'NOT_COMPLETED';
-    completedCount: number;
-    totalCount: number;
+    completedTaskCount: number;
+    totalTaskCount: number;
+    completedHabitCount: number;
+    totalHabitCount: number;
   } | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedIds(
-      new Set(todayTasks.filter((task) => task.isCompleted).map((task) => task.id))
-    );
     setError(null);
     setResult(null);
-    // Initialize only when the popup opens or the calendar day changes.
-    // Task writes during Mark Day must not reset the final result screen.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, todayDateKey]);
+
+  useEffect(() => {
+    if (!isOpen || isSubmitting || result) return;
+    setSelectedTaskIds(
+      new Set(todayTasks.filter((task) => task.isCompleted).map((task) => task.id))
+    );
+    setSelectedHabitIds(
+      new Set(
+        todayHabits
+          .filter((habit) => habit.checkIns.includes(todayDateKey))
+          .map((habit) => habit.id)
+      )
+    );
+  }, [isOpen, isSubmitting, result, todayTasks, todayHabits, todayDateKey]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,9 +99,9 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isSubmitting, onClose]);
 
-  const toggleSelection = (taskId: string) => {
+  const toggleTaskSelection = (taskId: string) => {
     if (isSubmitting) return;
-    setSelectedIds((current) => {
+    setSelectedTaskIds((current) => {
       const next = new Set(current);
       if (next.has(taskId)) next.delete(taskId);
       else next.add(taskId);
@@ -87,9 +109,19 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     });
   };
 
+  const toggleHabitSelection = (habitId: string) => {
+    if (isSubmitting) return;
+    setSelectedHabitIds((current) => {
+      const next = new Set(current);
+      if (next.has(habitId)) next.delete(habitId);
+      else next.add(habitId);
+      return next;
+    });
+  };
+
   const handleMarkDay = async () => {
-    if (todayTasks.length === 0) {
-      setError('No tasks were created for today.');
+    if (todayTasks.length === 0 && todayHabits.length === 0) {
+      setError('No tasks or habits are scheduled for today.');
       return;
     }
 
@@ -98,7 +130,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
       setError(null);
 
       for (const task of todayTasks) {
-        const shouldBeCompleted = selectedIds.has(task.id);
+        const shouldBeCompleted = selectedTaskIds.has(task.id);
         if (task.isCompleted !== shouldBeCompleted) {
           await onToggleTaskStatus(task.id);
         }
@@ -106,14 +138,38 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
 
       const reviewedTasks = todayTasks.map((task) => ({
         ...task,
-        isCompleted: selectedIds.has(task.id),
+        isCompleted: selectedTaskIds.has(task.id),
       }));
 
-      const status = await onSubmitTaskDay(todayDateKey, reviewedTasks);
+      const reviewedHabits: HabitItem[] = [];
+      for (const habit of todayHabits) {
+        const shouldBeCheckedIn = selectedHabitIds.has(habit.id);
+        const isCheckedIn = habit.checkIns.includes(todayDateKey);
+        let reviewedHabit = habit;
+
+        if (isCheckedIn !== shouldBeCheckedIn) {
+          const checkIns = shouldBeCheckedIn
+            ? [...habit.checkIns, todayDateKey].sort()
+            : habit.checkIns.filter((key) => key !== todayDateKey);
+
+          reviewedHabit = {
+            ...habit,
+            checkIns,
+            updatedAt: new Date().toISOString(),
+          };
+          await onUpdateHabit(reviewedHabit);
+        }
+
+        reviewedHabits.push(reviewedHabit);
+      }
+
+      const status = await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
       setResult({
         status,
-        completedCount: selectedIds.size,
-        totalCount: todayTasks.length,
+        completedTaskCount: selectedTaskIds.size,
+        totalTaskCount: todayTasks.length,
+        completedHabitCount: selectedHabitIds.size,
+        totalHabitCount: todayHabits.length,
       });
     } catch (err: any) {
       setError(err?.message || 'Unable to mark the day. Please try again.');
@@ -206,7 +262,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
 
                 <div className="p-4">
                   <p className="mb-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                    Check the tasks you completed, then press <strong>Mark Day</strong>.
+                    Check completed tasks and today's habit check-ins, then press <strong>Mark Day</strong>.
                   </p>
 
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -216,12 +272,12 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                       </div>
                     ) : (
                       todayTasks.map((task) => {
-                        const checked = selectedIds.has(task.id);
+                        const checked = selectedTaskIds.has(task.id);
                         return (
                           <button
                             key={task.id}
                             type="button"
-                            onClick={() => toggleSelection(task.id)}
+                            onClick={() => toggleTaskSelection(task.id)}
                             disabled={isSubmitting}
                             className="w-full flex items-center gap-3 p-3 text-left border-b last:border-b-0 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/70 disabled:cursor-not-allowed"
                           >
@@ -242,20 +298,67 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   {todayTasks.length > 0 && (
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs font-bold mb-1">
-                        <span>{selectedIds.size} of {todayTasks.length} completed</span>
+                        <span>{selectedTaskIds.size} of {todayTasks.length} completed</span>
                         <span className="font-mono">
-                          {Math.round((selectedIds.size / todayTasks.length) * 100)}%
+                          {Math.round((selectedTaskIds.size / todayTasks.length) * 100)}%
                         </span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-blue-600 transition-all duration-200"
-                          style={{ width: `${Math.round((selectedIds.size / todayTasks.length) * 100)}%` }}
+                          style={{ width: `${Math.round((selectedTaskIds.size / todayTasks.length) * 100)}%` }}
                         />
                       </div>
                     </div>
                   )}
 
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400">
+                      <Repeat2 className="w-4 h-4" />
+                      Habits due today
+                    </div>
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                      {todayHabits.length === 0 ? (
+                        <div className="p-4 text-sm text-slate-500 dark:text-slate-400">
+                          No habits are due today.
+                        </div>
+                      ) : (
+                        todayHabits.map((habit) => {
+                          const checked = selectedHabitIds.has(habit.id);
+                          return (
+                            <button
+                              key={habit.id}
+                              type="button"
+                              onClick={() => toggleHabitSelection(habit.id)}
+                              disabled={isSubmitting}
+                              className="w-full flex items-center gap-3 p-3 text-left border-b last:border-b-0 border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 disabled:cursor-not-allowed"
+                            >
+                              {checked ? (
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                              ) : (
+                                <Circle className="w-5 h-5 text-slate-400 shrink-0" />
+                              )}
+                              <span className="text-lg leading-none shrink-0" aria-hidden="true">
+                                {habit.emoji}
+                              </span>
+                              <span className="text-sm font-bold leading-snug min-w-0 flex-1">
+                                {habit.name}
+                              </span>
+                              <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">
+                                {checked ? 'Checked in' : 'Check in'}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {todayHabits.length > 0 && (
+                      <div className="mt-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                        {selectedHabitIds.size} of {todayHabits.length} checked in
+                      </div>
+                    )}
+                  </div>
                   {error && (
                     <div className="mt-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">
                       {error}
@@ -265,7 +368,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   <button
                     type="button"
                     onClick={handleMarkDay}
-                    disabled={todayTasks.length === 0 || isSubmitting || isSyncing}
+                    disabled={(todayTasks.length === 0 && todayHabits.length === 0) || isSubmitting || isSyncing}
                     className="mt-4 w-full min-h-11 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 text-white font-black text-sm flex items-center justify-center gap-2"
                   >
                     {isSubmitting || isSyncing ? (
@@ -277,7 +380,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   </button>
 
                   <p className="mt-2 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                    All tasks checked = Completed. Any unchecked = Not Completed.
+                    All tasks and due habits checked = Completed. Any unchecked item = Not Completed.
                   </p>
                 </div>
               </>
@@ -294,7 +397,8 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   Day marked {result.status === 'COMPLETED' ? 'Completed' : 'Not Completed'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  {result.completedCount} of {result.totalCount} tasks were marked completed.
+                  {result.completedTaskCount} of {result.totalTaskCount} tasks completed.{' '}
+                  {result.completedHabitCount} of {result.totalHabitCount} habits checked in.
                 </p>
 
                 <div className="grid grid-cols-2 gap-2 mt-5">

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Award } from 'lucide-react';
+import { Award, Hourglass } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
@@ -139,6 +139,51 @@ export const ReportView: React.FC<ReportViewProps> = ({
     };
   }, []);
 
+  // Countdown to the app's 1,800-day long-term mastery horizon.
+  // It begins from the earliest valid logged date and decreases by calendar day.
+  const longTermCountdown = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const HORIZON_DAYS = 1800;
+
+    const firstTimestamp = records
+      .map((record) => parseDateToTimestamp(record.date))
+      .filter((timestamp) => timestamp > 0)
+      .sort((a, b) => a - b)[0];
+
+    if (!firstTimestamp) {
+      return {
+        daysRemaining: HORIZON_DAYS,
+        targetDateLabel: 'Start logging to begin',
+      };
+    }
+
+    const firstDate = new Date(firstTimestamp);
+    const startUtc = Date.UTC(
+      firstDate.getFullYear(),
+      firstDate.getMonth(),
+      firstDate.getDate()
+    );
+
+    const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+    const [todayYear, todayMonth, todayDay] = todayKey.split('-').map(Number);
+    const todayUtc = Date.UTC(todayYear, todayMonth - 1, todayDay);
+
+    const targetUtc = startUtc + HORIZON_DAYS * DAY_MS;
+    const daysRemaining = Math.max(
+      0,
+      Math.ceil((targetUtc - todayUtc) / DAY_MS)
+    );
+
+    const targetDateLabel = new Intl.DateTimeFormat('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(targetUtc));
+
+    return { daysRemaining, targetDateLabel };
+  }, [records]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -192,36 +237,57 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-[0.9fr_1.6fr] gap-2.5 md:divide-x divide-slate-200 dark:divide-slate-800">
               <div className="min-w-0 md:pr-3">
-                <div className="flex items-center gap-2">
-                  <motion.div
-                    initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-                    className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0"
-                  >
-                    <Award className="w-4 h-4 text-blue-500" />
-                  </motion.div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
-                      Overall Completion
-                    </p>
-                    <div className="flex items-baseline gap-1.5">
-                      <span
-                        className={`text-3xl font-black font-mono ${
-                          allKpis.completionRate >= 80
-                            ? 'text-blue-500'
-                            : isDark
-                            ? 'text-slate-100'
-                            : 'text-slate-900'
-                        }`}
-                      >
-                        {allKpis.completionRate.toFixed(1)}%
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {allKpis.completedDays}/{allKpis.totalDays} days
-                      </span>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <motion.div
+                      initial={{ scale: 0.72, rotate: -12, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+                      className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 ring-2 ring-blue-400/30 flex items-center justify-center shrink-0"
+                    >
+                      <Award className="w-4 h-4 text-blue-500" />
+                    </motion.div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
+                        Overall Completion
+                      </p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span
+                          className={`text-3xl font-black font-mono ${
+                            allKpis.completionRate >= 80
+                              ? 'text-blue-500'
+                              : isDark
+                              ? 'text-slate-100'
+                              : 'text-slate-900'
+                          }`}
+                        >
+                          {allKpis.completionRate.toFixed(1)}%
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {allKpis.completedDays}/{allKpis.totalDays} days
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    className="shrink-0 min-w-[82px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2.5 py-2 text-center"
+                    title={`1,800-day goal target: ${longTermCountdown.targetDateLabel}`}
+                    aria-label={`${longTermCountdown.daysRemaining} days remaining in the 1,800-day goal`}
+                  >
+                    <div className="mx-auto w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-300">
+                      <Hourglass className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="mt-0.5 text-2xl leading-none font-black font-mono text-blue-600 dark:text-blue-300">
+                      {longTermCountdown.daysRemaining}
+                    </div>
+                    <div className="mt-0.5 text-[8px] uppercase tracking-[0.12em] font-black text-slate-400">
+                      days left
+                    </div>
+                  </motion.div>
                 </div>
 
                 <div className="mt-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">

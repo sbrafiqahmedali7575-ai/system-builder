@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BookOpen, ClipboardCheck } from 'lucide-react';
+import { Bell, BookOpen, ClipboardCheck, Database } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
-import { BadgeIcon } from './BadgeIcon';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -36,7 +35,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenLibrary,
   onOpenDayReview,
   totalRecordsCount = 0,
-  currentBadge = null,
   isSyncing = false,
 }) => {
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -66,11 +64,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               whileTap={{ scale: 0.96 }}
               className="system-mark ui-motion-icon w-9 h-9 rounded-xl text-white flex items-center justify-center font-black shadow-md relative overflow-hidden"
             >
-              {currentBadge ? (
-                <BadgeIcon badge={currentBadge} className="relative z-10 w-5 h-5" />
-              ) : (
-                <span className="relative z-10 text-base leading-none">S</span>
-              )}
+              <Database className="relative z-10 w-5 h-5 stroke-[2.4]" aria-hidden="true" />
             </motion.div>
             <div className="hidden sm:block">
               <div className="flex items-center space-x-1">

@@ -506,7 +506,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
               transition={{ duration: 0.36, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
               className="min-w-0 min-h-0 h-full flex flex-col"
             >
-              <DailyInsightsCard tasks={tasks} habits={habits} theme={theme} />
+              <DailyInsightsCard
+                tasks={tasks}
+                habits={habits}
+                theme={theme}
+                currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
+              />
             </motion.div>
           </div>
         </div>

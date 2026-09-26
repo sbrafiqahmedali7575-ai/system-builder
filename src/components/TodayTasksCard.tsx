@@ -85,36 +85,6 @@ function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
   }
 }
 
-function getTaskTimelineAccent(quadrant?: MatrixQuadrant) {
-  switch (quadrant) {
-    case 'urgent-important':
-      return {
-        dot: 'bg-rose-500 ring-rose-100 dark:ring-rose-950/60',
-        line: 'bg-rose-200/80 dark:bg-rose-900/50',
-      };
-    case 'important':
-      return {
-        dot: 'bg-amber-500 ring-amber-100 dark:ring-amber-950/60',
-        line: 'bg-amber-200/80 dark:bg-amber-900/50',
-      };
-    case 'urgent':
-      return {
-        dot: 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-950/60',
-        line: 'bg-indigo-200/80 dark:bg-indigo-900/50',
-      };
-    case 'neither':
-      return {
-        dot: 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950/60',
-        line: 'bg-emerald-200/80 dark:bg-emerald-900/50',
-      };
-    default:
-      return {
-        dot: 'bg-slate-400 ring-slate-100 dark:ring-slate-800',
-        line: 'bg-slate-200 dark:bg-slate-800',
-      };
-  }
-}
-
 interface TodayTasksCardProps {
   tasks: TaskItem[];
   theme: DashboardTheme;
@@ -605,12 +575,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ) : (
         <div className="relative pl-0.5 sm:pl-1">
           <AnimatePresence initial={false}>
-            {sortedTasks.map((task, index) => {
+            {sortedTasks.map((task) => {
               const isTaskCompleted = task.isCompleted;
               const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
-              const timelineAccent = getTaskTimelineAccent(task.matrixQuadrant);
               const priorityLabel = task.priority || 'Normal';
-              const isLastTask = index === sortedTasks.length - 1;
 
               return (
                 <motion.div
@@ -620,23 +588,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="relative grid grid-cols-[22px_minmax(0,1fr)] sm:grid-cols-[24px_minmax(0,1fr)] gap-2"
+                  className="relative"
                 >
-                  {/* Timeline rail */}
-                  <div className="relative flex flex-col items-center">
-                    <div
-                      className={`mt-2.5 z-10 w-3 h-3 rounded-full ring-4 ${timelineAccent.dot}`}
-                      title={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
-                      aria-hidden="true"
-                    />
-                    {!isLastTask && (
-                      <div
-                        className={`absolute top-6 bottom-0 w-px ${timelineAccent.line}`}
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
-
                   {/* Task row */}
                   <motion.div
                     whileHover={{ x: 2 }}

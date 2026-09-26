@@ -43,7 +43,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     const parsed = Number(window.localStorage.getItem(FONT_SCALE_KEY) || '1');
     return Number.isFinite(parsed) ? Math.min(1.25, Math.max(0.9, parsed)) : 1;
   });
-  const readerTone: ReaderTone = 'sepia';
+  const readerTone = 'sepia' as ReaderTone;
   const [readingProgress, setReadingProgress] = useState(0);
 
   const activeBook = useMemo(

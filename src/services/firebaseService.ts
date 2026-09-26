@@ -433,7 +433,7 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
       notes: task.notes || '',
       updatedAt: new Date().toISOString(),
       completedAt: task.completedAt || null,
-    matrixQuadrant: task.matrixQuadrant || null,
+      matrixQuadrant: task.matrixQuadrant || null,
     },
     { merge: true }
   );
@@ -581,7 +581,7 @@ export async function syncAllDataInCloud(
         notes: t.notes || '',
         updatedAt: new Date().toISOString(),
         completedAt: t.completedAt || null,
-      matrixQuadrant: t.matrixQuadrant || null,
+        matrixQuadrant: t.matrixQuadrant || null,
       },
       { merge: true }
     );

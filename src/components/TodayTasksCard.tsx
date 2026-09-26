@@ -587,9 +587,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
                   }`}
                 >
-                  {/* Left: Checkbox + Title + Status */}
-                  <div className="flex items-start sm:items-center space-x-1.5 flex-1 min-w-0 pr-1">
-                    {/* Checkbox button */}
+                  {/* Left: Checkbox + flexible title + aligned quadrant/status columns */}
+                  <div className="flex items-start sm:items-center gap-1.5 flex-1 min-w-0 pr-1">
                     <button
                       type="button"
                       role="checkbox"
@@ -607,11 +606,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       {isTaskCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </button>
 
-                    {/* Title + Status Label */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 min-w-0 flex-1">
+                    <div className="min-w-0 flex-1">
                       <span
                         onClick={() => handleToggleTask(task)}
-                        className={`text-sm font-medium cursor-pointer break-words select-none ${
+                        className={`block text-sm font-medium cursor-pointer break-words select-none ${
                           isTaskCompleted
                             ? 'line-through text-slate-400 dark:text-slate-500'
                             : 'text-slate-900 dark:text-slate-100'
@@ -620,17 +618,49 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         {task.taskOfTheDay}
                       </span>
 
+                      {/* On small screens keep metadata together below the title. */}
+                      <div className="mt-1 flex items-center gap-1 sm:hidden">
+                        <span
+                          className={`inline-flex w-7 items-center justify-center px-1 py-0.5 rounded-md border text-[10px] font-black shrink-0 select-none ${quadrantMeta.classes}`}
+                          title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
+                          aria-label={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
+                        >
+                          {quadrantMeta.roman}
+                        </span>
+                        <span
+                          className={`inline-flex min-w-[104px] items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold shrink-0 select-none ${
+                            isTaskCompleted
+                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                          }`}
+                        >
+                          {isTaskCompleted ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>Completed</span>
+                            </>
+                          ) : (
+                            <>
+                              <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                              <span>Not completed</span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Fixed desktop columns keep every quadrant and status aligned. */}
+                    <div className="hidden sm:grid grid-cols-[32px_108px] items-center gap-1.5 shrink-0">
                       <span
-                        className={`inline-flex items-center justify-center min-w-6 px-1 py-0.5 rounded-md border text-[10px] font-black shrink-0 select-none ${quadrantMeta.classes}`}
+                        className={`inline-flex w-7 items-center justify-center px-1 py-0.5 rounded-md border text-[10px] font-black select-none ${quadrantMeta.classes}`}
                         title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
                         aria-label={`Quadrant ${quadrantMeta.roman}: ${quadrantMeta.label}`}
                       >
                         {quadrantMeta.roman}
                       </span>
 
-                      {/* Clear Status text */}
                       <span
-                        className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded-md text-[11px] font-semibold shrink-0 select-none ${
+                        className={`inline-flex w-[108px] items-center justify-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-semibold select-none ${
                           isTaskCompleted
                             ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                             : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'

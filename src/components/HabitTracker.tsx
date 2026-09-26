@@ -12,7 +12,7 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import { HabitFrequency, HabitItem } from '../types';
+import { HabitFrequency, HabitItem, ToolsDensity } from '../types';
 import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import {
   HABIT_WEEKDAYS,
@@ -30,6 +30,7 @@ interface HabitTrackerProps {
   onAddHabit: (habit: Omit<HabitItem, 'id'>) => Promise<void>;
   onUpdateHabit: (habit: HabitItem) => Promise<void>;
   onDeleteHabit: (habitId: string) => Promise<void>;
+  density?: ToolsDensity;
 }
 
 type HabitDraft = {
@@ -98,6 +99,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   onAddHabit,
   onUpdateHabit,
   onDeleteHabit,
+  density = 'compact',
 }) => {
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
   const [weekAnchor, setWeekAnchor] = useState(today);
@@ -106,6 +108,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   const [draft, setDraft] = useState<HabitDraft>(EMPTY_DRAFT);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [historyHabitId, setHistoryHabitId] = useState<string | null>(null);
+  const compact = density === 'compact';
 
   const weekDates = useMemo(() => {
     const monday = getMonday(weekAnchor);
@@ -263,22 +266,22 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   }, [weeklyTrend]);
 
   return (
-    <div className="space-y-2 lg:max-h-[calc(100vh-82px)] lg:overflow-y-auto lg:pr-1">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+    <div className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:overflow-y-auto lg:pr-1`}>
+      <div className={`flex flex-col lg:flex-row lg:items-center justify-between ${compact ? 'gap-2' : 'gap-3'}`}>
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
             Consistency workspace
           </p>
-          <h2 className="mt-0.5 text-xl sm:text-2xl font-black tracking-tight">
+          <h2 className={`${compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'} font-black tracking-tight`}>
             Habit Tracker
           </h2>
-          <p className="mt-0.5 text-xs font-semibold text-slate-600 hidden md:block">
+          <p className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-semibold text-slate-600 hidden md:block`}>
             Custom schedules, weekly check-ins, streaks, and completion history.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-right">
+          <div className={`${compact ? 'rounded-lg px-2.5 py-1.5' : 'rounded-xl px-3 py-2'} border border-slate-200 bg-white text-right`}>
             <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
               This week
             </div>
@@ -289,7 +292,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <button
             type="button"
             onClick={formOpen && !editingHabitId ? closeForm : openAdd}
-            className="h-8 px-2.5 rounded-lg bg-blue-600 text-white font-black text-xs inline-flex items-center gap-1.5"
+            className={`${compact ? 'h-8 px-2.5 rounded-lg text-xs gap-1.5' : 'h-10 px-3 rounded-xl text-sm gap-2'} bg-blue-600 text-white font-black inline-flex items-center`}
           >
             {formOpen && !editingHabitId ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {formOpen && !editingHabitId ? 'Cancel' : 'Add Habit'}
@@ -298,7 +301,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {formOpen && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div className={`${compact ? 'rounded-xl p-3' : 'rounded-2xl p-4'} border border-slate-200 bg-slate-50`}>
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <div className="text-sm font-black">
@@ -639,7 +642,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {historyHabit && historyStats && (
-        <section className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+        <section className={`${compact ? 'rounded-xl' : 'rounded-2xl'} border border-slate-200 bg-slate-50 overflow-hidden`}>
           <div className="px-4 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div
@@ -668,7 +671,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             </button>
           </div>
 
-          <div className="p-3 space-y-3 lg:max-h-[calc(100vh-195px)] lg:overflow-y-auto">
+          <div className={`${compact ? 'p-3 space-y-3 lg:max-h-[calc(100vh-195px)]' : 'p-4 space-y-4 lg:max-h-[calc(100vh-220px)]'} lg:overflow-y-auto`}>
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
               <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <Flame className="w-4 h-4 text-orange-500" />
@@ -738,14 +741,14 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   </div>
                 </div>
 
-                <div className="h-28 flex items-end gap-1.5 border-b border-slate-200 px-1">
+                <div className={`${compact ? 'h-28' : 'h-40'} flex items-end gap-1.5 border-b border-slate-200 px-1`}>
                   {weeklyTrend.map((week) => (
                     <div
                       key={week.key}
                       className="flex-1 min-w-0 h-full flex flex-col justify-end items-center group"
                       title={`${week.label}: ${week.completed}/${week.due} completed (${week.rate}%)`}
                     >
-                      <div className="w-full h-[76px] flex items-end justify-center">
+                      <div className={`w-full ${compact ? 'h-[76px]' : 'h-[112px]'} flex items-end justify-center`}>
                         <div
                           className={`w-full max-w-[28px] rounded-t-md transition-all ${
                             week.due === 0

@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Sparkles,
   ArrowRight,
+  Target,
 } from 'lucide-react';
 import { DashboardTheme, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
@@ -447,14 +448,20 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
-              <span>Current day</span>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[9px] font-semibold text-slate-400">
               <span className="font-mono font-black text-slate-600 dark:text-slate-300">
                 {currentDayFormatted}
               </span>
               <span>•</span>
               <span className="font-black text-slate-600 dark:text-slate-300">
                 {currentDayName}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5">
+                <Target className="w-2.5 h-2.5 text-blue-500" />
+                <span className="uppercase tracking-wide font-black text-slate-400">Tasks</span>
+                <span className="font-mono font-black text-slate-700 dark:text-slate-200">
+                  {completedCount}/{totalTasksCount}
+                </span>
               </span>
             </div>
           </div>

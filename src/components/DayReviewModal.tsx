@@ -260,7 +260,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   </button>
                 </div>
 
-                <div className="p-4">
+                <div className="p-4 max-h-[72vh] overflow-y-auto">
                   <p className="mb-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
                     Check completed tasks and today's habit check-ins, then press <strong>Mark Day</strong>.
                   </p>

@@ -1085,7 +1085,7 @@ const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                         className={`w-3 h-3 rounded-[3px] border shrink-0 inline-flex items-center justify-center ${
                           task.isCompleted
                             ? 'border-slate-400 bg-slate-400 text-white'
-                            : 'border-current/40 bg-white/40'
+                            : 'border-current bg-white/40'
                         }`}
                         aria-hidden="true"
                       >

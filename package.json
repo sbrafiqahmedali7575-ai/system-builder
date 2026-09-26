@@ -19,6 +19,7 @@
     "firebase": "^12.17.1",
     "framer-motion": "^13.4.2",
     "jszip": "^3.10.1",
+    "localforage": "^1.10.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "nodemailer": "^10.0.1",

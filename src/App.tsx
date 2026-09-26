@@ -27,6 +27,17 @@ import {
   updateHabitInCloud,
   deleteHabitFromCloud,
 } from './services/firebaseService';
+import {
+  getCachedRecords,
+  setCachedRecords,
+  getCachedTasks,
+  setCachedTasks,
+  getCachedHabits,
+  setCachedHabits,
+  queueMutation,
+  processPendingSync,
+  isNetworkOrOfflineError,
+} from './services/offlineStorage';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
@@ -163,17 +174,80 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
+  // Hydrate from IndexedDB on initial mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function hydrateFromIndexedDB() {
+      try {
+        const [cachedRecords, cachedTasks, cachedHabits] = await Promise.all([
+          getCachedRecords(),
+          getCachedTasks(),
+          getCachedHabits(),
+        ]);
+        if (!isMounted) return;
+
+        if (cachedRecords && cachedRecords.length > 0) {
+          setRecords(cachedRecords);
+        }
+        if (cachedTasks && cachedTasks.length > 0) {
+          setTasks(cachedTasks);
+        }
+        if (cachedHabits && cachedHabits.length > 0) {
+          setHabits(cachedHabits);
+        }
+      } catch (err) {
+        console.warn('Error hydrating from IndexedDB:', err);
+      }
+    }
+
+    hydrateFromIndexedDB();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Background sync for queued offline mutations when online
+  useEffect(() => {
+    const handleSync = async () => {
+      try {
+        await processPendingSync({
+          addTask: addTaskToCloud,
+          updateTask: updateTaskInCloud,
+          deleteTask: deleteTaskFromCloud,
+          addHabit: addHabitToCloud,
+          updateHabit: updateHabitInCloud,
+          deleteHabit: deleteHabitFromCloud,
+          addRecord: addRecordToCloud,
+          updateRecord: updateRecordInCloud,
+          deleteRecord: deleteRecordFromCloud,
+        });
+      } catch (err) {
+        console.warn('Background sync for offline queue attempt:', err);
+      }
+    };
+
+    window.addEventListener('online', handleSync);
+    // Also attempt when component mounts in case pending mutations existed from earlier session
+    handleSync();
+
+    return () => {
+      window.removeEventListener('online', handleSync);
+    };
+  }, []);
+
   // Subscribe to real-time Firestore updates for records
   useEffect(() => {
     const unsubscribe = subscribeToRecords(
       (cloudRecords) => {
         if (cloudRecords && cloudRecords.length > 0) {
           setRecords(cloudRecords);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudRecords));
+          setCachedRecords(cloudRecords);
         }
       },
       (error) => {
-        console.warn('Using local storage fallback for records due to:', error);
+        console.warn('Using IndexedDB/local storage cache for records due to:', error);
       }
     );
 
@@ -208,10 +282,10 @@ export default function App() {
           (b.taskKey || '').localeCompare(a.taskKey || '')
         );
         setTasks(nextTasks);
-        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(nextTasks));
+        setCachedTasks(nextTasks);
       },
       (error) => {
-        console.warn('Using local storage fallback for tasks due to:', error);
+        console.warn('Using IndexedDB/local storage cache for tasks due to:', error);
       }
     );
 
@@ -223,30 +297,31 @@ export default function App() {
     const unsubscribe = subscribeToHabits(
       (cloudHabits) => {
         setHabits(cloudHabits);
-        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(cloudHabits));
+        setCachedHabits(cloudHabits);
       },
       (error) => {
-        console.warn('Using local storage fallback for habits due to:', error);
+        console.warn('Using IndexedDB/local storage cache for habits due to:', error);
       }
     );
 
     return () => unsubscribe();
   }, []);
 
-  // Save records to local cache as immediate offline persistence
+  // Save records to IndexedDB cache
   useEffect(() => {
     if (records.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      setCachedRecords(records);
     }
   }, [records]);
 
-  // Save tasks to local cache as immediate offline persistence
+  // Save tasks to IndexedDB cache
   useEffect(() => {
-    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    setCachedTasks(tasks);
   }, [tasks]);
 
+  // Save habits to IndexedDB cache
   useEffect(() => {
-    localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits));
+    setCachedHabits(habits);
   }, [habits]);
 
   // Handle record status toggle (Check / Uncheck) with cloud sync
@@ -275,7 +350,16 @@ export default function App() {
       setIsSyncing(true);
       await updateRecordInCloud(updated);
     } catch (e) {
-      console.error('Error syncing status update to cloud:', e);
+      if (isNetworkOrOfflineError(e)) {
+        console.warn('Record status update saved locally in IndexedDB (offline):', e);
+        await queueMutation({
+          type: 'record_update',
+          payload: updated,
+          timestamp: Date.now(),
+        });
+      } else {
+        console.error('Error syncing status update to cloud:', e);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -302,7 +386,16 @@ export default function App() {
       setIsSyncing(true);
       await updateRecordInCloud(withTimestamp);
     } catch (e) {
-      console.error('Error syncing record update to cloud:', e);
+      if (isNetworkOrOfflineError(e)) {
+        console.warn('Record update saved locally in IndexedDB (offline):', e);
+        await queueMutation({
+          type: 'record_update',
+          payload: withTimestamp,
+          timestamp: Date.now(),
+        });
+      } else {
+        console.error('Error syncing record update to cloud:', e);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -325,7 +418,16 @@ export default function App() {
       setIsSyncing(true);
       await addRecordToCloud(recordWithId);
     } catch (e) {
-      console.error('Error adding record to cloud:', e);
+      if (isNetworkOrOfflineError(e)) {
+        console.warn('Record saved locally in IndexedDB (offline):', e);
+        await queueMutation({
+          type: 'record_add',
+          payload: recordWithId,
+          timestamp: Date.now(),
+        });
+      } else {
+        console.error('Error adding record to cloud:', e);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -356,10 +458,19 @@ export default function App() {
       setIsSyncing(true);
       await addTaskToCloud(newTask);
     } catch (err) {
-      pendingTaskMutationsRef.current.delete(taskId);
-      // Rollback on failure
-      setTasks((prev) => prev.filter((t) => t.id !== taskId));
-      throw err;
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Task saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'task_add',
+          payload: newTask,
+          timestamp: Date.now(),
+        });
+      } else {
+        pendingTaskMutationsRef.current.delete(taskId);
+        // Rollback on non-offline failure
+        setTasks((prev) => prev.filter((t) => t.id !== taskId));
+        throw err;
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -385,13 +496,22 @@ export default function App() {
       setIsSyncing(true);
       await updateTaskInCloud(optimisticTask);
     } catch (err) {
-      pendingTaskMutationsRef.current.delete(updatedTask.id);
-      if (previousTask) {
-        setTasks((prev) =>
-          prev.map((task) => (task.id === previousTask.id ? previousTask : task))
-        );
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Task update saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'task_update',
+          payload: optimisticTask,
+          timestamp: Date.now(),
+        });
+      } else {
+        pendingTaskMutationsRef.current.delete(updatedTask.id);
+        if (previousTask) {
+          setTasks((prev) =>
+            prev.map((task) => (task.id === previousTask.id ? previousTask : task))
+          );
+        }
+        throw err;
       }
-      throw err;
     } finally {
       setIsSyncing(false);
     }
@@ -407,15 +527,24 @@ export default function App() {
       setIsSyncing(true);
       await deleteTaskFromCloud(taskId);
     } catch (err) {
-      pendingTaskMutationsRef.current.delete(taskId);
-      if (previousTask) {
-        setTasks((prev) =>
-          prev.some((task) => task.id === previousTask.id)
-            ? prev
-            : [previousTask, ...prev]
-        );
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Task deletion saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'task_delete',
+          payload: { id: taskId },
+          timestamp: Date.now(),
+        });
+      } else {
+        pendingTaskMutationsRef.current.delete(taskId);
+        if (previousTask) {
+          setTasks((prev) =>
+            prev.some((task) => task.id === previousTask.id)
+              ? prev
+              : [previousTask, ...prev]
+          );
+        }
+        throw err;
       }
-      throw err;
     } finally {
       setIsSyncing(false);
     }
@@ -446,11 +575,20 @@ export default function App() {
       setIsSyncing(true);
       await updateTaskInCloud(updatedTask);
     } catch (err) {
-      pendingTaskMutationsRef.current.delete(taskId);
-      setTasks((prev) =>
-        prev.map((task) => (task.id === taskId ? target : task))
-      );
-      throw err;
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Task status update saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'task_update',
+          payload: updatedTask,
+          timestamp: Date.now(),
+        });
+      } else {
+        pendingTaskMutationsRef.current.delete(taskId);
+        setTasks((prev) =>
+          prev.map((task) => (task.id === taskId ? target : task))
+        );
+        throw err;
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -467,7 +605,16 @@ export default function App() {
       setIsSyncing(true);
       await addHabitToCloud(habit);
     } catch (err) {
-      console.warn('Habit saved locally; cloud sync is unavailable:', err);
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Habit saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'habit_add',
+          payload: habit,
+          timestamp: Date.now(),
+        });
+      } else {
+        console.warn('Habit saved locally; cloud sync is unavailable:', err);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -479,7 +626,16 @@ export default function App() {
       setIsSyncing(true);
       await updateHabitInCloud(habit);
     } catch (err) {
-      console.warn('Habit update kept locally; cloud sync is unavailable:', err);
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Habit update saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'habit_update',
+          payload: habit,
+          timestamp: Date.now(),
+        });
+      } else {
+        console.warn('Habit update kept locally; cloud sync is unavailable:', err);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -491,7 +647,16 @@ export default function App() {
       setIsSyncing(true);
       await deleteHabitFromCloud(habitId);
     } catch (err) {
-      console.warn('Habit deletion kept locally; cloud sync is unavailable:', err);
+      if (isNetworkOrOfflineError(err)) {
+        console.warn('Habit deletion saved locally in IndexedDB (offline):', err);
+        await queueMutation({
+          type: 'habit_delete',
+          payload: { id: habitId },
+          timestamp: Date.now(),
+        });
+      } else {
+        console.warn('Habit deletion kept locally; cloud sync is unavailable:', err);
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -559,8 +724,17 @@ export default function App() {
         setIsSyncing(true);
         await updateRecordInCloud(updatedRecord);
       } catch (err) {
-        setRecords(previousRecords);
-        throw err;
+        if (isNetworkOrOfflineError(err)) {
+          console.warn('Day review update saved locally in IndexedDB (offline):', err);
+          await queueMutation({
+            type: 'record_update',
+            payload: updatedRecord,
+            timestamp: Date.now(),
+          });
+        } else {
+          setRecords(previousRecords);
+          throw err;
+        }
       } finally {
         setIsSyncing(false);
       }
@@ -589,8 +763,17 @@ export default function App() {
         setIsSyncing(true);
         await addRecordToCloud(newRecord);
       } catch (err) {
-        setRecords(previousRecords);
-        throw err;
+        if (isNetworkOrOfflineError(err)) {
+          console.warn('Day review record saved locally in IndexedDB (offline):', err);
+          await queueMutation({
+            type: 'record_add',
+            payload: newRecord,
+            timestamp: Date.now(),
+          });
+        } else {
+          setRecords(previousRecords);
+          throw err;
+        }
       } finally {
         setIsSyncing(false);
       }

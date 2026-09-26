@@ -42,13 +42,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   const isDark = theme === 'dark';
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
 
-  const todayTasks = useMemo(
-    () => tasks.filter((task) => areDatesEqual(task.taskKey, today)),
-    [tasks, today]
-  );
-
-  const completedToday = todayTasks.filter((task) => task.isCompleted).length;
-
   const dueHabits = useMemo(
     () => habits.filter((habit) => isHabitDue(habit, today)),
     [habits, today]
@@ -169,16 +162,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
-      <div className="shrink-0 grid grid-cols-3 sm:grid-cols-5 gap-1 mb-1.5">
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
-            <Target className="w-3 h-3 text-blue-500" />
-            Tasks
-          </div>
-          <div className="mt-0.5 text-sm font-black text-slate-800 dark:text-slate-100">
-            {completedToday}/{todayTasks.length}
-          </div>
-        </div>
+      <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-1 mb-1.5">
         <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
             <Repeat2 className="w-3 h-3 text-emerald-500" />

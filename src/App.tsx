@@ -113,9 +113,9 @@ export default function App() {
     if (typeof window === 'undefined') return false;
     return window.location.pathname === '/books/cal-newport';
   });
-  const [isMoreOpen, setIsMoreOpen] = useState<boolean>(() => {
+  const [isToolsOpen, setIsToolsOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return window.location.pathname === '/more';
+    return window.location.pathname === '/tools';
   });
 
   // Filter state for report view
@@ -132,7 +132,7 @@ export default function App() {
       setConfirmToken(params.get('token'));
       setConfirmAction(params.get('action') || undefined);
       setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
-      setIsMoreOpen(window.location.pathname === '/more');
+      setIsToolsOpen(window.location.pathname === '/tools');
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -516,21 +516,21 @@ export default function App() {
     setIsLibraryOpen(false);
   };
 
-  const handleOpenMore = () => {
+  const handleOpenTools = () => {
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/more');
+      window.history.pushState({}, '', '/tools');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     setIsLibraryOpen(false);
-    setIsMoreOpen(true);
+    setIsToolsOpen(true);
   };
 
-  const handleCloseMore = () => {
+  const handleCloseTools = () => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    setIsMoreOpen(false);
+    setIsToolsOpen(false);
   };
 
   const handleCloseDayReview = () => {
@@ -567,11 +567,11 @@ export default function App() {
     return <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />;
   }
 
-  if (isMoreOpen) {
+  if (isToolsOpen) {
     return (
       <MoreWorkspace
         theme={theme}
-        onBack={handleCloseMore}
+        onBack={handleCloseTools}
         tasks={tasks}
         habits={habits}
         onAddTask={handleAddTask}
@@ -603,7 +603,7 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
-        onOpenMore={handleOpenMore}
+        onOpenTools={handleOpenTools}
         theme={theme}
         onThemeChange={setTheme}
         totalRecordsCount={records.length}

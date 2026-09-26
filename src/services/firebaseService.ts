@@ -95,6 +95,54 @@ export function handleFirestoreError(
 const RECORDS_COLLECTION = 'records';
 const TASKS_COLLECTION = 'tasks';
 const HABITS_COLLECTION = 'habits';
+const SETTINGS_COLLECTION = 'notification_settings';
+const COUNTDOWN_SETTINGS_DOC = 'system_builder_countdown';
+
+export interface CountdownSettings {
+  targetDate: string;
+  reason: string;
+  updatedAt?: string;
+}
+
+export function subscribeToCountdownSettings(
+  onUpdate: (settings: CountdownSettings | null) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  return onSnapshot(
+    doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        onUpdate(null);
+        return;
+      }
+
+      const data = snapshot.data();
+      onUpdate({
+        targetDate: String(data.targetDate ?? ''),
+        reason: String(data.reason ?? ''),
+        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+      });
+    },
+    (err) => {
+      console.error('Firestore countdown settings subscription error:', err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+export async function saveCountdownSettings(
+  settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
+): Promise<void> {
+  await setDoc(
+    doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
+    {
+      targetDate: settings.targetDate,
+      reason: settings.reason,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
 
 /**
  * Subscribe to real-time updates from Firestore.

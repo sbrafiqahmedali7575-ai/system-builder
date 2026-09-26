@@ -385,8 +385,7 @@ export default function App() {
       setIsSyncing(true);
       await addHabitToCloud(habit);
     } catch (err) {
-      setHabits((current) => current.filter((item) => item.id !== habit.id));
-      throw err;
+      console.warn('Habit saved locally; cloud sync is unavailable:', err);
     } finally {
       setIsSyncing(false);
     }
@@ -399,8 +398,7 @@ export default function App() {
       setIsSyncing(true);
       await updateHabitInCloud(habit);
     } catch (err) {
-      setHabits(previous);
-      throw err;
+      console.warn('Habit update kept locally; cloud sync is unavailable:', err);
     } finally {
       setIsSyncing(false);
     }
@@ -413,8 +411,7 @@ export default function App() {
       setIsSyncing(true);
       await deleteHabitFromCloud(habitId);
     } catch (err) {
-      setHabits(previous);
-      throw err;
+      console.warn('Habit deletion kept locally; cloud sync is unavailable:', err);
     } finally {
       setIsSyncing(false);
     }

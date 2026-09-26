@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Check, Lightbulb, Repeat2, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Lightbulb, Repeat2, Target, TrendingUp } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -8,8 +8,6 @@ import {
 } from '../utils/taskDateUtils';
 import {
   addHabitDays,
-  getHabitScheduleLabel,
-  getHabitStats,
   isHabitDue,
   parseHabitDateKey,
 } from '../utils/habitUtils';
@@ -18,11 +16,6 @@ interface DailyInsightsCardProps {
   tasks: TaskItem[];
   habits: HabitItem[];
   theme: DashboardTheme;
-}
-
-function hideProgressBarForHabit(name: string): boolean {
-  const normalized = name.trim().toLowerCase();
-  return normalized.includes('wake up early') && normalized.includes('5:15');
 }
 
 export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
@@ -50,25 +43,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   const completedHabitsToday = dueHabits.filter((habit) =>
     habit.checkIns.includes(today)
   ).length;
-
-  const newestHabits = useMemo(
-    () =>
-      [...habits]
-        .sort((a, b) => {
-          const aTime = new Date(a.createdAt).getTime();
-          const bTime = new Date(b.createdAt).getTime();
-          return (Number.isNaN(bTime) ? 0 : bTime) -
-            (Number.isNaN(aTime) ? 0 : aTime);
-        })
-        .slice(0, 3)
-        .map((habit) => ({
-          habit,
-          stats: getHabitStats(habit, today),
-          dueToday: isHabitDue(habit, today),
-          checkedToday: habit.checkIns.includes(today),
-        })),
-    [habits, today]
-  );
 
   const overdueTasks = useMemo(
     () =>
@@ -245,63 +219,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
 
         </div>
 
-        <div>
-        {newestHabits.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 px-3 py-5 text-center text-[11px] font-semibold text-slate-400">
-            Add a habit in Tools to see progress here.
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {newestHabits.map(({ habit, stats, dueToday, checkedToday }) => (
-              <div
-                key={habit.id}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-base leading-none shrink-0">
-                    {habit.emoji}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-[11px] font-black text-slate-800 dark:text-slate-100">
-                        {habit.name}
-                      </span>
-                      <span className="hidden sm:inline text-[8px] font-bold text-slate-400 shrink-0">
-                        {getHabitScheduleLabel(habit)}
-                      </span>
-                    </div>
-                    {!hideProgressBarForHabit(habit.name) && (
-                      <div className="mt-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-emerald-500 transition-all"
-                          style={{ width: `${stats.thirty.rate}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-[10px] font-black text-slate-700 dark:text-slate-200">
-                      {stats.thirty.rate}%
-                    </div>
-                    <div
-                      className={`mt-0.5 inline-flex items-center gap-0.5 text-[8px] font-black ${
-                        checkedToday
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : dueToday
-                          ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      {checkedToday && <Check className="w-2.5 h-2.5" />}
-                      {checkedToday ? 'Done' : dueToday ? 'Due' : 'Off'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        </div>
+
       </div>
     </div>
   );

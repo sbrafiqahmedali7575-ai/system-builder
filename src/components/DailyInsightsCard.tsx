@@ -468,5 +468,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
         </div>
       </div>
     </div>
+      </div>
+    </div>
   );
 };

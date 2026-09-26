@@ -333,7 +333,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
             tasks={tasks}
             habits={habits}
             theme={theme}
-            currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
           />
         </motion.div>
       </section>

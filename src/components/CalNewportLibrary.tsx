@@ -4,20 +4,13 @@ import {
   BookMarked,
   BookOpen,
   CheckCircle2,
-  Coffee,
-  Heart,
-  Lightbulb,
-  Minus,
-  Moon,
-  Plus,
-  Sun,
-  Target,
+  Coffee,  Lightbulb,
+  Minus,  Plus,  Target,
 } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import {
   CAL_NEWPORT_BOOKS,
   CAL_NEWPORT_LIBRARY_UPDATED,
-  FAVORITE_CAL_NEWPORT_BOOKS,
   CalNewportBook,
 } from '../data/calNewportLibrary';
 
@@ -30,10 +23,9 @@ interface CalNewportLibraryProps {
 
 const ACTIVE_BOOK_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_ACTIVE_BOOK';
 const FONT_SCALE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_FONT_SCALE';
-const READER_TONE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_READER_TONE';
 
 export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
-  theme,
+  theme: _theme,
   onBack,
 }) => {
   const [activeBookId, setActiveBookId] = useState<CalNewportBook['id']>(() => {
@@ -48,12 +40,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     const parsed = Number(window.localStorage.getItem(FONT_SCALE_KEY) || '1');
     return Number.isFinite(parsed) ? Math.min(1.25, Math.max(0.9, parsed)) : 1;
   });
-  const [readerTone, setReaderTone] = useState<ReaderTone>(() => {
-    if (typeof window === 'undefined') return theme === 'dark' ? 'night' : 'paper';
-    const stored = window.localStorage.getItem(READER_TONE_KEY);
-    if (stored === 'paper' || stored === 'sepia' || stored === 'night') return stored;
-    return theme === 'dark' ? 'night' : 'paper';
-  });
+  const readerTone: ReaderTone = 'sepia';
   const [readingProgress, setReadingProgress] = useState(0);
 
   const activeBook = useMemo(
@@ -69,10 +56,6 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   useEffect(() => {
     window.localStorage.setItem(FONT_SCALE_KEY, String(fontScale));
   }, [fontScale]);
-
-  useEffect(() => {
-    window.localStorage.setItem(READER_TONE_KEY, readerTone);
-  }, [readerTone]);
 
   useEffect(() => {
     const updateProgress = () => {
@@ -192,43 +175,13 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             </div>
 
             <div
-              className={`flex items-center rounded-xl border p-1 ${
-                readerTone === 'night' ? 'border-[#343a40]' : 'border-black/10'
-              }`}
+              className="flex items-center rounded-xl border border-[#ded0b4] p-1"
+              title="Sepia reading theme"
+              aria-label="Sepia reading theme"
             >
-              <button
-                type="button"
-                onClick={() => setReaderTone('paper')}
-                className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                  readerTone === 'paper' ? 'bg-blue-600 text-white' : ''
-                }`}
-                title="Paper reading theme"
-                aria-label="Paper reading theme"
-              >
-                <Sun className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setReaderTone('sepia')}
-                className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                  readerTone === 'sepia' ? 'bg-amber-700 text-white' : ''
-                }`}
-                title="Sepia reading theme"
-                aria-label="Sepia reading theme"
-              >
+              <span className="h-8 w-8 rounded-lg flex items-center justify-center bg-amber-700 text-white">
                 <Coffee className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setReaderTone('night')}
-                className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                  readerTone === 'night' ? 'bg-slate-700 text-white' : ''
-                }`}
-                title="Night reading theme"
-                aria-label="Night reading theme"
-              >
-                <Moon className="w-3.5 h-3.5" />
-              </button>
+              </span>
             </div>
           </div>
         </div>
@@ -257,37 +210,6 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
       <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-5 lg:gap-8">
         <aside className="lg:sticky lg:top-[122px] self-start space-y-4">
-          <section className={`rounded-2xl border p-3.5 ${cardClasses}`}>
-            <div className="flex items-center gap-2 mb-3">
-              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-              <h2 className="text-sm font-black">Favorite</h2>
-            </div>
-            <div className="space-y-2">
-              {FAVORITE_CAL_NEWPORT_BOOKS.map((book, index) => (
-                <button
-                  key={book.id}
-                  type="button"
-                  onClick={() => selectBook(book)}
-                  className={`w-full text-left rounded-xl border p-3 transition-all ${
-                    activeBookId === book.id
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : readerTone === 'night'
-                      ? 'border-[#343a40] hover:bg-white/5'
-                      : 'border-black/10 hover:bg-black/5'
-                  }`}
-                >
-                  <div className="text-[10px] uppercase tracking-[0.14em] font-black text-rose-500">
-                    Favorite {index + 1}
-                  </div>
-                  <div className="mt-1 text-sm font-black leading-tight">{book.title}</div>
-                  <div className={`mt-1 text-[11px] font-semibold ${mutedText}`}>
-                    {book.focus}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-
           <section className={`rounded-2xl border p-3.5 ${cardClasses}`}>
             <div className="flex items-center gap-2 mb-3">
               <BookMarked className="w-4 h-4 text-blue-600" />

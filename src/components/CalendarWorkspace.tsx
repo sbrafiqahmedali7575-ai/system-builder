@@ -920,34 +920,162 @@ interface CalendarMultiWeekViewProps extends CalendarBaseViewProps {
 
 const CalendarYearView: React.FC<CalendarYearViewProps> = ({
   year,
+  today,
+  selectedDate,
+  onSelectDate,
   onOpenMonth,
-}) => (
-  <CalendarPlaceholder
-    title={`${year} • Year View`}
-    description="12-month overview placeholder. Replace with CalendarYearView.tsx."
-  >
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-      {Array.from({ length: 12 }, (_, month) => (
-        <button
-          key={month}
-          type="button"
-          onClick={() => onOpenMonth(year, month)}
-          className="min-h-32 rounded-xl border border-slate-200 bg-white p-3 text-left hover:border-blue-300 hover:bg-blue-50/20"
-        >
-          <div className="font-bold">
-            {new Date(Date.UTC(year, month, 1)).toLocaleDateString('en-US', {
-              month: 'long',
-              timeZone: 'UTC',
-            })}
-          </div>
-          <div className="mt-2 text-[10px] text-slate-400">
-            Mini month placeholder
-          </div>
-        </button>
-      ))}
-    </div>
-  </CalendarPlaceholder>
-);
+  getDaySummary,
+}) => {
+  const weekdayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  const activityClass = (
+    dateKey: string,
+    totalItems: number,
+    completionRate: number | null
+  ) => {
+    if (dateKey === today) {
+      return 'bg-blue-600 text-white shadow-sm';
+    }
+
+    if (totalItems === 0 || completionRate === null) {
+      return 'text-slate-600 hover:bg-slate-100';
+    }
+
+    if (completionRate >= 80) {
+      return 'bg-blue-600 text-white hover:bg-blue-700';
+    }
+
+    if (completionRate >= 50) {
+      return 'bg-blue-300 text-blue-950 hover:bg-blue-400';
+    }
+
+    if (completionRate > 0) {
+      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+    }
+
+    return 'bg-blue-50 text-slate-600 hover:bg-blue-100';
+  };
+
+  return (
+    <section
+      aria-label={`${year} year calendar`}
+      className="h-full overflow-auto bg-white px-3 sm:px-5 py-4 sm:py-5"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7 xl:gap-x-9 gap-y-7">
+        {Array.from({ length: 12 }, (_, month) => {
+          const monthStart = new Date(Date.UTC(year, month, 1));
+          const monthName = monthStart.toLocaleDateString('en-US', {
+            month: 'long',
+            timeZone: 'UTC',
+          });
+          const leadingDays = monthStart.getUTCDay();
+          const daysInMonth = getDaysInMonth(year, month);
+
+          const monthCells = Array.from({ length: 42 }, (_, cellIndex) => {
+            const dayNumber = cellIndex - leadingDays + 1;
+            return dayNumber >= 1 && dayNumber <= daysInMonth
+              ? dayNumber
+              : null;
+          });
+
+          return (
+            <article key={month} className="min-w-0">
+              <button
+                type="button"
+                onClick={() => onOpenMonth(year, month)}
+                className="mb-2.5 text-base sm:text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors"
+                aria-label={`Open ${monthName} ${year}`}
+              >
+                {monthName}
+              </button>
+
+              <div className="grid grid-cols-7 mb-1">
+                {weekdayLabels.map((label, index) => (
+                  <div
+                    key={`${label}-${index}`}
+                    className="h-5 flex items-center justify-center text-[9px] font-semibold text-slate-400"
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-y-1">
+                {monthCells.map((dayNumber, cellIndex) => {
+                  if (dayNumber === null) {
+                    return (
+                      <div
+                        key={`blank-${cellIndex}`}
+                        className="h-7"
+                        aria-hidden="true"
+                      />
+                    );
+                  }
+
+                  const dateKey = keyFromDate(
+                    new Date(Date.UTC(year, month, dayNumber))
+                  );
+                  const summary = getDaySummary(dateKey);
+                  const isSelected = dateKey === selectedDate;
+                  const isToday = dateKey === today;
+
+                  return (
+                    <button
+                      key={dateKey}
+                      type="button"
+                      onClick={() => onSelectDate(dateKey)}
+                      aria-label={`${longDate(dateKey)}. ${summary.completedItems} of ${summary.totalItems} items completed.`}
+                      aria-pressed={isSelected}
+                      aria-current={isToday ? 'date' : undefined}
+                      title={
+                        summary.totalItems
+                          ? `${longDate(dateKey)} • ${summary.completedItems}/${summary.totalItems} completed`
+                          : longDate(dateKey)
+                      }
+                      className={`mx-auto w-7 h-7 rounded-[4px] inline-flex items-center justify-center text-[10px] font-semibold transition-all ${
+                        activityClass(
+                          dateKey,
+                          summary.totalItems,
+                          summary.completionRate
+                        )
+                      } ${
+                        isSelected && !isToday
+                          ? 'ring-2 ring-blue-500 ring-offset-1'
+                          : ''
+                      }`}
+                    >
+                      {dayNumber}
+                    </button>
+                  );
+                })}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3 text-[9px] font-semibold text-slate-400">
+        <span>Completion intensity</span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 rounded-[3px] bg-blue-50 border border-blue-100" />
+          0%
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 rounded-[3px] bg-blue-100" />
+          1–49%
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 rounded-[3px] bg-blue-300" />
+          50–79%
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 rounded-[3px] bg-blue-600" />
+          80–100%
+        </span>
+      </div>
+    </section>
+  );
+};
 
 const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
   calendarDays,

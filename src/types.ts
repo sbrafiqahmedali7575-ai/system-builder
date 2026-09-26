@@ -13,6 +13,21 @@ export interface DailyRecord {
   updatedAt?: string; // ISO 8601 UTC timestamp
 }
 
+export type MatrixQuadrant = 'urgent-important' | 'important' | 'urgent' | 'neither';
+
+export type HabitFrequency = 'daily' | 'weekdays';
+
+export interface HabitItem {
+  id: string;
+  name: string;
+  emoji: string;
+  frequency: HabitFrequency;
+  color: 'blue' | 'emerald' | 'amber' | 'rose' | 'violet';
+  checkIns: string[]; // YYYY-MM-DD date keys
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface TaskItem {
   id: string;
   taskKey: string; // e.g. "2026-08-26" (Today's Date)
@@ -24,6 +39,7 @@ export interface TaskItem {
   notes?: string;
   updatedAt?: string;
   completedAt?: string;
+  matrixQuadrant?: MatrixQuadrant;
 }
 
 export type DashboardTheme = 'powerbi' | 'dark' | 'executive' | 'modern';

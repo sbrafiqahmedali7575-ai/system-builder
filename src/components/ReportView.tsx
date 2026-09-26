@@ -7,6 +7,8 @@ import { calculateKPIStats } from '../utils/daxMeasures';
 import { parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TodayTasksCard } from './TodayTasksCard';
+import { CommandCenterSidebar } from './CommandCenterSidebar';
+import { WeeklyProgressCards } from './WeeklyProgressCards';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -265,36 +267,68 @@ export const ReportView: React.FC<ReportViewProps> = ({
       transition={{ duration: 0.3 }}
       className="w-full space-y-4 sm:space-y-5"
     >
-      <motion.div
+      <section
         id="today-focus-section"
-        aria-label="Today's Commitments and Key Metrics"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-        className="min-w-0 min-h-0 flex flex-col lg:h-[430px]"
+        aria-label="Today Command Center"
+        className="space-y-2"
       >
-        <TodayTasksCard
-          tasks={tasks}
-          habits={habits}
-          theme={theme}
-          onAddTask={onAddTask}
-          onUpdateTask={onUpdateTask}
-          onDeleteTask={onDeleteTask}
-          onToggleTaskStatus={onToggleTaskStatus}
-          onOpenDayReview={onOpenDayReview}
-          currentDayFormatted={currentCadenceDay.formattedDate}
-          currentDayName={currentCadenceDay.fullDayName}
-          currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
-          overallCompletionPercentage={allKpis.completionRate}
-          completedDays={allKpis.completedDays}
-          totalDays={allKpis.totalDays}
-          countdownDaysRemaining={longTermCountdown.daysRemaining}
-          countdownReason={longTermCountdown.reason}
-          countdownTargetLabel={longTermCountdown.targetDateLabel}
-          onOpenCountdown={openCountdownEditor}
-          isSyncing={isSyncing}
-        />
-      </motion.div>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-2 items-stretch lg:h-[430px]">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="min-w-0 min-h-0 h-full flex flex-col"
+          >
+            <TodayTasksCard
+              tasks={tasks}
+              theme={theme}
+              onAddTask={onAddTask}
+              onUpdateTask={onUpdateTask}
+              onDeleteTask={onDeleteTask}
+              onToggleTaskStatus={onToggleTaskStatus}
+              onOpenDayReview={onOpenDayReview}
+              currentDayFormatted={currentCadenceDay.formattedDate}
+              currentDayName={currentCadenceDay.fullDayName}
+              isSyncing={isSyncing}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="min-w-0 min-h-0 h-full"
+          >
+            <CommandCenterSidebar
+              theme={theme}
+              currentDayFormatted={currentCadenceDay.formattedDate}
+              currentDayName={currentCadenceDay.fullDayName}
+              overallCompletionPercentage={allKpis.completionRate}
+              completedDays={allKpis.completedDays}
+              totalDays={allKpis.totalDays}
+              cadencePercentage={Math.round(recentWeekCadence.performance)}
+              cadenceCompletedDays={recentWeekCadence.completedDays}
+              countdownDaysRemaining={longTermCountdown.daysRemaining}
+              countdownReason={longTermCountdown.reason}
+              countdownTargetLabel={longTermCountdown.targetDateLabel}
+              onOpenCountdown={openCountdownEditor}
+            />
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.34, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <WeeklyProgressCards
+            tasks={tasks}
+            habits={habits}
+            theme={theme}
+            currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
+          />
+        </motion.div>
+      </section>
 
       {isCountdownEditorOpen && typeof document !== 'undefined'
         ? createPortal(

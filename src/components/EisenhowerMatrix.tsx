@@ -700,7 +700,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                   }
                                   className={`w-7 h-7 rounded-full ${optionTheme.dot} transition-all ${
                                     selected
-                                      ? 'ring-2 ring-offset-2 ring-[#3f3426] scale-105'
+                                      ? 'ring-2 ring-offset-2 ring-[#0f172a] scale-105'
                                       : 'hover:scale-105'
                                   }`}
                                   title={optionTheme.label}

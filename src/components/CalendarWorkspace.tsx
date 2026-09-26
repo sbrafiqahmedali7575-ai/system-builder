@@ -4,10 +4,9 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   Plus,
 } from 'lucide-react';
-import { HabitItem, TaskItem, ToolsDensity } from '../types';
+import type { HabitItem, TaskItem, ToolsDensity } from '../types';
 import {
   CONFIGURED_TIMEZONE,
   getIsoDateKeyInTimezone,
@@ -16,14 +15,7 @@ import { isHabitDue } from '../utils/habitUtils';
 import { CalendarYearView } from './calendar/CalendarYearView';
 import { CalendarMonthView } from './calendar/CalendarMonthView';
 
-export type CalendarView =
-  | 'year'
-  | 'month'
-  | 'week'
-  | 'day'
-  | 'agenda'
-  | 'multi-day'
-  | 'multi-week';
+export type CalendarView = 'year' | 'month';
 
 export interface CalendarWorkspaceProps {
   tasks: TaskItem[];
@@ -51,34 +43,10 @@ export interface CalendarDaySummary {
   completionRate: number | null;
 }
 
-export interface CalendarBaseViewProps {
-  today: string;
-  selectedDate: string;
-  cursor: Date;
-  tasks: TaskItem[];
-  habits: HabitItem[];
-  tasksByDate: Map<string, TaskItem[]>;
-  showCompleted: boolean;
-  showHabits: boolean;
-  onSelectDate: (dateKey: string) => void;
-  onToggleTask: (taskId: string) => Promise<void>;
-  onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
-  getHabitsForDate: (dateKey: string) => HabitItem[];
-  getDaySummary: (dateKey: string) => CalendarDaySummary;
-}
-
 const CALENDAR_VIEWS: CalendarViewOption[] = [
-  { id: 'year', label: 'Year' },
   { id: 'month', label: 'Month' },
-  { id: 'week', label: 'Week' },
-  { id: 'day', label: 'Day' },
-  { id: 'agenda', label: 'Agenda' },
-  { id: 'multi-day', label: 'Multi-Day' },
-  { id: 'multi-week', label: 'Multi-Week' },
+  { id: 'year', label: 'Year' },
 ];
-
-const MULTI_DAY_SPAN = 3;
-const MULTI_WEEK_SPAN = 4;
 
 function parseKey(key: string): Date {
   const [year, month, day] = key.split('-').map(Number);
@@ -91,12 +59,6 @@ function keyFromDate(date: Date): string {
     String(date.getUTCMonth() + 1).padStart(2, '0'),
     String(date.getUTCDate()).padStart(2, '0'),
   ].join('-');
-}
-
-function addDays(dateKey: string, amount: number): string {
-  const date = parseKey(dateKey);
-  date.setUTCDate(date.getUTCDate() + amount);
-  return keyFromDate(date);
 }
 
 function addMonths(date: Date, amount: number): Date {
@@ -118,12 +80,6 @@ function monthKey(date: Date): string {
   )}`;
 }
 
-function getMonday(dateKey: string): string {
-  const date = parseKey(dateKey);
-  const weekday = date.getUTCDay();
-  return addDays(dateKey, weekday === 0 ? -6 : 1 - weekday);
-}
-
 function getDaysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 }
@@ -142,9 +98,7 @@ function clampDateToMonth(
 }
 
 function startOfMonth(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)
-  );
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
 }
 
 function longDate(dateKey: string): string {
@@ -161,7 +115,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   tasks,
   habits,
   onAddTask,
-  onUpdateTask,
   onToggleTaskStatus,
   onUpdateHabit,
   density = 'compact',
@@ -225,10 +178,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
       const dayTasks = tasksByDate.get(dateKey) || [];
       const dayHabits = getHabitsForDate(dateKey);
 
-      const completedTasks = dayTasks.filter(
-        (task) => task.isCompleted
-      ).length;
-
+      const completedTasks = dayTasks.filter((task) => task.isCompleted).length;
       const completedHabits = dayHabits.filter((habit) =>
         habit.checkIns.includes(dateKey)
       ).length;
@@ -265,46 +215,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
       return keyFromDate(date);
     });
   }, [cursor]);
-
-  const weekDates = useMemo(() => {
-    const monday = getMonday(selectedDate);
-    return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
-  }, [selectedDate]);
-
-  const multiDayDates = useMemo(
-    () =>
-      Array.from({ length: MULTI_DAY_SPAN }, (_, index) =>
-        addDays(selectedDate, index)
-      ),
-    [selectedDate]
-  );
-
-  const multiWeekDates = useMemo(() => {
-    const start = getMonday(selectedDate);
-    return Array.from({ length: MULTI_WEEK_SPAN * 7 }, (_, index) =>
-      addDays(start, index)
-    );
-  }, [selectedDate]);
-
-  const agendaDates = useMemo(() => {
-    const year = cursor.getUTCFullYear();
-    const month = cursor.getUTCMonth();
-    const days = getDaysInMonth(year, month);
-
-    return Array.from({ length: days }, (_, index) =>
-      keyFromDate(new Date(Date.UTC(year, month, index + 1)))
-    );
-  }, [cursor]);
-
-  const agendaDatesWithItems = useMemo(
-    () =>
-      agendaDates.filter((dateKey) => {
-        const dayTasks = tasksByDate.get(dateKey) || [];
-        const dayHabits = getHabitsForDate(dateKey);
-        return dayTasks.length > 0 || dayHabits.length > 0;
-      }),
-    [agendaDates, tasksByDate, getHabitsForDate]
-  );
 
   const selectDate = useCallback(
     (dateKey: string) => {
@@ -374,119 +284,28 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
     [cursor, selectedDate]
   );
 
-  const navigateDays = useCallback(
-    (amount: number) => {
-      const next = addDays(selectedDate, amount);
-      setSelectedDate(next);
-      setCursor(startOfMonth(parseKey(next)));
-    },
-    [selectedDate]
-  );
-
   const navigatePeriod = useCallback(
     (direction: -1 | 1) => {
-      switch (view) {
-        case 'year':
-          navigateYear(direction);
-          return;
-        case 'month':
-        case 'agenda':
-          navigateMonth(direction);
-          return;
-        case 'week':
-          navigateDays(direction * 7);
-          return;
-        case 'day':
-          navigateDays(direction);
-          return;
-        case 'multi-day':
-          navigateDays(direction * MULTI_DAY_SPAN);
-          return;
-        case 'multi-week':
-          navigateDays(direction * MULTI_WEEK_SPAN * 7);
-          return;
+      if (view === 'year') {
+        navigateYear(direction);
+        return;
       }
+
+      navigateMonth(direction);
     },
-    [view, navigateYear, navigateMonth, navigateDays]
+    [view, navigateYear, navigateMonth]
   );
 
-  const periodLabel = useMemo(() => {
-    switch (view) {
-      case 'year':
-        return String(cursor.getUTCFullYear());
-
-      case 'month':
-        return cursor.toLocaleDateString('en-US', {
-          month: 'long',
-          timeZone: 'UTC',
-        });
-
-      case 'agenda':
-        return cursor.toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
-          timeZone: 'UTC',
-        });
-
-      case 'week': {
-        const first = parseKey(weekDates[0]);
-        const last = parseKey(weekDates[6]);
-
-        return `${first.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          timeZone: 'UTC',
-        })} – ${last.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          timeZone: 'UTC',
-        })}`;
-      }
-
-      case 'day':
-        return longDate(selectedDate);
-
-      case 'multi-day': {
-        const first = parseKey(multiDayDates[0]);
-        const last = parseKey(multiDayDates[multiDayDates.length - 1]);
-
-        return `${first.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          timeZone: 'UTC',
-        })} – ${last.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          timeZone: 'UTC',
-        })}`;
-      }
-
-      case 'multi-week': {
-        const first = parseKey(multiWeekDates[0]);
-        const last = parseKey(multiWeekDates[multiWeekDates.length - 1]);
-
-        return `${first.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          timeZone: 'UTC',
-        })} – ${last.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          timeZone: 'UTC',
-        })}`;
-      }
-    }
-  }, [
-    view,
-    cursor,
-    selectedDate,
-    weekDates,
-    multiDayDates,
-    multiWeekDates,
-  ]);
+  const periodLabel = useMemo(
+    () =>
+      view === 'year'
+        ? String(cursor.getUTCFullYear())
+        : cursor.toLocaleDateString('en-US', {
+            month: 'long',
+            timeZone: 'UTC',
+          }),
+    [view, cursor]
+  );
 
   const addTaskToDate = useCallback(
     async (title: string, dateKey = selectedDate) => {
@@ -503,19 +322,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
       });
     },
     [onAddTask, selectedDate]
-  );
-
-  const moveTask = useCallback(
-    async (task: TaskItem, targetDate: string) => {
-      if (task.taskKey === targetDate) return;
-
-      await onUpdateTask({
-        ...task,
-        taskKey: targetDate,
-        updatedAt: new Date().toISOString(),
-      });
-    },
-    [onUpdateTask]
   );
 
   const toggleHabit = useCallback(
@@ -535,73 +341,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
     },
     [onUpdateHabit, today]
   );
-
-  const moveHabitOccurrence = useCallback(
-    async (
-      habit: HabitItem,
-      sourceDate: string,
-      targetDate: string
-    ) => {
-      if (!targetDate || sourceDate === targetDate) return;
-
-      const skippedDates = new Set(habit.skippedDates || []);
-      const extraDates = new Set(habit.extraDates || []);
-
-      /*
-       * If the source is an extra occurrence, remove that exception.
-       * Otherwise suppress the original recurring occurrence.
-       */
-      if (extraDates.has(sourceDate)) {
-        extraDates.delete(sourceDate);
-      } else {
-        skippedDates.add(sourceDate);
-      }
-
-      /*
-       * If the target date was previously skipped, restore it.
-       * Otherwise create a one-off occurrence when needed.
-       */
-      if (skippedDates.has(targetDate)) {
-        skippedDates.delete(targetDate);
-      }
-
-      if (!isHabitDue({ ...habit, skippedDates: [], extraDates: [] }, targetDate)) {
-        extraDates.add(targetDate);
-      }
-
-      const sourceChecked = habit.checkIns.includes(sourceDate);
-      let checkIns = habit.checkIns.filter((key) => key !== sourceDate);
-
-      if (sourceChecked && targetDate <= today) {
-        checkIns = [...new Set([...checkIns, targetDate])].sort();
-      }
-
-      await onUpdateHabit({
-        ...habit,
-        skippedDates: [...skippedDates].sort(),
-        extraDates: [...extraDates].sort(),
-        checkIns,
-        updatedAt: new Date().toISOString(),
-      });
-    },
-    [onUpdateHabit, today]
-  );
-
-  const commonViewProps: CalendarBaseViewProps = {
-    today,
-    selectedDate,
-    cursor,
-    tasks,
-    habits,
-    tasksByDate,
-    showCompleted,
-    showHabits,
-    onSelectDate: selectDate,
-    onToggleTask: onToggleTaskStatus,
-    onToggleHabit: toggleHabit,
-    getHabitsForDate,
-    getDaySummary,
-  };
 
   return (
     <div
@@ -644,8 +383,11 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
       <div className="relative flex-1 min-h-0 overflow-auto pb-20">
         {view === 'year' && (
           <CalendarYearView
-            {...commonViewProps}
             year={cursor.getUTCFullYear()}
+            today={today}
+            selectedDate={selectedDate}
+            onSelectDate={selectDate}
+            getDaySummary={getDaySummary}
             onOpenMonth={(year, month) => {
               const target = new Date(Date.UTC(year, month, 1));
               setCursor(target);
@@ -658,49 +400,15 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
         {view === 'month' && (
           <CalendarMonthView
-            {...commonViewProps}
             calendarDays={calendarDays}
+            selectedDate={selectedDate}
+            today={today}
             currentMonth={monthKey(cursor)}
-          />
-        )}
-
-        {view === 'week' && (
-          <CalendarWeekView
-            {...commonViewProps}
-            dates={weekDates}
-            onMoveTask={moveTask}
-            onMoveHabit={moveHabitOccurrence}
-          />
-        )}
-
-        {view === 'day' && (
-          <CalendarDayView
-            {...commonViewProps}
-            dateKey={selectedDate}
-            onAddTask={addTaskToDate}
-          />
-        )}
-
-        {view === 'agenda' && (
-          <CalendarAgendaView
-            {...commonViewProps}
-            dates={agendaDatesWithItems}
-          />
-        )}
-
-        {view === 'multi-day' && (
-          <CalendarMultiDayView
-            {...commonViewProps}
-            dates={multiDayDates}
-            onMoveTask={moveTask}
-            onMoveHabit={moveHabitOccurrence}
-          />
-        )}
-
-        {view === 'multi-week' && (
-          <CalendarMultiWeekView
-            {...commonViewProps}
-            dates={multiWeekDates}
+            tasksByDate={tasksByDate}
+            getHabitsForDate={getHabitsForDate}
+            onSelectDate={selectDate}
+            onToggleTask={onToggleTaskStatus}
+            onToggleHabit={toggleHabit}
           />
         )}
       </div>
@@ -775,7 +483,7 @@ const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
           {viewMenuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-10 z-50 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+              className="absolute right-0 top-10 z-50 w-32 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
             >
               {CALENDAR_VIEWS.map((option) => (
                 <button
@@ -810,10 +518,6 @@ const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
 
         <ToolbarIconButton title="Next period" onClick={onNext}>
           <ChevronRight className="w-4 h-4" />
-        </ToolbarIconButton>
-
-        <ToolbarIconButton title="More calendar options">
-          <MoreHorizontal className="w-4 h-4" />
         </ToolbarIconButton>
       </div>
     </header>
@@ -853,7 +557,7 @@ const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = ({
 }) => (
   <nav
     aria-label="Calendar view"
-    className="absolute z-40 bottom-3 left-1/2 -translate-x-1/2 max-w-[96vw] flex items-center rounded-2xl bg-slate-800 p-1 shadow-xl overflow-x-auto"
+    className="absolute z-40 bottom-3 left-1/2 -translate-x-1/2 flex items-center rounded-2xl bg-slate-800 p-1 shadow-xl"
   >
     {CALENDAR_VIEWS.map((option) => {
       const active = value === option.id;
@@ -863,7 +567,7 @@ const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = ({
           key={option.id}
           type="button"
           onClick={() => onChange(option.id)}
-          className={`h-9 px-3 rounded-xl whitespace-nowrap text-xs font-semibold transition ${
+          className={`h-9 px-4 rounded-xl whitespace-nowrap text-xs font-semibold transition ${
             active
               ? 'bg-slate-600 text-white'
               : 'text-slate-300 hover:bg-slate-700 hover:text-white'
@@ -874,182 +578,6 @@ const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = ({
       );
     })}
   </nav>
-);
-
-interface CalendarWeekViewProps extends CalendarBaseViewProps {
-  dates: string[];
-  onMoveTask: (task: TaskItem, targetDate: string) => Promise<void>;
-  onMoveHabit: (
-    habit: HabitItem,
-    sourceDate: string,
-    targetDate: string
-  ) => Promise<void>;
-}
-
-interface CalendarDayViewProps extends CalendarBaseViewProps {
-  dateKey: string;
-  onAddTask: (title: string, dateKey?: string) => Promise<void>;
-}
-
-interface CalendarAgendaViewProps extends CalendarBaseViewProps {
-  dates: string[];
-}
-
-interface CalendarMultiDayViewProps extends CalendarBaseViewProps {
-  dates: string[];
-  onMoveTask: (task: TaskItem, targetDate: string) => Promise<void>;
-  onMoveHabit: (
-    habit: HabitItem,
-    sourceDate: string,
-    targetDate: string
-  ) => Promise<void>;
-}
-
-interface CalendarMultiWeekViewProps extends CalendarBaseViewProps {
-  dates: string[];
-}
-
-const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({ dates }) => (
-  <CalendarPlaceholder
-    title="Week View"
-    description="Typed placeholder. Existing drag/reschedule callbacks are available to the future child component."
-  >
-    <PlaceholderDateGrid dates={dates} />
-  </CalendarPlaceholder>
-);
-
-const CalendarDayView: React.FC<CalendarDayViewProps> = ({
-  dateKey,
-  getDaySummary,
-}) => {
-  const summary = getDaySummary(dateKey);
-
-  return (
-    <CalendarPlaceholder
-      title={longDate(dateKey)}
-      description="Typed Day view placeholder."
-    >
-      <div className="grid grid-cols-3 gap-2 max-w-xl">
-        <SummaryTile label="Tasks" value={summary.tasks.length} />
-        <SummaryTile label="Habits" value={summary.habits.length} />
-        <SummaryTile
-          label="Completion"
-          value={
-            summary.completionRate === null
-              ? '—'
-              : `${summary.completionRate}%`
-          }
-        />
-      </div>
-    </CalendarPlaceholder>
-  );
-};
-
-const CalendarAgendaView: React.FC<CalendarAgendaViewProps> = ({
-  dates,
-  getDaySummary,
-  onSelectDate,
-}) => (
-  <CalendarPlaceholder
-    title="Agenda"
-    description="Typed monthly agenda placeholder."
-  >
-    <div className="space-y-2">
-      {dates.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center text-sm font-semibold text-slate-400">
-          Nothing scheduled this month
-        </div>
-      )}
-
-      {dates.map((dateKey) => {
-        const summary = getDaySummary(dateKey);
-
-        return (
-          <button
-            key={dateKey}
-            type="button"
-            onClick={() => onSelectDate(dateKey)}
-            className="w-full rounded-xl border border-slate-200 p-3 text-left hover:bg-slate-50"
-          >
-            <div className="font-bold">{longDate(dateKey)}</div>
-            <div className="mt-1 text-xs text-slate-500">
-              {summary.tasks.length} task
-              {summary.tasks.length === 1 ? '' : 's'} •{' '}
-              {summary.habits.length} habit
-              {summary.habits.length === 1 ? '' : 's'}
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  </CalendarPlaceholder>
-);
-
-const CalendarMultiDayView: React.FC<CalendarMultiDayViewProps> = ({
-  dates,
-}) => (
-  <CalendarPlaceholder
-    title="Multi-Day"
-    description={`${dates.length}-day planning placeholder.`}
-  >
-    <PlaceholderDateGrid dates={dates} />
-  </CalendarPlaceholder>
-);
-
-const CalendarMultiWeekView: React.FC<CalendarMultiWeekViewProps> = ({
-  dates,
-}) => (
-  <CalendarPlaceholder
-    title="Multi-Week"
-    description={`${Math.ceil(dates.length / 7)}-week planning placeholder.`}
-  >
-    <PlaceholderDateGrid dates={dates} />
-  </CalendarPlaceholder>
-);
-
-interface CalendarPlaceholderProps {
-  title: string;
-  description: string;
-  children?: React.ReactNode;
-}
-
-const CalendarPlaceholder: React.FC<CalendarPlaceholderProps> = ({
-  title,
-  description,
-  children,
-}) => (
-  <section className="p-3 sm:p-5">
-    <div className="mb-4">
-      <h3 className="text-lg font-bold">{title}</h3>
-      <p className="mt-1 text-xs font-medium text-slate-500">{description}</p>
-    </div>
-    {children}
-  </section>
-);
-
-const PlaceholderDateGrid: React.FC<{ dates: string[] }> = ({ dates }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
-    {dates.map((dateKey) => (
-      <div
-        key={dateKey}
-        className="min-h-28 rounded-xl border border-slate-200 bg-white p-3"
-      >
-        <div className="text-xs font-bold">{longDate(dateKey)}</div>
-      </div>
-    ))}
-  </div>
-);
-
-const SummaryTile: React.FC<{
-  label: string;
-  value: React.ReactNode;
-}> = ({ label, value }) => (
-  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-    <div className="text-lg font-black">{value}</div>
-    <div className="mt-0.5 text-[9px] uppercase tracking-wider font-black text-slate-400">
-      {label}
-    </div>
-  </div>
 );
 
 interface QuickAddTaskDialogProps {

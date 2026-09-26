@@ -496,6 +496,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 onDeleteTask={onDeleteTask}
                 onToggleTaskStatus={onToggleTaskStatus}
                 onOpenDayReview={onOpenDayReview}
+                currentDayFormatted={currentCadenceDay.formattedDate}
+                currentDayName={currentCadenceDay.fullDayName}
                 isSyncing={isSyncing}
               />
             </motion.div>
@@ -517,6 +519,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 countdownDaysRemaining={longTermCountdown.daysRemaining}
                 countdownReason={longTermCountdown.reason}
                 countdownTargetLabel={longTermCountdown.targetDateLabel}
+                currentDayFormatted={currentCadenceDay.formattedDate}
+                currentDayName={currentCadenceDay.fullDayName}
                 onOpenCountdown={openCountdownEditor}
               />
             </motion.div>

@@ -289,6 +289,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             >
               <TodayTasksCard
                 tasks={tasks}
+                habits={habits}
                 theme={theme}
                 onAddTask={onAddTask}
                 onUpdateTask={onUpdateTask}

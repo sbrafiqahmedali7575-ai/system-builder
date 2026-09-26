@@ -20,6 +20,11 @@ interface DailyInsightsCardProps {
   theme: DashboardTheme;
 }
 
+function hideProgressBarForHabit(name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+  return normalized.includes('wake up early') && normalized.includes('5:15');
+}
+
 export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   tasks,
   habits,
@@ -373,12 +378,14 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                         {getHabitScheduleLabel(habit)}
                       </span>
                     </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-emerald-500 transition-all"
-                        style={{ width: `${stats.thirty.rate}%` }}
-                      />
-                    </div>
+                    {!hideProgressBarForHabit(habit.name) && (
+                      <div className="mt-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-all"
+                          style={{ width: `${stats.thirty.rate}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-[10px] font-black text-slate-700 dark:text-slate-200">

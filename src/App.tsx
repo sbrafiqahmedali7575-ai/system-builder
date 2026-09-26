@@ -507,6 +507,7 @@ export default function App() {
           onDeleteTask={handleDeleteTask}
           onToggleTaskStatus={handleToggleTaskStatus}
           onSubmitTaskDay={handleSubmitTaskDay}
+          onOpenDayReview={() => setIsDayReviewOpen(true)}
           isSyncing={isSyncing}
         />
       </main>

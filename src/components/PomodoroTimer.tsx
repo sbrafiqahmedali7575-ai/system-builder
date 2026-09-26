@@ -18,12 +18,10 @@ import {
 } from 'lucide-react';
 
 const DEFAULT_MINUTES = 30;
-const SHORT_BREAK_MINUTES = 5;
-const LONG_BREAK_MINUTES = 15;
 const MAX_CUSTOM_MINUTES = 180;
 const ALARM_SECONDS = 60;
 
-type TimerMode = 'focus' | 'short' | 'long' | 'custom';
+type TimerMode = 'focus' | 'custom';
 
 interface PomodoroTimerProps {
   className?: string;
@@ -190,14 +188,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     )}`;
   }, [remainingSeconds]);
 
-  const modeLabel =
-    mode === 'focus'
-      ? 'Focus Session'
-      : mode === 'short'
-      ? 'Short Break'
-      : mode === 'long'
-      ? 'Long Break'
-      : 'Custom Session';
+  const modeLabel = mode === 'focus' ? 'Focus Session' : 'Custom Session';
 
   const toggleTimer = () => {
     stopAlarm();
@@ -232,16 +223,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     setIsRunning(false);
     setRemainingSeconds(durationSeconds);
   }, [durationSeconds, stopAlarm]);
-
-  const setPreset = (nextMode: TimerMode, minutes: number) => {
-    stopAlarm();
-    endAtRef.current = null;
-    setIsRunning(false);
-    setMode(nextMode);
-    setDurationSeconds(minutes * 60);
-    setRemainingSeconds(minutes * 60);
-    setCustomMinutes(String(minutes));
-  };
 
   const openCustom = () => {
     stopAlarm();
@@ -463,70 +444,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             </div>
           </div>
 
-          <div className="mt-2 grid grid-cols-4 gap-1">
-            {[
-              {
-                id: 'focus' as TimerMode,
-                label: 'Focus',
-                minutes: DEFAULT_MINUTES,
-              },
-              {
-                id: 'short' as TimerMode,
-                label: 'Short',
-                minutes: SHORT_BREAK_MINUTES,
-              },
-              {
-                id: 'long' as TimerMode,
-                label: 'Long',
-                minutes: LONG_BREAK_MINUTES,
-              },
-            ].map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => setPreset(preset.id, preset.minutes)}
-                className={`min-w-0 rounded-lg border px-1 py-1.5 text-center transition-colors ${
-                  mode === preset.id
-                    ? 'border-emerald-500 bg-emerald-500 text-white'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                }`}
-              >
-                <div className="truncate text-[8px] font-black">
-                  {preset.label}
-                </div>
-                <div
-                  className={`mt-0.5 text-[7px] font-bold ${
-                    mode === preset.id
-                      ? 'text-emerald-50'
-                      : 'text-slate-400'
-                  }`}
-                >
-                  {preset.minutes}m
-                </div>
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={openCustom}
-              className={`min-w-0 rounded-lg border px-1 py-1.5 text-center transition-colors ${
-                mode === 'custom'
-                  ? 'border-emerald-500 bg-emerald-500 text-white'
-                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-              }`}
-            >
-              <div className="truncate text-[8px] font-black">Custom</div>
-              <div
-                className={`mt-0.5 text-[7px] font-bold ${
-                  mode === 'custom' ? 'text-emerald-50' : 'text-slate-400'
-                }`}
-              >
-                {mode === 'custom'
-                  ? `${Math.round(durationSeconds / 60)}m`
-                  : 'Set'}
-              </div>
-            </button>
-          </div>
         </div>
       ) : (
         <div

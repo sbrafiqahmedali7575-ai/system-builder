@@ -241,13 +241,22 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             {' – '}
             {parseKey(weekDates[6]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
           </div>
-          <button
-            type="button"
-            onClick={() => setWeekAnchor(today)}
-            className="px-3 py-1.5 rounded-lg border border-[#dfd1b6] text-xs font-black hover:bg-black/5"
-          >
-            This Week
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setWeekAnchor(today)}
+              className="px-3 py-1.5 rounded-lg border border-[#dfd1b6] text-xs font-black hover:bg-black/5"
+            >
+              This Week
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekAnchor(addDays(weekAnchor, 7))}
+              className="px-3 py-1.5 rounded-lg border border-[#dfd1b6] text-xs font-black hover:bg-black/5"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

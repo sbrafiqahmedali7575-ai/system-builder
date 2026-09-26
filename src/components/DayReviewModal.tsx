@@ -13,8 +13,8 @@ import {
   areDatesEqual,
   CONFIGURED_TIMEZONE,
   formatCalendarDate,
-  getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { isHabitDue } from '../utils/habitUtils';
 
 interface DayReviewModalProps {
@@ -45,7 +45,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
   onSubmitTaskDay,
 }) => {
   const isDark = theme === 'dark';
-  const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const todayDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const todayTasks = useMemo(
     () => tasks.filter((task) => areDatesEqual(task.taskKey, todayDateKey)),
     [tasks, todayDateKey]

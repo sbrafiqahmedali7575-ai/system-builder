@@ -42,6 +42,8 @@ type HabitDraft = {
 };
 
 const COLORS: HabitItem['color'][] = ['blue', 'emerald', 'amber', 'rose', 'violet'];
+const WEEKLY_TARGET_PERCENTAGE = 80;
+const FULL_WEEK_PERCENT_CAPACITY = 700;
 
 const colorClasses: Record<
   HabitItem['color'],
@@ -144,6 +146,53 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
     (best, habit) => Math.max(best, getHabitStats(habit, today).currentStreak),
     0
   );
+
+
+  const achievedWeeks = useMemo(() => {
+    if (habits.length === 0) return 0;
+
+    const activityDates = habits.flatMap((habit) => [
+      ...(habit.checkIns || []),
+      habit.createdAt?.slice(0, 10) || today,
+    ]);
+    const firstActivity = activityDates
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))[0];
+
+    if (!firstActivity) return 0;
+
+    let weekStart = getMonday(firstActivity);
+    const currentWeekStart = getMonday(today);
+    let achieved = 0;
+    let guard = 0;
+
+    while (weekStart <= currentWeekStart && guard < 5200) {
+      const dailyRates = Array.from({ length: 7 }, (_, index) => {
+        const dateKey = addHabitDays(weekStart, index);
+        if (dateKey > today) return 0;
+
+        const due = habits.filter((habit) => isHabitDue(habit, dateKey));
+        if (due.length === 0) return 0;
+
+        const completed = due.filter((habit) =>
+          habit.checkIns.includes(dateKey)
+        ).length;
+
+        return (completed / due.length) * 100;
+      });
+
+      const weeklyScore =
+        (dailyRates.reduce((sum, rate) => sum + rate, 0) /
+          FULL_WEEK_PERCENT_CAPACITY) *
+        100;
+
+      if (weeklyScore >= WEEKLY_TARGET_PERCENTAGE) achieved += 1;
+      weekStart = addHabitDays(weekStart, 7);
+      guard += 1;
+    }
+
+    return achieved;
+  }, [habits, today]);
 
   const openAdd = () => {
     setEditingHabitId(null);
@@ -343,14 +392,15 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
 
         <div className="rounded-xl border border-violet-200/80 bg-violet-50/60 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wider font-black text-violet-600">
-            Active habits
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-violet-600">
+            <Trophy className="w-3 h-3" />
+            Achieved Weeks
           </div>
           <div className="mt-1 text-lg font-black text-slate-900">
-            {habits.length}
+            {achievedWeeks}
           </div>
           <div className="text-[9px] font-bold text-slate-500">
-            tracked habits
+            weeks at {WEEKLY_TARGET_PERCENTAGE}%+ target
           </div>
         </div>
       </div>

@@ -605,7 +605,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ) : (
         <div className="relative pl-0.5 sm:pl-1">
           <AnimatePresence initial={false}>
-            {sortedTasks.map((task) => {
+            {sortedTasks.map((task, index) => {
               const isTaskCompleted = task.isCompleted;
               const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
               const timelineAccent = getTaskTimelineAccent(task.matrixQuadrant);

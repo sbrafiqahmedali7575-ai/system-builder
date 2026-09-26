@@ -527,6 +527,11 @@ export default function App() {
     const allCompleted = allTasksCompleted && allHabitsCompleted;
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
+    const responseSource: DailyRecord['responseSource'] =
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('review') === '1'
+        ? 'EMAIL'
+        : 'APP';
     const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
     const existingRecord = records.find((record) =>
       areDatesEqual(record.date, formattedDate)
@@ -541,7 +546,7 @@ export default function App() {
         change: 0,
         summary,
         responseSubmittedAt: nowIso,
-        responseSource: 'APP',
+        responseSource,
         updatedAt: nowIso,
       };
 
@@ -573,7 +578,7 @@ export default function App() {
         summary,
         notes: 'Submitted from current-day Review checklist',
         responseSubmittedAt: nowIso,
-        responseSource: 'APP',
+        responseSource,
         updatedAt: nowIso,
       };
 

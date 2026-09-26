@@ -769,10 +769,9 @@ export function startBackgroundScheduler(): void {
       }
 
       const scheduled = settings.scheduledTime || '21:00';
-      const [schedH, schedM] = scheduled.split(':').map(Number);
       const [curH, curM] = timeStr.split(':').map(Number);
 
-      const schedMins = schedH * 60 + schedM;
+      const schedMins = parseScheduledMinutes(scheduled);
       const curMins = curH * 60 + curM;
 
       // Only run if current time is at or past scheduled time.

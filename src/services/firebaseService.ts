@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import {
   getFirestore,
   collection,
@@ -7,6 +8,7 @@ import {
   deleteDoc,
   onSnapshot,
   getDocs,
+  getDocFromServer,
   writeBatch,
   Unsubscribe,
 } from 'firebase/firestore';
@@ -24,6 +26,71 @@ export const db =
   firebaseConfig.firestoreDatabaseId !== '(default)'
     ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
     : getFirestore(app);
+
+export const auth = getAuth(app);
+
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error('Please check your Firebase configuration.');
+    }
+  }
+}
+testConnection();
+
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+export function handleFirestoreError(
+  error: unknown,
+  operationType: OperationType,
+  path: string | null
+): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo:
+        auth.currentUser?.providerData?.map((provider) => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || [],
+    },
+    operationType,
+    path,
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 const RECORDS_COLLECTION = 'records';
 const TASKS_COLLECTION = 'tasks';
@@ -524,31 +591,18 @@ export function subscribeToHabits(
     },
     (err) => {
       console.error('Firestore habits real-time subscription error:', err);
-      if (onError) onError(err);
+      try {
+        handleFirestoreError(err, OperationType.GET, HABITS_COLLECTION);
+      } catch (wrapped) {
+        if (onError) onError(wrapped instanceof Error ? wrapped : new Error(String(wrapped)));
+      }
     }
   );
 }
 
 export async function addHabitToCloud(habit: HabitItem): Promise<void> {
-  await setDoc(doc(db, HABITS_COLLECTION, habit.id), {
-    id: habit.id,
-    name: habit.name,
-    emoji: habit.emoji,
-    frequency: habit.frequency,
-    repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
-    skippedDates: habit.skippedDates || [],
-    extraDates: habit.extraDates || [],
-    color: habit.color,
-    checkIns: habit.checkIns || [],
-    createdAt: habit.createdAt,
-    updatedAt: new Date().toISOString(),
-  });
-}
-
-export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
-  await setDoc(
-    doc(db, HABITS_COLLECTION, habit.id),
-    {
+  try {
+    await setDoc(doc(db, HABITS_COLLECTION, habit.id), {
       id: habit.id,
       name: habit.name,
       emoji: habit.emoji,
@@ -560,13 +614,42 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
       checkIns: habit.checkIns || [],
       createdAt: habit.createdAt,
       updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `${HABITS_COLLECTION}/${habit.id}`);
+  }
+}
+
+export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
+  try {
+    await setDoc(
+      doc(db, HABITS_COLLECTION, habit.id),
+      {
+        id: habit.id,
+        name: habit.name,
+        emoji: habit.emoji,
+        frequency: habit.frequency,
+        repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
+        skippedDates: habit.skippedDates || [],
+        extraDates: habit.extraDates || [],
+        color: habit.color,
+        checkIns: habit.checkIns || [],
+        createdAt: habit.createdAt,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `${HABITS_COLLECTION}/${habit.id}`);
+  }
 }
 
 export async function deleteHabitFromCloud(habitId: string): Promise<void> {
-  await deleteDoc(doc(db, HABITS_COLLECTION, habitId));
+  try {
+    await deleteDoc(doc(db, HABITS_COLLECTION, habitId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `${HABITS_COLLECTION}/${habitId}`);
+  }
 }
 
 /**

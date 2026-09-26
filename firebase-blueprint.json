@@ -85,6 +85,25 @@
         "sentAt": { "type": "string", "description": "ISO timestamp of when the reminder was sent" }
       },
       "required": ["id", "dateKey", "formattedDate", "recipient", "status", "sentAt"]
+    },
+    "Habit": {
+      "title": "HabitItem",
+      "description": "A recurring habit with schedule frequencies and check-ins.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the habit" },
+        "name": { "type": "string", "description": "Habit name or objective" },
+        "emoji": { "type": "string", "description": "Icon emoji representing the habit" },
+        "frequency": { "type": "string", "description": "Frequency: daily, weekdays, or custom" },
+        "repeatDays": { "type": "array", "description": "Days of week for custom frequency (0-6)" },
+        "skippedDates": { "type": "array", "description": "Skipped dates in YYYY-MM-DD" },
+        "extraDates": { "type": "array", "description": "Extra active dates in YYYY-MM-DD" },
+        "color": { "type": "string", "description": "Habit display color tag" },
+        "checkIns": { "type": "array", "description": "Dates where habit was checked in" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["id", "name", "frequency", "color", "checkIns", "createdAt"]
     }
   },
   "firestore": {
@@ -95,6 +114,10 @@
     "/tasks/{taskId}": {
       "schema": "Task",
       "description": "Global shared tasks of the day synchronized across all devices."
+    },
+    "/habits/{habitId}": {
+      "schema": "Habit",
+      "description": "Global shared habit tracking items and check-in records."
     },
     "/notification_settings/{settingId}": {
       "schema": "NotificationSettings",

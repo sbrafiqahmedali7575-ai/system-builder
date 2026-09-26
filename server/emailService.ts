@@ -216,14 +216,12 @@ export function buildDailyConfirmationEmail(
                       <tr>
                         <td style="vertical-align:middle;">
                           <a href="${baseUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#0f172a;">
-                            <span style="display:inline-flex;width:36px;height:36px;border-radius:11px;background:#2563eb;color:#ffffff;align-items:center;justify-content:center;font-size:18px;font-weight:900;line-height:36px;text-align:center;">S</span>
+                            <span style="display:inline-block;width:36px;height:36px;border-radius:11px;background:#2563eb;color:#ffffff;text-align:center;vertical-align:middle;padding-top:7px;box-sizing:border-box;">
+                              <span style="display:block;width:18px;height:5px;margin:0 auto 2px;border:2px solid #ffffff;border-radius:50%;box-sizing:border-box;"></span>
+                              <span style="display:block;width:18px;height:5px;margin:0 auto 2px;border-left:2px solid #ffffff;border-right:2px solid #ffffff;border-bottom:2px solid #ffffff;border-radius:0 0 9px 9px;box-sizing:border-box;"></span>
+                              <span style="display:block;width:18px;height:5px;margin:0 auto;border-left:2px solid #ffffff;border-right:2px solid #ffffff;border-bottom:2px solid #ffffff;border-radius:0 0 9px 9px;box-sizing:border-box;"></span>
+                            </span>
                             <span style="font-size:18px;font-weight:900;color:#0f172a;">System Builder</span>
-                          </a>
-                        </td>
-                        <td style="padding-left:10px;vertical-align:middle;">
-                          <a href="${reviewUrl}" target="_blank" title="Review current day" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;">
-                            <span style="font-size:16px;line-height:1;">☑</span>
-                            <span>Review</span>
                           </a>
                         </td>
                       </tr>
@@ -259,9 +257,19 @@ export function buildDailyConfirmationEmail(
                 </div>
               </div>
 
-              <div class="email-section-title" style="margin:0 0 8px;color:#000000;font-size:15px;font-weight:900;">
-                Current Day Tasks &amp; Status
-              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 8px;">
+                <tr>
+                  <td class="email-section-title" style="color:#000000;font-size:15px;font-weight:900;vertical-align:middle;">
+                    Current Day Tasks &amp; Status
+                  </td>
+                  <td align="right" style="vertical-align:middle;padding-left:10px;">
+                    <a href="${reviewUrl}" target="_self" title="Review current day tasks" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;white-space:nowrap;">
+                      <span style="font-size:16px;line-height:1;">☑</span>
+                      <span>Review Tasks</span>
+                    </a>
+                  </td>
+                </tr>
+              </table>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
                 ${taskRows}
               </table>
@@ -293,6 +301,9 @@ Date: ${details.taskDate}
 Overall Status: ${progressPercent}% (${completedCount}/${tasks.length} completed)
 
 ${taskText}
+
+Review Tasks:
+${reviewUrl}
 
 Open System Builder:
 ${baseUrl}

@@ -83,7 +83,10 @@ export default function App() {
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState<boolean>(false);
-  const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(false);
+  const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('review') === '1';
+  });
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -405,6 +408,17 @@ export default function App() {
     return allCompleted ? 'COMPLETED' : 'NOT_COMPLETED';
   };
 
+  const handleCloseDayReview = () => {
+    setIsDayReviewOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('review')) {
+        url.searchParams.delete('review');
+        window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+      }
+    }
+  };
+
   const handleReturnToDashboard = () => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/');
@@ -492,7 +506,7 @@ export default function App() {
         tasks={tasks}
         theme={theme}
         isSyncing={isSyncing}
-        onClose={() => setIsDayReviewOpen(false)}
+        onClose={handleCloseDayReview}
         onToggleTaskStatus={handleToggleTaskStatus}
         onSubmitTaskDay={handleSubmitTaskDay}
       />

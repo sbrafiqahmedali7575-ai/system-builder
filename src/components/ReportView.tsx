@@ -310,10 +310,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               className="min-w-0 min-h-0 h-full flex flex-col"
             >
               <DailyInsightsCard
-                tasks={tasks}
-                habits={habits}
                 theme={theme}
-                currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
                 overallCompletionPercentage={allKpis.completionRate}
                 completedDays={allKpis.completedDays}
                 totalDays={allKpis.totalDays}

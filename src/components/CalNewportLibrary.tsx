@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
-  BookMarked,
   BookOpen,
   CheckCircle2,
   Coffee,
@@ -204,69 +203,14 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                     : 'border-black/10 hover:bg-black/5'
                 }`}
               >
-                {index + 1}. {book.shortTitle}
+                {index + 1}. {book.id === 'so-good' ? book.title : book.shortTitle}
               </button>
             ))}
           </div>
         </div>
       </header>
 
-      <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-5 lg:gap-8">
-        <aside className="lg:sticky lg:top-[122px] self-start space-y-4">
-          <section className={`rounded-2xl border p-3.5 ${cardClasses}`}>
-            <div className="flex items-center gap-2 mb-3">
-              <BookMarked className="w-4 h-4 text-blue-600" />
-              <h2 className="text-sm font-black">All Books</h2>
-            </div>
-            <div className="space-y-1.5">
-              {CAL_NEWPORT_BOOKS.map((book, index) => (
-                <button
-                  key={book.id}
-                  type="button"
-                  onClick={() => selectBook(book)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-left flex items-center gap-3 transition-colors ${
-                    activeBookId === book.id
-                      ? 'bg-blue-600 text-white'
-                      : readerTone === 'night'
-                      ? 'hover:bg-white/5'
-                      : 'hover:bg-black/5'
-                  }`}
-                >
-                  <span
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
-                      activeBookId === book.id
-                        ? 'bg-white/15'
-                        : readerTone === 'night'
-                        ? 'bg-white/5'
-                        : 'bg-black/5'
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-xs font-black truncate">{book.shortTitle}</span>
-                    <span
-                      className={`block text-[10px] font-semibold truncate ${
-                        activeBookId === book.id ? 'text-blue-100' : mutedText
-                      }`}
-                    >
-                      {book.focus}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div
-              className={`mt-3 pt-3 border-t text-[10px] leading-relaxed font-semibold ${
-                readerTone === 'night' ? 'border-[#343a40] text-slate-500' : 'border-black/10 text-slate-500'
-              }`}
-            >
-              Curated five-title System Builder library. The author’s official bibliography contains additional publications; this reader follows the five titles selected for this app.
-            </div>
-          </section>
-        </aside>
-
+      <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7">
         <main className="min-w-0">
           <article
             className={`rounded-[24px] border shadow-[0_20px_55px_rgba(15,23,42,0.08)] overflow-hidden ${cardClasses}`}

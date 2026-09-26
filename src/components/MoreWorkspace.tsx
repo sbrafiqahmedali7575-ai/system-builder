@@ -5,6 +5,7 @@ import {
   Coffee,
   Grid2X2,
   Repeat2,
+  Wrench,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import { CalendarWorkspace } from './CalendarWorkspace';
@@ -70,13 +71,18 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             </button>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">•••</span>
-                <h1 className="text-lg sm:text-xl font-black tracking-tight truncate">
-                  More
+              <div
+                aria-current="page"
+                className="inline-flex items-center gap-2 rounded-xl border border-blue-600 bg-blue-600 px-3 py-1.5 text-white shadow-sm ring-1 ring-blue-300/70"
+                title="Tools — current page"
+              >
+                <Wrench className="w-4 h-4" />
+                <h1 className="text-sm sm:text-base font-black tracking-tight">
+                  Tools
                 </h1>
+                <span className="w-1.5 h-1.5 rounded-full bg-white/90" aria-hidden="true" />
               </div>
-              <p className="text-[11px] sm:text-xs font-semibold text-[#766653]">
+              <p className="mt-1 text-[11px] sm:text-xs font-semibold text-[#766653]">
                 Planning & consistency tools
                 {isSyncing ? ' • Syncing…' : ''}
               </p>

@@ -338,7 +338,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -2 }}
-      className={`system-task-card ui-motion-section p-2 sm:p-2.5 rounded-2xl border flex-1 flex flex-col transition-all ${
+      className={`system-task-card ui-motion-section h-full min-h-0 overflow-hidden p-2 rounded-2xl border flex-1 flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
@@ -347,7 +347,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           1. CARD HEADER
       ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800">
+      <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
         <div className="flex items-center space-x-1.5">
           <div
             className="shrink-0"
@@ -470,8 +470,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           4. TASK LIST (Incomplete tasks first, Completed tasks below)
              Or Empty State when no tasks planned
       ───────────────────────────────────────────────────────────── */}
+      <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
       {totalTasksCount === 0 ? (
-        <div className="py-5 px-2 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+        <div className="py-4 px-2 text-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
           <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
             <CalendarDays className="w-5 h-5" />
           </div>
@@ -491,7 +492,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </button>
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <AnimatePresence initial={false}>
             {sortedTasks.map((task) => {
               const isTaskCompleted = task.isCompleted;
@@ -506,7 +507,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   transition={{ duration: 0.2 }}
                   whileHover={{ y: -2, scale: 1.005 }}
                   whileTap={{ scale: 0.995 }}
-                  className={`group ui-motion-card flex items-center justify-between p-2 sm:p-2 rounded-2xl border transition-all ${
+                  className={`group ui-motion-card flex items-center justify-between p-1.5 sm:p-2 rounded-xl border transition-all ${
                     isTaskCompleted
                       ? isDark
                         ? 'bg-slate-950/40 border-slate-800/60 opacity-85'
@@ -613,6 +614,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </AnimatePresence>
         </div>
       )}
+      </div>
 
       {/* ─────────────────────────────────────────────────────────────
           5. "ENTER TASKS" PANEL

@@ -3,14 +3,16 @@ import {
   ArrowLeft,
   CalendarDays,
   Grid2X2,
+  ListChecks,
   Repeat2,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import { CalendarWorkspace } from './CalendarWorkspace';
 import { EisenhowerMatrix } from './EisenhowerMatrix';
 import { HabitTracker } from './HabitTracker';
+import { TaskTracker } from './TaskTracker';
 
-type MoreTab = 'eisenhower' | 'habits' | 'calendar';
+type MoreTab = 'eisenhower' | 'habits' | 'tasks' | 'calendar';
 
 interface MoreWorkspaceProps {
   theme: DashboardTheme;
@@ -35,6 +37,7 @@ const TABS: Array<{
 }> = [
   { id: 'eisenhower', label: 'Eisenhower Matrix', icon: Grid2X2 },
   { id: 'habits', label: 'Habit Tracker', icon: Repeat2 },
+  { id: 'tasks', label: 'Task Tracker', icon: ListChecks },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
 ];
 
@@ -94,6 +97,8 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                   ? 'Matrix'
                   : tab.id === 'habits'
                   ? 'Habits'
+                  : tab.id === 'tasks'
+                  ? 'Tasks'
                   : 'Calendar';
 
               return (
@@ -166,6 +171,24 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               onAddHabit={onAddHabit}
               onUpdateHabit={onUpdateHabit}
               onDeleteHabit={onDeleteHabit}
+              density="compact"
+            />
+            </div>
+          )}
+
+          {activeTab === 'tasks' && (
+            <div
+              id="tools-panel-tasks"
+              role="tabpanel"
+              className="h-full"
+              aria-labelledby="tools-tab-tasks"
+            >
+            <TaskTracker
+              tasks={tasks}
+              onAddTask={onAddTask}
+              onUpdateTask={onUpdateTask}
+              onDeleteTask={onDeleteTask}
+              onToggleTaskStatus={onToggleTaskStatus}
               density="compact"
             />
             </div>

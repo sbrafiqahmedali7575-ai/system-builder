@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Award, Hourglass, Repeat2, Target } from 'lucide-react';
+import { Award, Hourglass, Repeat2, Target } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -41,14 +41,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-
-  const overdueTasks = useMemo(
-    () =>
-      tasks
-        .filter((task) => !task.isCompleted && task.taskKey < today)
-        .sort((a, b) => a.taskKey.localeCompare(b.taskKey)),
-    [tasks, today]
-  );
 
   const weekTaskTrend = useMemo(() => {
     const todayDate = parseHabitDateKey(today);
@@ -154,20 +146,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
-      <div className="shrink-0 grid grid-cols-3 gap-1 mb-1.5">
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
-            <AlertTriangle className="w-3 h-3 text-amber-500" />
-            Overdue
-          </div>
-          <div className={`mt-0.5 text-sm font-black ${
-            overdueTasks.length > 0
-              ? 'text-amber-600 dark:text-amber-400'
-              : 'text-slate-800 dark:text-slate-100'
-          }`}>
-            {overdueTasks.length}
-          </div>
-        </div>
+      <div className="shrink-0 grid grid-cols-2 gap-1 mb-1.5">
         <div
           className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-2 py-1.5"
           title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}

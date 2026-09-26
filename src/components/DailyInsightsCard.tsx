@@ -41,7 +41,9 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
       todayTasks
         .filter(
           (task) =>
-            !task.isCompleted && task.matrixQuadrant === 'urgent-important'
+            !task.isCompleted &&
+            (task.matrixQuadrant === 'urgent-important' ||
+              (!task.matrixQuadrant && task.priority === 'High'))
         )
         .slice(0, 4),
     [todayTasks]

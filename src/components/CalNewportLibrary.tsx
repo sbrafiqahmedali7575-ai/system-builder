@@ -4,8 +4,11 @@ import {
   BookMarked,
   BookOpen,
   CheckCircle2,
-  Coffee,  Lightbulb,
-  Minus,  Plus,  Target,
+  Coffee,
+  Lightbulb,
+  Minus,
+  Plus,
+  Target,
 } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import {
@@ -274,12 +277,6 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               }`}
             >
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                {activeBook.favorite && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 text-rose-600 px-2.5 py-1 text-[11px] font-black">
-                    <Heart className="w-3 h-3 fill-current" />
-                    Favorite
-                  </span>
-                )}
                 <span className="rounded-full bg-blue-500/10 text-blue-600 px-2.5 py-1 text-[11px] font-black">
                   {activeBook.year}
                 </span>

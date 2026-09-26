@@ -605,11 +605,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ) : (
         <div className="relative pl-0.5 sm:pl-1">
           <AnimatePresence initial={false}>
-            {sortedTasks.map((task, index) => {
+            {sortedTasks.map((task) => {
               const isTaskCompleted = task.isCompleted;
               const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
               const timelineAccent = getTaskTimelineAccent(task.matrixQuadrant);
-              const timelineLabel = task.timeEstimate?.trim() || `Step ${index + 1}`;
               const priorityLabel = task.priority || 'Normal';
               const isLastTask = index === sortedTasks.length - 1;
 
@@ -621,7 +620,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="relative grid grid-cols-[48px_minmax(0,1fr)] sm:grid-cols-[58px_minmax(0,1fr)] gap-2"
+                  className="relative grid grid-cols-[22px_minmax(0,1fr)] sm:grid-cols-[24px_minmax(0,1fr)] gap-2"
                 >
                   {/* Timeline rail */}
                   <div className="relative flex flex-col items-center">
@@ -636,9 +635,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         aria-hidden="true"
                       />
                     )}
-                    <span className="mt-1 max-w-[54px] truncate text-center text-[9px] font-black font-mono text-slate-400">
-                      {timelineLabel}
-                    </span>
                   </div>
 
                   {/* Task row */}

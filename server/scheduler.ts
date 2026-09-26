@@ -23,6 +23,7 @@ export interface NotificationSettingsData {
 const SETTINGS_COLLECTION = 'notification_settings';
 const SETTINGS_DOC_ID = 'daily-settings';
 const DAILY_REMINDERS_SENT_COLLECTION = 'daily_reminders_sent';
+const SMTP_RETRY_BACKOFF_MS = 2 * 60 * 1000;
 
 export const DEFAULT_SETTINGS: NotificationSettingsData = {
   id: SETTINGS_DOC_ID,
@@ -424,6 +425,17 @@ export async function triggerDailyReminder(options?: {
                 return { acquired: false, alreadySent: true, inProgress: true, data };
               }
             }
+            if (data.status === 'failed' && data.retryAfter) {
+              const retryAfterMs = new Date(data.retryAfter).getTime();
+              if (Number.isFinite(retryAfterMs) && retryAfterMs > Date.now()) {
+                return {
+                  acquired: false,
+                  alreadySent: false,
+                  retryPending: true,
+                  data,
+                };
+              }
+            }
           }
 
           // Also check settings.lastSentDate
@@ -450,6 +462,27 @@ export async function triggerDailyReminder(options?: {
 
         if (!lockResult.acquired) {
           const existing = lockResult.data || {};
+
+          if (lockResult.retryPending) {
+            const retryAfter = existing.retryAfter || '';
+            console.log(
+              `[Scheduler] SMTP retry for ${formattedDate} is cooling down until ${retryAfter}.`
+            );
+            return {
+              success: false,
+              alreadySent: false,
+              message: `SMTP retry is scheduled for ${retryAfter}.`,
+              date: formattedDate,
+              taskId: existing.taskId || '',
+              recipient: existing.recipient || targetRecipient,
+              messageId: existing.messageId || '',
+              taskName: existing.taskName,
+              sentAt: existing.sentAt || existing.lockedAt,
+              status: 'retry_pending',
+              error: existing.error || 'Previous SMTP attempt failed.',
+            };
+          }
+
           console.log(
             `[Scheduler] Reminder for ${formattedDate} (${dateKey}) is already sent or in-flight. Skipping duplicate email.`
           );
@@ -463,7 +496,7 @@ export async function triggerDailyReminder(options?: {
             messageId: existing.messageId || '',
             taskName: existing.taskName,
             sentAt: existing.sentAt || existing.lockedAt,
-            status: existing.status || 'delivered',
+            status: existing.status || 'in_progress',
           };
         }
       } catch (err) {
@@ -495,27 +528,50 @@ export async function triggerDailyReminder(options?: {
     // 4. Send daily confirmation email
     const sendResult = await sendDailyConfirmationEmail(taskDetails, undefined, targetRecipient);
 
-    // 5. Handle failed send
-    if (!sendResult.success && sendResult.status === 'failed') {
-      const cleanError = sanitizeError(sendResult.error || 'Failed to dispatch email via SMTP provider.');
-      // Update lock document to failed so it can be retried if needed
+    // 5. Any result other than confirmed SMTP delivery is a failed attempt.
+    // Never advance lastSentDate or seal the deduplication record in this branch.
+    if (!sendResult.success || sendResult.status !== 'delivered') {
+      const cleanError = sanitizeError(
+        sendResult.error ||
+          `Email provider did not confirm delivery (status: ${sendResult.status}).`
+      );
+      const failedAt = new Date();
+      const retryAfter = new Date(
+        failedAt.getTime() + SMTP_RETRY_BACKOFF_MS
+      ).toISOString();
+
       try {
         await setDoc(
           doc(db, DAILY_REMINDERS_SENT_COLLECTION, dateKey),
-          { status: 'failed', error: cleanError, updatedAt: new Date().toISOString() },
+          {
+            status: 'failed',
+            providerStatus: sendResult.status,
+            error: cleanError,
+            lastAttemptAt: failedAt.toISOString(),
+            retryAfter,
+            updatedAt: failedAt.toISOString(),
+          },
           { merge: true }
         );
       } catch (lockReleaseErr) {
-        console.warn('Failed to release lock after email failure:', lockReleaseErr);
+        console.warn(
+          'Failed to persist retry state after email failure:',
+          sanitizeError(lockReleaseErr)
+        );
       }
+
       return {
         success: false,
+        alreadySent: false,
         date: formattedDate,
         taskId: taskDetails.taskId || taskDetails.recordId,
         recipient: targetRecipient,
         taskName: taskDetails.taskName,
-        status: 'failed',
+        status: sendResult.status === 'pending_configuration'
+          ? 'pending_configuration'
+          : 'failed',
         error: cleanError,
+        message: `Retry available after ${retryAfter}.`,
       };
     }
 
@@ -559,12 +615,23 @@ export async function triggerDailyReminder(options?: {
 
   if (!force) {
     activeDispatchPromises.set(dateKey, dispatchPromise);
-    dispatchPromise.finally(() => {
-      // Keep in cache for 2 minutes to prevent rapid successive double calls
-      setTimeout(() => {
+    dispatchPromise.then(
+      (result) => {
+        if (!result.success) {
+          // Failure retry timing is controlled by the Firestore retryAfter value.
+          activeDispatchPromises.delete(dateKey);
+          return;
+        }
+
+        // Keep successful/in-flight results briefly cached to collapse duplicate triggers.
+        setTimeout(() => {
+          activeDispatchPromises.delete(dateKey);
+        }, 120000);
+      },
+      () => {
         activeDispatchPromises.delete(dateKey);
-      }, 120000);
-    });
+      }
+    );
   }
 
   return await dispatchPromise;
@@ -643,14 +710,27 @@ export function startBackgroundScheduler(): void {
       const schedMins = schedH * 60 + schedM;
       const curMins = curH * 60 + curM;
 
-      // Only run if current time is at or past scheduled time
+      // Only run if current time is at or past scheduled time.
+      // Mark the local date complete only after a confirmed delivery; failures remain retryable.
       if (curMins >= schedMins) {
-        // Record date immediately to prevent repeating checks during async execution
-        localLastDispatchedDate = dateKey;
         const result = await triggerDailyReminder({ force: false });
-        if (result.success && !result.alreadySent) {
-          console.log(
-            `[Background Scheduler] Auto-dispatched daily reminder for ${formattedDate} (${timeStr} IST) to ${result.recipient}`
+
+        if (
+          result.success &&
+          (result.status === 'delivered' || result.status === 'sent')
+        ) {
+          localLastDispatchedDate = dateKey;
+
+          if (!result.alreadySent) {
+            console.log(
+              `[Background Scheduler] Auto-dispatched daily reminder for ${formattedDate} (${timeStr} IST) to ${result.recipient}`
+            );
+          }
+        } else if (!result.success) {
+          console.warn(
+            `[Background Scheduler] Reminder attempt failed for ${formattedDate}; retry remains enabled. ${sanitizeError(
+              result.error || result.message || 'Unknown SMTP failure'
+            )}`
           );
         }
       }

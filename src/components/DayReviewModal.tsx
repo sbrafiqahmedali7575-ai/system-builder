@@ -122,6 +122,30 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     }
   };
 
+  const exitReview = () => {
+    const openedFromEmail =
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('review') === '1';
+
+    if (!openedFromEmail) {
+      onClose();
+      return;
+    }
+
+    // Email review links open in the same browsing context when possible,
+    // so Back returns to the message that launched the review.
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    // Fallback for email clients that opened the review in a separate tab/window.
+    window.close();
+    window.setTimeout(() => {
+      if (!window.closed) onClose();
+    }, 150);
+  };
+
   const goToDashboard = () => {
     window.location.assign('/');
   };
@@ -276,7 +300,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 <div className="grid grid-cols-2 gap-2 mt-5">
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={exitReview}
                     className="min-h-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-black text-sm"
                   >
                     Exit

@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   CalendarDays,
-  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +14,7 @@ import {
 } from '../utils/taskDateUtils';
 import { isHabitDue } from '../utils/habitUtils';
 import { CalendarYearView } from './calendar/CalendarYearView';
+import { CalendarMonthView } from './calendar/CalendarMonthView';
 
 export type CalendarView =
   | 'year'
@@ -876,11 +876,6 @@ const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = ({
   </nav>
 );
 
-interface CalendarMonthViewProps extends CalendarBaseViewProps {
-  calendarDays: string[];
-  currentMonth: string;
-}
-
 interface CalendarWeekViewProps extends CalendarBaseViewProps {
   dates: string[];
   onMoveTask: (task: TaskItem, targetDate: string) => Promise<void>;
@@ -913,237 +908,6 @@ interface CalendarMultiDayViewProps extends CalendarBaseViewProps {
 interface CalendarMultiWeekViewProps extends CalendarBaseViewProps {
   dates: string[];
 }
-
-const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
-  calendarDays,
-  selectedDate,
-  today,
-  currentMonth,
-  tasksByDate,
-  getHabitsForDate,
-  onSelectDate,
-  onToggleTask,
-  onToggleHabit,
-}) => {
-  const MAX_VISIBLE_ITEMS = 4;
-  const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  const taskChipClass = (task: TaskItem) => {
-    if (task.isCompleted) {
-      return 'bg-slate-100 text-slate-500 line-through';
-    }
-
-    switch (task.matrixQuadrant) {
-      case 'urgent-important':
-        return 'bg-rose-100 text-rose-800 hover:bg-rose-200/80';
-      case 'important':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200/80';
-      case 'urgent':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-200/80';
-      case 'neither':
-        return 'bg-slate-100 text-slate-700 hover:bg-slate-200/80';
-      default:
-        return 'bg-sky-100 text-sky-800 hover:bg-sky-200/80';
-    }
-  };
-
-  return (
-    <section
-      aria-label="Month calendar"
-      className="h-full min-h-[560px] flex flex-col bg-white"
-    >
-      <div className="grid grid-cols-7 border-b border-slate-100 bg-white shrink-0">
-        {weekdayLabels.map((day) => (
-          <div
-            key={day}
-            className="h-9 flex items-center justify-center sm:justify-start px-1 sm:px-2 text-[9px] sm:text-[11px] font-semibold text-slate-400"
-          >
-            <span className="sm:hidden">{day.slice(0, 1)}</span>
-            <span className="hidden sm:inline">{day}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 border-l border-slate-100">
-        {calendarDays.map((dateKey) => {
-          const date = parseKey(dateKey);
-          const inMonth = monthKey(date) === currentMonth;
-          const isToday = dateKey === today;
-          const isSelected = dateKey === selectedDate;
-          const isFuture = dateKey > today;
-
-          const dayTasks = tasksByDate.get(dateKey) || [];
-          const dayHabits = getHabitsForDate(dateKey);
-
-          const visibleTasks = dayTasks.slice(0, MAX_VISIBLE_ITEMS);
-          const remainingSlots = Math.max(
-            0,
-            MAX_VISIBLE_ITEMS - visibleTasks.length
-          );
-          const visibleHabits = dayHabits.slice(0, remainingSlots);
-          const hiddenCount =
-            Math.max(0, dayTasks.length - visibleTasks.length) +
-            Math.max(0, dayHabits.length - visibleHabits.length);
-
-          return (
-            <div
-              key={dateKey}
-              className={`relative min-w-0 min-h-[76px] sm:min-h-[108px] border-r border-b border-slate-100 transition-colors ${
-                !inMonth
-                  ? 'bg-slate-50/40'
-                  : isSelected
-                  ? 'bg-blue-50/45'
-                  : 'bg-white hover:bg-slate-50/70'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => onSelectDate(dateKey)}
-                aria-label={`Select ${longDate(dateKey)}`}
-                aria-pressed={isSelected}
-                className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
-              />
-
-              <div className="relative z-10 p-1 sm:p-1.5 pointer-events-none">
-                <div className="flex items-start justify-between gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onSelectDate(dateKey)}
-                    className={`pointer-events-auto w-6 h-6 sm:w-7 sm:h-7 rounded-full inline-flex items-center justify-center text-[10px] sm:text-xs font-semibold transition-colors ${
-                      isToday
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : isSelected
-                        ? 'bg-blue-100 text-blue-700'
-                        : inMonth
-                        ? 'text-slate-700 hover:bg-slate-100'
-                        : 'text-slate-300 hover:bg-slate-100/70'
-                    }`}
-                    aria-label={`Select ${longDate(dateKey)}`}
-                    aria-current={isToday ? 'date' : undefined}
-                  >
-                    {date.getUTCDate()}
-                  </button>
-
-                  <div className="hidden sm:flex items-center gap-1 pt-0.5 text-[8px] font-bold text-slate-400">
-                    {dayTasks.length > 0 && <span>{dayTasks.length}T</span>}
-                    {dayHabits.length > 0 && <span>{dayHabits.length}H</span>}
-                  </div>
-                </div>
-
-                <div className="hidden sm:block mt-0.5 space-y-[2px]">
-                  {visibleTasks.map((task) => (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onToggleTask(task.id);
-                      }}
-                      title={`${task.taskOfTheDay}${
-                        task.timeEstimate ? ` • ${task.timeEstimate}` : ''
-                      }`}
-                      className={`pointer-events-auto w-full min-w-0 h-[20px] px-1.5 rounded-[3px] flex items-center gap-1 text-left text-[9px] font-semibold transition-colors ${taskChipClass(
-                        task
-                      )}`}
-                    >
-                      <span
-                        className={`w-3 h-3 rounded-[3px] border shrink-0 inline-flex items-center justify-center ${
-                          task.isCompleted
-                            ? 'border-slate-400 bg-slate-400 text-white'
-                            : 'border-current bg-white/40'
-                        }`}
-                        aria-hidden="true"
-                      >
-                        {task.isCompleted && <Check className="w-2.5 h-2.5" />}
-                      </span>
-
-                      <span className="truncate flex-1">
-                        {task.taskOfTheDay}
-                      </span>
-
-                      {task.timeEstimate && (
-                        <span className="shrink-0 text-[8px] opacity-65 font-medium">
-                          {task.timeEstimate}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-
-                  {visibleHabits.map((habit) => {
-                    const checked = habit.checkIns.includes(dateKey);
-                    const disabled = isFuture;
-
-                    return (
-                      <button
-                        key={habit.id}
-                        type="button"
-                        disabled={disabled}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void onToggleHabit(habit, dateKey);
-                        }}
-                        title={`${habit.name}${disabled ? ' • Future check-in locked' : ''}`}
-                        className={`pointer-events-auto w-full min-w-0 h-[20px] px-1.5 rounded-[3px] flex items-center gap-1 text-left text-[9px] font-semibold transition-colors ${
-                          checked
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200/80'
-                            : 'bg-teal-50 text-teal-800 hover:bg-teal-100'
-                        } disabled:opacity-55 disabled:cursor-default`}
-                      >
-                        <span
-                          className={`w-3 h-3 rounded-[3px] border shrink-0 inline-flex items-center justify-center ${
-                            checked
-                              ? 'border-emerald-500 bg-emerald-500 text-white'
-                              : 'border-teal-400 bg-white/60'
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {checked && <Check className="w-2.5 h-2.5" />}
-                        </span>
-
-                        <span className="truncate flex-1">
-                          {habit.emoji} {habit.name}
-                        </span>
-                      </button>
-                    );
-                  })}
-
-                  {hiddenCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => onSelectDate(dateKey)}
-                      className="pointer-events-auto h-[18px] px-1 text-[9px] font-semibold text-slate-500 hover:text-blue-600"
-                      title={`${hiddenCount} more item${hiddenCount === 1 ? '' : 's'}`}
-                    >
-                      +{hiddenCount} more
-                    </button>
-                  )}
-                </div>
-
-                <div className="sm:hidden mt-1 flex flex-wrap items-center gap-1">
-                  {dayTasks.length > 0 && (
-                    <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-blue-100 text-blue-700 items-center justify-center text-[8px] font-black">
-                      {dayTasks.length}T
-                    </span>
-                  )}
-
-                  {dayHabits.length > 0 && (
-                    <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-emerald-100 text-emerald-700 items-center justify-center text-[8px] font-black">
-                      {dayHabits.length}H
-                    </span>
-                  )}
-
-                  {dayTasks.length === 0 && dayHabits.length === 0 && isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-};
 
 const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({ dates }) => (
   <CalendarPlaceholder

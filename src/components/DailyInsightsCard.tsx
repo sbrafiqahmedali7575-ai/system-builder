@@ -135,6 +135,21 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
     };
   }, [weekHabitTrend]);
 
+
+  const overallWeekSummary = useMemo(() => {
+    const totalItems = weekTaskSummary.scheduled + weekHabitSummary.due;
+    const completedItems =
+      weekTaskSummary.completed + weekHabitSummary.completed;
+
+    return {
+      totalItems,
+      completedItems,
+      rate: totalItems
+        ? Math.round((completedItems / totalItems) * 100)
+        : 0,
+    };
+  }, [weekTaskSummary, weekHabitSummary]);
+
   return (
     <div
       aria-label="Daily Insights"
@@ -219,13 +234,13 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
               </div>
               <div
                 className="text-right shrink-0"
-                title={`Week done: ${weekTaskSummary.completed}/${weekTaskSummary.scheduled} tasks completed`}
+                title={`Overall week: ${overallWeekSummary.completedItems}/${overallWeekSummary.totalItems} tasks + due habits completed`}
               >
                 <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
-                  {weekTaskSummary.rate}%
+                  {overallWeekSummary.rate}%
                 </div>
                 <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-                  week done
+                  overall week
                 </div>
               </div>
             </div>
@@ -291,13 +306,13 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
               </div>
               <div
                 className="text-right shrink-0"
-                title={`Week done: ${weekHabitSummary.completed}/${weekHabitSummary.due} habit check-ins completed`}
+                title={`Overall week: ${overallWeekSummary.completedItems}/${overallWeekSummary.totalItems} tasks + due habits completed`}
               >
                 <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">
-                  {weekHabitSummary.rate}%
+                  {overallWeekSummary.rate}%
                 </div>
                 <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-                  week done
+                  overall week
                 </div>
               </div>
             </div>

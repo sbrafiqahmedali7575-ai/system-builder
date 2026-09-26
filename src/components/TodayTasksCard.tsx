@@ -23,6 +23,7 @@ import {
   areDatesEqual,
   toInputDateValue,
 } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import confetti from 'canvas-confetti';
 
 const TASK_QUADRANT_OPTIONS: Array<{
@@ -113,7 +114,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const isDark = theme === 'dark';
 
   // Keep the main task view intentionally focused on only Today and Tomorrow.
-  const upcomingOptions = useMemo(() => getUpcomingDateOptions(CONFIGURED_TIMEZONE), []);
+  const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
+  const upcomingOptions = useMemo(
+    () => getUpcomingDateOptions(CONFIGURED_TIMEZONE),
+    [currentDateKey]
+  );
   const todayOption = upcomingOptions[0];
   const tomorrowOption = upcomingOptions[1];
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Gauge, Hourglass } from 'lucide-react';
+import { Award, Hourglass } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -11,8 +11,6 @@ interface CommandCenterSidebarProps {
   overallCompletionPercentage: number;
   completedDays: number;
   totalDays: number;
-  cadencePercentage: number;
-  cadenceCompletedDays: number;
   countdownDaysRemaining: number;
   countdownReason: string;
   countdownTargetLabel: string;
@@ -26,8 +24,6 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   overallCompletionPercentage,
   completedDays,
   totalDays,
-  cadencePercentage,
-  cadenceCompletedDays,
   countdownDaysRemaining,
   countdownReason,
   countdownTargetLabel,
@@ -84,61 +80,29 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           </div>
         </div>
 
-        <div className="rounded-xl border border-violet-200/80 dark:border-violet-900/50 bg-white/80 dark:bg-slate-950/50 p-2 flex items-center gap-2">
-          <AnimatedProgressRing
-            value={cadencePercentage}
-            size={50}
-            strokeWidth={5}
-            label={`${Math.round(cadencePercentage)}%`}
-            trackClassName="text-slate-200 dark:text-slate-800"
-            progressClassName="text-violet-500"
-          />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
-              <Gauge className="w-3 h-3 text-violet-500" />
-              Cadence
-            </div>
-            <div className="mt-0.5 text-[10px] font-black text-slate-700 dark:text-slate-200">
-              {Math.round(cadencePercentage)}%
-            </div>
-            <div className="text-[8px] font-bold text-slate-400">
-              {cadenceCompletedDays}/7 days
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onOpenCountdown}
-        disabled={!onOpenCountdown}
-        className="mt-1.5 shrink-0 rounded-xl border border-amber-200/80 dark:border-amber-900/50 bg-white/80 dark:bg-slate-950/50 p-2 text-left transition-colors enabled:hover:bg-amber-50/70 dark:enabled:hover:bg-amber-950/20 disabled:cursor-default"
-        title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
-        aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
-      >
-        <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={onOpenCountdown}
+          disabled={!onOpenCountdown}
+          className="rounded-xl border border-amber-200/80 dark:border-amber-900/50 bg-white/80 dark:bg-slate-950/50 p-2 text-left transition-colors enabled:hover:bg-amber-50/70 dark:enabled:hover:bg-amber-950/20 disabled:cursor-default"
+          title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
+          aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
+        >
           <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
             <Hourglass className="w-3 h-3 text-amber-500" />
             Countdown
           </div>
-          <span className="text-[8px] font-bold text-slate-400 truncate">
-            {countdownTargetLabel}
-          </span>
-        </div>
-        <div className="mt-1 flex items-end justify-between gap-2">
-          <div>
-            <span className="text-2xl leading-none font-black font-mono text-blue-600 dark:text-blue-300">
-              {countdownDaysRemaining}
-            </span>
-            <span className="ml-1 text-[9px] font-bold text-slate-400">
-              days left
-            </span>
+          <div className="mt-1 text-2xl leading-none font-black font-mono text-blue-600 dark:text-blue-300">
+            {countdownDaysRemaining}
           </div>
-          <span className="max-w-[120px] truncate text-[9px] font-bold text-slate-600 dark:text-slate-300">
-            {countdownReason}
-          </span>
-        </div>
-      </button>
+          <div className="mt-0.5 text-[8px] font-bold text-slate-400">
+            days left
+          </div>
+          <div className="mt-1 truncate text-[8px] font-semibold text-slate-500 dark:text-slate-400">
+            {countdownTargetLabel}
+          </div>
+        </button>
+      </div>
 
       <div className="mt-1.5 min-h-0 flex-1 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
         <div className="text-[8px] uppercase tracking-wide font-black text-slate-400 mb-1.5">

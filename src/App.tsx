@@ -481,7 +481,6 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
-        onOpenDayReview={() => setIsDayReviewOpen(true)}
         theme={theme}
         onThemeChange={setTheme}
         totalRecordsCount={records.length}

@@ -320,7 +320,7 @@ function loadQuadrantLabels(): Record<MatrixQuadrant, EditableQuadrant> {
 
     localStorage.setItem(MATRIX_SETTINGS_KEY, JSON.stringify(defaults));
   } catch (error) {
-    console.warn('Unable to load Today's Eisenhower Matrix settings:', error);
+    console.warn('Unable to load Eisenhower Matrix settings:', error);
   }
 
   return defaults;
@@ -355,6 +355,10 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   const [error, setError] = useState<string | null>(null);
   const compact = density === 'compact';
   const todayTaskKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const todayTasks = useMemo(
+    () => tasks.filter((task) => areDatesEqual(task.taskKey, todayTaskKey)),
+    [tasks, todayTaskKey]
+  );
 
   const quadrants = useMemo(
     () =>
@@ -373,8 +377,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       neither: [],
     };
 
-    tasks.forEach((task) => {
-      if (!areDatesEqual(task.taskKey, todayTaskKey)) return;
+    todayTasks.forEach((task) => {
       if (!showCompleted && task.isCompleted) return;
       result[inferQuadrant(task)].push(task);
     });
@@ -388,7 +391,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     );
 
     return result;
-  }, [tasks, showCompleted, todayTaskKey]);
+  }, [todayTasks, showCompleted]);
 
   const persistQuadrantLabels = (
     next: Record<MatrixQuadrant, EditableQuadrant>
@@ -547,10 +550,10 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
             Priority workspace
           </p>
           <h2 className={`${compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'} font-black tracking-tight`}>
-            Eisenhower Matrix
+            Today's Eisenhower Matrix
           </h2>
           <p className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-semibold text-slate-600 hidden md:block`}>
-            Drag with the grip handle, or use Move to on touch devices. Quadrant and priority are controlled separately.
+            Today only — changes sync instantly with Today Tasks.
           </p>
         </div>
 
@@ -561,8 +564,8 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
             </div>
           )}
           <div className="text-xs font-bold text-slate-600">
-            {tasks.filter((task) => !task.isCompleted).length} active •{' '}
-            {tasks.filter((task) => task.isCompleted).length} done
+            {todayTasks.filter((task) => !task.isCompleted).length} active •{' '}
+            {todayTasks.filter((task) => task.isCompleted).length} done
           </div>
           <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
             <input

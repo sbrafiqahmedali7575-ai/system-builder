@@ -1080,7 +1080,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 view === 'day'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
-              }'}`}
+              }`}
             >
               <CalendarDays className="w-3.5 h-3.5" />
               Day

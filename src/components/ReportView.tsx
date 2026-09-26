@@ -120,29 +120,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
   // Overall KPIs for hero visual (preserved calculations)
   const allKpis = useMemo(() => calculateKPIStats(records), [records]);
 
-  // Fixed tracked-week cadence:
-  // Week 1 = D1-D7, Week 2 = D8-D14, Week 3 = D15-D21, etc.
-  const recentWeekCadence = useMemo(() => {
-    const latestDay = records.reduce((maxDay, record) => Math.max(maxDay, record.day), 0);
-    const weekNumber = latestDay > 0 ? Math.ceil(latestDay / 7) : 1;
-    const startDay = (weekNumber - 1) * 7 + 1;
-    const endDay = weekNumber * 7;
-    const weekRecords = [...records]
-      .filter((record) => record.day >= startDay && record.day <= endDay)
-      .sort((a, b) => a.day - b.day);
-    const completedDays = weekRecords.filter((record) => record.isCompleted).length;
-    const performance = Math.min(100, (completedDays / 7) * 100);
-
-    return {
-      weekNumber,
-      startDay,
-      endDay,
-      records: weekRecords,
-      completedDays,
-      performance,
-    };
-  }, [records]);
-
   const currentFocusTask = useMemo(() => {
     const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
     return (

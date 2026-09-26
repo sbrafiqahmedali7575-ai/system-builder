@@ -125,7 +125,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   };
 
   const toggleHabit = async (habit: HabitItem, dateKey: string) => {
-    if (!isHabitDue(habit, dateKey)) return;
+    if (!isHabitDue(habit, dateKey) || dateKey > today) return;
     const exists = habit.checkIns.includes(dateKey);
     const checkIns = exists
       ? habit.checkIns.filter((key) => key !== dateKey)
@@ -182,8 +182,9 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               <button
                 key={habit.id}
                 type="button"
+                disabled={dateKey > today}
                 onClick={() => void toggleHabit(habit, dateKey)}
-                className="w-full flex items-center gap-2 rounded-xl border border-[#e7dbc4] bg-[#fbf4e3] px-3 py-2 text-left"
+                className="w-full flex items-center gap-2 rounded-xl border border-[#e7dbc4] bg-[#fbf4e3] px-3 py-2 text-left disabled:opacity-55 disabled:cursor-not-allowed"
               >
                 <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                   checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-[#b9aa91]'
@@ -381,8 +382,9 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                       <button
                         key={habit.id}
                         type="button"
+                        disabled={selectedDate > today}
                         onClick={() => void toggleHabit(habit, selectedDate)}
-                        className="w-full flex items-center gap-2 rounded-xl border border-[#e7dbc4] bg-[#fff8e8] px-3 py-2 text-left"
+                        className="w-full flex items-center gap-2 rounded-xl border border-[#e7dbc4] bg-[#fff8e8] px-3 py-2 text-left disabled:opacity-55 disabled:cursor-not-allowed"
                       >
                         <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                           checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-[#b9aa91]'

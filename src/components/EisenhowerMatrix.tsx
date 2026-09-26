@@ -5,8 +5,13 @@ import {
   Check,
   Circle,
   Clock3,
+  GripVertical,
+  Pencil,
   Plus,
+  RotateCcw,
+  Save,
   Trash2,
+  X,
 } from 'lucide-react';
 import { MatrixQuadrant, TaskItem } from '../types';
 import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
@@ -20,7 +25,7 @@ interface EisenhowerMatrixProps {
   isSyncing?: boolean;
 }
 
-const QUADRANTS: Array<{
+type QuadrantDisplay = {
   id: MatrixQuadrant;
   roman: string;
   title: string;
@@ -28,7 +33,13 @@ const QUADRANTS: Array<{
   header: string;
   border: string;
   dot: string;
-}> = [
+};
+
+type EditableQuadrant = Pick<QuadrantDisplay, 'title' | 'action'>;
+
+const MATRIX_SETTINGS_KEY = 'SYSTEM_BUILDER_MATRIX_LABELS_V1';
+
+const DEFAULT_QUADRANTS: QuadrantDisplay[] = [
   {
     id: 'urgent-important',
     roman: 'I',
@@ -67,6 +78,30 @@ const QUADRANTS: Array<{
   },
 ];
 
+const QUADRANT_IDS = DEFAULT_QUADRANTS.map((quadrant) => quadrant.id);
+
+const PRIORITY_OPTIONS: Array<{
+  value: NonNullable<TaskItem['priority']>;
+  label: string;
+  classes: string;
+}> = [
+  {
+    value: 'High',
+    label: 'High',
+    classes: 'bg-rose-50 text-rose-700 border-rose-200',
+  },
+  {
+    value: 'Medium',
+    label: 'Medium',
+    classes: 'bg-amber-50 text-amber-700 border-amber-200',
+  },
+  {
+    value: 'Normal',
+    label: 'Normal',
+    classes: 'bg-slate-50 text-slate-600 border-slate-200',
+  },
+];
+
 function inferQuadrant(task: TaskItem): MatrixQuadrant {
   if (task.matrixQuadrant) return task.matrixQuadrant;
   if (task.priority === 'High') return 'urgent-important';
@@ -74,10 +109,46 @@ function inferQuadrant(task: TaskItem): MatrixQuadrant {
   return 'neither';
 }
 
-function priorityForQuadrant(quadrant: MatrixQuadrant): TaskItem['priority'] {
+function defaultPriorityForQuadrant(
+  quadrant: MatrixQuadrant
+): NonNullable<TaskItem['priority']> {
   if (quadrant === 'urgent-important') return 'High';
   if (quadrant === 'important' || quadrant === 'urgent') return 'Medium';
   return 'Normal';
+}
+
+function loadQuadrantLabels(): Record<MatrixQuadrant, EditableQuadrant> {
+  const defaults = Object.fromEntries(
+    DEFAULT_QUADRANTS.map((quadrant) => [
+      quadrant.id,
+      { title: quadrant.title, action: quadrant.action },
+    ])
+  ) as Record<MatrixQuadrant, EditableQuadrant>;
+
+  if (typeof window === 'undefined') return defaults;
+
+  try {
+    const saved = localStorage.getItem(MATRIX_SETTINGS_KEY);
+    if (!saved) return defaults;
+    const parsed = JSON.parse(saved) as Partial<
+      Record<MatrixQuadrant, Partial<EditableQuadrant>>
+    >;
+
+    QUADRANT_IDS.forEach((id) => {
+      const savedQuadrant = parsed[id];
+      if (!savedQuadrant) return;
+      if (typeof savedQuadrant.title === 'string' && savedQuadrant.title.trim()) {
+        defaults[id].title = savedQuadrant.title.trim();
+      }
+      if (typeof savedQuadrant.action === 'string' && savedQuadrant.action.trim()) {
+        defaults[id].action = savedQuadrant.action.trim();
+      }
+    });
+  } catch (error) {
+    console.warn('Unable to load Eisenhower Matrix labels:', error);
+  }
+
+  return defaults;
 }
 
 export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
@@ -94,10 +165,27 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     urgent: '',
     neither: '',
   });
+  const [quadrantLabels, setQuadrantLabels] = useState<
+    Record<MatrixQuadrant, EditableQuadrant>
+  >(loadQuadrantLabels);
+  const [editingQuadrant, setEditingQuadrant] =
+    useState<MatrixQuadrant | null>(null);
+  const [quadrantEditDraft, setQuadrantEditDraft] =
+    useState<EditableQuadrant | null>(null);
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<MatrixQuadrant | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const quadrants = useMemo(
+    () =>
+      DEFAULT_QUADRANTS.map((quadrant) => ({
+        ...quadrant,
+        ...quadrantLabels[quadrant.id],
+      })),
+    [quadrantLabels]
+  );
 
   const grouped = useMemo(() => {
     const result: Record<MatrixQuadrant, TaskItem[]> = {
@@ -106,26 +194,90 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       urgent: [],
       neither: [],
     };
+
     tasks.forEach((task) => {
       if (!showCompleted && task.isCompleted) return;
       result[inferQuadrant(task)].push(task);
     });
+
     Object.values(result).forEach((items) =>
-      items.sort((a, b) => Number(a.isCompleted) - Number(b.isCompleted) || b.taskKey.localeCompare(a.taskKey))
+      items.sort(
+        (a, b) =>
+          Number(a.isCompleted) - Number(b.isCompleted) ||
+          b.taskKey.localeCompare(a.taskKey)
+      )
     );
+
     return result;
   }, [tasks, showCompleted]);
+
+  const persistQuadrantLabels = (
+    next: Record<MatrixQuadrant, EditableQuadrant>
+  ) => {
+    setQuadrantLabels(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(MATRIX_SETTINGS_KEY, JSON.stringify(next));
+    }
+  };
+
+  const beginQuadrantEdit = (quadrant: QuadrantDisplay) => {
+    setEditingQuadrant(quadrant.id);
+    setQuadrantEditDraft({
+      title: quadrant.title,
+      action: quadrant.action,
+    });
+  };
+
+  const cancelQuadrantEdit = () => {
+    setEditingQuadrant(null);
+    setQuadrantEditDraft(null);
+  };
+
+  const saveQuadrantEdit = (quadrantId: MatrixQuadrant) => {
+    if (!quadrantEditDraft) return;
+
+    const title = quadrantEditDraft.title.trim();
+    const action = quadrantEditDraft.action.trim();
+    if (!title || !action) return;
+
+    persistQuadrantLabels({
+      ...quadrantLabels,
+      [quadrantId]: { title, action },
+    });
+    cancelQuadrantEdit();
+  };
+
+  const resetQuadrant = (quadrantId: MatrixQuadrant) => {
+    const original = DEFAULT_QUADRANTS.find(
+      (quadrant) => quadrant.id === quadrantId
+    );
+    if (!original) return;
+
+    persistQuadrantLabels({
+      ...quadrantLabels,
+      [quadrantId]: {
+        title: original.title,
+        action: original.action,
+      },
+    });
+
+    setQuadrantEditDraft({
+      title: original.title,
+      action: original.action,
+    });
+  };
 
   const addTask = async (quadrant: MatrixQuadrant) => {
     const title = drafts[quadrant].trim();
     if (!title) return;
+
     try {
       setError(null);
       await onAddTask({
         taskKey: getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE),
         taskOfTheDay: title,
         isCompleted: false,
-        priority: priorityForQuadrant(quadrant),
+        priority: defaultPriorityForQuadrant(quadrant),
         category: 'Eisenhower Matrix',
         matrixQuadrant: quadrant,
       });
@@ -138,42 +290,85 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   const moveTask = async (taskId: string, quadrant: MatrixQuadrant) => {
     const task = tasks.find((item) => item.id === taskId);
     if (!task || inferQuadrant(task) === quadrant) return;
+
     try {
       setBusyTaskId(taskId);
       setError(null);
+
       await onUpdateTask({
         ...task,
         matrixQuadrant: quadrant,
-        priority: priorityForQuadrant(quadrant),
         updatedAt: new Date().toISOString(),
       });
     } catch (err: any) {
       setError(err?.message || 'Unable to move task.');
     } finally {
       setBusyTaskId(null);
+      setDraggedTaskId(null);
+      setDragOver(null);
     }
   };
 
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>, quadrant: MatrixQuadrant) => {
+  const updatePriority = async (
+    task: TaskItem,
+    priority: NonNullable<TaskItem['priority']>
+  ) => {
+    if ((task.priority || 'Normal') === priority) return;
+
+    try {
+      setBusyTaskId(task.id);
+      setError(null);
+      await onUpdateTask({
+        ...task,
+        priority,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Unable to update task priority.');
+    } finally {
+      setBusyTaskId(null);
+    }
+  };
+
+  const handleDrop = async (
+    event: React.DragEvent<HTMLDivElement>,
+    quadrant: MatrixQuadrant
+  ) => {
     event.preventDefault();
-    const taskId = event.dataTransfer.getData('text/task-id');
-    setDragOver(null);
+    const taskId =
+      event.dataTransfer.getData('text/task-id') || draggedTaskId || '';
     if (taskId) await moveTask(taskId, quadrant);
+  };
+
+  const endDrag = () => {
+    setDraggedTaskId(null);
+    setDragOver(null);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">Priority workspace</p>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">Eisenhower Matrix</h2>
+          <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
+            Priority workspace
+          </p>
+          <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">
+            Eisenhower Matrix
+          </h2>
           <p className="mt-1 text-sm font-semibold text-[#766653]">
-            Drag tasks between quadrants. Changes stay attached to the same System Builder task.
+            Drag with the grip handle, or use Move to on touch devices. Quadrant and priority are controlled separately.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-2">
+          {draggedTaskId && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 h-9 inline-flex items-center text-xs font-black text-blue-700">
+              Dragging task • choose a quadrant
+            </div>
+          )}
           <div className="text-xs font-bold text-[#766653]">
-            {tasks.filter((task) => !task.isCompleted).length} active • {tasks.filter((task) => task.isCompleted).length} done
+            {tasks.filter((task) => !task.isCompleted).length} active •{' '}
+            {tasks.filter((task) => task.isCompleted).length} done
           </div>
           <label className="inline-flex items-center gap-2 rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 h-9 text-xs font-black">
             <input
@@ -194,124 +389,356 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {QUADRANTS.map((quadrant) => (
-          <div
-            key={quadrant.id}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setDragOver(quadrant.id);
-            }}
-            onDragLeave={() => setDragOver((current) => (current === quadrant.id ? null : current))}
-            onDrop={(event) => handleDrop(event, quadrant.id)}
-            className={`min-h-[280px] rounded-2xl border bg-[#fffaf0] transition-all ${
-              quadrant.border
-            } ${dragOver === quadrant.id ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-[#f4ecd8]' : ''}`}
-          >
-            <div className="px-4 py-3 border-b border-black/8 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className={`w-6 h-6 rounded-full ${quadrant.dot} text-white flex items-center justify-center text-[10px] font-black shrink-0`}>
-                  {quadrant.roman}
-                </span>
-                <div className="min-w-0">
-                  <div className={`text-sm font-black ${quadrant.header}`}>{quadrant.title}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8b7a66]">{quadrant.action}</div>
-                </div>
-              </div>
-              <span className="text-xs font-black text-[#8b7a66]">{grouped[quadrant.id].length}</span>
-            </div>
+        {quadrants.map((quadrant) => {
+          const isEditing = editingQuadrant === quadrant.id;
+          const isDropTarget = dragOver === quadrant.id;
+          const draggedTask = draggedTaskId
+            ? tasks.find((task) => task.id === draggedTaskId)
+            : null;
+          const sameQuadrant =
+            draggedTask && inferQuadrant(draggedTask) === quadrant.id;
 
-            <div className="p-3 space-y-2">
-              <div className="flex gap-2">
-                <input
-                  value={drafts[quadrant.id]}
-                  onChange={(event) =>
-                    setDrafts((current) => ({ ...current, [quadrant.id]: event.target.value }))
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') void addTask(quadrant.id);
-                  }}
-                  placeholder="Add task..."
-                  className="min-w-0 flex-1 h-9 rounded-xl border border-[#dfd1b6] bg-white/80 px-3 text-sm font-semibold outline-none focus:border-blue-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => void addTask(quadrant.id)}
-                  disabled={!drafts[quadrant.id].trim() || isSyncing}
-                  className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
-                  title="Add task"
-                  aria-label={`Add task to ${quadrant.title}`}
+          return (
+            <div
+              key={quadrant.id}
+              onDragEnter={(event) => {
+                if (!draggedTaskId) return;
+                event.preventDefault();
+                setDragOver(quadrant.id);
+              }}
+              onDragOver={(event) => {
+                if (!draggedTaskId) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                setDragOver(quadrant.id);
+              }}
+              onDragLeave={(event) => {
+                if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+                setDragOver((current) =>
+                  current === quadrant.id ? null : current
+                );
+              }}
+              onDrop={(event) => void handleDrop(event, quadrant.id)}
+              className={`relative min-h-[300px] rounded-2xl border bg-[#fffaf0] transition-all ${
+                quadrant.border
+              } ${
+                isDropTarget && draggedTaskId
+                  ? sameQuadrant
+                    ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-[#f4ecd8]'
+                    : 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#f4ecd8] shadow-lg -translate-y-0.5'
+                  : ''
+              }`}
+            >
+              {isDropTarget && draggedTaskId && (
+                <div
+                  className={`absolute inset-0 z-20 rounded-2xl pointer-events-none flex items-center justify-center ${
+                    sameQuadrant ? 'bg-slate-100/65' : 'bg-blue-50/75'
+                  }`}
                 >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {grouped[quadrant.id].length === 0 ? (
-                <div className="min-h-[170px] flex items-center justify-center text-sm font-semibold text-[#a18f78]">
-                  No tasks
+                  <div
+                    className={`rounded-xl border px-4 py-2 text-sm font-black shadow-sm ${
+                      sameQuadrant
+                        ? 'bg-white border-slate-200 text-slate-600'
+                        : 'bg-white border-blue-200 text-blue-700'
+                    }`}
+                  >
+                    {sameQuadrant
+                      ? `Already in ${quadrant.title}`
+                      : `Drop in ${quadrant.title}`}
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {grouped[quadrant.id].map((task) => (
-                    <div
-                      key={task.id}
-                      draggable={!task.isCompleted}
-                      onDragStart={(event) => {
-                        event.dataTransfer.setData('text/task-id', task.id);
-                        event.dataTransfer.effectAllowed = 'move';
-                      }}
-                      className={`rounded-xl border border-[#e7dbc4] bg-white/85 px-3 py-2.5 shadow-sm ${
-                        busyTaskId === task.id ? 'opacity-60' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
+              )}
+
+              <div className="px-4 py-3 border-b border-black/8 flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0 flex-1">
+                  <span
+                    className={`w-6 h-6 rounded-full ${quadrant.dot} text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5`}
+                  >
+                    {quadrant.roman}
+                  </span>
+
+                  {isEditing && quadrantEditDraft ? (
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <input
+                        value={quadrantEditDraft.title}
+                        onChange={(event) =>
+                          setQuadrantEditDraft((current) =>
+                            current
+                              ? { ...current, title: event.target.value }
+                              : current
+                          )
+                        }
+                        className="w-full h-8 rounded-lg border border-[#dfd1b6] bg-white px-2 text-sm font-black outline-none focus:border-blue-400"
+                        aria-label={`Edit quadrant ${quadrant.roman} title`}
+                      />
+                      <input
+                        value={quadrantEditDraft.action}
+                        onChange={(event) =>
+                          setQuadrantEditDraft((current) =>
+                            current
+                              ? { ...current, action: event.target.value }
+                              : current
+                          )
+                        }
+                        className="w-full h-8 rounded-lg border border-[#dfd1b6] bg-white px-2 text-[11px] font-bold outline-none focus:border-blue-400"
+                        aria-label={`Edit quadrant ${quadrant.roman} action`}
+                      />
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => void onToggleTaskStatus(task.id)}
-                          className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                            task.isCompleted
-                              ? 'bg-blue-600 border-blue-600 text-white'
-                              : 'border-[#b9aa91] text-transparent hover:border-blue-500'
-                          }`}
-                          aria-label={task.isCompleted ? 'Mark task incomplete' : 'Mark task complete'}
+                          onClick={() => saveQuadrantEdit(quadrant.id)}
+                          disabled={
+                            !quadrantEditDraft.title.trim() ||
+                            !quadrantEditDraft.action.trim()
+                          }
+                          className="h-7 px-2 rounded-lg bg-blue-600 text-white inline-flex items-center gap-1 text-[10px] font-black disabled:opacity-40"
                         >
-                          {task.isCompleted ? <Check className="w-3 h-3" /> : <Circle className="w-2 h-2" />}
+                          <Save className="w-3 h-3" />
+                          Save
                         </button>
-
-                        <div className="min-w-0 flex-1">
-                          <div className={`text-sm font-bold break-words ${task.isCompleted ? 'line-through text-[#9e8f7b]' : 'text-[#3f3426]'}`}>
-                            {task.taskOfTheDay}
-                          </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold text-[#8b7a66]">
-                            <span className="inline-flex items-center gap-1">
-                              <CalendarDays className="w-3 h-3" />
-                              {task.taskKey}
-                            </span>
-                            {task.timeEstimate && (
-                              <span className="inline-flex items-center gap-1">
-                                <Clock3 className="w-3 h-3" />
-                                {task.timeEstimate}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
                         <button
                           type="button"
-                          onClick={() => void onDeleteTask(task.id)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[#a18f78] hover:text-rose-600 hover:bg-rose-50"
-                          title="Delete task"
-                          aria-label="Delete task"
+                          onClick={() => resetQuadrant(quadrant.id)}
+                          className="h-7 px-2 rounded-lg border border-[#dfd1b6] inline-flex items-center gap-1 text-[10px] font-black hover:bg-black/5"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <RotateCcw className="w-3 h-3" />
+                          Reset
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelQuadrantEdit}
+                          className="w-7 h-7 rounded-lg border border-[#dfd1b6] flex items-center justify-center hover:bg-black/5"
+                          aria-label="Cancel quadrant editing"
+                        >
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="min-w-0">
+                      <div className={`text-sm font-black ${quadrant.header}`}>
+                        {quadrant.title}
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#8b7a66]">
+                        {quadrant.action}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                <div className="flex items-center gap-1 shrink-0">
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => beginQuadrantEdit(quadrant)}
+                      className="w-7 h-7 rounded-lg text-[#8b7a66] hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                      title="Edit quadrant"
+                      aria-label={`Edit ${quadrant.title}`}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <span className="min-w-7 h-7 px-2 rounded-lg bg-black/[0.04] flex items-center justify-center text-xs font-black text-[#8b7a66]">
+                    {grouped[quadrant.id].length}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    value={drafts[quadrant.id]}
+                    onChange={(event) =>
+                      setDrafts((current) => ({
+                        ...current,
+                        [quadrant.id]: event.target.value,
+                      }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') void addTask(quadrant.id);
+                    }}
+                    placeholder="Add task..."
+                    className="min-w-0 flex-1 h-9 rounded-xl border border-[#dfd1b6] bg-white/80 px-3 text-sm font-semibold outline-none focus:border-blue-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void addTask(quadrant.id)}
+                    disabled={!drafts[quadrant.id].trim() || isSyncing}
+                    className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
+                    title="Add task"
+                    aria-label={`Add task to ${quadrant.title}`}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {grouped[quadrant.id].length === 0 ? (
+                  <div
+                    className={`min-h-[175px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-sm font-semibold transition ${
+                      draggedTaskId
+                        ? 'border-blue-200 bg-blue-50/40 text-blue-600'
+                        : 'border-[#e8dcc6] text-[#a18f78]'
+                    }`}
+                  >
+                    <GripVertical className="w-5 h-5 mb-1 opacity-60" />
+                    {draggedTaskId ? 'Drop task here' : 'No tasks'}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {grouped[quadrant.id].map((task) => {
+                      const priority = task.priority || 'Normal';
+                      const priorityConfig =
+                        PRIORITY_OPTIONS.find((option) => option.value === priority) ||
+                        PRIORITY_OPTIONS[2];
+                      const dragging = draggedTaskId === task.id;
+
+                      return (
+                        <div
+                          key={task.id}
+                          className={`rounded-xl border border-[#e7dbc4] bg-white/90 px-2.5 py-2.5 shadow-sm transition-all ${
+                            busyTaskId === task.id ? 'opacity-60' : ''
+                          } ${dragging ? 'opacity-40 scale-[0.99] border-blue-300' : ''}`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <button
+                              type="button"
+                              draggable={!task.isCompleted}
+                              onDragStart={(event) => {
+                                if (task.isCompleted) {
+                                  event.preventDefault();
+                                  return;
+                                }
+                                event.dataTransfer.setData('text/task-id', task.id);
+                                event.dataTransfer.effectAllowed = 'move';
+                                setDraggedTaskId(task.id);
+                              }}
+                              onDragEnd={endDrag}
+                              disabled={task.isCompleted}
+                              className={`mt-0.5 w-7 h-7 rounded-lg border border-[#e7dbc4] flex items-center justify-center shrink-0 ${
+                                task.isCompleted
+                                  ? 'text-[#c4b6a2] cursor-not-allowed'
+                                  : 'text-[#8b7a66] cursor-grab active:cursor-grabbing hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50'
+                              }`}
+                              title={
+                                task.isCompleted
+                                  ? 'Completed tasks cannot be dragged'
+                                  : 'Drag task to another quadrant'
+                              }
+                              aria-label={`Drag ${task.taskOfTheDay}`}
+                            >
+                              <GripVertical className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => void onToggleTaskStatus(task.id)}
+                              className={`mt-1 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                                task.isCompleted
+                                  ? 'bg-blue-600 border-blue-600 text-white'
+                                  : 'border-[#b9aa91] text-transparent hover:border-blue-500'
+                              }`}
+                              aria-label={
+                                task.isCompleted
+                                  ? 'Mark task incomplete'
+                                  : 'Mark task complete'
+                              }
+                            >
+                              {task.isCompleted ? (
+                                <Check className="w-3 h-3" />
+                              ) : (
+                                <Circle className="w-2 h-2" />
+                              )}
+                            </button>
+
+                            <div className="min-w-0 flex-1">
+                              <div
+                                className={`text-sm font-bold break-words ${
+                                  task.isCompleted
+                                    ? 'line-through text-[#9e8f7b]'
+                                    : 'text-[#3f3426]'
+                                }`}
+                              >
+                                {task.taskOfTheDay}
+                              </div>
+
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <select
+                                  value={priority}
+                                  onChange={(event) =>
+                                    void updatePriority(
+                                      task,
+                                      event.target.value as NonNullable<
+                                        TaskItem['priority']
+                                      >
+                                    )
+                                  }
+                                  disabled={busyTaskId === task.id}
+                                  className={`h-7 rounded-lg border px-2 text-[10px] font-black outline-none cursor-pointer ${priorityConfig.classes}`}
+                                  title="Task priority"
+                                  aria-label={`Priority for ${task.taskOfTheDay}`}
+                                >
+                                  {PRIORITY_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label} priority
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <select
+                                  value={inferQuadrant(task)}
+                                  onChange={(event) =>
+                                    void moveTask(
+                                      task.id,
+                                      event.target.value as MatrixQuadrant
+                                    )
+                                  }
+                                  disabled={
+                                    task.isCompleted || busyTaskId === task.id
+                                  }
+                                  className="h-7 rounded-lg border border-[#dfd1b6] bg-[#fffaf0] px-2 text-[10px] font-black text-[#6f604f] outline-none cursor-pointer disabled:opacity-50"
+                                  title="Move task to another quadrant"
+                                  aria-label={`Move ${task.taskOfTheDay}`}
+                                >
+                                  {quadrants.map((target) => (
+                                    <option key={target.id} value={target.id}>
+                                      {target.roman}. {target.title}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8b7a66]">
+                                  <CalendarDays className="w-3 h-3" />
+                                  {task.taskKey}
+                                </span>
+
+                                {task.timeEstimate && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8b7a66]">
+                                    <Clock3 className="w-3 h-3" />
+                                    {task.timeEstimate}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => void onDeleteTask(task.id)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#a18f78] hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              title="Delete task"
+                              aria-label="Delete task"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

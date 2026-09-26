@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
@@ -31,6 +31,25 @@ const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
+
+type PendingTaskMutation =
+  | { kind: 'upsert'; task: TaskItem }
+  | { kind: 'delete' };
+
+function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
+  return (
+    a.id === b.id &&
+    a.taskKey === b.taskKey &&
+    a.taskOfTheDay === b.taskOfTheDay &&
+    a.isCompleted === b.isCompleted &&
+    (a.priority || 'Normal') === (b.priority || 'Normal') &&
+    (a.timeEstimate || '') === (b.timeEstimate || '') &&
+    (a.category || '') === (b.category || '') &&
+    (a.notes || '') === (b.notes || '') &&
+    (a.completedAt || '') === (b.completedAt || '') &&
+    (a.matrixQuadrant || '') === (b.matrixQuadrant || '')
+  );
+}
 
 export default function App() {
   // Check if current URL is a secure confirmation link
@@ -101,6 +120,10 @@ export default function App() {
     return [];
   });
 
+  const pendingTaskMutationsRef = useRef<Map<string, PendingTaskMutation>>(
+    new Map()
+  );
+
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -160,8 +183,31 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = subscribeToTasks(
       (cloudTasks) => {
-        setTasks(cloudTasks);
-        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(cloudTasks));
+        const pending = pendingTaskMutationsRef.current;
+        const merged = new Map(cloudTasks.map((task) => [task.id, task]));
+
+        pending.forEach((mutation, taskId) => {
+          const cloudTask = merged.get(taskId);
+
+          if (mutation.kind === 'delete') {
+            if (!cloudTask) pending.delete(taskId);
+            merged.delete(taskId);
+            return;
+          }
+
+          if (cloudTask && taskContentMatches(cloudTask, mutation.task)) {
+            pending.delete(taskId);
+            return;
+          }
+
+          merged.set(taskId, mutation.task);
+        });
+
+        const nextTasks = Array.from(merged.values()).sort((a, b) =>
+          (b.taskKey || '').localeCompare(a.taskKey || '')
+        );
+        setTasks(nextTasks);
+        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(nextTasks));
       },
       (error) => {
         console.warn('Using local storage fallback for tasks due to:', error);
@@ -297,13 +343,19 @@ export default function App() {
       updatedAt: new Date().toISOString(),
     };
 
-    // Optimistic update
+    pendingTaskMutationsRef.current.set(taskId, {
+      kind: 'upsert',
+      task: newTask,
+    });
+
+    // Optimistic update: dashboard and Matrix read this same state immediately.
     setTasks((prev) => [newTask, ...prev]);
 
     try {
       setIsSyncing(true);
       await addTaskToCloud(newTask);
     } catch (err) {
+      pendingTaskMutationsRef.current.delete(taskId);
       // Rollback on failure
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
       throw err;
@@ -314,15 +366,30 @@ export default function App() {
 
   // Update a task (preserves ID and recorded date)
   const handleUpdateTask = async (updatedTask: TaskItem) => {
-    const previousTasks = [...tasks];
-    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+    const previousTask = tasks.find((task) => task.id === updatedTask.id);
+    const optimisticTask: TaskItem = {
+      ...updatedTask,
+      updatedAt: updatedTask.updatedAt || new Date().toISOString(),
+    };
+
+    pendingTaskMutationsRef.current.set(updatedTask.id, {
+      kind: 'upsert',
+      task: optimisticTask,
+    });
+    setTasks((prev) =>
+      prev.map((task) => (task.id === optimisticTask.id ? optimisticTask : task))
+    );
 
     try {
       setIsSyncing(true);
-      await updateTaskInCloud(updatedTask);
+      await updateTaskInCloud(optimisticTask);
     } catch (err) {
-      // Rollback on failure
-      setTasks(previousTasks);
+      pendingTaskMutationsRef.current.delete(updatedTask.id);
+      if (previousTask) {
+        setTasks((prev) =>
+          prev.map((task) => (task.id === previousTask.id ? previousTask : task))
+        );
+      }
       throw err;
     } finally {
       setIsSyncing(false);
@@ -331,15 +398,22 @@ export default function App() {
 
   // Delete a task
   const handleDeleteTask = async (taskId: string) => {
-    const previousTasks = [...tasks];
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    const previousTask = tasks.find((task) => task.id === taskId);
+    pendingTaskMutationsRef.current.set(taskId, { kind: 'delete' });
+    setTasks((prev) => prev.filter((task) => task.id !== taskId));
 
     try {
       setIsSyncing(true);
       await deleteTaskFromCloud(taskId);
     } catch (err) {
-      // Rollback on failure
-      setTasks(previousTasks);
+      pendingTaskMutationsRef.current.delete(taskId);
+      if (previousTask) {
+        setTasks((prev) =>
+          prev.some((task) => task.id === previousTask.id)
+            ? prev
+            : [previousTask, ...prev]
+        );
+      }
       throw err;
     } finally {
       setIsSyncing(false);
@@ -359,15 +433,22 @@ export default function App() {
       updatedAt: new Date().toISOString(),
     };
 
-    const previousTasks = [...tasks];
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
+    pendingTaskMutationsRef.current.set(taskId, {
+      kind: 'upsert',
+      task: updatedTask,
+    });
+    setTasks((prev) =>
+      prev.map((task) => (task.id === taskId ? updatedTask : task))
+    );
 
     try {
       setIsSyncing(true);
       await updateTaskInCloud(updatedTask);
     } catch (err) {
-      // Rollback on failure
-      setTasks(previousTasks);
+      pendingTaskMutationsRef.current.delete(taskId);
+      setTasks((prev) =>
+        prev.map((task) => (task.id === taskId ? target : task))
+      );
       throw err;
     } finally {
       setIsSyncing(false);

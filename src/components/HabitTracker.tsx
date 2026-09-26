@@ -263,22 +263,22 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   }, [weeklyTrend]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+    <div className="space-y-2 lg:max-h-[calc(100vh-82px)] lg:overflow-y-auto lg:pr-1">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
             Consistency workspace
           </p>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">
+          <h2 className="mt-0.5 text-xl sm:text-2xl font-black tracking-tight">
             Habit Tracker
           </h2>
-          <p className="mt-1 text-sm font-semibold text-slate-600">
+          <p className="mt-0.5 text-xs font-semibold text-slate-600 hidden md:block">
             Custom schedules, weekly check-ins, streaks, and completion history.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-right">
+          <div className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-right">
             <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
               This week
             </div>
@@ -289,7 +289,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <button
             type="button"
             onClick={formOpen && !editingHabitId ? closeForm : openAdd}
-            className="h-10 px-3 rounded-xl bg-blue-600 text-white font-black text-sm inline-flex items-center gap-2"
+            className="h-8 px-2.5 rounded-lg bg-blue-600 text-white font-black text-xs inline-flex items-center gap-1.5"
           >
             {formOpen && !editingHabitId ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {formOpen && !editingHabitId ? 'Cancel' : 'Add Habit'}
@@ -298,7 +298,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {formOpen && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <div className="text-sm font-black">
@@ -459,9 +459,9 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="min-w-[850px]">
-            <div className="grid grid-cols-[280px_repeat(7,1fr)_90px_90px] border-b border-slate-200/80 bg-slate-50">
+        <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
+          <div className="min-w-[760px]">
+            <div className="grid grid-cols-[220px_repeat(7,1fr)_72px_72px] border-b border-slate-200/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-black text-slate-500">
                 Habit
               </div>
@@ -496,7 +496,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             </div>
 
             {habits.length === 0 ? (
-              <div className="py-14 text-center">
+              <div className="py-8 text-center">
                 <Repeat2 className="w-8 h-8 mx-auto text-slate-400" />
                 <div className="mt-2 text-sm font-black">No habits yet</div>
                 <div className="text-xs font-semibold text-slate-500">
@@ -509,7 +509,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
-                    className={`grid grid-cols-[280px_repeat(7,1fr)_90px_90px] border-b last:border-b-0 border-slate-200/80 ${
+                    className={`grid grid-cols-[220px_repeat(7,1fr)_72px_72px] border-b last:border-b-0 border-slate-200/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
                     }`}
                   >
@@ -639,7 +639,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {historyHabit && historyStats && (
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
+        <section className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div
@@ -668,7 +668,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             </button>
           </div>
 
-          <div className="p-4 space-y-4">
+          <div className="p-3 space-y-3 lg:max-h-[calc(100vh-195px)] lg:overflow-y-auto">
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
               <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <Flame className="w-4 h-4 text-orange-500" />
@@ -738,14 +738,14 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   </div>
                 </div>
 
-                <div className="h-40 flex items-end gap-1.5 border-b border-slate-200 px-1">
+                <div className="h-28 flex items-end gap-1.5 border-b border-slate-200 px-1">
                   {weeklyTrend.map((week) => (
                     <div
                       key={week.key}
                       className="flex-1 min-w-0 h-full flex flex-col justify-end items-center group"
                       title={`${week.label}: ${week.completed}/${week.due} completed (${week.rate}%)`}
                     >
-                      <div className="w-full h-[112px] flex items-end justify-center">
+                      <div className="w-full h-[76px] flex items-end justify-center">
                         <div
                           className={`w-full max-w-[28px] rounded-t-md transition-all ${
                             week.due === 0

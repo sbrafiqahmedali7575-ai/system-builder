@@ -6,6 +6,7 @@ import { ReportView } from './components/ReportView';
 import { AddRecordModal } from './components/AddRecordModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
 import { ConfirmationPage } from './components/ConfirmationPage';
+import { DayReviewModal } from './components/DayReviewModal';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
@@ -82,6 +83,7 @@ export default function App() {
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState<boolean>(false);
+  const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(false);
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -438,6 +440,7 @@ export default function App() {
       <PowerBiHeader
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
+        onOpenDayReview={() => setIsDayReviewOpen(true)}
         theme={theme}
         onThemeChange={setTheme}
         totalRecordsCount={records.length}
@@ -481,6 +484,17 @@ export default function App() {
         isOpen={isNotificationModalOpen}
         onClose={() => setIsNotificationModalOpen(false)}
         theme={theme}
+      />
+
+      {/* 5. Header-triggered current-day review */}
+      <DayReviewModal
+        isOpen={isDayReviewOpen}
+        tasks={tasks}
+        theme={theme}
+        isSyncing={isSyncing}
+        onClose={() => setIsDayReviewOpen(false)}
+        onToggleTaskStatus={handleToggleTaskStatus}
+        onSubmitTaskDay={handleSubmitTaskDay}
       />
     </div>
   );

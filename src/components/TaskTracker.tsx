@@ -361,7 +361,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden min-h-[640px]">
+      <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
         <CalendarWorkspace
           tasks={tasks}
           habits={habits}

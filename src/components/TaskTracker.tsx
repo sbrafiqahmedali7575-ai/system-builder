@@ -140,7 +140,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
 
   const achievedDays = useMemo(() => {
     const loggedDates = Array.from(
-      new Set(
+      new Set<string>(
         tasks
           .filter((task) => task.taskKey <= today)
           .map((task) => task.taskKey)

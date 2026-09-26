@@ -135,7 +135,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   };
 
   const toggleCheckIn = async (habit: HabitItem, dateKey: string) => {
-    if (!isHabitDue(habit, dateKey)) return;
+    if (!isHabitDue(habit, dateKey) || dateKey > today) return;
     try {
       setBusyId(habit.id);
       const exists = habit.checkIns.includes(dateKey);
@@ -313,21 +313,22 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
                     {weekDates.map((dateKey) => {
                       const due = isHabitDue(habit, dateKey);
+                      const isFuture = dateKey > today;
                       const checked = habit.checkIns.includes(dateKey);
                       return (
                         <div key={dateKey} className="flex items-center justify-center border-l border-black/5">
                           <button
                             type="button"
-                            disabled={!due}
+                            disabled={!due || isFuture}
                             onClick={() => void toggleCheckIn(habit, dateKey)}
                             className={`w-8 h-8 rounded-full border flex items-center justify-center transition ${
-                              !due
-                                ? 'border-transparent bg-black/[0.025] cursor-not-allowed'
+                              !due || isFuture
+                                ? 'border-transparent bg-black/[0.025] cursor-not-allowed opacity-50'
                                 : checked
                                 ? colorClasses[habit.color].active
                                 : 'border-[#cdbfa8] bg-white hover:border-blue-400'
                             }`}
-                            title={due ? (checked ? 'Remove check-in' : 'Check in') : 'Not scheduled'}
+                            title={isFuture ? 'Future check-ins are locked' : due ? (checked ? 'Remove check-in' : 'Check in') : 'Not scheduled'}
                             aria-label={`${habit.name} on ${dateKey}`}
                           >
                             {checked && <Check className="w-4 h-4" />}

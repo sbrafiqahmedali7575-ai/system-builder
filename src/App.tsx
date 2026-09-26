@@ -392,7 +392,6 @@ export default function App() {
   };
 
   const handleUpdateHabit = async (habit: HabitItem) => {
-    const previous = [...habits];
     setHabits((current) => current.map((item) => (item.id === habit.id ? habit : item)));
     try {
       setIsSyncing(true);
@@ -405,7 +404,6 @@ export default function App() {
   };
 
   const handleDeleteHabit = async (habitId: string) => {
-    const previous = [...habits];
     setHabits((current) => current.filter((item) => item.id !== habitId));
     try {
       setIsSyncing(true);

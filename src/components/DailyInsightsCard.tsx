@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Check, Clock3, Flame, Lightbulb, Repeat2, Siren, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Check, Clock3, Flame, Lightbulb, Repeat2, Target, TrendingUp } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -37,18 +37,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   const taskProgress = todayTasks.length
     ? Math.round((completedToday / todayTasks.length) * 100)
     : 0;
-
-  const quadrantOneTasks = useMemo(
-    () =>
-      todayTasks
-        .filter(
-          (task) =>
-            !task.isCompleted &&
-            task.matrixQuadrant === 'urgent-important'
-        )
-        .slice(0, 4),
-    [todayTasks]
-  );
 
   const dueHabits = useMemo(
     () => habits.filter((habit) => isHabitDue(habit, today)),
@@ -360,44 +348,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
           </div>
         </div>
 
-      <div className="rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/20 p-1.5 mb-0">
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Siren className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span className="text-[10px] uppercase tracking-wider font-black text-rose-700 dark:text-rose-300">
-              Quadrant I · Do first
-            </span>
-          </div>
-          <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">
-            {quadrantOneTasks.length}
-          </span>
-        </div>
-
-        {quadrantOneTasks.length === 0 ? (
-          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-            No unfinished Quadrant I tasks scheduled for today.
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {quadrantOneTasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-1.5 rounded-lg border border-rose-100 dark:border-rose-900/40 bg-white/80 dark:bg-slate-950/45 px-2 py-1.5"
-                title={task.taskOfTheDay}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                  {task.taskOfTheDay}
-                </span>
-                <span className="text-[9px] font-black text-rose-600 dark:text-rose-400 shrink-0">
-                  I
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
         <div>
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-1.5">
@@ -407,7 +357,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             </span>
           </div>
           <span className="text-[9px] font-bold text-slate-400">
-            30-day progress
+            30-day rate
           </span>
         </div>
 
@@ -434,12 +384,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                       <span className="hidden sm:inline text-[8px] font-bold text-slate-400 shrink-0">
                         {getHabitScheduleLabel(habit)}
                       </span>
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-emerald-500 transition-all"
-                        style={{ width: `${stats.thirty.rate}%` }}
-                      />
                     </div>
                   </div>
                   <div className="text-right shrink-0">

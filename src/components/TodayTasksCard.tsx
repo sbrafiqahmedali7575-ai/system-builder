@@ -10,12 +10,12 @@ import {
   X,
   AlertCircle,
   Loader2,
-  ListTodo,
   CalendarDays,
   Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import { TaskItem, DashboardTheme } from '../types';
+import { AnimatedProgressRing } from './AnimatedProgressRing';
 import {
   CONFIGURED_TIMEZONE,
   getUpcomingDateOptions,
@@ -348,8 +348,18 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800">
         <div className="flex items-center space-x-1.5">
-          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
-            <ListTodo className="w-5 h-5" />
+          <div
+            className="shrink-0"
+            title={`${completedCount} of ${totalTasksCount} tasks completed • ${progressPercent}%`}
+          >
+            <AnimatedProgressRing
+              value={progressPercent}
+              size={38}
+              strokeWidth={4}
+              label={`${progressPercent}%`}
+              trackClassName="text-slate-200 dark:text-slate-800"
+              progressClassName={progressPercent === 100 ? 'text-emerald-500' : 'text-blue-500'}
+            />
           </div>
           <div>
             <div className="flex items-center gap-1">
@@ -451,29 +461,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────
-          3. PROGRESS BAR (Displayed when tasks exist)
-             Do NOT show 0% failure when there are no tasks!
-      ───────────────────────────────────────────────────────────── */}
-      {totalTasksCount > 0 ? (
-        <div className="ui-motion-card mb-2.5 p-2 rounded-2xl bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-          <div className="flex items-center justify-between text-xs font-semibold mb-1">
-            <span className="text-slate-700 dark:text-slate-200">
-              {completedCount} of {totalTasksCount} tasks completed
-            </span>
-            <span className="font-mono text-blue-600 dark:text-blue-400">
-              {progressPercent}%
-            </span>
-          </div>
-          <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-            <motion.div
-              className="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-      ) : null}
+      {/* Task completion progress is shown in the header ring. */}
 
       {/* ─────────────────────────────────────────────────────────────
           4. TASK LIST (Incomplete tasks first, Completed tasks below)

@@ -80,14 +80,14 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   }, [tasks, today]);
 
   const weekTaskSummary = useMemo(() => {
-    const elapsed = weekTaskTrend.filter((day) => !day.future);
-    const total = elapsed.reduce((sum, day) => sum + day.total, 0);
-    const completed = elapsed.reduce((sum, day) => sum + day.completed, 0);
+    const elapsedDays = weekTaskTrend.filter((day) => !day.future);
+    const scheduled = elapsedDays.reduce((sum, day) => sum + day.total, 0);
+    const completed = elapsedDays.reduce((sum, day) => sum + day.completed, 0);
 
     return {
-      total,
+      scheduled,
       completed,
-      rate: total ? Math.round((completed / total) * 100) : 0,
+      rate: scheduled ? Math.round((completed / scheduled) * 100) : 0,
     };
   }, [weekTaskTrend]);
 
@@ -121,9 +121,9 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   }, [habits, today]);
 
   const weekHabitSummary = useMemo(() => {
-    const elapsed = weekHabitTrend.filter((day) => !day.future);
-    const due = elapsed.reduce((sum, day) => sum + day.due, 0);
-    const completed = elapsed.reduce((sum, day) => sum + day.completed, 0);
+    const elapsedDays = weekHabitTrend.filter((day) => !day.future);
+    const due = elapsedDays.reduce((sum, day) => sum + day.due, 0);
+    const completed = elapsedDays.reduce((sum, day) => sum + day.completed, 0);
 
     return {
       due,
@@ -209,9 +209,17 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                   This week · tasks
                 </span>
               </div>
-              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0">
-                {weekTaskSummary.rate}%
-              </span>
+              <div
+                className="text-right shrink-0"
+                title={`Week done: ${weekTaskSummary.completed}/${weekTaskSummary.scheduled} tasks completed`}
+              >
+                <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
+                  {weekTaskSummary.rate}%
+                </div>
+                <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
+                  week done
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
@@ -225,18 +233,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                       : `${day.dateKey}: ${day.completed}/${day.total} tasks completed (${day.rate}%)`
                   }
                 >
-                  <div
-                    className={`mb-0.5 text-[8px] font-black tabular-nums ${
-                      day.future
-                        ? 'text-slate-300 dark:text-slate-600'
-                        : day.dateKey === today
-                        ? 'text-blue-600 dark:text-blue-300'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    {day.future ? '—' : `${day.rate}%`}
-                  </div>
-                  <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
+                  <div className="relative h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
                     {!day.future && (
                       <div
                         className={`w-full rounded-t-sm transition-all ${
@@ -252,6 +249,17 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                         }}
                       />
                     )}
+                    <span
+                      className={`absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums ${
+                        day.future
+                          ? 'text-slate-300 dark:text-slate-600'
+                          : day.rate >= 45 && day.total > 0
+                          ? 'text-white'
+                          : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {day.future ? '—' : `${day.rate}%`}
+                    </span>
                   </div>
                   <div className={`mt-0.5 text-[8px] font-black ${
                     day.dateKey === today
@@ -273,9 +281,17 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                   This week · habits
                 </span>
               </div>
-              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0">
-                {weekHabitSummary.rate}%
-              </span>
+              <div
+                className="text-right shrink-0"
+                title={`Week done: ${weekHabitSummary.completed}/${weekHabitSummary.due} habit check-ins completed`}
+              >
+                <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">
+                  {weekHabitSummary.rate}%
+                </div>
+                <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
+                  week done
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
@@ -289,18 +305,7 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                       : `${day.dateKey}: ${day.completed}/${day.due} habits completed (${day.rate}%)`
                   }
                 >
-                  <div
-                    className={`mb-0.5 text-[8px] font-black tabular-nums ${
-                      day.future
-                        ? 'text-slate-300 dark:text-slate-600'
-                        : day.dateKey === today
-                        ? 'text-emerald-600 dark:text-emerald-300'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    {day.future ? '—' : `${day.rate}%`}
-                  </div>
-                  <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
+                  <div className="relative h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
                     {!day.future && (
                       <div
                         className={`w-full rounded-t-sm transition-all ${
@@ -316,6 +321,17 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                         }}
                       />
                     )}
+                    <span
+                      className={`absolute inset-0 flex items-center justify-center text-[8px] font-black tabular-nums ${
+                        day.future
+                          ? 'text-slate-300 dark:text-slate-600'
+                          : day.rate >= 45 && day.due > 0
+                          ? 'text-white'
+                          : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {day.future ? '—' : `${day.rate}%`}
+                    </span>
                   </div>
                   <div className={`mt-0.5 text-[8px] font-black ${
                     day.dateKey === today

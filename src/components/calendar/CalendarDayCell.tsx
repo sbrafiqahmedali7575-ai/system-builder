@@ -59,7 +59,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 
   return (
     <div
-      className={`relative min-w-0 min-h-[76px] sm:min-h-[108px] border-r border-b border-slate-100 transition-colors ${
+      className={`relative min-w-0 min-h-[64px] sm:min-h-[108px] border-r border-b border-slate-100 transition-colors ${
         !inMonth
           ? 'bg-slate-50/40'
           : isSelected
@@ -75,12 +75,12 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
       />
 
-      <div className="relative z-10 p-1 sm:p-1.5 pointer-events-none">
+      <div className="relative z-10 p-0.5 sm:p-1.5 pointer-events-none">
         <div className="flex items-start justify-between gap-1">
           <button
             type="button"
             onClick={() => onSelectDate(dateKey)}
-            className={`pointer-events-auto w-6 h-6 sm:w-7 sm:h-7 rounded-full inline-flex items-center justify-center text-[10px] sm:text-xs font-semibold transition-colors ${
+            className={`pointer-events-auto w-5 h-5 sm:w-7 sm:h-7 rounded-full inline-flex items-center justify-center text-[9px] sm:text-xs font-semibold transition-colors ${
               isToday
                 ? 'bg-blue-600 text-white shadow-sm'
                 : isSelected
@@ -134,15 +134,15 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           )}
         </div>
 
-        <div className="sm:hidden mt-1 flex flex-wrap items-center gap-1">
+        <div className="sm:hidden mt-0.5 flex flex-wrap items-center gap-0.5">
           {tasks.length > 0 && (
-            <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-blue-100 text-blue-700 items-center justify-center text-[8px] font-black">
+            <span className="inline-flex min-w-4 h-3.5 px-1 rounded-full bg-blue-100 text-blue-700 items-center justify-center text-[7px] font-black">
               {tasks.length}T
             </span>
           )}
 
           {habits.length > 0 && (
-            <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-emerald-100 text-emerald-700 items-center justify-center text-[8px] font-black">
+            <span className="inline-flex min-w-4 h-3.5 px-1 rounded-full bg-emerald-100 text-emerald-700 items-center justify-center text-[7px] font-black">
               {habits.length}H
             </span>
           )}

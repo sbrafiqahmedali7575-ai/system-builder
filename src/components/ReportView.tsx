@@ -7,7 +7,6 @@ import { calculateKPIStats } from '../utils/daxMeasures';
 import { parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TodayTasksCard } from './TodayTasksCard';
-import { DailyInsightsCard } from './DailyInsightsCard';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -279,8 +278,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
         }`}
       >
         <div className="space-y-2.5">
-          {/* Today's Tasks + Daily Insights — 50/50 on desktop */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-stretch lg:h-[430px]">
+          {/* Today's Tasks dashboard */}
+          <div className="grid grid-cols-1 gap-2 items-stretch lg:h-[430px]">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -299,18 +298,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 currentDayFormatted={currentCadenceDay.formattedDate}
                 currentDayName={currentCadenceDay.fullDayName}
                 currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
-                isSyncing={isSyncing}
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.36, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="min-w-0 min-h-0 h-full flex flex-col"
-            >
-              <DailyInsightsCard
-                theme={theme}
                 overallCompletionPercentage={allKpis.completionRate}
                 completedDays={allKpis.completedDays}
                 totalDays={allKpis.totalDays}
@@ -318,8 +305,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 countdownReason={longTermCountdown.reason}
                 countdownTargetLabel={longTermCountdown.targetDateLabel}
                 onOpenCountdown={openCountdownEditor}
+                isSyncing={isSyncing}
               />
             </motion.div>
+
           </div>
         </div>
       </section>

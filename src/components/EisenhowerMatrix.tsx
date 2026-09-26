@@ -531,16 +531,16 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+    <div className="space-y-2 lg:max-h-full lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
             Priority workspace
           </p>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">
+          <h2 className="mt-0.5 text-xl sm:text-2xl font-black tracking-tight">
             Eisenhower Matrix
           </h2>
-          <p className="mt-1 text-sm font-semibold text-slate-600">
+          <p className="mt-0.5 text-xs font-semibold text-slate-600 hidden md:block">
             Drag with the grip handle, or use Move to on touch devices. Quadrant and priority are controlled separately.
           </p>
         </div>
@@ -573,7 +573,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 lg:min-h-0 lg:h-[calc(100vh-145px)]">
         {quadrants.map((quadrant) => {
           const theme = QUADRANT_THEMES[quadrant.color];
           const QuadrantIconComponent =
@@ -607,7 +607,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[300px] rounded-2xl border transition-all ${theme.border} ${theme.surface} ${
+              className={`relative min-h-[230px] rounded-xl border transition-all overflow-hidden flex flex-col ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'
@@ -635,11 +635,11 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               )}
 
-              <div className="px-4 py-3 border-b border-slate-200/80 flex items-start justify-between gap-2">
+              <div className="px-3 py-2 border-b border-slate-200/80 flex items-start justify-between gap-2 shrink-0">
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                   <div className="relative shrink-0 mt-0.5">
                     <span
-                      className={`w-9 h-9 rounded-xl border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center`}
+                      className={`w-9 h-8 rounded-lg border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center`}
                       title={QUADRANT_ICONS[quadrant.icon].label}
                     >
                       <QuadrantIconComponent className="w-4 h-4" />
@@ -813,7 +813,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               </div>
 
-              <div className="p-3 space-y-2">
+              <div className="p-2 space-y-1.5 flex-1 min-h-0 overflow-y-auto">
                 <div className="flex gap-2">
                   <input
                     value={drafts[quadrant.id]}
@@ -827,13 +827,13 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       if (event.key === 'Enter') void addTask(quadrant.id);
                     }}
                     placeholder="Add task..."
-                    className="min-w-0 flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
+                    className="min-w-0 flex-1 h-8 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
                   />
                   <button
                     type="button"
                     onClick={() => void addTask(quadrant.id)}
                     disabled={!drafts[quadrant.id].trim() || isSyncing}
-                    className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
+                    className="w-9 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
                     title="Add task"
                     aria-label={`Add task to ${quadrant.title}`}
                   >
@@ -843,7 +843,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
 
                 {grouped[quadrant.id].length === 0 ? (
                   <div
-                    className={`min-h-[175px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-sm font-semibold transition ${
+                    className={`min-h-[96px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-sm font-semibold transition ${
                       draggedTaskId
                         ? 'border-blue-200 bg-blue-50/40 text-blue-600'
                         : `${theme.border} ${theme.iconText} bg-white`
@@ -864,7 +864,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       return (
                         <div
                           key={task.id}
-                          className={`rounded-xl border ${theme.accentBorder} bg-white px-2.5 py-2.5 shadow-sm transition-all ${
+                          className={`rounded-xl border ${theme.accentBorder} bg-white px-2 py-2 shadow-sm transition-all ${
                             busyTaskId === task.id ? 'opacity-60' : ''
                           } ${dragging ? 'opacity-40 scale-[0.99] border-blue-300' : ''}`}
                         >

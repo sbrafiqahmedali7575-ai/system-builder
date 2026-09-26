@@ -14,8 +14,9 @@ import {
   Sparkles,
   ArrowRight,
   Target,
+  Repeat2,
 } from 'lucide-react';
-import { DashboardTheme, MatrixQuadrant, TaskItem } from '../types';
+import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { PomodoroTimer } from './PomodoroTimer';
 import {
@@ -25,6 +26,7 @@ import {
   areDatesEqual,
   toInputDateValue,
 } from '../utils/taskDateUtils';
+import { isHabitDue } from '../utils/habitUtils';
 import confetti from 'canvas-confetti';
 
 const TASK_QUADRANT_OPTIONS: Array<{
@@ -89,6 +91,7 @@ function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
 
 interface TodayTasksCardProps {
   tasks: TaskItem[];
+  habits: HabitItem[];
   theme: DashboardTheme;
   onAddTask: (task: Omit<TaskItem, 'id'>) => Promise<void>;
   onUpdateTask: (task: TaskItem) => Promise<void>;
@@ -102,6 +105,7 @@ interface TodayTasksCardProps {
 
 export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   tasks,
+  habits,
   theme,
   onAddTask,
   onUpdateTask,
@@ -142,6 +146,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const totalTasksCount = dateTasks.length;
   const completedCount = completedTasks.length;
   const progressPercent = totalTasksCount > 0 ? Math.round((completedCount / totalTasksCount) * 100) : 0;
+
+  const dateHabits = useMemo(
+    () => habits.filter((habit) => isHabitDue(habit, activeDateKey)),
+    [habits, activeDateKey]
+  );
+  const completedHabitCount = dateHabits.filter((habit) =>
+    habit.checkIns.includes(activeDateKey)
+  ).length;
 
   // UI state for "Enter Tasks" panel
   const [isEnterPanelOpen, setIsEnterPanelOpen] = useState(false);
@@ -461,6 +473,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <span className="uppercase tracking-wide font-black text-slate-400">Tasks</span>
                 <span className="font-mono font-black text-slate-700 dark:text-slate-200">
                   {completedCount}/{totalTasksCount}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5">
+                <Repeat2 className="w-2.5 h-2.5 text-emerald-500" />
+                <span className="uppercase tracking-wide font-black text-slate-400">Habits</span>
+                <span className="font-mono font-black text-slate-700 dark:text-slate-200">
+                  {completedHabitCount}/{dateHabits.length}
                 </span>
               </span>
             </div>

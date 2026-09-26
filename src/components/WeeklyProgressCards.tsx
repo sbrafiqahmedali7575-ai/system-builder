@@ -12,18 +12,19 @@ import {
   parseHabitDateKey,
 } from '../utils/habitUtils';
 
+const FULL_WEEK_PERCENT_CAPACITY = 700;
+const WEEKLY_TARGET_PERCENTAGE = 80;
+
 interface WeeklyProgressCardsProps {
   tasks: TaskItem[];
   habits: HabitItem[];
   theme: DashboardTheme;
-  currentWeekCadencePercentage: number;
 }
 
 export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
   tasks,
   habits,
   theme,
-  currentWeekCadencePercentage,
 }) => {
   const isDark = theme === 'dark';
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
@@ -61,12 +62,15 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
     });
   }, [tasks, today]);
 
-  const weekTaskSummary = useMemo(() => {
-    const elapsed = weekTaskTrend.filter((day) => !day.future);
-    return {
-      scheduled: elapsed.reduce((sum, day) => sum + day.total, 0),
-      completed: elapsed.reduce((sum, day) => sum + day.completed, 0),
-    };
+  const weekTaskScore = useMemo(() => {
+    const totalDailyPercentage = weekTaskTrend.reduce(
+      (sum, day) => sum + (day.future ? 0 : day.rate),
+      0
+    );
+
+    return Math.round(
+      (totalDailyPercentage / FULL_WEEK_PERCENT_CAPACITY) * 1000
+    ) / 10;
   }, [weekTaskTrend]);
 
   const weekHabitTrend = useMemo(() => {
@@ -100,20 +104,16 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
     });
   }, [habits, today]);
 
-  const weekHabitSummary = useMemo(() => {
-    const elapsed = weekHabitTrend.filter((day) => !day.future);
-    return {
-      due: elapsed.reduce((sum, day) => sum + day.due, 0),
-      completed: elapsed.reduce((sum, day) => sum + day.completed, 0),
-    };
-  }, [weekHabitTrend]);
+  const weekHabitScore = useMemo(() => {
+    const totalDailyPercentage = weekHabitTrend.reduce(
+      (sum, day) => sum + (day.future ? 0 : day.rate),
+      0
+    );
 
-  const overallWeekRate = useMemo(() => {
-    const total = weekTaskSummary.scheduled + weekHabitSummary.due;
-    const completed =
-      weekTaskSummary.completed + weekHabitSummary.completed;
-    return total ? Math.round((completed / total) * 100) : 0;
-  }, [weekTaskSummary, weekHabitSummary]);
+    return Math.round(
+      (totalDailyPercentage / FULL_WEEK_PERCENT_CAPACITY) * 1000
+    ) / 10;
+  }, [weekHabitTrend]);
 
   return (
     <section
@@ -136,13 +136,13 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
           </div>
           <div
             className="text-right shrink-0"
-            title={`Current week cadence: ${currentWeekCadencePercentage}%`}
+            title={`Weekly task score: ${weekTaskScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="text-xs font-black text-blue-600 dark:text-blue-400">
-              {currentWeekCadencePercentage}%
+              {weekTaskScore.toFixed(1)}%
             </div>
             <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-              cadence
+              Target {WEEKLY_TARGET_PERCENTAGE}%
             </div>
           </div>
         </div>
@@ -216,13 +216,13 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
           </div>
           <div
             className="text-right shrink-0"
-            title={`Overall week completion: ${overallWeekRate}%`}
+            title={`Weekly habit score: ${weekHabitScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-              {overallWeekRate}%
+              {weekHabitScore.toFixed(1)}%
             </div>
             <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-              overall week
+              Target {WEEKLY_TARGET_PERCENTAGE}%
             </div>
           </div>
         </div>

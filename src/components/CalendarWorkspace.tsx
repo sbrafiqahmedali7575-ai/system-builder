@@ -103,7 +103,11 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   }, [cursor]);
 
   const changeMonth = (offset: number) => {
-    setCursor((current) => new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + offset, 1)));
+    setCursor((current) => {
+      const next = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + offset, 1));
+      setSelectedDate(keyFromDate(next));
+      return next;
+    });
   };
 
   const jumpToday = () => {

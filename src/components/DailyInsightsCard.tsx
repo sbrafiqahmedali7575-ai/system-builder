@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Lightbulb, Repeat2, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Lightbulb, Repeat2, Target } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import {
   CONFIGURED_TIMEZONE,
@@ -51,6 +51,45 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
         .sort((a, b) => a.taskKey.localeCompare(b.taskKey)),
     [tasks, today]
   );
+
+  const weekTaskTrend = useMemo(() => {
+    const todayDate = parseHabitDateKey(today);
+    const day = todayDate.getUTCDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = addHabitDays(today, mondayOffset);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const dateKey = addHabitDays(monday, index);
+      const date = parseHabitDateKey(dateKey);
+      const dayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, dateKey));
+      const completed = dayTasks.filter((task) => task.isCompleted).length;
+      const future = dateKey > today;
+
+      return {
+        dateKey,
+        label: date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          timeZone: 'UTC',
+        }).slice(0, 1),
+        total: dayTasks.length,
+        completed,
+        rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
+        future,
+      };
+    });
+  }, [tasks, today]);
+
+  const weekTaskSummary = useMemo(() => {
+    const elapsed = weekTaskTrend.filter((day) => !day.future);
+    const total = elapsed.reduce((sum, day) => sum + day.total, 0);
+    const completed = elapsed.reduce((sum, day) => sum + day.completed, 0);
+
+    return {
+      total,
+      completed,
+      rate: total ? Math.round((completed / total) * 100) : 0,
+    };
+  }, [weekTaskTrend]);
 
   const weekHabitTrend = useMemo(() => {
     const todayDate = parseHabitDateKey(today);
@@ -161,62 +200,112 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-0.5 space-y-1.5">
 
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-1.5 mb-0">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
-                This week · habits
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-white/80 dark:bg-slate-950/50 p-1.5">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Target className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="truncate text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
+                  This week · tasks
+                </span>
+              </div>
+              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0">
+                {weekTaskSummary.rate}%
               </span>
             </div>
-            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">
-              {weekHabitSummary.rate}%
-            </span>
+
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+              {weekTaskTrend.map((day) => (
+                <div
+                  key={day.dateKey}
+                  className="min-w-0 text-center"
+                  title={
+                    day.future
+                      ? `${day.dateKey}: future`
+                      : `${day.dateKey}: ${day.completed}/${day.total} tasks completed (${day.rate}%)`
+                  }
+                >
+                  <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
+                    {!day.future && (
+                      <div
+                        className={`w-full rounded-t-sm transition-all ${
+                          day.total > 0
+                            ? 'bg-blue-500'
+                            : 'bg-slate-300 dark:bg-slate-700'
+                        }`}
+                        style={{
+                          height:
+                            day.total === 0
+                              ? '4px'
+                              : `${Math.max(8, day.rate)}%`,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className={`mt-0.5 text-[8px] font-black ${
+                    day.dateKey === today
+                      ? 'text-blue-600 dark:text-blue-300'
+                      : 'text-slate-400'
+                  }`}>
+                    {day.label}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
-            {weekHabitTrend.map((day) => (
-              <div
-                key={day.dateKey}
-                className="min-w-0 text-center"
-                title={
-                  day.future
-                    ? `${day.dateKey}: future`
-                    : `${day.dateKey}: ${day.completed}/${day.due} habits completed (${day.rate}%)`
-                }
-              >
-                <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
-                  {!day.future && (
-                    <div
-                      className={`w-full rounded-t-sm transition-all ${
-                        day.rate >= 80
-                          ? 'bg-emerald-500'
-                          : day.rate >= 50
-                          ? 'bg-blue-500'
-                          : day.due > 0
-                          ? 'bg-amber-400'
-                          : 'bg-slate-300 dark:bg-slate-700'
-                      }`}
-                      style={{
-                        height:
-                          day.due === 0
-                            ? '4px'
-                            : `${Math.max(8, day.rate)}%`,
-                      }}
-                    />
-                  )}
-                </div>
-                <div className={`mt-0.5 text-[8px] font-black ${
-                  day.dateKey === today
-                    ? 'text-blue-600 dark:text-blue-300'
-                    : 'text-slate-400'
-                }`}>
-                  {day.label}
-                </div>
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-white/80 dark:bg-slate-950/50 p-1.5">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Repeat2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="truncate text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
+                  This week · habits
+                </span>
               </div>
-            ))}
-          </div>
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0">
+                {weekHabitSummary.rate}%
+              </span>
+            </div>
 
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+              {weekHabitTrend.map((day) => (
+                <div
+                  key={day.dateKey}
+                  className="min-w-0 text-center"
+                  title={
+                    day.future
+                      ? `${day.dateKey}: future`
+                      : `${day.dateKey}: ${day.completed}/${day.due} habits completed (${day.rate}%)`
+                  }
+                >
+                  <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
+                    {!day.future && (
+                      <div
+                        className={`w-full rounded-t-sm transition-all ${
+                          day.due > 0
+                            ? 'bg-emerald-500'
+                            : 'bg-slate-300 dark:bg-slate-700'
+                        }`}
+                        style={{
+                          height:
+                            day.due === 0
+                              ? '4px'
+                              : `${Math.max(8, day.rate)}%`,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className={`mt-0.5 text-[8px] font-black ${
+                    day.dateKey === today
+                      ? 'text-emerald-600 dark:text-emerald-300'
+                      : 'text-slate-400'
+                  }`}>
+                    {day.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
 

@@ -17,10 +17,10 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ className = '' }) 
   const [customMinutes, setCustomMinutes] = useState(String(DEFAULT_MINUTES));
 
   const endAtRef = useRef<number | null>(null);
-  const resetClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetClickTimerRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const oscillatorsRef = useRef<OscillatorNode[]>([]);
-  const alarmStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alarmStopTimerRef = useRef<number | null>(null);
   const alarmStartedRef = useRef(false);
 
   const stopAlarm = useCallback(() => {
@@ -67,7 +67,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ className = '' }) 
         const startTime = baseTime + second;
         const endTime = startTime + 0.28;
         const progress = ALARM_SECONDS <= 1 ? 1 : second / (ALARM_SECONDS - 1);
-        const volume = 0.035 + progress * 0.465;
+        const volume = 0.03 + progress * 0.77;
 
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();

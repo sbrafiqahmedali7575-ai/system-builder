@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   CalendarDays,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -444,85 +443,109 @@ interface CalendarTopBarProps {
 const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
   view,
   periodLabel,
-  viewMenuOpen,
-  onToggleViewMenu,
   onViewChange,
   onPrevious,
   onNext,
   onToday,
   onAdd,
-}) => {
-  const activeView = CALENDAR_VIEWS.find((option) => option.id === view);
-
-  return (
-    <header className="relative z-30 shrink-0 h-14 px-3 sm:px-5 flex items-center justify-between gap-3 border-b border-slate-100 bg-white">
-      <div className="min-w-0 flex items-center gap-2">
-        <CalendarDays className="w-5 h-5 shrink-0 text-slate-500" />
-        <h2 className="min-w-0 truncate text-lg sm:text-xl font-bold">
-          {periodLabel}
-        </h2>
-      </div>
-
-      <div className="flex items-center gap-0.5 shrink-0">
-        <ToolbarIconButton title="Add task" onClick={onAdd}>
-          <Plus className="w-4 h-4" />
-        </ToolbarIconButton>
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={onToggleViewMenu}
-            aria-haspopup="menu"
-            aria-expanded={viewMenuOpen}
-            className="h-9 px-2.5 rounded-lg inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-          >
-            {activeView?.label || 'Month'}
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-
-          {viewMenuOpen && (
-            <div
-              role="menu"
-              className="absolute right-0 top-10 z-50 w-32 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
-            >
-              {CALENDAR_VIEWS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => onViewChange(option.id)}
-                  className={`w-full h-8 px-2.5 rounded-lg text-left text-xs font-semibold ${
-                    option.id === view
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          )}
+}) => (
+  <header className="relative z-30 shrink-0 border-b border-slate-100 bg-white">
+    <div className="px-2.5 sm:px-5 py-2 sm:py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex items-center gap-2">
+          <CalendarDays className="w-5 h-5 shrink-0 text-slate-500" />
+          <h2 className="min-w-0 truncate text-base sm:text-xl font-bold text-slate-900">
+            {periodLabel}
+          </h2>
         </div>
 
-        <ToolbarIconButton title="Previous period" onClick={onPrevious}>
-          <ChevronLeft className="w-4 h-4" />
-        </ToolbarIconButton>
-
-        <button
-          type="button"
-          onClick={onToday}
-          className="h-9 px-2.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100"
-        >
-          Today
-        </button>
-
-        <ToolbarIconButton title="Next period" onClick={onNext}>
-          <ChevronRight className="w-4 h-4" />
-        </ToolbarIconButton>
+        <div className="sm:hidden shrink-0">
+          <ToolbarIconButton title="Add task" onClick={onAdd}>
+            <Plus className="w-4 h-4" />
+          </ToolbarIconButton>
+        </div>
       </div>
-    </header>
-  );
-};
+
+      <div className="flex items-center justify-between gap-2 sm:justify-end">
+        <CalendarViewSegmentedControl
+          value={view}
+          onChange={onViewChange}
+        />
+
+        <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={onPrevious}
+            title={view === 'year' ? 'Previous year' : 'Previous month'}
+            aria-label={view === 'year' ? 'Previous year' : 'Previous month'}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-white hover:text-slate-900 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onToday}
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-700 hover:bg-white transition-colors"
+          >
+            Today
+          </button>
+
+          <button
+            type="button"
+            onClick={onNext}
+            title={view === 'year' ? 'Next year' : 'Next month'}
+            aria-label={view === 'year' ? 'Next year' : 'Next month'}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-white hover:text-slate-900 transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="hidden sm:block shrink-0">
+          <ToolbarIconButton title="Add task" onClick={onAdd}>
+            <Plus className="w-4 h-4" />
+          </ToolbarIconButton>
+        </div>
+      </div>
+    </div>
+  </header>
+);
+
+interface CalendarViewSegmentedControlProps {
+  value: CalendarView;
+  onChange: (view: CalendarView) => void;
+}
+
+const CalendarViewSegmentedControl: React.FC<
+  CalendarViewSegmentedControlProps
+> = ({ value, onChange }) => (
+  <div
+    role="group"
+    aria-label="Calendar view"
+    className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-0.5 shrink-0"
+  >
+    {CALENDAR_VIEWS.map((option) => {
+      const active = value === option.id;
+
+      return (
+        <button
+          key={option.id}
+          type="button"
+          onClick={() => onChange(option.id)}
+          aria-pressed={active}
+          className={`h-8 sm:h-9 min-w-[58px] sm:min-w-[64px] px-2.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${
+            active
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          {option.label}
+        </button>
+      );
+    })}
+  </div>
+);
 
 interface ToolbarIconButtonProps {
   children: React.ReactNode;
@@ -540,7 +563,7 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     title={title}
     aria-label={title}
     onClick={onClick}
-    className="w-9 h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
+    className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
   >
     {children}
   </button>
@@ -551,34 +574,7 @@ interface CalendarViewSwitcherProps {
   onChange: (view: CalendarView) => void;
 }
 
-const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = ({
-  value,
-  onChange,
-}) => (
-  <nav
-    aria-label="Calendar view"
-    className="absolute z-40 bottom-3 left-1/2 -translate-x-1/2 flex items-center rounded-2xl bg-slate-800 p-1 shadow-xl"
-  >
-    {CALENDAR_VIEWS.map((option) => {
-      const active = value === option.id;
-
-      return (
-        <button
-          key={option.id}
-          type="button"
-          onClick={() => onChange(option.id)}
-          className={`h-9 px-4 rounded-xl whitespace-nowrap text-xs font-semibold transition ${
-            active
-              ? 'bg-slate-600 text-white'
-              : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-          }`}
-        >
-          {option.label}
-        </button>
-      );
-    })}
-  </nav>
-);
+const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = () => null;
 
 interface QuickAddTaskDialogProps {
   selectedDate: string;

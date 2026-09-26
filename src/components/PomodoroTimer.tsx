@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Pause, Play, RotateCcw, X } from 'lucide-react';
+import { Pause, Play, RotateCcw, Timer, X } from 'lucide-react';
 
 const DEFAULT_MINUTES = 30;
 const MAX_CUSTOM_MINUTES = 180;
@@ -263,10 +263,18 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ className = '' }) 
           </svg>
 
           <span
-            className="absolute inset-0 flex items-center justify-center text-[11px] font-black font-mono tabular-nums text-slate-900 dark:text-slate-100"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 text-slate-900 dark:text-slate-100"
             aria-label={`Pomodoro timer ${formattedTime} remaining`}
           >
-            {formattedTime}
+            <Timer
+              className={`w-3.5 h-3.5 ${
+                isRunning ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'
+              }`}
+              aria-hidden="true"
+            />
+            <span className="text-[10px] leading-none font-black font-mono tabular-nums">
+              {formattedTime}
+            </span>
           </span>
         </div>
 

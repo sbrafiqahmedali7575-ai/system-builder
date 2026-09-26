@@ -41,7 +41,7 @@ const TABS: Array<{
 ];
 
 const TOOL_TAB_BASE =
-  'h-9 px-3 rounded-xl border text-xs font-black inline-flex items-center gap-1.5 transition-all duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200';
+  'h-8 px-2 sm:px-2.5 rounded-lg border text-[10px] sm:text-xs font-black inline-flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-150 select-none whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200';
 
 const TOOL_TAB_ACTIVE =
   'bg-blue-600 text-white border-blue-600 shadow-sm hover:bg-blue-700 hover:border-blue-700 active:bg-blue-800';
@@ -68,58 +68,41 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200">
       <header className="sticky top-0 z-[60] border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-sm">
-        <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <button
-              type="button"
-              onClick={onBack}
-              className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-              aria-label="Back to dashboard"
-              title="Back to dashboard"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-
-            <div className="min-w-0">
-              <div
-                aria-current="page"
-                className="inline-flex items-center gap-2 rounded-xl border border-blue-600 bg-blue-600 px-3 py-1.5 text-white shadow-sm ring-1 ring-blue-300/70"
-                title="Tools — current page"
-              >
-                <Wrench className="w-4 h-4" />
-                <h1 className="text-sm sm:text-base font-black tracking-tight">
-                  Tools
-                </h1>
-                <span className="w-1.5 h-1.5 rounded-full bg-white/90" aria-hidden="true" />
-              </div>
-              <p className="mt-1 text-[11px] sm:text-xs font-semibold text-slate-600">
-                Planning & consistency tools
-                {isSyncing ? ' • Syncing…' : ''}
-              </p>
-            </div>
-          </div>
+        <div className="max-w-[1500px] mx-auto px-2 sm:px-4 lg:px-5 py-2 flex items-center gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            aria-label="Back to dashboard"
+            title="Back to dashboard"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </button>
 
           <div
-            className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1"
-            title="Light workspace theme"
-            aria-label="Light workspace theme"
+            aria-current="page"
+            className="h-8 shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-blue-600 px-2 text-white shadow-sm"
+            title="Tools — current page"
           >
-            <span className="h-8 w-8 rounded-lg flex items-center justify-center bg-white text-blue-600 border border-slate-200 shadow-sm">
-              <Sun className="w-3.5 h-3.5" />
-            </span>
+            <Wrench className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-xs font-black">Tools</span>
           </div>
-        </div>
 
-        <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
           <div
             role="tablist"
             aria-label="System Builder tools"
-            className="flex items-center gap-1.5 min-w-max"
+            className="grid grid-cols-3 gap-1 sm:gap-1.5 min-w-0 flex-1"
           >
-            {TABS.map((tab, index) => {
+            {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               const isDisabled = Boolean(tab.disabled);
+              const shortLabel =
+                tab.id === 'eisenhower'
+                  ? 'Matrix'
+                  : tab.id === 'habits'
+                  ? 'Habits'
+                  : 'Calendar';
 
               return (
                 <button
@@ -129,6 +112,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                   role="tab"
                   aria-selected={isActive}
                   aria-controls={`tools-panel-${tab.id}`}
+                  aria-label={tab.label}
                   tabIndex={isActive ? 0 : -1}
                   disabled={isDisabled}
                   onClick={() => {
@@ -144,22 +128,29 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                     }`}
                     aria-hidden="true"
                   />
-                  <span>{index + 1}. {tab.label}</span>
-                  {isActive && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-white/90"
-                      aria-hidden="true"
-                    />
-                  )}
+                  <span className="truncate">
+                    <span className="sm:hidden">{shortLabel}</span>
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </span>
                 </button>
               );
             })}
           </div>
+
+          <div
+            className="h-8 w-8 shrink-0 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center"
+            title={isSyncing ? 'Syncing data…' : 'Light workspace theme'}
+            aria-label={isSyncing ? 'Syncing data' : 'Light workspace theme'}
+          >
+            <Sun className={`w-3.5 h-3.5 ${
+              isSyncing ? 'text-amber-500 animate-pulse' : 'text-blue-600'
+            }`} />
+          </div>
         </div>
       </header>
 
-      <main className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7">
-        <section className="rounded-[24px] border border-slate-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.07)] p-4 sm:p-6 lg:p-7">
+      <main className="max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3">
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-2.5 sm:p-3 lg:p-4 min-h-[calc(100vh-64px)]">
           {activeTab === 'eisenhower' && (
             <div
               id="tools-panel-eisenhower"

@@ -16,6 +16,8 @@ import {
   Target,
   Repeat2,
   AlertTriangle,
+  Award,
+  Hourglass,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
@@ -102,6 +104,13 @@ interface TodayTasksCardProps {
   currentDayFormatted: string;
   currentDayName: string;
   currentWeekCadencePercentage: number;
+  overallCompletionPercentage: number;
+  completedDays: number;
+  totalDays: number;
+  countdownDaysRemaining: number;
+  countdownReason: string;
+  countdownTargetLabel: string;
+  onOpenCountdown?: () => void;
   isSyncing?: boolean;
 }
 
@@ -117,6 +126,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   currentDayFormatted,
   currentDayName,
   currentWeekCadencePercentage,
+  overallCompletionPercentage,
+  completedDays,
+  totalDays,
+  countdownDaysRemaining,
+  countdownReason,
+  countdownTargetLabel,
+  onOpenCountdown,
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
@@ -532,6 +548,34 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   {overdueTasksCount}
                 </span>
               </span>
+              <span
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5"
+                title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
+              >
+                <Award className="w-2.5 h-2.5 text-blue-500" />
+                <span className="uppercase tracking-wide font-black text-slate-400">Overall</span>
+                <span className="font-mono font-black text-blue-600 dark:text-blue-300">
+                  {overallCompletionPercentage.toFixed(1)}%
+                </span>
+                <span className="font-mono text-slate-400">
+                  {completedDays}/{totalDays}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={onOpenCountdown}
+                disabled={!onOpenCountdown}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 px-1.5 py-0.5 text-left transition-colors enabled:hover:bg-slate-100/80 dark:enabled:hover:bg-slate-800/80 disabled:cursor-default"
+                title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
+                aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
+              >
+                <Hourglass className="w-2.5 h-2.5 text-blue-500" />
+                <span className="uppercase tracking-wide font-black text-slate-400">Countdown</span>
+                <span className="font-mono font-black text-blue-600 dark:text-blue-300">
+                  {countdownDaysRemaining}
+                </span>
+                <span className="text-slate-400">days left</span>
+              </button>
             </div>
           </div>
         </div>

@@ -147,6 +147,7 @@ export function buildDailyConfirmationEmail(
   reviewUrl: string;
 } {
   const baseUrl = getAppBaseUrl();
+  const reviewUrl = `${baseUrl}/?review=1`;
   const tasks = details.tasks || [];
   const completedCount = tasks.filter((task) => task.isCompleted).length;
   const progressPercent =
@@ -211,10 +212,22 @@ export function buildDailyConfirmationEmail(
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="left" style="vertical-align:middle;">
-                    <a href="${baseUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#0f172a;">
-                      <span style="display:inline-flex;width:36px;height:36px;border-radius:11px;background:#2563eb;color:#ffffff;align-items:center;justify-content:center;font-size:18px;font-weight:900;line-height:36px;text-align:center;">S</span>
-                      <span style="font-size:18px;font-weight:900;color:#0f172a;">System Builder</span>
-                    </a>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td style="vertical-align:middle;">
+                          <a href="${baseUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#0f172a;">
+                            <span style="display:inline-flex;width:36px;height:36px;border-radius:11px;background:#2563eb;color:#ffffff;align-items:center;justify-content:center;font-size:18px;font-weight:900;line-height:36px;text-align:center;">S</span>
+                            <span style="font-size:18px;font-weight:900;color:#0f172a;">System Builder</span>
+                          </a>
+                        </td>
+                        <td style="padding-left:10px;vertical-align:middle;">
+                          <a href="${reviewUrl}" target="_blank" title="Review current day" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;">
+                            <span style="font-size:16px;line-height:1;">☑</span>
+                            <span>Review</span>
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                   <td align="right" style="vertical-align:middle;font-size:12px;color:#64748b;font-family:monospace;">
                     ${escapeHtml(details.taskDate)}
@@ -285,7 +298,7 @@ Open System Builder:
 ${baseUrl}
 `;
 
-  return { subject, html, text, reviewUrl: baseUrl };
+  return { subject, html, text, reviewUrl };
 }
 
 /**

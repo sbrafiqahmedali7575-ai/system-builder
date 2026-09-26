@@ -463,8 +463,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
 
         <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
-          <div className="min-w-[760px]">
-            <div className="grid grid-cols-[220px_repeat(7,1fr)_72px_72px] border-b border-slate-200/80 bg-slate-50">
+          <div className="min-w-[860px]">
+            <div className="grid grid-cols-[300px_repeat(7,1fr)_72px_72px] border-b border-slate-200/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-black text-slate-500">
                 Habit
               </div>
@@ -512,11 +512,11 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
-                    className={`grid grid-cols-[220px_repeat(7,1fr)_72px_72px] border-b last:border-b-0 border-slate-200/80 ${
+                    className={`grid grid-cols-[300px_repeat(7,1fr)_72px_72px] border-b last:border-b-0 border-slate-200/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
                     }`}
                   >
-                    <div className="p-3 flex items-center gap-3 min-w-0">
+                    <div className="p-2.5 flex items-center gap-2 min-w-0">
                       <button
                         type="button"
                         onClick={() =>
@@ -539,10 +539,10 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                               current === habit.id ? null : habit.id
                             )
                           }
-                          className="block text-left max-w-full"
+                          className="block w-full min-w-0 text-left"
                         >
-                          <div className="text-sm font-black truncate">{habit.name}</div>
-                          <div className="text-[10px] font-bold text-slate-500 truncate">
+                          <div className="text-sm font-black leading-snug whitespace-normal break-words">{habit.name}</div>
+                          <div className="mt-0.5 text-[10px] leading-snug font-bold text-slate-500 whitespace-normal break-words">
                             {getHabitScheduleLabel(habit)}
                           </div>
                         </button>

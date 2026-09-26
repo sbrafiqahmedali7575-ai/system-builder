@@ -1,4 +1,5 @@
 import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Pause, Play, RotateCcw, X } from 'lucide-react';
 
 const DEFAULT_MINUTES = 30;
@@ -228,117 +229,146 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ className = '' }) 
   const dashOffset = circumference * (1 - elapsedPercent / 100);
 
   return (
-    <div className={`relative flex items-center gap-1.5 shrink-0 ${className}`}>
-      <div className="relative w-[58px] h-[58px] flex items-center justify-center">
-        <svg
-          width={size}
-          height={size}
-          viewBox={`0 0 ${size} ${size}`}
-          className="-rotate-90"
-          aria-hidden="true"
-        >
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={strokeWidth}
-            className="text-slate-200 dark:text-slate-700"
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            className="text-blue-600 transition-[stroke-dashoffset] duration-300 ease-linear"
-          />
-        </svg>
-
-        <span
-          className="absolute inset-0 flex items-center justify-center text-[11px] font-black font-mono tabular-nums text-slate-900 dark:text-slate-100"
-          aria-label={`Pomodoro timer ${formattedTime} remaining`}
-        >
-          {formattedTime}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <button
-          type="button"
-          onClick={toggleTimer}
-          title={isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
-          aria-label={isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
-          className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors"
-        >
-          {isRunning ? (
-            <Pause className="w-3.5 h-3.5 fill-current" />
-          ) : (
-            <Play className="w-3.5 h-3.5 fill-current" />
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={handleResetClick}
-          onDoubleClick={handleResetDoubleClick}
-          title="Reset timer • Double-click to set custom minutes"
-          aria-label="Reset Pomodoro timer. Double-click to set custom minutes."
-          className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {isCustomOpen && (
-        <div className="absolute z-[90] top-[64px] left-0 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2.5">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
-              Custom Pomodoro
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsCustomOpen(false)}
-              className="w-5 h-5 inline-flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              aria-label="Close custom timer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <form onSubmit={applyCustomTime} className="flex items-center gap-1.5">
-            <input
-              type="number"
-              min={1}
-              max={MAX_CUSTOM_MINUTES}
-              step={1}
-              autoFocus
-              value={customMinutes}
-              onChange={(event) => setCustomMinutes(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') setIsCustomOpen(false);
-              }}
-              className="min-w-0 flex-1 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
-              aria-label="Custom Pomodoro minutes"
+    <>
+      <div className={`relative flex items-center gap-1.5 shrink-0 ${className}`}>
+        <div className="relative w-[58px] h-[58px] flex items-center justify-center">
+          <svg
+            width={size}
+            height={size}
+            viewBox={`0 0 ${size} ${size}`}
+            className="-rotate-90"
+            aria-hidden="true"
+          >
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              className="text-slate-200 dark:text-slate-700"
             />
-            <span className="text-[10px] font-bold text-slate-400">min</span>
-            <button
-              type="submit"
-              className="h-8 px-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black"
-            >
-              Set
-            </button>
-          </form>
-          <p className="mt-1.5 text-[9px] leading-4 text-slate-400">
-            1–{MAX_CUSTOM_MINUTES} minutes. Reset uses this value until the page is reloaded.
-          </p>
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
+              className="text-blue-600 transition-[stroke-dashoffset] duration-300 ease-linear"
+            />
+          </svg>
+
+          <span
+            className="absolute inset-0 flex items-center justify-center text-[11px] font-black font-mono tabular-nums text-slate-900 dark:text-slate-100"
+            aria-label={`Pomodoro timer ${formattedTime} remaining`}
+          >
+            {formattedTime}
+          </span>
         </div>
-      )}
-    </div>
+
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={toggleTimer}
+            title={isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
+            aria-label={isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
+            className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors"
+          >
+            {isRunning ? (
+              <Pause className="w-3.5 h-3.5 fill-current" />
+            ) : (
+              <Play className="w-3.5 h-3.5 fill-current" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetClick}
+            onDoubleClick={handleResetDoubleClick}
+            title="Reset timer • Double-click to set custom minutes"
+            aria-label="Reset Pomodoro timer. Double-click to set custom minutes."
+            className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {isCustomOpen && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-slate-950/35 backdrop-blur-[2px]"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Set custom Pomodoro time"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) setIsCustomOpen(false);
+              }}
+            >
+              <div className="w-full max-w-xs rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
+                      Custom Pomodoro
+                    </h3>
+                    <p className="mt-0.5 text-[10px] text-slate-400">
+                      Set a focus duration from 1 to {MAX_CUSTOM_MINUTES} minutes.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomOpen(false)}
+                    className="w-7 h-7 inline-flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label="Close custom timer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <form onSubmit={applyCustomTime} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={MAX_CUSTOM_MINUTES}
+                      step={1}
+                      autoFocus
+                      value={customMinutes}
+                      onChange={(event) => setCustomMinutes(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Escape') setIsCustomOpen(false);
+                      }}
+                      className="min-w-0 flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-sm font-black text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                      aria-label="Custom Pomodoro minutes"
+                    />
+                    <span className="text-xs font-bold text-slate-400">minutes</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomOpen(false)}
+                      className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black"
+                    >
+                      Set Timer
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
+    </>
   );
 };

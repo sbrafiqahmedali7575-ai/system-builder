@@ -483,20 +483,32 @@ export async function triggerDailyReminder(options?: {
             };
           }
 
+          const confirmedSent =
+            existing.status === 'delivered' ||
+            existing.status === 'sent' ||
+            lockResult.reason === 'settings_already_sent';
+
           console.log(
-            `[Scheduler] Reminder for ${formattedDate} (${dateKey}) is already sent or in-flight. Skipping duplicate email.`
+            confirmedSent
+              ? `[Scheduler] Reminder for ${formattedDate} (${dateKey}) is already delivered. Skipping duplicate email.`
+              : `[Scheduler] Reminder for ${formattedDate} (${dateKey}) is currently in-flight. Skipping duplicate email.`
           );
+
           return {
             success: true,
             alreadySent: true,
-            message: `Daily reminder has already been sent (or is in-flight) for IST date ${formattedDate}. Duplicate skipped.`,
+            message: confirmedSent
+              ? `Daily reminder has already been delivered for IST date ${formattedDate}. Duplicate skipped.`
+              : `Daily reminder is already in-flight for IST date ${formattedDate}. Duplicate skipped.`,
             date: formattedDate,
             taskId: existing.taskId || '',
             recipient: existing.recipient || targetRecipient,
             messageId: existing.messageId || '',
             taskName: existing.taskName,
             sentAt: existing.sentAt || existing.lockedAt,
-            status: existing.status || 'in_progress',
+            status: confirmedSent
+              ? 'delivered'
+              : existing.status || 'in_progress',
           };
         }
       } catch (err) {

@@ -218,6 +218,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             <div
               id="tools-panel-eisenhower"
               role="tabpanel"
+              className="h-full"
               aria-labelledby="tools-tab-eisenhower"
             >
             <EisenhowerMatrix
@@ -236,6 +237,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             <div
               id="tools-panel-habits"
               role="tabpanel"
+              className="h-full"
               aria-labelledby="tools-tab-habits"
             >
             <HabitTracker
@@ -252,6 +254,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             <div
               id="tools-panel-calendar"
               role="tabpanel"
+              className="h-full"
               aria-labelledby="tools-tab-calendar"
             >
             <CalendarWorkspace

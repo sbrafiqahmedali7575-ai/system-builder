@@ -839,7 +839,7 @@ pause
       >
         Exit
       </button>
-      <a class="btn open-btn" href="/">Open System Builder</a>
+      <a class="btn open-btn" href="/">Go to Dashboard</a>
     </div>
   </main>
 </body>

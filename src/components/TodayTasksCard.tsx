@@ -455,7 +455,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               <span className="font-black text-slate-600 dark:text-slate-300">
                 {currentDayName}
               </span>
-            </div>            </div>
+            </div>
           </div>
         </div>
 

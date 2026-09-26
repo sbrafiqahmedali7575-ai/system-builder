@@ -94,6 +94,8 @@ interface TodayTasksCardProps {
   onDeleteTask: (taskId: string) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
   onOpenDayReview: () => void;
+  currentDayFormatted: string;
+  currentDayName: string;
   isSyncing?: boolean;
 }
 
@@ -105,6 +107,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   onDeleteTask,
   onToggleTaskStatus,
   onOpenDayReview,
+  currentDayFormatted,
+  currentDayName,
   isSyncing = false,
 }) => {
   const isDark = theme === 'dark';
@@ -442,6 +446,16 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <span>Syncing</span>
                 </span>
               )}
+            </div>
+            <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
+              <span>Current day</span>
+              <span className="font-mono font-black text-slate-600 dark:text-slate-300">
+                {currentDayFormatted}
+              </span>
+              <span>•</span>
+              <span className="font-black text-slate-600 dark:text-slate-300">
+                {currentDayName}
+              </span>
             </div>
           </div>
         </div>

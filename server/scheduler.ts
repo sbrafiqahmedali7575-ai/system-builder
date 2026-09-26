@@ -131,6 +131,47 @@ function normalizeSchedulerDateKey(value: string): string {
   return raw.toLowerCase();
 }
 
+function dateKeyFromUnknown(value: any): string {
+  if (!value) return '';
+  const date = typeof value?.toDate === 'function' ? value.toDate() : new Date(value);
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, '0'),
+    String(date.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function isHabitDueForDate(habit: any, dateKey: string): boolean {
+  const startKey = dateKeyFromUnknown(habit?.createdAt);
+  if (startKey && dateKey < startKey) return false;
+
+  const skippedDates = new Set(
+    Array.isArray(habit?.skippedDates) ? habit.skippedDates.map(String) : []
+  );
+  const extraDates = new Set(
+    Array.isArray(habit?.extraDates) ? habit.extraDates.map(String) : []
+  );
+
+  if (extraDates.has(dateKey)) return true;
+  if (skippedDates.has(dateKey)) return false;
+
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const frequency = String(habit?.frequency || 'daily');
+
+  if (frequency === 'daily') return true;
+  if (frequency === 'weekdays') return weekday >= 1 && weekday <= 5;
+
+  if (frequency === 'custom') {
+    const repeatDays = Array.isArray(habit?.repeatDays)
+      ? habit.repeatDays.map(Number).filter((value: number) => value >= 0 && value <= 6)
+      : [];
+    return repeatDays.includes(weekday);
+  }
+
+  return false;
+}
 export async function finalizeDayIfNoResponse(targetDate = new Date()): Promise<{
   finalized: boolean;
   dateKey: string;
@@ -219,6 +260,7 @@ export async function findTodayTaskOrRecord(): Promise<{
   record?: any;
   task?: any;
   tasks?: any[];
+  habits?: any[];
   taskDetails?: EmailTaskDetails;
 } | null> {
   const { dateKey, formattedDate } = getKolkataTimeInfo();
@@ -236,6 +278,18 @@ export async function findTodayTaskOrRecord(): Promise<{
 
     matchedTasks.sort((x, y) =>
       String(x.updatedAt || x.id).localeCompare(String(y.updatedAt || y.id))
+    );
+
+    const habitsSnap = await getDocs(collection(db, 'habits'));
+    const matchedHabits: any[] = [];
+
+    habitsSnap.forEach((d) => {
+      const habit = { id: d.id, ...d.data() } as any;
+      if (isHabitDueForDate(habit, dateKey)) matchedHabits.push(habit);
+    });
+
+    matchedHabits.sort((a, b) =>
+      String(a.name || a.id).localeCompare(String(b.name || b.id))
     );
 
     const recordsSnap = await getDocs(collection(db, 'records'));
@@ -279,6 +333,7 @@ export async function findTodayTaskOrRecord(): Promise<{
       record: matchedRecord,
       task: primaryTask,
       tasks: matchedTasks,
+      habits: matchedHabits,
       taskDetails: {
         recordId: matchedRecord?.id || `rec-${dateKey}`,
         taskId: primaryTask?.id || `review-${dateKey}`,
@@ -289,6 +344,12 @@ export async function findTodayTaskOrRecord(): Promise<{
           id: task.id,
           title: String(task.taskOfTheDay || 'Daily Task'),
           isCompleted: Boolean(task.isCompleted),
+        })),
+        habits: matchedHabits.map((habit) => ({
+          id: habit.id,
+          name: String(habit.name || 'Habit'),
+          emoji: String(habit.emoji || '✓'),
+          isCheckedIn: Array.isArray(habit.checkIns) && habit.checkIns.includes(dateKey),
         })),
       },
     };
@@ -420,6 +481,7 @@ export async function triggerDailyReminder(options?: {
       taskName: 'Today’s Tasks',
       isCompleted: false,
       tasks: [],
+      habits: [],
       recipientEmail: targetRecipient,
       recipientName: settings.recipientName || 'Rafiq Ahmed',
     };

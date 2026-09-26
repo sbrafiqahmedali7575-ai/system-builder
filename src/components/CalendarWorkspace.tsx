@@ -127,6 +127,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   const [showCompleted, setShowCompleted] = useState(true);
   const [showHabits, setShowHabits] = useState(true);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
 
   const compact = density === 'compact';
 
@@ -229,6 +230,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   const changeView = useCallback(
     (nextView: CalendarView) => {
       setView(nextView);
+      setViewMenuOpen(false);
       setCursor(startOfMonth(parseKey(selectedDate)));
     },
     [selectedDate]
@@ -341,13 +343,15 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
   return (
     <div
-      className={`relative h-[620px] sm:h-[680px] bg-white text-slate-900 flex flex-col overflow-hidden ${
+      className={`relative h-full min-h-[640px] lg:min-h-0 bg-white text-slate-900 flex flex-col overflow-hidden ${
         compact ? 'text-sm' : ''
       }`}
     >
       <CalendarTopBar
         view={view}
         periodLabel={periodLabel}
+        viewMenuOpen={viewMenuOpen}
+        onToggleViewMenu={() => setViewMenuOpen((current) => !current)}
         onViewChange={changeView}
         onPrevious={() => navigatePeriod(-1)}
         onNext={() => navigatePeriod(1)}
@@ -355,13 +359,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         onAdd={() => setAddTaskOpen(true)}
       />
 
-      <div className="shrink-0 h-9 px-2.5 sm:px-5 flex items-center justify-between sm:justify-end gap-2 border-b border-slate-100 bg-slate-50/50">
-        <span className="sm:hidden text-[9px] uppercase tracking-wider font-black text-slate-400">
-          Display
-        </span>
-
-        <div className="flex items-center gap-1.5">
-        <label className="h-7 px-2 rounded-lg inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 hover:bg-white transition-colors">
+      <div className="shrink-0 min-h-9 px-3 sm:px-5 flex items-center justify-end gap-3 border-b border-slate-100 bg-white">
+        <label className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
           <input
             type="checkbox"
             checked={showCompleted}
@@ -370,7 +369,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           Completed
         </label>
 
-        <label className="h-7 px-2 rounded-lg inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 hover:bg-white transition-colors">
+        <label className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
           <input
             type="checkbox"
             checked={showHabits}
@@ -378,10 +377,9 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           />
           Habits
         </label>
-        </div>
       </div>
 
-      <div className="relative flex-1 min-h-0 overflow-auto overscroll-contain">
+      <div className="relative flex-1 min-h-0 overflow-auto pb-20">
         {view === 'year' && (
           <CalendarYearView
             year={cursor.getUTCFullYear()}
@@ -394,6 +392,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               setCursor(target);
               setSelectedDate(keyFromDate(target));
               setView('month');
+              setViewMenuOpen(false);
             }}
           />
         )}
@@ -413,6 +412,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         )}
       </div>
 
+      <CalendarViewSwitcher value={view} onChange={changeView} />
+
       {addTaskOpen && (
         <QuickAddTaskDialog
           selectedDate={selectedDate}
@@ -430,6 +431,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 interface CalendarTopBarProps {
   view: CalendarView;
   periodLabel: string;
+  viewMenuOpen: boolean;
+  onToggleViewMenu: () => void;
   onViewChange: (view: CalendarView) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -565,6 +568,13 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     {children}
   </button>
 );
+
+interface CalendarViewSwitcherProps {
+  value: CalendarView;
+  onChange: (view: CalendarView) => void;
+}
+
+const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = () => null;
 
 interface QuickAddTaskDialogProps {
   selectedDate: string;

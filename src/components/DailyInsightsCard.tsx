@@ -225,6 +225,17 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                       : `${day.dateKey}: ${day.completed}/${day.total} tasks completed (${day.rate}%)`
                   }
                 >
+                  <div
+                    className={`mb-0.5 text-[8px] font-black tabular-nums ${
+                      day.future
+                        ? 'text-slate-300 dark:text-slate-600'
+                        : day.dateKey === today
+                        ? 'text-blue-600 dark:text-blue-300'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {day.future ? '—' : `${day.rate}%`}
+                  </div>
                   <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
                     {!day.future && (
                       <div
@@ -278,6 +289,17 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                       : `${day.dateKey}: ${day.completed}/${day.due} habits completed (${day.rate}%)`
                   }
                 >
+                  <div
+                    className={`mb-0.5 text-[8px] font-black tabular-nums ${
+                      day.future
+                        ? 'text-slate-300 dark:text-slate-600'
+                        : day.dateKey === today
+                        ? 'text-emerald-600 dark:text-emerald-300'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {day.future ? '—' : `${day.rate}%`}
+                  </div>
                   <div className="h-9 rounded-md bg-slate-100 dark:bg-slate-800 flex items-end overflow-hidden">
                     {!day.future && (
                       <div

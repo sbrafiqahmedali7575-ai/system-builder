@@ -23,8 +23,6 @@ interface DailyInsightsCardProps {
   countdownDaysRemaining: number;
   countdownReason: string;
   countdownTargetLabel: string;
-  currentDayFormatted: string;
-  currentDayName: string;
   onOpenCountdown?: () => void;
 }
 
@@ -39,8 +37,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   countdownDaysRemaining,
   countdownReason,
   countdownTargetLabel,
-  currentDayFormatted,
-  currentDayName,
   onOpenCountdown,
 }) => {
   const isDark = theme === 'dark';
@@ -167,77 +163,22 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   return (
     <div
       aria-label="Daily Insights"
-      className={`h-full min-h-0 overflow-hidden p-2 rounded-2xl border flex flex-col transition-all ${
+      className={`system-task-card ui-motion-section h-full min-h-0 overflow-hidden p-2 rounded-2xl border flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
-      <div className="shrink-0 flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 flex items-center justify-center shrink-0">
-            <Lightbulb className="w-4 h-4" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-              Daily Insights
-            </h2>
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-              Priority + habit signals for today
-            </p>
-            <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
-              <span>Current day</span>
-              <span className="font-mono font-black text-slate-600 dark:text-slate-300">
-                {currentDayFormatted}
-              </span>
-              <span>•</span>
-              <span className="font-black text-slate-600 dark:text-slate-300">
-                {currentDayName}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-stretch gap-1.5 shrink-0">
-          <div
-            className="min-w-[88px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5 text-right"
-            title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
-          >
-            <div className="flex items-center justify-end gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
-              <Award className="w-3 h-3 text-blue-500" />
-              Overall
-            </div>
-            <div className="mt-0.5 text-base leading-none font-black font-mono text-blue-600 dark:text-blue-300">
-              {overallCompletionPercentage.toFixed(1)}%
-            </div>
-            <div className="mt-0.5 text-[8px] font-bold text-slate-400">
-              {completedDays}/{totalDays} days
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onOpenCountdown}
-            disabled={!onOpenCountdown}
-            className="min-w-[82px] rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5 text-right transition-colors enabled:hover:bg-blue-100/80 dark:enabled:hover:bg-blue-950/45 disabled:cursor-default"
-            title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
-            aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
-          >
-            <div className="flex items-center justify-end gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
-              <Hourglass className="w-3 h-3 text-blue-500" />
-              Countdown
-            </div>
-            <div className="mt-0.5 text-base leading-none font-black font-mono text-blue-600 dark:text-blue-300">
-              {countdownDaysRemaining}
-            </div>
-            <div className="mt-0.5 text-[8px] font-bold text-slate-400">
-              days left
-            </div>
-          </button>
-        </div>
+      <div className="shrink-0 flex items-center gap-2 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
+        <span className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 flex items-center justify-center shrink-0">
+          <Lightbulb className="w-4 h-4" />
+        </span>
+        <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+          Daily Insights
+        </h2>
       </div>
 
-      <div className="shrink-0 grid grid-cols-3 gap-1 mb-1.5">
+      <div className="shrink-0 grid grid-cols-3 sm:grid-cols-5 gap-1 mb-1.5">
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 px-2 py-1.5">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
             <Target className="w-3 h-3 text-blue-500" />
@@ -269,6 +210,40 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
             {overdueTasks.length}
           </div>
         </div>
+        <div
+          className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5"
+          title={`Overall Completion: ${overallCompletionPercentage.toFixed(1)}% · ${completedDays}/${totalDays} days completed`}
+        >
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
+            <Award className="w-3 h-3 text-blue-500" />
+            Overall
+          </div>
+          <div className="mt-0.5 text-sm font-black font-mono text-blue-600 dark:text-blue-300">
+            {overallCompletionPercentage.toFixed(1)}%
+          </div>
+          <div className="text-[8px] font-bold text-slate-400">
+            {completedDays}/{totalDays} days
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenCountdown}
+          disabled={!onOpenCountdown}
+          className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/70 dark:bg-blue-950/25 px-2 py-1.5 text-left transition-colors enabled:hover:bg-blue-100/80 dark:enabled:hover:bg-blue-950/45 disabled:cursor-default"
+          title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
+          aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
+        >
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-slate-400">
+            <Hourglass className="w-3 h-3 text-blue-500" />
+            Countdown
+          </div>
+          <div className="mt-0.5 text-sm font-black font-mono text-blue-600 dark:text-blue-300">
+            {countdownDaysRemaining}
+          </div>
+          <div className="text-[8px] font-bold text-slate-400">
+            days left
+          </div>
+        </button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-0.5 space-y-1.5">

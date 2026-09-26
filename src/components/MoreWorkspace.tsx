@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   CalendarDays,
-  Coffee,
+  Sun,
   Grid2X2,
   Repeat2,
   Wrench,
@@ -56,14 +56,14 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   const [activeTab, setActiveTab] = useState<MoreTab>('eisenhower');
 
   return (
-    <div className="min-h-screen bg-[#f4ecd8] text-[#3f3426] transition-colors duration-200">
-      <header className="sticky top-0 z-[60] border-b border-[#ded0b4] bg-[#f4ecd8]/95 backdrop-blur-xl">
+    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200">
+      <header className="sticky top-0 z-[60] border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
               onClick={onBack}
-              className="h-9 w-9 rounded-xl border border-black/10 flex items-center justify-center shrink-0 hover:bg-black/5 transition-colors"
+              className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-slate-600 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
               aria-label="Back to dashboard"
               title="Back to dashboard"
             >
@@ -82,7 +82,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                 </h1>
                 <span className="w-1.5 h-1.5 rounded-full bg-white/90" aria-hidden="true" />
               </div>
-              <p className="mt-1 text-[11px] sm:text-xs font-semibold text-[#766653]">
+              <p className="mt-1 text-[11px] sm:text-xs font-semibold text-slate-600">
                 Planning & consistency tools
                 {isSyncing ? ' • Syncing…' : ''}
               </p>
@@ -90,12 +90,12 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
           </div>
 
           <div
-            className="flex items-center rounded-xl border border-[#ded0b4] p-1"
-            title="Sepia workspace theme"
-            aria-label="Sepia workspace theme"
+            className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1"
+            title="Light workspace theme"
+            aria-label="Light workspace theme"
           >
-            <span className="h-8 w-8 rounded-lg flex items-center justify-center bg-amber-700 text-white">
-              <Coffee className="w-3.5 h-3.5" />
+            <span className="h-8 w-8 rounded-lg flex items-center justify-center bg-white text-blue-600 border border-slate-200 shadow-sm">
+              <Sun className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
@@ -112,7 +112,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                   className={`px-3 py-2 rounded-xl text-xs font-black border transition-all inline-flex items-center gap-1.5 ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                      : 'border-black/10 hover:bg-black/5'
+                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-300'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -125,7 +125,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
       </header>
 
       <main className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7">
-        <section className="rounded-[24px] border border-[#ded0b4] bg-[#fbf4e3] shadow-[0_20px_55px_rgba(15,23,42,0.08)] p-4 sm:p-6 lg:p-7">
+        <section className="rounded-[24px] border border-slate-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.07)] p-4 sm:p-6 lg:p-7">
           {activeTab === 'eisenhower' && (
             <EisenhowerMatrix
               tasks={tasks}

@@ -580,7 +580,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
             <div
               role="tablist"
               aria-label="Eisenhower quadrants"
-              className="flex items-center gap-1"
+              className="flex items-center gap-2"
             >
               {quadrants.map((quadrant) => {
                 const tabTheme = QUADRANT_THEMES[quadrant.color];
@@ -588,7 +588,15 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 const isSelected = selectedQuadrant === quadrant.id;
                 const isTabDropTarget =
                   draggedTaskId && dragOver === quadrant.id;
-                const taskCount = grouped[quadrant.id].length;
+                const quadrantTasks = todayTasks.filter(
+                  (task) => inferQuadrant(task) === quadrant.id
+                );
+                const activeCount = quadrantTasks.filter(
+                  (task) => !task.isCompleted
+                ).length;
+                const completedCount = quadrantTasks.filter(
+                  (task) => task.isCompleted
+                ).length;
 
                 return (
                   <button
@@ -621,16 +629,27 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                         ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                         : ''
                     }`}
-                    title={`Quadrant ${quadrant.roman} — ${quadrant.title} · ${taskCount} task${taskCount === 1 ? '' : 's'}`}
-                    aria-label={`Show Quadrant ${quadrant.roman}: ${quadrant.title}. ${taskCount} task${taskCount === 1 ? '' : 's'}.`}
+                    title={`Quadrant ${quadrant.roman} — ${quadrant.title} · ${activeCount} active · ${completedCount} completed`}
+                    aria-label={`Show Quadrant ${quadrant.roman}: ${quadrant.title}. ${activeCount} active tasks and ${completedCount} completed tasks.`}
                   >
                     <TabIcon className="w-4 h-4" aria-hidden="true" />
 
                     <span
-                      className="absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center justify-center text-[8px] font-black shadow-sm"
-                      aria-label={`${taskCount} task${taskCount === 1 ? '' : 's'}`}
+                      className="absolute -left-2 -top-1 min-w-5 h-4 px-1 rounded-full border border-blue-700 bg-blue-600 text-white flex items-center justify-center gap-0.5 text-[8px] font-black shadow-sm"
+                      title={`${activeCount} active task${activeCount === 1 ? '' : 's'}`}
+                      aria-hidden="true"
                     >
-                      {taskCount}
+                      <span>A</span>
+                      <span>{activeCount}</span>
+                    </span>
+
+                    <span
+                      className="absolute -right-2 -top-1 min-w-5 h-4 px-1 rounded-full border border-emerald-700 bg-emerald-600 text-white flex items-center justify-center gap-0.5 text-[8px] font-black shadow-sm"
+                      title={`${completedCount} completed task${completedCount === 1 ? '' : 's'}`}
+                      aria-hidden="true"
+                    >
+                      <Check className="w-2.5 h-2.5" />
+                      <span>{completedCount}</span>
                     </span>
 
                     <span

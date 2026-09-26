@@ -22,7 +22,8 @@ import {
   X,
 } from 'lucide-react';
 import { MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
-import { areDatesEqual, CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
+import { areDatesEqual, CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 
 interface EisenhowerMatrixProps {
   tasks: TaskItem[];
@@ -356,7 +357,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     useState<MatrixQuadrant>('urgent-important');
   const [error, setError] = useState<string | null>(null);
   const compact = density === 'compact';
-  const todayTaskKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const todayTaskKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const todayTasks = useMemo(
     () => tasks.filter((task) => areDatesEqual(task.taskKey, todayTaskKey)),
     [tasks, todayTaskKey]
@@ -485,7 +486,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     try {
       setError(null);
       await onAddTask({
-        taskKey: getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE),
+        taskKey: todayTaskKey,
         taskOfTheDay: title,
         isCompleted: false,
         priority: defaultPriorityForQuadrant(quadrant),

@@ -143,6 +143,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
     };
   }, [records]);
 
+  const currentFocusTask = useMemo(() => {
+    const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+    return (
+      tasks.find(
+        (task) => task.taskKey === todayKey && !task.isCompleted
+      ) || null
+    );
+  }, [tasks]);
+
   const currentCadenceDay = useMemo(() => {
     const dateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
     const [year, month, day] = dateKey.split('-').map(Number);
@@ -309,6 +318,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               countdownDaysRemaining={longTermCountdown.daysRemaining}
               countdownReason={longTermCountdown.reason}
               countdownTargetLabel={longTermCountdown.targetDateLabel}
+              currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
               onOpenCountdown={openCountdownEditor}
             />
           </motion.div>

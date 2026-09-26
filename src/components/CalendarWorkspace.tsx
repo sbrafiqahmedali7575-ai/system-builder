@@ -1114,8 +1114,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-        <div className={`${compact ? 'px-2.5 sm:px-3 py-2 gap-2' : 'px-3 sm:px-4 py-3 gap-3'} border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50`}>
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className={`${compact ? 'px-2.5 sm:px-3 py-2 gap-2' : 'px-3 sm:px-4 py-3 gap-3'} border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between bg-white`}>
           <div className="flex items-center justify-between sm:justify-start gap-2">
             <button
               type="button"
@@ -1272,26 +1272,30 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         )}
 
         {view === 'week' && (
-          <div className="p-2">
-            <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <div className="text-xs font-black">Week planning</div>
-                <div className="text-[10px] font-semibold text-slate-500">
-                  Drag tasks or habit occurrences between days on desktop.
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] min-h-0">
+            <div className="p-2 min-w-0">
+              <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="text-xs font-black">Week planning</div>
+                  <div className="text-[10px] font-semibold text-slate-500">
+                    Drag tasks or habit occurrences between days on desktop.
+                  </div>
+                </div>
+                <div className="text-[10px] font-bold text-slate-500">
+                  On mobile, use each item’s Move to selector.
                 </div>
               </div>
-              <div className="text-[10px] font-bold text-slate-500">
-                On mobile, use each item’s Move to selector.
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
+                {weekDates.map((dateKey) => renderWeekDay(dateKey))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
-              {weekDates.map((dateKey) => renderWeekDay(dateKey))}
-            </div>
-
-            <div className="mt-2">
-              {renderSelectedDayPanel()}
-            </div>
+            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200 bg-slate-50/80 p-2.5">
+              <div className="xl:sticky xl:top-20">
+                {renderSelectedDayPanel()}
+              </div>
+            </aside>
           </div>
         )}
 

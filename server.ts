@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config({ override: true });
 import express from 'express';
 import path from 'path';
+import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 import {
   db,
@@ -32,6 +33,29 @@ import {
   fetchAllProjectData,
   generateAllCsvFiles,
 } from './server/backupService';
+
+function getSchedulerSecret(): string {
+  return (process.env.SCHEDULER_SECRET || '').trim();
+}
+
+function isValidSchedulerBearer(authHeader: string | undefined): boolean {
+  const expected = getSchedulerSecret();
+  if (!expected) return false;
+
+  const raw = String(authHeader || '').trim();
+  if (!raw.startsWith('Bearer ')) return false;
+
+  const provided = raw.slice(7).trim();
+  if (!provided) return false;
+
+  const expectedBuffer = Buffer.from(expected);
+  const providedBuffer = Buffer.from(provided);
+
+  return (
+    expectedBuffer.length === providedBuffer.length &&
+    crypto.timingSafeEqual(expectedBuffer, providedBuffer)
+  );
+}
 
 function escapeHtml(unsafe: string): string {
   return String(unsafe || '')
@@ -231,27 +255,25 @@ async function startServer() {
   });
 
   // 4. Production endpoint for external scheduler: GET/POST /api/send-daily-reminder
-  // Protected with Authorization: Bearer <SCHEDULER_SECRET> header or ?secret= query parameter.
+  // Protected only with Authorization: Bearer <SCHEDULER_SECRET>.
   // Sends daily commitment reminder to sbrafiqahmedali7575@gmail.com.
   // Retrieves today's task in Asia/Kolkata timezone with Completed & Not Completed buttons.
   // Enforces persistent deduplication preventing double-sends for the same IST date.
   app.all('/api/send-daily-reminder', async (req, res) => {
-    const authHeader = (req.headers.authorization || '').trim();
-    const providedToken = authHeader.startsWith('Bearer ')
-      ? authHeader.substring(7).trim()
-      : ((req.query?.secret as string) || '').trim();
+    if (!getSchedulerSecret()) {
+      console.error(
+        'SCHEDULER_SECRET is not configured; refusing external scheduler request.'
+      );
+      return res.status(503).json({
+        success: false,
+        error: 'Scheduler authentication is not configured.',
+      });
+    }
 
-    const allowedTokens = [
-      'commit-daily-scheduler-secret-auth-key-2026',
-      (process.env.SCHEDULER_SECRET || '').trim(),
-      (process.env.CONFIRMATION_SECRET || '').trim(),
-      'yqgpolotjeyxwnjt',
-    ].filter(Boolean);
-
-    if (!providedToken || !allowedTokens.includes(providedToken)) {
+    if (!isValidSchedulerBearer(req.headers.authorization)) {
       return res.status(401).json({
         success: false,
-        error: 'Unauthorized: Invalid scheduler secret token.',
+        error: 'Unauthorized: Invalid scheduler bearer token.',
       });
     }
 
@@ -310,22 +332,20 @@ async function startServer() {
 
   // End-of-day fallback: no task creation or no explicit app/email response => Not Completed.
   app.all('/api/finalize-day', async (req, res) => {
-    const authHeader = (req.headers.authorization || '').trim();
-    const providedToken = authHeader.startsWith('Bearer ')
-      ? authHeader.substring(7).trim()
-      : ((req.query?.secret as string) || '').trim();
+    if (!getSchedulerSecret()) {
+      console.error(
+        'SCHEDULER_SECRET is not configured; refusing external scheduler request.'
+      );
+      return res.status(503).json({
+        success: false,
+        error: 'Scheduler authentication is not configured.',
+      });
+    }
 
-    const allowedTokens = [
-      'commit-daily-scheduler-secret-auth-key-2026',
-      (process.env.SCHEDULER_SECRET || '').trim(),
-      (process.env.CONFIRMATION_SECRET || '').trim(),
-      'yqgpolotjeyxwnjt',
-    ].filter(Boolean);
-
-    if (!providedToken || !allowedTokens.includes(providedToken)) {
+    if (!isValidSchedulerBearer(req.headers.authorization)) {
       return res.status(401).json({
         success: false,
-        error: 'Unauthorized: Invalid scheduler secret token.',
+        error: 'Unauthorized: Invalid scheduler bearer token.',
       });
     }
 

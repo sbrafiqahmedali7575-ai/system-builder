@@ -1,16 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import {
   AlertCircle,
+  Ban,
+  CalendarClock,
   CalendarDays,
   Check,
   Circle,
+  CircleSlash2,
   Clock3,
+  Flame,
   GripVertical,
+  Lightbulb,
   Pencil,
   Plus,
   RotateCcw,
   Save,
+  Siren,
+  Sparkles,
+  Target,
   Trash2,
+  UsersRound,
   X,
 } from 'lucide-react';
 import { MatrixQuadrant, TaskItem } from '../types';
@@ -25,19 +34,157 @@ interface EisenhowerMatrixProps {
   isSyncing?: boolean;
 }
 
+type QuadrantColor =
+  | 'rose'
+  | 'amber'
+  | 'indigo'
+  | 'emerald'
+  | 'blue'
+  | 'violet'
+  | 'cyan'
+  | 'slate';
+
+type QuadrantIcon =
+  | 'siren'
+  | 'calendar'
+  | 'users'
+  | 'ban'
+  | 'target'
+  | 'flame'
+  | 'lightbulb'
+  | 'sparkles';
+
 type QuadrantDisplay = {
   id: MatrixQuadrant;
   roman: string;
   title: string;
   action: string;
-  header: string;
-  border: string;
-  dot: string;
+  color: QuadrantColor;
+  icon: QuadrantIcon;
 };
 
-type EditableQuadrant = Pick<QuadrantDisplay, 'title' | 'action'>;
+type EditableQuadrant = Pick<
+  QuadrantDisplay,
+  'title' | 'action' | 'color' | 'icon'
+>;
 
-const MATRIX_SETTINGS_KEY = 'SYSTEM_BUILDER_MATRIX_LABELS_V1';
+const MATRIX_SETTINGS_KEY = 'SYSTEM_BUILDER_MATRIX_SETTINGS_V2';
+const LEGACY_MATRIX_SETTINGS_KEY = 'SYSTEM_BUILDER_MATRIX_LABELS_V1';
+
+const QUADRANT_THEMES: Record<
+  QuadrantColor,
+  {
+    label: string;
+    header: string;
+    border: string;
+    dot: string;
+    surface: string;
+    iconSurface: string;
+    iconText: string;
+    accentBorder: string;
+  }
+> = {
+  rose: {
+    label: 'Rose',
+    header: 'text-rose-700',
+    border: 'border-rose-200',
+    dot: 'bg-rose-500',
+    surface: 'bg-rose-50/55',
+    iconSurface: 'bg-rose-100',
+    iconText: 'text-rose-700',
+    accentBorder: 'border-rose-200',
+  },
+  amber: {
+    label: 'Amber',
+    header: 'text-amber-700',
+    border: 'border-amber-200',
+    dot: 'bg-amber-500',
+    surface: 'bg-amber-50/55',
+    iconSurface: 'bg-amber-100',
+    iconText: 'text-amber-700',
+    accentBorder: 'border-amber-200',
+  },
+  indigo: {
+    label: 'Indigo',
+    header: 'text-indigo-700',
+    border: 'border-indigo-200',
+    dot: 'bg-indigo-500',
+    surface: 'bg-indigo-50/55',
+    iconSurface: 'bg-indigo-100',
+    iconText: 'text-indigo-700',
+    accentBorder: 'border-indigo-200',
+  },
+  emerald: {
+    label: 'Emerald',
+    header: 'text-emerald-700',
+    border: 'border-emerald-200',
+    dot: 'bg-emerald-500',
+    surface: 'bg-emerald-50/55',
+    iconSurface: 'bg-emerald-100',
+    iconText: 'text-emerald-700',
+    accentBorder: 'border-emerald-200',
+  },
+  blue: {
+    label: 'Blue',
+    header: 'text-blue-700',
+    border: 'border-blue-200',
+    dot: 'bg-blue-500',
+    surface: 'bg-blue-50/55',
+    iconSurface: 'bg-blue-100',
+    iconText: 'text-blue-700',
+    accentBorder: 'border-blue-200',
+  },
+  violet: {
+    label: 'Violet',
+    header: 'text-violet-700',
+    border: 'border-violet-200',
+    dot: 'bg-violet-500',
+    surface: 'bg-violet-50/55',
+    iconSurface: 'bg-violet-100',
+    iconText: 'text-violet-700',
+    accentBorder: 'border-violet-200',
+  },
+  cyan: {
+    label: 'Cyan',
+    header: 'text-cyan-700',
+    border: 'border-cyan-200',
+    dot: 'bg-cyan-500',
+    surface: 'bg-cyan-50/55',
+    iconSurface: 'bg-cyan-100',
+    iconText: 'text-cyan-700',
+    accentBorder: 'border-cyan-200',
+  },
+  slate: {
+    label: 'Slate',
+    header: 'text-slate-700',
+    border: 'border-slate-300',
+    dot: 'bg-slate-500',
+    surface: 'bg-slate-50/70',
+    iconSurface: 'bg-slate-200',
+    iconText: 'text-slate-700',
+    accentBorder: 'border-slate-300',
+  },
+};
+
+const QUADRANT_ICONS: Record<
+  QuadrantIcon,
+  {
+    label: string;
+    component: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  siren: { label: 'Urgent', component: Siren },
+  calendar: { label: 'Schedule', component: CalendarClock },
+  users: { label: 'Delegate', component: UsersRound },
+  ban: { label: 'Eliminate', component: CircleSlash2 },
+  target: { label: 'Target', component: Target },
+  flame: { label: 'Focus', component: Flame },
+  lightbulb: { label: 'Ideas', component: Lightbulb },
+  sparkles: { label: 'Improve', component: Sparkles },
+};
+
+const COLOR_OPTIONS = Object.keys(QUADRANT_THEMES) as QuadrantColor[];
+const ICON_OPTIONS = Object.keys(QUADRANT_ICONS) as QuadrantIcon[];
 
 const DEFAULT_QUADRANTS: QuadrantDisplay[] = [
   {
@@ -45,36 +192,32 @@ const DEFAULT_QUADRANTS: QuadrantDisplay[] = [
     roman: 'I',
     title: 'Urgent & Important',
     action: 'Do first',
-    header: 'text-rose-700',
-    border: 'border-rose-200',
-    dot: 'bg-rose-500',
+    color: 'rose',
+    icon: 'siren',
   },
   {
     id: 'important',
     roman: 'II',
     title: 'Not Urgent & Important',
     action: 'Schedule',
-    header: 'text-amber-700',
-    border: 'border-amber-200',
-    dot: 'bg-amber-500',
+    color: 'amber',
+    icon: 'calendar',
   },
   {
     id: 'urgent',
     roman: 'III',
     title: 'Urgent & Unimportant',
     action: 'Delegate',
-    header: 'text-indigo-700',
-    border: 'border-indigo-200',
-    dot: 'bg-indigo-500',
+    color: 'indigo',
+    icon: 'users',
   },
   {
     id: 'neither',
     roman: 'IV',
     title: 'Not Urgent & Unimportant',
     action: 'Eliminate',
-    header: 'text-emerald-700',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    color: 'emerald',
+    icon: 'ban',
   },
 ];
 
@@ -121,15 +264,23 @@ function loadQuadrantLabels(): Record<MatrixQuadrant, EditableQuadrant> {
   const defaults = Object.fromEntries(
     DEFAULT_QUADRANTS.map((quadrant) => [
       quadrant.id,
-      { title: quadrant.title, action: quadrant.action },
+      {
+        title: quadrant.title,
+        action: quadrant.action,
+        color: quadrant.color,
+        icon: quadrant.icon,
+      },
     ])
   ) as Record<MatrixQuadrant, EditableQuadrant>;
 
   if (typeof window === 'undefined') return defaults;
 
   try {
-    const saved = localStorage.getItem(MATRIX_SETTINGS_KEY);
+    const saved =
+      localStorage.getItem(MATRIX_SETTINGS_KEY) ||
+      localStorage.getItem(LEGACY_MATRIX_SETTINGS_KEY);
     if (!saved) return defaults;
+
     const parsed = JSON.parse(saved) as Partial<
       Record<MatrixQuadrant, Partial<EditableQuadrant>>
     >;
@@ -137,15 +288,39 @@ function loadQuadrantLabels(): Record<MatrixQuadrant, EditableQuadrant> {
     QUADRANT_IDS.forEach((id) => {
       const savedQuadrant = parsed[id];
       if (!savedQuadrant) return;
-      if (typeof savedQuadrant.title === 'string' && savedQuadrant.title.trim()) {
+
+      if (
+        typeof savedQuadrant.title === 'string' &&
+        savedQuadrant.title.trim()
+      ) {
         defaults[id].title = savedQuadrant.title.trim();
       }
-      if (typeof savedQuadrant.action === 'string' && savedQuadrant.action.trim()) {
+
+      if (
+        typeof savedQuadrant.action === 'string' &&
+        savedQuadrant.action.trim()
+      ) {
         defaults[id].action = savedQuadrant.action.trim();
       }
+
+      if (
+        savedQuadrant.color &&
+        COLOR_OPTIONS.includes(savedQuadrant.color)
+      ) {
+        defaults[id].color = savedQuadrant.color;
+      }
+
+      if (
+        savedQuadrant.icon &&
+        ICON_OPTIONS.includes(savedQuadrant.icon)
+      ) {
+        defaults[id].icon = savedQuadrant.icon;
+      }
     });
+
+    localStorage.setItem(MATRIX_SETTINGS_KEY, JSON.stringify(defaults));
   } catch (error) {
-    console.warn('Unable to load Eisenhower Matrix labels:', error);
+    console.warn('Unable to load Eisenhower Matrix settings:', error);
   }
 
   return defaults;
@@ -225,6 +400,8 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     setQuadrantEditDraft({
       title: quadrant.title,
       action: quadrant.action,
+      color: quadrant.color,
+      icon: quadrant.icon,
     });
   };
 
@@ -242,7 +419,12 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
 
     persistQuadrantLabels({
       ...quadrantLabels,
-      [quadrantId]: { title, action },
+      [quadrantId]: {
+        title,
+        action,
+        color: quadrantEditDraft.color,
+        icon: quadrantEditDraft.icon,
+      },
     });
     cancelQuadrantEdit();
   };
@@ -258,12 +440,16 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       [quadrantId]: {
         title: original.title,
         action: original.action,
+        color: original.color,
+        icon: original.icon,
       },
     });
 
     setQuadrantEditDraft({
       title: original.title,
       action: original.action,
+      color: original.color,
+      icon: original.icon,
     });
   };
 
@@ -390,6 +576,9 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {quadrants.map((quadrant) => {
+          const theme = QUADRANT_THEMES[quadrant.color];
+          const QuadrantIconComponent =
+            QUADRANT_ICONS[quadrant.icon].component;
           const isEditing = editingQuadrant === quadrant.id;
           const isDropTarget = dragOver === quadrant.id;
           const draggedTask = draggedTaskId
@@ -419,9 +608,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[300px] rounded-2xl border bg-[#fffaf0] transition-all ${
-                quadrant.border
-              } ${
+              className={`relative min-h-[300px] rounded-2xl border transition-all ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-[#f4ecd8]'
@@ -451,11 +638,19 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
 
               <div className="px-4 py-3 border-b border-black/8 flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2 min-w-0 flex-1">
-                  <span
-                    className={`w-6 h-6 rounded-full ${quadrant.dot} text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5`}
-                  >
-                    {quadrant.roman}
-                  </span>
+                  <div className="relative shrink-0 mt-0.5">
+                    <span
+                      className={`w-9 h-9 rounded-xl border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center`}
+                      title={QUADRANT_ICONS[quadrant.icon].label}
+                    >
+                      <QuadrantIconComponent className="w-4.5 h-4.5" />
+                    </span>
+                    <span
+                      className={`absolute -right-1.5 -bottom-1.5 min-w-4 h-4 px-1 rounded-full ${theme.dot} text-white flex items-center justify-center text-[8px] font-black shadow-sm`}
+                    >
+                      {quadrant.roman}
+                    </span>
+                  </div>
 
                   {isEditing && quadrantEditDraft ? (
                     <div className="min-w-0 flex-1 space-y-2">
@@ -483,6 +678,79 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                         className="w-full h-8 rounded-lg border border-[#dfd1b6] bg-white px-2 text-[11px] font-bold outline-none focus:border-blue-400"
                         aria-label={`Edit quadrant ${quadrant.roman} action`}
                       />
+                      <div className="rounded-xl border border-black/10 bg-white/70 p-2.5 space-y-2.5">
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66] mb-1.5">
+                            Color theme
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {COLOR_OPTIONS.map((color) => {
+                              const optionTheme = QUADRANT_THEMES[color];
+                              const selected =
+                                quadrantEditDraft.color === color;
+                              return (
+                                <button
+                                  key={color}
+                                  type="button"
+                                  onClick={() =>
+                                    setQuadrantEditDraft((current) =>
+                                      current
+                                        ? { ...current, color }
+                                        : current
+                                    )
+                                  }
+                                  className={`w-7 h-7 rounded-full ${optionTheme.dot} transition-all ${
+                                    selected
+                                      ? 'ring-2 ring-offset-2 ring-[#3f3426] scale-105'
+                                      : 'hover:scale-105'
+                                  }`}
+                                  title={optionTheme.label}
+                                  aria-label={`Use ${optionTheme.label} quadrant color`}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66] mb-1.5">
+                            Icon
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {ICON_OPTIONS.map((icon) => {
+                              const option = QUADRANT_ICONS[icon];
+                              const IconComponent = option.component;
+                              const selected =
+                                quadrantEditDraft.icon === icon;
+                              const selectedTheme =
+                                QUADRANT_THEMES[quadrantEditDraft.color];
+
+                              return (
+                                <button
+                                  key={icon}
+                                  type="button"
+                                  onClick={() =>
+                                    setQuadrantEditDraft((current) =>
+                                      current
+                                        ? { ...current, icon }
+                                        : current
+                                    )
+                                  }
+                                  className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${
+                                    selected
+                                      ? `${selectedTheme.iconSurface} ${selectedTheme.iconText} ${selectedTheme.accentBorder} ring-1 ring-current`
+                                      : 'bg-white border-[#dfd1b6] text-[#8b7a66] hover:border-blue-300 hover:text-blue-600'
+                                  }`}
+                                  title={option.label}
+                                  aria-label={`Use ${option.label} icon`}
+                                >
+                                  <IconComponent className="w-4 h-4" />
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
@@ -516,7 +784,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     </div>
                   ) : (
                     <div className="min-w-0">
-                      <div className={`text-sm font-black ${quadrant.header}`}>
+                      <div className={`text-sm font-black ${theme.header}`}>
                         {quadrant.title}
                       </div>
                       <div className="text-[10px] font-bold uppercase tracking-wider text-[#8b7a66]">
@@ -538,7 +806,9 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  <span className="min-w-7 h-7 px-2 rounded-lg bg-black/[0.04] flex items-center justify-center text-xs font-black text-[#8b7a66]">
+                  <span
+                    className={`min-w-7 h-7 px-2 rounded-lg border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center text-xs font-black`}
+                  >
                     {grouped[quadrant.id].length}
                   </span>
                 </div>
@@ -577,7 +847,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     className={`min-h-[175px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-sm font-semibold transition ${
                       draggedTaskId
                         ? 'border-blue-200 bg-blue-50/40 text-blue-600'
-                        : 'border-[#e8dcc6] text-[#a18f78]'
+                        : `${theme.border} ${theme.iconText} bg-white/35`
                     }`}
                   >
                     <GripVertical className="w-5 h-5 mb-1 opacity-60" />
@@ -595,7 +865,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       return (
                         <div
                           key={task.id}
-                          className={`rounded-xl border border-[#e7dbc4] bg-white/90 px-2.5 py-2.5 shadow-sm transition-all ${
+                          className={`rounded-xl border ${theme.accentBorder} bg-white/90 px-2.5 py-2.5 shadow-sm transition-all ${
                             busyTaskId === task.id ? 'opacity-60' : ''
                           } ${dragging ? 'opacity-40 scale-[0.99] border-blue-300' : ''}`}
                         >

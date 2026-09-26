@@ -199,6 +199,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
           ))}
         </div>
       </div>
+      </div>
 
       <div
         className={`rounded-2xl border p-2.5 ${
@@ -278,6 +279,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             </div>
           ))}
         </div>
+      </div>
       </div>
     </section>
   );

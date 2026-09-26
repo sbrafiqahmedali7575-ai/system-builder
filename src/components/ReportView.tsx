@@ -265,53 +265,36 @@ export const ReportView: React.FC<ReportViewProps> = ({
       transition={{ duration: 0.3 }}
       className="w-full space-y-4 sm:space-y-5"
     >
-      {/* ─────────────────────────────────────────────────────────────
-          TODAY'S COMMITMENTS & KPIS - Tasks Card & KPI Cadence Card
-      ───────────────────────────────────────────────────────────── */}
-      <section
+      <motion.div
         id="today-focus-section"
         aria-label="Today's Commitments and Key Metrics"
-        className={`system-focus-panel ui-motion-section p-2.5 sm:p-3.5 rounded-3xl border transition-all ${
-          isDark
-            ? 'bg-slate-900/60 border-slate-800'
-            : 'bg-white border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)]'
-        }`}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+        className="min-w-0 min-h-0 flex flex-col lg:h-[430px]"
       >
-        <div className="space-y-2.5">
-          {/* Today's Tasks dashboard */}
-          <div className="grid grid-cols-1 gap-2 items-stretch lg:h-[430px]">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="min-w-0 min-h-0 h-full flex flex-col"
-            >
-              <TodayTasksCard
-                tasks={tasks}
-                habits={habits}
-                theme={theme}
-                onAddTask={onAddTask}
-                onUpdateTask={onUpdateTask}
-                onDeleteTask={onDeleteTask}
-                onToggleTaskStatus={onToggleTaskStatus}
-                onOpenDayReview={onOpenDayReview}
-                currentDayFormatted={currentCadenceDay.formattedDate}
-                currentDayName={currentCadenceDay.fullDayName}
-                currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
-                overallCompletionPercentage={allKpis.completionRate}
-                completedDays={allKpis.completedDays}
-                totalDays={allKpis.totalDays}
-                countdownDaysRemaining={longTermCountdown.daysRemaining}
-                countdownReason={longTermCountdown.reason}
-                countdownTargetLabel={longTermCountdown.targetDateLabel}
-                onOpenCountdown={openCountdownEditor}
-                isSyncing={isSyncing}
-              />
-            </motion.div>
-
-          </div>
-        </div>
-      </section>
+        <TodayTasksCard
+          tasks={tasks}
+          habits={habits}
+          theme={theme}
+          onAddTask={onAddTask}
+          onUpdateTask={onUpdateTask}
+          onDeleteTask={onDeleteTask}
+          onToggleTaskStatus={onToggleTaskStatus}
+          onOpenDayReview={onOpenDayReview}
+          currentDayFormatted={currentCadenceDay.formattedDate}
+          currentDayName={currentCadenceDay.fullDayName}
+          currentWeekCadencePercentage={Math.round(recentWeekCadence.performance)}
+          overallCompletionPercentage={allKpis.completionRate}
+          completedDays={allKpis.completedDays}
+          totalDays={allKpis.totalDays}
+          countdownDaysRemaining={longTermCountdown.daysRemaining}
+          countdownReason={longTermCountdown.reason}
+          countdownTargetLabel={longTermCountdown.targetDateLabel}
+          onOpenCountdown={openCountdownEditor}
+          isSyncing={isSyncing}
+        />
+      </motion.div>
 
       {isCountdownEditorOpen && typeof document !== 'undefined'
         ? createPortal(

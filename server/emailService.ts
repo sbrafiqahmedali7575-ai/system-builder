@@ -14,6 +14,12 @@ export interface EmailTaskDetails {
     title: string;
     isCompleted: boolean;
   }>;
+  habits?: Array<{
+    id: string;
+    name: string;
+    emoji?: string;
+    isCheckedIn: boolean;
+  }>;
   recipientEmail?: string;
   recipientName?: string;
 }
@@ -149,10 +155,16 @@ export function buildDailyConfirmationEmail(
   const baseUrl = getAppBaseUrl();
   const reviewUrl = `${baseUrl}/?review=1`;
   const tasks = details.tasks || [];
-  const completedCount = tasks.filter((task) => task.isCompleted).length;
+  const habits = details.habits || [];
+  const completedTaskCount = tasks.filter((task) => task.isCompleted).length;
+  const checkedHabitCount = habits.filter((habit) => habit.isCheckedIn).length;
+  const totalReviewItems = tasks.length + habits.length;
+  const completedReviewItems = completedTaskCount + checkedHabitCount;
   const progressPercent =
-    tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
-  const subject = 'System Builder • Today’s task status';
+    totalReviewItems > 0
+      ? Math.round((completedReviewItems / totalReviewItems) * 100)
+      : 0;
+  const subject = 'System Builder • Today’s review status';
 
   const taskRows =
     tasks.length > 0
@@ -161,7 +173,7 @@ export function buildDailyConfirmationEmail(
             (task) => `
               <tr>
                 <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
-                  ${escapeHtml(task.title)}
+                  <span style="display:inline-block;width:24px;font-size:18px;line-height:1;color:${task.isCompleted ? '#16a34a' : '#64748b'};">${task.isCompleted ? '☑' : '☐'}</span>${escapeHtml(task.title)}
                 </td>
                 <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
                   <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${task.isCompleted ? '#bbf7d0' : '#fde68a'};">
@@ -175,6 +187,30 @@ export function buildDailyConfirmationEmail(
         <tr>
           <td colspan="2" class="email-task" style="padding:16px;color:#000000;font-size:15px;font-weight:800;">
             No tasks are scheduled for today.
+          </td>
+        </tr>`;
+
+  const habitRows =
+    habits.length > 0
+      ? habits
+          .map(
+            (habit) => `
+              <tr>
+                <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
+                  <span style="display:inline-block;width:24px;font-size:18px;line-height:1;color:${habit.isCheckedIn ? '#059669' : '#64748b'};">${habit.isCheckedIn ? '☑' : '☐'}</span>${escapeHtml(habit.emoji || '✓')} ${escapeHtml(habit.name)}
+                </td>
+                <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
+                  <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${habit.isCheckedIn ? '#a7f3d0' : '#e2e8f0'};">
+                    ${habit.isCheckedIn ? 'Checked in' : 'Not checked in'}
+                  </span>
+                </td>
+              </tr>`
+          )
+          .join('')
+      : `
+        <tr>
+          <td colspan="2" class="email-task" style="padding:16px;color:#000000;font-size:15px;font-weight:800;">
+            No habits are due today.
           </td>
         </tr>`;
 
@@ -237,9 +273,9 @@ export function buildDailyConfirmationEmail(
 
           <tr>
             <td class="email-body" style="padding:24px 26px;">
-              <h1 class="email-title" style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#0f172a;font-weight:900;">Today’s Tasks</h1>
+              <h1 class="email-title" style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#0f172a;font-weight:900;">Today’s Review</h1>
               <p class="email-copy" style="margin:0 0 16px;color:#000000;font-size:15px;line-height:1.6;font-weight:800;">
-                ${completedCount} of ${tasks.length} tasks currently completed.
+                ${completedTaskCount}/${tasks.length} tasks completed • ${checkedHabitCount}/${habits.length} habits checked in.
               </p>
 
               <div style="margin:0 0 20px;padding:14px;border:1px solid #dbeafe;border-radius:12px;background:#eff6ff;">
@@ -253,7 +289,7 @@ export function buildDailyConfirmationEmail(
                   <div style="width:${progressPercent}%;height:10px;border-radius:999px;background:#2563eb;"></div>
                 </div>
                 <div style="margin-top:7px;font-size:12px;font-weight:800;color:#475569;">
-                  ${completedCount} / ${tasks.length} completed
+                  ${completedReviewItems} / ${totalReviewItems} review items completed
                 </div>
               </div>
 
@@ -263,15 +299,22 @@ export function buildDailyConfirmationEmail(
                     Current Day Tasks &amp; Status
                   </td>
                   <td align="right" style="vertical-align:middle;padding-left:10px;">
-                    <a href="${reviewUrl}" target="_self" title="Review current day tasks" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;white-space:nowrap;">
+                    <a href="${reviewUrl}" target="_self" title="Review current day tasks and habits" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;white-space:nowrap;">
                       <span style="font-size:16px;line-height:1;">☑</span>
-                      <span>Review Tasks</span>
+                      <span>Review Tasks &amp; Habits</span>
                     </a>
                   </td>
                 </tr>
               </table>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
                 ${taskRows}
+              </table>
+
+              <div class="email-section-title" style="margin:18px 0 8px;color:#047857;font-size:15px;font-weight:900;">
+                Current Day Habits &amp; Check-ins
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #d1fae5;border-radius:12px;overflow:hidden;">
+                ${habitRows}
               </table>
             </td>
           </tr>
@@ -291,18 +334,29 @@ export function buildDailyConfirmationEmail(
   const taskText =
     tasks.length > 0
       ? tasks
-          .map((task) => `${task.title} — ${task.isCompleted ? 'Completed' : 'Not Completed'}`)
+          .map((task) => `${task.isCompleted ? '☑' : '☐'} ${task.title} — ${task.isCompleted ? 'Completed' : 'Not Completed'}`)
           .join('\n')
       : 'No tasks are scheduled for today.';
 
-  const text = `System Builder — Today’s Task Status
+  const habitText =
+    habits.length > 0
+      ? habits
+          .map((habit) => `${habit.isCheckedIn ? '☑' : '☐'} ${habit.emoji || '✓'} ${habit.name} — ${habit.isCheckedIn ? 'Checked in' : 'Not checked in'}`)
+          .join('\n')
+      : 'No habits are due today.';
+
+  const text = `System Builder — Today’s Review Status
 
 Date: ${details.taskDate}
-Overall Status: ${progressPercent}% (${completedCount}/${tasks.length} completed)
+Overall Status: ${progressPercent}% (${completedReviewItems}/${totalReviewItems} review items completed)
 
+Tasks:
 ${taskText}
 
-Review Tasks:
+Habits due today:
+${habitText}
+
+Review Tasks & Habits:
 ${reviewUrl}
 
 Open System Builder:

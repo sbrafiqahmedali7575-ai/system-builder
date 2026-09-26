@@ -2,11 +2,12 @@ import React, { FormEvent, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Award, Hourglass, RotateCcw, X } from 'lucide-react';
-import { DailyRecord, FilterState, DashboardTheme, TaskItem } from '../types';
+import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { isTodayDate, parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
 import { TodayTasksCard } from './TodayTasksCard';
+import { DailyInsightsCard } from './DailyInsightsCard';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -17,6 +18,7 @@ const COUNTDOWN_TARGET_REASON_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_REASON';
 interface ReportViewProps {
   records: DailyRecord[];
   tasks: TaskItem[];
+  habits: HabitItem[];
   filterState: FilterState;
   onFilterChange: (filters: Partial<FilterState>) => void;
   theme: DashboardTheme;
@@ -74,6 +76,7 @@ export const SmoothCheckmark: React.FC<{
 export const ReportView: React.FC<ReportViewProps> = ({
   records,
   tasks,
+  habits,
   filterState,
   theme,
   onToggleRecordStatus,
@@ -477,24 +480,35 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
           </motion.div>
 
-          {/* Today's Tasks — full width */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            className="min-w-0 flex flex-col"
-          >
-            <TodayTasksCard
-              tasks={tasks}
-              theme={theme}
-              onAddTask={onAddTask}
-              onUpdateTask={onUpdateTask}
-              onDeleteTask={onDeleteTask}
-              onToggleTaskStatus={onToggleTaskStatus}
-              onOpenDayReview={onOpenDayReview}
-              isSyncing={isSyncing}
-            />
-          </motion.div>
+          {/* Today's Tasks + Daily Insights — 50/50 on desktop */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5 items-stretch">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.36, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="min-w-0 flex flex-col"
+            >
+              <TodayTasksCard
+                tasks={tasks}
+                theme={theme}
+                onAddTask={onAddTask}
+                onUpdateTask={onUpdateTask}
+                onDeleteTask={onDeleteTask}
+                onToggleTaskStatus={onToggleTaskStatus}
+                onOpenDayReview={onOpenDayReview}
+                isSyncing={isSyncing}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.36, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="min-w-0 flex flex-col"
+            >
+              <DailyInsightsCard tasks={tasks} habits={habits} theme={theme} />
+            </motion.div>
+          </div>
         </div>
       </section>
 

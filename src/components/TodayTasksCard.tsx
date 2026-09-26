@@ -60,20 +60,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     return activeDateTab === 'TODAY' ? todayOption.dateKey : tomorrowOption.dateKey;
   }, [activeDateTab, todayOption.dateKey, tomorrowOption.dateKey]);
 
-  // Compute active formatted calendar date (e.g. "24-Sep-2026")
-  const activeFormattedDate = useMemo(() => {
-    return formatCalendarDate(activeDateKey);
-  }, [activeDateKey]);
-
-  const activeFullDayName = useMemo(() => {
-    const [year, month, day] = activeDateKey.split('-').map(Number);
-    if (!year || !month || !day) return '';
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      timeZone: 'UTC',
-    }).format(new Date(Date.UTC(year, month - 1, day)));
-  }, [activeDateKey]);
-
   // Relative label for currently active date
   const activeDateLabel = activeDateTab === 'TODAY' ? 'Today' : 'Tomorrow';
 
@@ -377,9 +363,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </span>
               )}
             </div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-              Mission Board • {activeFormattedDate} • {activeFullDayName}
-            </p>
           </div>
         </div>
 
@@ -397,7 +380,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             }`}
           >
             <span>Today</span>
-            <span className="opacity-80 font-mono text-[10px]">({todayOption.formattedDate})</span>
           </button>
 
           <button
@@ -412,16 +394,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             }`}
           >
             <span>Tomorrow</span>
-            <span className="opacity-80 font-mono text-[10px]">({tomorrowOption.formattedDate})</span>
           </button>
 
           <button
             id="btn-add-task-card-header"
+            type="button"
             onClick={() => handleOpenEnterPanel()}
-            className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            title="Add Task"
+            aria-label="Add Task"
+            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add Task</span>
           </button>
 
           <button
@@ -436,10 +419,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 ? 'Add at least one task before reviewing today'
                 : 'Review today tasks before marking the day'
             }
-            className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Review today's tasks"
+            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-            <span>Review</span>
           </button>
         </div>
       </div>

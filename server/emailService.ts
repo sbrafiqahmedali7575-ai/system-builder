@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { generateDailyReviewToken } from './tokenService';
 import { db, collection, doc, setDoc } from './db';
 
 const DELIVERY_LOGS_COLLECTION = 'delivery_logs';
@@ -153,9 +154,19 @@ export function buildDailyConfirmationEmail(
   reviewUrl: string;
 } {
   const baseUrl = getAppBaseUrl();
-  const reviewUrl = `${baseUrl}/?review=1`;
   const tasks = details.tasks || [];
   const habits = details.habits || [];
+  const reviewToken = generateDailyReviewToken(
+    {
+      taskDate: details.taskDate,
+      recordId: details.recordId,
+      taskIds: tasks.map((task) => task.id),
+    },
+    1
+  );
+  const reviewUrl = `${baseUrl}/api/daily-review?token=${encodeURIComponent(
+    reviewToken
+  )}`;
   const completedTaskCount = tasks.filter((task) => task.isCompleted).length;
   const checkedHabitCount = habits.filter((habit) => habit.isCheckedIn).length;
   const totalReviewItems = tasks.length + habits.length;
@@ -173,7 +184,7 @@ export function buildDailyConfirmationEmail(
             (task) => `
               <tr>
                 <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
-                  <a href="${reviewUrl}" target="_self" title="Open review to update this task" style="display:inline-block;width:24px;font-size:18px;line-height:1;text-decoration:none;color:${task.isCompleted ? '#16a34a' : '#64748b'};">${task.isCompleted ? '☑' : '☐'}</a>${escapeHtml(task.title)}
+                  <a href="${reviewUrl}" target="_self" title="Open Review Tasks" style="display:inline-block;width:24px;font-size:18px;line-height:1;text-decoration:none;color:${task.isCompleted ? '#16a34a' : '#64748b'};">${task.isCompleted ? '☑' : '☐'}</a>${escapeHtml(task.title)}
                 </td>
                 <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
                   <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${task.isCompleted ? '#bbf7d0' : '#fde68a'};">
@@ -197,7 +208,7 @@ export function buildDailyConfirmationEmail(
             (habit) => `
               <tr>
                 <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
-                  <a href="${reviewUrl}" target="_self" title="Open review to update this habit check-in" style="display:inline-block;width:24px;font-size:18px;line-height:1;text-decoration:none;color:${habit.isCheckedIn ? '#059669' : '#64748b'};">${habit.isCheckedIn ? '☑' : '☐'}</a>${escapeHtml(habit.emoji || '✓')} ${escapeHtml(habit.name)}
+                  <a href="${reviewUrl}" target="_self" title="Open Review Tasks" style="display:inline-block;width:24px;font-size:18px;line-height:1;text-decoration:none;color:${habit.isCheckedIn ? '#059669' : '#64748b'};">${habit.isCheckedIn ? '☑' : '☐'}</a>${escapeHtml(habit.emoji || '✓')} ${escapeHtml(habit.name)}
                 </td>
                 <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
                   <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${habit.isCheckedIn ? '#a7f3d0' : '#e2e8f0'};">
@@ -299,9 +310,9 @@ export function buildDailyConfirmationEmail(
                     Current Day Tasks &amp; Status
                   </td>
                   <td align="right" style="vertical-align:middle;padding-left:10px;">
-                    <a href="${reviewUrl}" target="_self" title="Review current day tasks and habits" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;white-space:nowrap;">
+                    <a href="${reviewUrl}" target="_self" title="Review current day tasks" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 10px;color:#1d4ed8;font-size:12px;font-weight:900;white-space:nowrap;">
                       <span style="font-size:16px;line-height:1;">☑</span>
-                      <span>Review Tasks &amp; Habits</span>
+                      <span>Review Tasks</span>
                     </a>
                   </td>
                 </tr>
@@ -356,7 +367,7 @@ ${taskText}
 Habits due today:
 ${habitText}
 
-Review Tasks & Habits:
+Review Tasks:
 ${reviewUrl}
 
 Open System Builder:

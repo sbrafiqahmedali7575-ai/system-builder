@@ -787,12 +787,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
               {/* Task Title + Quadrant Input Form */}
               <form onSubmit={handleCreateTask} className="space-y-2">
-                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_190px] gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_190px_auto] gap-2 items-start">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                       Task Title / Objective
                     </label>
-                  <div className="flex items-center space-x-1">
                     <input
                       ref={taskInputRef}
                       type="text"
@@ -805,38 +804,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') setIsEnterPanelOpen(false);
                       }}
-                      className={`flex-1 p-1.5 rounded-xl border text-sm focus:outline-none transition ${
+                      className={`w-full p-1.5 rounded-xl border text-sm focus:outline-none transition ${
                         isDark
                           ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
                           : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'
                       }`}
                     />
-
-                    <button
-                      type="submit"
-                      disabled={isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant}
-                      className={`px-2 py-1.5 rounded-xl font-semibold text-xs flex items-center space-x-1 transition shadow-xs shrink-0 ${
-                        isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant
-                          ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
-                          : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'
-                      }`}
-                    >
-                      {isAddingTask ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Adding...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4" />
-                          <span>Add</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Press <kbd className="font-mono bg-slate-200 dark:bg-slate-800 px-0.5 py-0.5 rounded text-[10px]">Enter</kbd> to add. Panel remains open so you can add multiple tasks.
-                  </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Press <kbd className="font-mono bg-slate-200 dark:bg-slate-800 px-0.5 py-0.5 rounded text-[10px]">Enter</kbd> to add. Panel remains open so you can add multiple tasks.
+                    </p>
                   </div>
 
                   <div>
@@ -871,6 +847,28 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       I = do first · II = schedule · III = delegate · IV = eliminate
                     </p>
                   </div>
+
+                  <button
+                    type="submit"
+                    disabled={isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant}
+                    className={`h-[34px] px-3 rounded-xl font-semibold text-xs inline-flex items-center justify-center gap-1 transition shadow-xs shrink-0 sm:mt-[21px] ${
+                      isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant
+                        ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
+                        : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'
+                    }`}
+                  >
+                    {isAddingTask ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Adding...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Add</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 {/* Panel Error message */}

@@ -164,3 +164,133 @@ export function getHabitStats(habit: HabitItem, today: string) {
     totalCheckIns: habit.checkIns.filter((key) => key <= today).length,
   };
 }
+
+export interface HabitPeriodSummary {
+  key: string;
+  label: string;
+  completed: number;
+  due: number;
+  missed: number;
+  rate: number;
+}
+
+function summarizeRange(
+  habit: HabitItem,
+  startKey: string,
+  endKey: string
+): Omit<HabitPeriodSummary, 'key' | 'label'> {
+  const checked = new Set(habit.checkIns);
+  let cursor = startKey;
+  let due = 0;
+  let completed = 0;
+
+  for (let i = 0; i < 3700 && cursor <= endKey; i += 1) {
+    if (isHabitDue(habit, cursor)) {
+      due += 1;
+      if (checked.has(cursor)) completed += 1;
+    }
+    cursor = addHabitDays(cursor, 1);
+  }
+
+  return {
+    completed,
+    due,
+    missed: Math.max(0, due - completed),
+    rate: due ? Math.round((completed / due) * 100) : 0,
+  };
+}
+
+export function getHabitMonthlySummaries(
+  habit: HabitItem,
+  today: string,
+  months = 6
+): HabitPeriodSummary[] {
+  const todayDate = parseHabitDateKey(today);
+  const startKey = getHabitStartKey(habit);
+  const summaries: HabitPeriodSummary[] = [];
+
+  for (let offset = months - 1; offset >= 0; offset -= 1) {
+    const monthStart = new Date(
+      Date.UTC(todayDate.getUTCFullYear(), todayDate.getUTCMonth() - offset, 1)
+    );
+    const monthEnd = new Date(
+      Date.UTC(todayDate.getUTCFullYear(), todayDate.getUTCMonth() - offset + 1, 0)
+    );
+
+    let rangeStart = habitDateKey(monthStart);
+    let rangeEnd = habitDateKey(monthEnd);
+    if (rangeStart < startKey) rangeStart = startKey;
+    if (rangeEnd > today) rangeEnd = today;
+
+    const key = `${monthStart.getUTCFullYear()}-${String(
+      monthStart.getUTCMonth() + 1
+    ).padStart(2, '0')}`;
+    const label = monthStart.toLocaleDateString('en-US', {
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+
+    if (rangeStart > rangeEnd) {
+      summaries.push({ key, label, completed: 0, due: 0, missed: 0, rate: 0 });
+      continue;
+    }
+
+    summaries.push({
+      key,
+      label,
+      ...summarizeRange(habit, rangeStart, rangeEnd),
+    });
+  }
+
+  return summaries;
+}
+
+export function getHabitWeeklyTrend(
+  habit: HabitItem,
+  today: string,
+  weeks = 12
+): HabitPeriodSummary[] {
+  const todayDate = parseHabitDateKey(today);
+  const day = todayDate.getUTCDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const currentMonday = addHabitDays(today, mondayOffset);
+  const startKey = getHabitStartKey(habit);
+  const summaries: HabitPeriodSummary[] = [];
+
+  for (let offset = weeks - 1; offset >= 0; offset -= 1) {
+    const weekStart = addHabitDays(currentMonday, -(offset * 7));
+    let weekEnd = addHabitDays(weekStart, 6);
+    let rangeStart = weekStart;
+    let rangeEnd = weekEnd > today ? today : weekEnd;
+
+    if (rangeStart < startKey) rangeStart = startKey;
+
+    const startDate = parseHabitDateKey(weekStart);
+    const label = startDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+
+    if (rangeStart > rangeEnd) {
+      summaries.push({
+        key: weekStart,
+        label,
+        completed: 0,
+        due: 0,
+        missed: 0,
+        rate: 0,
+      });
+      continue;
+    }
+
+    summaries.push({
+      key: weekStart,
+      label,
+      ...summarizeRange(habit, rangeStart, rangeEnd),
+    });
+  }
+
+  return summaries;
+}

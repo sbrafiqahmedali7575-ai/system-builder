@@ -16,12 +16,14 @@ interface DailyInsightsCardProps {
   tasks: TaskItem[];
   habits: HabitItem[];
   theme: DashboardTheme;
+  currentWeekCadencePercentage: number;
 }
 
 export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
   tasks,
   habits,
   theme,
+  currentWeekCadencePercentage,
 }) => {
   const isDark = theme === 'dark';
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
@@ -234,13 +236,13 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
               </div>
               <div
                 className="text-right shrink-0"
-                title={`Overall week: ${overallWeekSummary.completedItems}/${overallWeekSummary.totalItems} tasks + due habits completed`}
+                title={`Current week cadence: ${currentWeekCadencePercentage}%`}
               >
                 <div className="text-[10px] font-black text-blue-600 dark:text-blue-400">
-                  {overallWeekSummary.rate}%
+                  {currentWeekCadencePercentage}%
                 </div>
                 <div className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
-                  overall week
+                  cadence
                 </div>
               </div>
             </div>

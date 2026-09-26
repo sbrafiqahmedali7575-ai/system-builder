@@ -33,11 +33,21 @@ const TABS: Array<{
   id: MoreTab;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  disabled?: boolean;
 }> = [
   { id: 'eisenhower', label: 'Eisenhower Matrix', icon: Grid2X2 },
   { id: 'habits', label: 'Habit Tracker', icon: Repeat2 },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
 ];
+
+const TOOL_TAB_BASE =
+  'h-9 px-3 rounded-xl border text-xs font-black inline-flex items-center gap-1.5 transition-all duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200';
+
+const TOOL_TAB_ACTIVE =
+  'bg-blue-600 text-white border-blue-600 shadow-sm hover:bg-blue-700 hover:border-blue-700 active:bg-blue-800';
+
+const TOOL_TAB_INACTIVE =
+  'bg-white text-slate-700 border-slate-200 shadow-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 hover:shadow-sm active:bg-blue-100';
 
 export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   theme: _theme,
@@ -101,22 +111,46 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
         </div>
 
         <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
-          <div className="flex items-center gap-1.5 min-w-max">
+          <div
+            role="tablist"
+            aria-label="System Builder tools"
+            className="flex items-center gap-1.5 min-w-max"
+          >
             {TABS.map((tab, index) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              const isDisabled = Boolean(tab.disabled);
+
               return (
                 <button
                   key={tab.id}
+                  id={`tools-tab-${tab.id}`}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 rounded-xl text-xs font-black border transition-all inline-flex items-center gap-1.5 ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-300'
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`tools-panel-${tab.id}`}
+                  tabIndex={isActive ? 0 : -1}
+                  disabled={isDisabled}
+                  onClick={() => {
+                    if (!isDisabled) setActiveTab(tab.id);
+                  }}
+                  className={`${TOOL_TAB_BASE} ${
+                    isActive ? TOOL_TAB_ACTIVE : TOOL_TAB_INACTIVE
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  {index + 1}. {tab.label}
+                  <Icon
+                    className={`w-3.5 h-3.5 shrink-0 ${
+                      isActive ? 'text-white' : 'text-blue-600'
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span>{index + 1}. {tab.label}</span>
+                  {isActive && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-white/90"
+                      aria-hidden="true"
+                    />
+                  )}
                 </button>
               );
             })}
@@ -127,6 +161,11 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
       <main className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7">
         <section className="rounded-[24px] border border-slate-200 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.07)] p-4 sm:p-6 lg:p-7">
           {activeTab === 'eisenhower' && (
+            <div
+              id="tools-panel-eisenhower"
+              role="tabpanel"
+              aria-labelledby="tools-tab-eisenhower"
+            >
             <EisenhowerMatrix
               tasks={tasks}
               onAddTask={onAddTask}
@@ -135,18 +174,30 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               onToggleTaskStatus={onToggleTaskStatus}
               isSyncing={isSyncing}
             />
+            </div>
           )}
 
           {activeTab === 'habits' && (
+            <div
+              id="tools-panel-habits"
+              role="tabpanel"
+              aria-labelledby="tools-tab-habits"
+            >
             <HabitTracker
               habits={habits}
               onAddHabit={onAddHabit}
               onUpdateHabit={onUpdateHabit}
               onDeleteHabit={onDeleteHabit}
             />
+            </div>
           )}
 
           {activeTab === 'calendar' && (
+            <div
+              id="tools-panel-calendar"
+              role="tabpanel"
+              aria-labelledby="tools-tab-calendar"
+            >
             <CalendarWorkspace
               tasks={tasks}
               habits={habits}
@@ -155,6 +206,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               onToggleTaskStatus={onToggleTaskStatus}
               onUpdateHabit={onUpdateHabit}
             />
+            </div>
           )}
         </section>
       </main>

@@ -173,7 +173,7 @@ export function buildDailyConfirmationEmail(
             (task) => `
               <tr>
                 <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
-                  <span style="display:inline-block;width:24px;font-size:18px;line-height:1;color:${task.isCompleted ? '#16a34a' : '#64748b'};">${task.isCompleted ? '☑' : '☐'}</span>${escapeHtml(task.title)}
+                  <a href="${reviewUrl}" target="_self" title="Open review to update this task" style="display:inline-block;width:24px;font-size:18px;line-height:1;text-decoration:none;color:${task.isCompleted ? '#16a34a' : '#64748b'};">${task.isCompleted ? '☑' : '☐'}</a>${escapeHtml(task.title)}
                 </td>
                 <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
                   <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${task.isCompleted ? '#bbf7d0' : '#fde68a'};">
@@ -197,7 +197,7 @@ export function buildDailyConfirmationEmail(
             (habit) => `
               <tr>
                 <td class="email-task" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;font-size:16px;line-height:1.5;color:#000000;font-weight:800;">
-                  <span style="display:inline-block;width:24px;font-size:18px;line-height:1;color:${habit.isCheckedIn ? '#059669' : '#64748b'};">${habit.isCheckedIn ? '☑' : '☐'}</span>${escapeHtml(habit.emoji || '✓')} ${escapeHtml(habit.name)}
+                  <a href="${reviewUrl}" target="_self" title="Open review to update this habit check-in" style="display:inline-block;width:24px;font-size:18px;line-height:1;text-decoration:none;color:${habit.isCheckedIn ? '#059669' : '#64748b'};">${habit.isCheckedIn ? '☑' : '☐'}</a>${escapeHtml(habit.emoji || '✓')} ${escapeHtml(habit.name)}
                 </td>
                 <td class="email-status" style="padding:14px 14px;border-bottom:1px solid #e2e8f0;width:132px;text-align:right;vertical-align:middle;">
                   <span style="display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;line-height:1;font-weight:900;color:#000000;background:${habit.isCheckedIn ? '#a7f3d0' : '#e2e8f0'};">

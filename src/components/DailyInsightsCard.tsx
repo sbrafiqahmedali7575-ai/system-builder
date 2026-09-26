@@ -349,18 +349,6 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
         </div>
 
         <div>
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          <div className="flex items-center gap-1.5">
-            <Flame className="w-3.5 h-3.5 text-orange-500" />
-            <span className="text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
-              New habits
-            </span>
-          </div>
-          <span className="text-[9px] font-bold text-slate-400">
-            30-day rate
-          </span>
-        </div>
-
         {newestHabits.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 px-3 py-5 text-center text-[11px] font-semibold text-slate-400">
             Add a habit in Tools to see progress here.
@@ -384,6 +372,12 @@ export const DailyInsightsCard: React.FC<DailyInsightsCardProps> = ({
                       <span className="hidden sm:inline text-[8px] font-bold text-slate-400 shrink-0">
                         {getHabitScheduleLabel(habit)}
                       </span>
+                    </div>
+                    <div className="mt-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all"
+                        style={{ width: `${stats.thirty.rate}%` }}
+                      />
                     </div>
                   </div>
                   <div className="text-right shrink-0">

@@ -463,10 +463,10 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <div className="text-[10px] uppercase tracking-[0.14em] font-black text-blue-700">
               Selected day
             </div>
-            <div className="mt-1 text-base sm:text-lg font-black text-[#3f3426] truncate">
+            <div className="mt-1 text-base sm:text-lg font-black text-slate-900 truncate">
               {longDate(selectedDate)}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold text-[#766653]">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-600">
               <span>
                 {selectedTasks.length} task
                 {selectedTasks.length === 1 ? '' : 's'}
@@ -489,7 +489,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => changeSelectedDay(-1)}
-              className="w-8 h-8 rounded-lg border border-blue-200 bg-white/80 flex items-center justify-center hover:bg-white"
+              className="w-8 h-8 rounded-lg border border-blue-200 bg-white flex items-center justify-center hover:bg-white"
               title="Previous day"
               aria-label="Previous day"
             >
@@ -498,7 +498,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => changeSelectedDay(1)}
-              className="w-8 h-8 rounded-lg border border-blue-200 bg-white/80 flex items-center justify-center hover:bg-white"
+              className="w-8 h-8 rounded-lg border border-blue-200 bg-white flex items-center justify-center hover:bg-white"
               title="Next day"
               aria-label="Next day"
             >
@@ -509,19 +509,19 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
         {(selectedTasks.length > 0 || selectedHabits.length > 0) && (
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-white/80 bg-white/70 px-3 py-2">
+            <div className="rounded-xl border border-white/80 bg-white px-3 py-2">
               <div className="text-lg font-black">
                 {selectedDoneTasks}/{selectedTasks.length}
               </div>
-              <div className="text-[9px] uppercase tracking-wider font-black text-[#8b7a66]">
+              <div className="text-[9px] uppercase tracking-wider font-black text-slate-500">
                 Tasks done
               </div>
             </div>
-            <div className="rounded-xl border border-white/80 bg-white/70 px-3 py-2">
+            <div className="rounded-xl border border-white/80 bg-white px-3 py-2">
               <div className="text-lg font-black">
                 {selectedDoneHabits}/{selectedHabits.length}
               </div>
-              <div className="text-[9px] uppercase tracking-wider font-black text-[#8b7a66]">
+              <div className="text-[9px] uppercase tracking-wider font-black text-slate-500">
                 Habits done
               </div>
             </div>
@@ -537,7 +537,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             if (event.key === 'Enter') void addTask();
           }}
           placeholder={`Add task for ${shortDate(selectedDate)}...`}
-          className="min-w-0 flex-1 h-10 rounded-xl border border-[#dfd1b6] bg-white/90 px-3 text-sm font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className="min-w-0 flex-1 h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
         />
         <button
           type="button"
@@ -552,9 +552,9 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
       </div>
 
       {selectedTasks.length === 0 && selectedHabits.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#dfd1b6] bg-white/45 py-8 text-center">
-          <CalendarDays className="w-6 h-6 mx-auto text-[#b7a58d]" />
-          <div className="mt-2 text-sm font-black text-[#766653]">
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 py-8 text-center">
+          <CalendarDays className="w-6 h-6 mx-auto text-slate-400" />
+          <div className="mt-2 text-sm font-black text-slate-600">
             Nothing scheduled
           </div>
         </div>
@@ -565,20 +565,20 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               key={task.id}
               type="button"
               onClick={() => void onToggleTaskStatus(task.id)}
-              className="w-full flex items-center gap-2 rounded-xl border border-[#e7dbc4] bg-white/85 px-3 py-2.5 text-left hover:border-blue-200 hover:bg-white transition"
+              className="w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left hover:border-blue-200 hover:bg-white transition"
             >
               <span
                 className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                   task.isCompleted
                     ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'border-[#b9aa91]'
+                    : 'border-slate-300'
                 }`}
               >
                 {task.isCompleted && <Check className="w-3 h-3" />}
               </span>
               <span
                 className={`text-sm font-bold min-w-0 flex-1 truncate ${
-                  task.isCompleted ? 'line-through text-[#9e8f7b]' : ''
+                  task.isCompleted ? 'line-through text-slate-500' : ''
                 }`}
               >
                 {task.taskOfTheDay}
@@ -613,7 +613,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 <span className="text-sm font-bold min-w-0 flex-1 truncate">
                   {habit.emoji} {habit.name}
                 </span>
-                <span className="text-[9px] uppercase tracking-wider font-black text-emerald-700 bg-white/80 rounded-full px-2 py-1">
+                <span className="text-[9px] uppercase tracking-wider font-black text-emerald-700 bg-white rounded-full px-2 py-1">
                   Habit
                 </span>
               </button>
@@ -637,13 +637,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         className={`rounded-2xl border overflow-hidden transition ${
           isSelected
             ? 'border-blue-300 bg-blue-50/35 shadow-sm ring-1 ring-blue-200'
-            : 'border-[#dfd1b6] bg-[#fffaf0]'
+            : 'border-slate-200 bg-white'
         }`}
       >
         <button
           type="button"
           onClick={() => selectDate(dateKey)}
-          className="w-full px-3 sm:px-4 py-3 text-left border-b border-black/8 flex items-center gap-3 hover:bg-black/[0.025]"
+          className="w-full px-3 sm:px-4 py-3 text-left border-b border-slate-200/80 flex items-center gap-3 hover:bg-slate-50"
         >
           <div
             className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border ${
@@ -651,7 +651,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 ? 'bg-blue-600 border-blue-600 text-white'
                 : isSelected
                 ? 'bg-blue-100 border-blue-200 text-blue-700'
-                : 'bg-[#fbf4e3] border-[#dfd1b6] text-[#3f3426]'
+                : 'bg-slate-50 border-slate-200 text-slate-900'
             }`}
           >
             <span className="text-[9px] uppercase font-black leading-none">
@@ -673,7 +673,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 timeZone: 'UTC',
               })}
             </div>
-            <div className="mt-1 text-[10px] font-bold text-[#8b7a66]">
+            <div className="mt-1 text-[10px] font-bold text-slate-500">
               {dayTasks.length} task{dayTasks.length === 1 ? '' : 's'}
               {showHabits
                 ? ` • ${dueHabits.length} habit${dueHabits.length === 1 ? '' : 's'}`
@@ -694,20 +694,20 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               key={task.id}
               type="button"
               onClick={() => void onToggleTaskStatus(task.id)}
-              className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-[#e7dbc4] bg-white/85 px-3 py-2.5 text-left"
+              className="w-full grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left"
             >
               <span
                 className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                   task.isCompleted
                     ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'border-[#b9aa91]'
+                    : 'border-slate-300'
                 }`}
               >
                 {task.isCompleted && <Check className="w-3 h-3" />}
               </span>
               <span
                 className={`text-sm font-bold truncate ${
-                  task.isCompleted ? 'line-through text-[#9e8f7b]' : ''
+                  task.isCompleted ? 'line-through text-slate-500' : ''
                 }`}
               >
                 {task.taskOfTheDay}
@@ -742,7 +742,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 <span className="text-sm font-bold truncate">
                   {habit.emoji} {habit.name}
                 </span>
-                <span className="hidden sm:inline-flex text-[9px] uppercase tracking-wider font-black text-emerald-700 bg-white/80 rounded-full px-2 py-1">
+                <span className="hidden sm:inline-flex text-[9px] uppercase tracking-wider font-black text-emerald-700 bg-white rounded-full px-2 py-1">
                   Habit
                 </span>
               </button>
@@ -785,13 +785,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-300 shadow-md -translate-y-0.5'
             : isSelected
             ? 'border-blue-300 bg-blue-50/45 ring-1 ring-blue-200'
-            : 'border-[#dfd1b6] bg-[#fffaf0]'
+            : 'border-slate-200 bg-white'
         }`}
       >
         <button
           type="button"
           onClick={() => selectDate(dateKey)}
-          className="w-full px-3 py-3 border-b border-black/8 text-left flex items-center lg:block gap-3 hover:bg-black/[0.025]"
+          className="w-full px-3 py-3 border-b border-slate-200/80 text-left flex items-center lg:block gap-3 hover:bg-slate-50"
         >
           <div className="flex lg:block items-center gap-2">
             <div
@@ -800,7 +800,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                   ? 'bg-blue-600 border-blue-600 text-white'
                   : isSelected
                   ? 'bg-blue-100 border-blue-200 text-blue-700'
-                  : 'bg-[#fbf4e3] border-[#dfd1b6]'
+                  : 'bg-slate-50 border-slate-200'
               }`}
             >
               <span className="text-[8px] uppercase font-black leading-none lg:hidden">
@@ -821,7 +821,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                   timeZone: 'UTC',
                 })}
               </div>
-              <div className="text-[9px] font-bold text-[#8b7a66]">
+              <div className="text-[9px] font-bold text-slate-500">
                 {date.toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -831,7 +831,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             </div>
           </div>
 
-          <div className="ml-auto lg:ml-0 lg:mt-2 text-[9px] font-black text-[#8b7a66]">
+          <div className="ml-auto lg:ml-0 lg:mt-2 text-[9px] font-black text-slate-500">
             {dayTasks.length}T • {dueHabits.length}H
           </div>
         </button>
@@ -883,7 +883,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                 <div className="min-w-0 flex-1">
                   <div
                     className={`text-xs font-black break-words ${
-                      task.isCompleted ? 'line-through text-[#9e8f7b]' : ''
+                      task.isCompleted ? 'line-through text-slate-500' : ''
                     }`}
                   >
                     {task.taskOfTheDay}
@@ -983,7 +983,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => selectDate(dateKey)}
-              className="w-full min-h-[82px] rounded-xl border border-dashed border-[#dfd1b6] text-[10px] font-bold text-[#9d8b73] hover:border-blue-300 hover:text-blue-600"
+              className="w-full min-h-[82px] rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 hover:border-blue-300 hover:text-blue-600"
             >
               Empty day
             </button>
@@ -1003,13 +1003,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">
             Calendar
           </h2>
-          <p className="mt-1 text-sm font-semibold text-[#766653]">
+          <p className="mt-1 text-sm font-semibold text-slate-600">
             Month planning, weekly rescheduling, and agenda review in one timeline.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="inline-flex items-center gap-2 rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 h-9 text-xs font-black">
+          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
             <input
               type="checkbox"
               checked={showCompleted}
@@ -1017,7 +1017,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             />
             Completed
           </label>
-          <label className="inline-flex items-center gap-2 rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 h-9 text-xs font-black">
+          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
             <input
               type="checkbox"
               checked={showHabits}
@@ -1026,14 +1026,14 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             Habits
           </label>
 
-          <div className="inline-flex rounded-xl border border-[#dfd1b6] bg-[#fffaf0] p-1">
+          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
             <button
               type="button"
               onClick={() => setView('month')}
               className={`h-8 px-2.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 ${
                 view === 'month'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-black/5'
+                  : 'hover:bg-slate-100'
               }`}
             >
               <CalendarDays className="w-3.5 h-3.5" />
@@ -1045,7 +1045,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               className={`h-8 px-2.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 ${
                 view === 'week'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-black/5'
+                  : 'hover:bg-slate-100'
               }`}
             >
               <CalendarRange className="w-3.5 h-3.5" />
@@ -1057,7 +1057,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               className={`h-8 px-2.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 ${
                 view === 'agenda'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-black/5'
+                  : 'hover:bg-slate-100'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -1080,13 +1080,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-[#ded0b4] bg-[#fffaf0] overflow-hidden">
-        <div className="px-3 sm:px-4 py-3 border-b border-black/8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#fbf4e3]">
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="px-3 sm:px-4 py-3 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50">
           <div className="flex items-center justify-between sm:justify-start gap-2">
             <button
               type="button"
               onClick={() => navigatePeriod(-1)}
-              className="w-9 h-9 rounded-xl border border-[#dfd1b6] bg-white/70 flex items-center justify-center hover:bg-white"
+              className="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-white"
               title={view === 'week' ? 'Previous week' : 'Previous month'}
               aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
             >
@@ -1095,14 +1095,14 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             <button
               type="button"
               onClick={jumpToday}
-              className="h-9 px-3 rounded-xl border border-[#dfd1b6] bg-white/70 text-xs font-black hover:bg-white"
+              className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black hover:bg-white"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => navigatePeriod(1)}
-              className="w-9 h-9 rounded-xl border border-[#dfd1b6] bg-white/70 flex items-center justify-center hover:bg-white"
+              className="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-white"
               title={view === 'week' ? 'Next week' : 'Next month'}
               aria-label={view === 'week' ? 'Next week' : 'Next month'}
             >
@@ -1118,12 +1118,12 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         {view === 'month' && (
           <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px]">
             <div className="min-w-0">
-              <div className="grid grid-cols-7 border-b border-black/8 bg-[#fbf4e3]">
+              <div className="grid grid-cols-7 border-b border-slate-200/80 bg-slate-50">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
                   (day) => (
                     <div
                       key={day}
-                      className="px-0.5 sm:px-2 py-2 text-center text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-[#8b7a66]"
+                      className="px-0.5 sm:px-2 py-2 text-center text-[9px] sm:text-[10px] uppercase tracking-wider font-black text-slate-500"
                     >
                       <span className="sm:hidden">{day.slice(0, 1)}</span>
                       <span className="hidden sm:inline">{day}</span>
@@ -1147,11 +1147,11 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                       type="button"
                       onClick={() => selectDate(dateKey)}
                       aria-pressed={isSelected}
-                      className={`relative min-h-[68px] sm:min-h-[112px] p-1 sm:p-1.5 border-r border-b border-black/8 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
+                      className={`relative min-h-[68px] sm:min-h-[112px] p-1 sm:p-1.5 border-r border-b border-slate-200/80 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
                         isSelected
                           ? 'bg-blue-50 ring-2 ring-inset ring-blue-500 z-[1]'
-                          : 'hover:bg-black/[0.025]'
-                      } ${inMonth ? '' : 'bg-black/[0.018] opacity-45'}`}
+                          : 'hover:bg-slate-50'
+                      } ${inMonth ? '' : 'bg-slate-50/80 opacity-45'}`}
                     >
                       <div className="flex items-center justify-between gap-1 mb-1">
                         <span
@@ -1212,7 +1212,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               </div>
             </div>
 
-            <aside className="border-t xl:border-t-0 xl:border-l border-black/8 bg-[#fbf4e3]/55 p-3 sm:p-4">
+            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200/80 bg-slate-50/55 p-3 sm:p-4">
               <div className="xl:sticky xl:top-24">
                 {renderSelectedDayPanel()}
               </div>
@@ -1222,14 +1222,14 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
         {view === 'week' && (
           <div className="p-2 sm:p-3">
-            <div className="mb-3 rounded-xl border border-[#dfd1b6] bg-[#fbf4e3] px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-xs font-black">Week planning</div>
-                <div className="text-[10px] font-semibold text-[#8b7a66]">
+                <div className="text-[10px] font-semibold text-slate-500">
                   Drag tasks or habit occurrences between days on desktop.
                 </div>
               </div>
-              <div className="text-[10px] font-bold text-[#8b7a66]">
+              <div className="text-[10px] font-bold text-slate-500">
                 On mobile, use each item’s Move to selector.
               </div>
             </div>
@@ -1252,7 +1252,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
                   <ClipboardList className="w-4 h-4 text-blue-600 shrink-0" />
                   <div>
                     <div className="text-sm font-black">Monthly Agenda</div>
-                    <div className="text-[10px] font-bold text-[#8b7a66]">
+                    <div className="text-[10px] font-bold text-slate-500">
                       {agendaDaysWithItems.length} active day
                       {agendaDaysWithItems.length === 1 ? '' : 's'}
                     </div>
@@ -1261,9 +1261,9 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               </div>
 
               {agendaDaysWithItems.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#dfd1b6] bg-white/45 py-16 text-center">
-                  <List className="w-7 h-7 mx-auto text-[#b7a58d]" />
-                  <div className="mt-2 text-sm font-black text-[#766653]">
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
+                  <List className="w-7 h-7 mx-auto text-slate-400" />
+                  <div className="mt-2 text-sm font-black text-slate-600">
                     Nothing scheduled this month
                   </div>
                 </div>
@@ -1276,7 +1276,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               )}
             </div>
 
-            <aside className="border-t xl:border-t-0 xl:border-l border-black/8 bg-[#fbf4e3]/55 p-3 sm:p-4">
+            <aside className="border-t xl:border-t-0 xl:border-l border-slate-200/80 bg-slate-50/55 p-3 sm:p-4">
               <div className="xl:sticky xl:top-24">
                 {renderSelectedDayPanel()}
               </div>
@@ -1285,12 +1285,12 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-bold text-[#8b7a66]">
-        <div className="rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 py-2 flex items-center gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center gap-2">
           <ClipboardList className="w-3.5 h-3.5 text-blue-600" />
           Blue items are tasks. Week view can reschedule them.
         </div>
-        <div className="rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 py-2 flex items-center gap-2">
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center gap-2">
           <Repeat2 className="w-3.5 h-3.5 text-emerald-600" />
           Green items are habits. Moving one changes only that occurrence.
         </div>

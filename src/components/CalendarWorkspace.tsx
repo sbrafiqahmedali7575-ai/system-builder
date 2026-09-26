@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { HabitItem, TaskItem } from '../types';
 import { CONFIGURED_TIMEZONE, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
+import { isHabitDue } from '../utils/habitUtils';
 
 interface CalendarWorkspaceProps {
   tasks: TaskItem[];
@@ -37,12 +38,6 @@ function addDays(key: string, amount: number): string {
   const date = parseKey(key);
   date.setUTCDate(date.getUTCDate() + amount);
   return keyFromDate(date);
-}
-
-function isHabitDue(habit: HabitItem, dateKey: string): boolean {
-  if (habit.frequency === 'daily') return true;
-  const day = parseKey(dateKey).getUTCDay();
-  return day !== 0 && day !== 6;
 }
 
 function monthKey(date: Date): string {

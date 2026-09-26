@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DailyRecord, FilterState, DashboardTheme, TaskItem } from './types';
+import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
 import { ReportView } from './components/ReportView';
@@ -21,11 +21,16 @@ import {
   addTaskToCloud,
   updateTaskInCloud,
   deleteTaskFromCloud,
+  subscribeToHabits,
+  addHabitToCloud,
+  updateHabitInCloud,
+  deleteHabitFromCloud,
 } from './services/firebaseService';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
+const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
 
 export default function App() {
   // Check if current URL is a secure confirmation link
@@ -75,6 +80,21 @@ export default function App() {
           }
         } catch (e) {
           console.error('Failed to parse cached tasks', e);
+        }
+      }
+    }
+    return [];
+  });
+
+  const [habits, setHabits] = useState<HabitItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedHabits = localStorage.getItem(HABITS_STORAGE_KEY);
+      if (savedHabits) {
+        try {
+          const parsed = JSON.parse(savedHabits);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          console.error('Failed to parse cached habits', e);
         }
       }
     }
@@ -151,6 +171,21 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Subscribe to real-time Firestore updates for habits
+  useEffect(() => {
+    const unsubscribe = subscribeToHabits(
+      (cloudHabits) => {
+        setHabits(cloudHabits);
+        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(cloudHabits));
+      },
+      (error) => {
+        console.warn('Using local storage fallback for habits due to:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
   // Save records to local cache as immediate offline persistence
   useEffect(() => {
     if (records.length > 0) {
@@ -162,6 +197,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits));
+  }, [habits]);
 
   // Handle record status toggle (Check / Uncheck) with cloud sync
   const handleToggleRecordStatus = async (id: string) => {
@@ -335,6 +374,52 @@ export default function App() {
     }
   };
 
+  const handleAddHabit = async (habitData: Omit<HabitItem, 'id'>) => {
+    const habit: HabitItem = {
+      ...habitData,
+      id: `habit-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      updatedAt: new Date().toISOString(),
+    };
+    setHabits((current) => [...current, habit]);
+    try {
+      setIsSyncing(true);
+      await addHabitToCloud(habit);
+    } catch (err) {
+      setHabits((current) => current.filter((item) => item.id !== habit.id));
+      throw err;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleUpdateHabit = async (habit: HabitItem) => {
+    const previous = [...habits];
+    setHabits((current) => current.map((item) => (item.id === habit.id ? habit : item)));
+    try {
+      setIsSyncing(true);
+      await updateHabitInCloud(habit);
+    } catch (err) {
+      setHabits(previous);
+      throw err;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDeleteHabit = async (habitId: string) => {
+    const previous = [...habits];
+    setHabits((current) => current.filter((item) => item.id !== habitId));
+    try {
+      setIsSyncing(true);
+      await deleteHabitFromCloud(habitId);
+    } catch (err) {
+      setHabits(previous);
+      throw err;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // Submit the selected day's task response into the records table.
   // All tasks checked => Completed; otherwise => Not Completed.
   const handleSubmitTaskDay = async (
@@ -488,7 +573,22 @@ export default function App() {
   }
 
   if (isMoreOpen) {
-    return <MoreWorkspace theme={theme} onBack={handleCloseMore} />;
+    return (
+      <MoreWorkspace
+        theme={theme}
+        onBack={handleCloseMore}
+        tasks={tasks}
+        habits={habits}
+        onAddTask={handleAddTask}
+        onUpdateTask={handleUpdateTask}
+        onDeleteTask={handleDeleteTask}
+        onToggleTaskStatus={handleToggleTaskStatus}
+        onAddHabit={handleAddHabit}
+        onUpdateHabit={handleUpdateHabit}
+        onDeleteHabit={handleDeleteHabit}
+        isSyncing={isSyncing}
+      />
+    );
   }
 
   const isDark = theme === 'dark';

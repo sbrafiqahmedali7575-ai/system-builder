@@ -5,7 +5,8 @@ import { RotateCcw, X } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from '../types';
 import { calculateKPIStats } from '../utils/daxMeasures';
 import { parseDateToTimestamp } from '../utils/dateUtils';
-import { CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from '../utils/taskDateUtils';
+import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils';
+import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
 import { WeeklyProgressCards } from './WeeklyProgressCards';
@@ -178,28 +179,28 @@ export const ReportView: React.FC<ReportViewProps> = ({
   // Overall KPIs for hero visual (preserved calculations)
   const allKpis = useMemo(() => calculateKPIStats(records), [records]);
 
-  const currentFocusTask = useMemo(() => {
-    const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-    return (
+  const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
+
+  const currentFocusTask = useMemo(
+    () =>
       tasks.find(
-        (task) => task.taskKey === todayKey && !task.isCompleted
-      ) || null
-    );
-  }, [tasks]);
+        (task) => task.taskKey === currentDateKey && !task.isCompleted
+      ) || null,
+    [tasks, currentDateKey]
+  );
 
   const currentCadenceDay = useMemo(() => {
-    const dateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-    const [year, month, day] = dateKey.split('-').map(Number);
+    const [year, month, day] = currentDateKey.split('-').map(Number);
     const fullDayName = new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
       timeZone: 'UTC',
     }).format(new Date(Date.UTC(year, month - 1, day)));
 
     return {
-      formattedDate: formatCalendarDate(dateKey),
+      formattedDate: formatCalendarDate(currentDateKey),
       fullDayName,
     };
-  }, []);
+  }, [currentDateKey]);
 
   // Default countdown = the app's 1,800-day mastery horizon.
   // A saved custom date/reason overrides the default until reset.
@@ -246,8 +247,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
     const [targetYear, targetMonth, targetDay] = targetDateKey.split('-').map(Number);
     const targetUtc = Date.UTC(targetYear, targetMonth - 1, targetDay);
 
-    const todayKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-    const [todayYear, todayMonth, todayDay] = todayKey.split('-').map(Number);
+    const [todayYear, todayMonth, todayDay] = currentDateKey.split('-').map(Number);
     const todayUtc = Date.UTC(todayYear, todayMonth - 1, todayDay);
 
     const daysRemaining = Math.max(0, Math.ceil((targetUtc - todayUtc) / DAY_MS));
@@ -264,7 +264,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       reason: customCountdownReason || '1,800-day mastery goal',
       isCustom: Boolean(customCountdownDate),
     };
-  }, [customCountdownDate, customCountdownReason, defaultCountdownTarget]);
+  }, [customCountdownDate, customCountdownReason, defaultCountdownTarget, currentDateKey]);
 
   const openCountdownEditor = () => {
     setDraftCountdownDate(customCountdownDate || defaultCountdownTarget);

@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   Check,
-  Flame,
   History,
   ListChecks,
   Pencil,
@@ -136,22 +135,18 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     );
   }, [tasks, weekDates, today]);
 
-  const currentTaskStreak = useMemo(() => {
-    let streak = 0;
-    let dateKey = today;
+  const achievedDays = useMemo(() => {
+    const loggedDates = Array.from(
+      new Set(
+        tasks
+          .filter((task) => task.taskKey <= today)
+          .map((task) => task.taskKey)
+      )
+    );
 
-    for (let index = 0; index < 3660; index += 1) {
-      const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
-      if (dayTasks.length === 0) break;
-
-      const rate = getDailyTaskRate(tasks, dateKey);
-      if (rate < WEEKLY_TARGET_PERCENTAGE) break;
-
-      streak += 1;
-      dateKey = addHabitDays(dateKey, -1);
-    }
-
-    return streak;
+    return loggedDates.filter(
+      (dateKey) => getDailyTaskRate(tasks, dateKey) >= WEEKLY_TARGET_PERCENTAGE
+    ).length;
   }, [tasks, today]);
 
   const achievedWeeks = useMemo(() => {
@@ -336,14 +331,14 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
 
         <div className="rounded-xl border border-orange-200/80 bg-orange-50/60 px-3 py-2">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-orange-600">
-            <Flame className="w-3 h-3" />
-            Best streak
+            <Check className="w-3 h-3" />
+            Achieved Days
           </div>
           <div className="mt-1 text-lg font-black text-slate-900">
-            {currentTaskStreak}
+            {achievedDays}
           </div>
           <div className="text-[9px] font-bold text-slate-500">
-            current days at {WEEKLY_TARGET_PERCENTAGE}%+
+            days at {WEEKLY_TARGET_PERCENTAGE}%+ target
           </div>
         </div>
 

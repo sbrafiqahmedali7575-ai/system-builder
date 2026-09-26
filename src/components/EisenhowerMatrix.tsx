@@ -352,6 +352,8 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<MatrixQuadrant | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [selectedQuadrant, setSelectedQuadrant] =
+    useState<MatrixQuadrant>('urgent-important');
   const [error, setError] = useState<string | null>(null);
   const compact = density === 'compact';
   const todayTaskKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
@@ -538,6 +540,27 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     setDragOver(null);
   };
 
+  const selectQuadrant = (quadrantId: MatrixQuadrant) => {
+    setSelectedQuadrant(quadrantId);
+    setDragOver(null);
+    if (editingQuadrant && editingQuadrant !== quadrantId) {
+      cancelQuadrantEdit();
+    }
+  };
+
+  const dropOnQuadrantTab = async (
+    event: React.DragEvent<HTMLButtonElement>,
+    quadrantId: MatrixQuadrant
+  ) => {
+    event.preventDefault();
+    const taskId =
+      event.dataTransfer.getData('text/task-id') || draggedTaskId || '';
+    if (!taskId) return;
+
+    selectQuadrant(quadrantId);
+    await moveTask(taskId, quadrantId);
+  };
+
   return (
     <div
       className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:flex lg:flex-col lg:overflow-hidden`}
@@ -545,22 +568,79 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       <div className={`flex flex-col lg:flex-row lg:items-center justify-between ${
           compact ? 'gap-2' : 'gap-3'
         } lg:shrink-0`}>
-        <div>
+        <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
             Priority workspace
           </p>
-          <h2 className={`${compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'} font-black tracking-tight`}>
-            Today's Eisenhower Matrix
-          </h2>
-          <p className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-semibold text-slate-600 hidden md:block`}>
-            Today only — changes sync instantly with Today Tasks.
-          </p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+            <h2 className={`${compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-black tracking-tight`}>
+              Today's Eisenhower Matrix
+            </h2>
+
+            <div
+              role="tablist"
+              aria-label="Eisenhower quadrants"
+              className="flex items-center gap-1"
+            >
+              {quadrants.map((quadrant) => {
+                const tabTheme = QUADRANT_THEMES[quadrant.color];
+                const TabIcon = QUADRANT_ICONS[quadrant.icon].component;
+                const isSelected = selectedQuadrant === quadrant.id;
+                const isTabDropTarget =
+                  draggedTaskId && dragOver === quadrant.id;
+
+                return (
+                  <button
+                    key={quadrant.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`matrix-panel-${quadrant.id}`}
+                    onClick={() => selectQuadrant(quadrant.id)}
+                    onDragEnter={(event) => {
+                      if (!draggedTaskId) return;
+                      event.preventDefault();
+                      setDragOver(quadrant.id);
+                    }}
+                    onDragOver={(event) => {
+                      if (!draggedTaskId) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = 'move';
+                      setDragOver(quadrant.id);
+                    }}
+                    onDrop={(event) =>
+                      void dropOnQuadrantTab(event, quadrant.id)
+                    }
+                    className={`relative w-9 h-9 rounded-lg border inline-flex items-center justify-center transition-all ${
+                      isSelected
+                        ? `${tabTheme.iconSurface} ${tabTheme.iconText} ${tabTheme.accentBorder} ring-2 ring-offset-1 ring-current shadow-sm`
+                        : `bg-white ${tabTheme.accentBorder} ${tabTheme.iconText} hover:${tabTheme.iconSurface}`
+                    } ${
+                      isTabDropTarget
+                        ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
+                        : ''
+                    }`}
+                    title={`Quadrant ${quadrant.roman} — ${quadrant.title}`}
+                    aria-label={`Show Quadrant ${quadrant.roman}: ${quadrant.title}`}
+                  >
+                    <TabIcon className="w-4 h-4" aria-hidden="true" />
+                    <span
+                      className={`absolute -right-1 -bottom-1 min-w-4 h-4 px-1 rounded-full ${tabTheme.dot} text-white flex items-center justify-center text-[8px] font-black shadow-sm`}
+                      aria-hidden="true"
+                    >
+                      {quadrant.roman}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {draggedTaskId && (
             <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 h-9 inline-flex items-center text-xs font-black text-blue-700">
-              Dragging task • choose a quadrant
+              Dragging task • drop on a quadrant tab
             </div>
           )}
           <div className="text-xs font-bold text-slate-600">
@@ -585,10 +665,10 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
         </div>
       )}
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 ${
-          compact ? 'gap-2' : 'gap-3'
-        } lg:flex-1 lg:min-h-0`}>
-        {quadrants.map((quadrant) => {
+      <div className="flex flex-col flex-1 min-h-0">
+        {quadrants
+          .filter((quadrant) => quadrant.id === selectedQuadrant)
+          .map((quadrant) => {
           const theme = QUADRANT_THEMES[quadrant.color];
           const QuadrantIconComponent =
             QUADRANT_ICONS[quadrant.icon].component;
@@ -603,6 +683,9 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           return (
             <div
               key={quadrant.id}
+              id={`matrix-panel-${quadrant.id}`}
+              role="tabpanel"
+              aria-label={`Quadrant ${quadrant.roman}: ${quadrant.title}`}
               onDragEnter={(event) => {
                 if (!draggedTaskId) return;
                 event.preventDefault();
@@ -621,7 +704,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative ${compact ? 'min-h-[230px] rounded-xl' : 'min-h-[320px] rounded-2xl'} border transition-all overflow-hidden flex flex-col ${theme.border} ${theme.surface} ${
+              className={`relative h-full flex-1 min-h-[320px] lg:min-h-0 ${compact ? 'rounded-xl' : 'rounded-2xl'} border transition-all overflow-hidden flex flex-col ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'

@@ -45,6 +45,8 @@ export interface TaskItem {
   matrixQuadrant?: MatrixQuadrant;
 }
 
+export type ToolsDensity = 'compact' | 'comfortable';
+
 export type DashboardTheme = 'powerbi' | 'dark' | 'executive' | 'modern';
 
 export interface FilterState {

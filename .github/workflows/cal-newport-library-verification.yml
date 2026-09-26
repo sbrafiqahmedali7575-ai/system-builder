@@ -1,0 +1,22 @@
+name: Cal Newport Library Verification
+
+on:
+  push:
+    branches:
+      - verification/cal-newport-library-2026-09-26
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run build

@@ -1,8 +1,6 @@
 import React from 'react';
-import {
-  CalendarMiniMonth,
-  CalendarMiniMonthDaySummary,
-} from './CalendarMiniMonth';
+import { CalendarMiniMonth } from './CalendarMiniMonth';
+import type { CalendarMiniMonthDaySummary } from './CalendarMiniMonth';
 
 export interface CalendarYearViewProps {
   year: number;

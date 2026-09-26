@@ -614,7 +614,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     className={`relative w-9 h-9 rounded-lg border inline-flex items-center justify-center transition-all ${
                       isSelected
                         ? `${tabTheme.iconSurface} ${tabTheme.iconText} ${tabTheme.accentBorder} ring-2 ring-offset-1 ring-current shadow-sm`
-                        : `bg-white ${tabTheme.accentBorder} ${tabTheme.iconText} hover:${tabTheme.iconSurface}`
+                        : `bg-white ${tabTheme.accentBorder} ${tabTheme.iconText} hover:bg-slate-50 hover:shadow-sm`
                     } ${
                       isTabDropTarget
                         ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'

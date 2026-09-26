@@ -8,6 +8,7 @@ import { NotificationSettingsModal } from './components/NotificationSettingsModa
 import { ConfirmationPage } from './components/ConfirmationPage';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
+import { MoreWorkspace } from './components/MoreWorkspace';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
@@ -92,6 +93,10 @@ export default function App() {
     if (typeof window === 'undefined') return false;
     return window.location.pathname === '/books/cal-newport';
   });
+  const [isMoreOpen, setIsMoreOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname === '/more';
+  });
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -107,6 +112,7 @@ export default function App() {
       setConfirmToken(params.get('token'));
       setConfirmAction(params.get('action') || undefined);
       setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
+      setIsMoreOpen(window.location.pathname === '/more');
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -430,6 +436,23 @@ export default function App() {
     setIsLibraryOpen(false);
   };
 
+  const handleOpenMore = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/more');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsLibraryOpen(false);
+    setIsMoreOpen(true);
+  };
+
+  const handleCloseMore = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsMoreOpen(false);
+  };
+
   const handleCloseDayReview = () => {
     setIsDayReviewOpen(false);
     if (typeof window !== 'undefined') {
@@ -464,6 +487,10 @@ export default function App() {
     return <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />;
   }
 
+  if (isMoreOpen) {
+    return <MoreWorkspace theme={theme} onBack={handleCloseMore} />;
+  }
+
   const isDark = theme === 'dark';
   const completedDaysForBadge = records.filter((record) => record.isCompleted).length;
   const currentBadge = getBadgeProgress(completedDaysForBadge).current;
@@ -481,6 +508,7 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
+        onOpenMore={handleOpenMore}
         theme={theme}
         onThemeChange={setTheme}
         totalRecordsCount={records.length}

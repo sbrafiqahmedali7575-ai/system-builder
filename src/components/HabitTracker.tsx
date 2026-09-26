@@ -272,17 +272,17 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">
             Habit Tracker
           </h2>
-          <p className="mt-1 text-sm font-semibold text-[#766653]">
+          <p className="mt-1 text-sm font-semibold text-slate-600">
             Custom schedules, weekly check-ins, streaks, and completion history.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 py-2 text-right">
-            <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-right">
+            <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
               This week
             </div>
-            <div className="text-sm font-black text-[#3f3426]">
+            <div className="text-sm font-black text-slate-900">
               {completedThisWeek}/{dueThisWeek || 0}
             </div>
           </div>
@@ -298,20 +298,20 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {formOpen && (
-        <div className="rounded-2xl border border-[#dfd1b6] bg-[#fff8e8] p-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <div className="text-sm font-black">
                 {editingHabitId ? 'Edit Habit' : 'New Habit'}
               </div>
-              <div className="text-[11px] font-semibold text-[#8b7a66]">
+              <div className="text-[11px] font-semibold text-slate-500">
                 Name, appearance, and repeat schedule.
               </div>
             </div>
             <button
               type="button"
               onClick={closeForm}
-              className="w-8 h-8 rounded-lg border border-[#dfd1b6] flex items-center justify-center hover:bg-black/5"
+              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
               aria-label="Close habit editor"
             >
               <X className="w-4 h-4" />
@@ -324,7 +324,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               onChange={(event) =>
                 setDraft((current) => ({ ...current, emoji: event.target.value.slice(0, 3) }))
               }
-              className="h-10 rounded-xl border border-[#dfd1b6] bg-white/80 px-3 text-center text-lg outline-none"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-center text-lg outline-none"
               aria-label="Habit emoji"
             />
             <input
@@ -341,7 +341,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 }
               }}
               placeholder="Habit name"
-              className="h-10 rounded-xl border border-[#dfd1b6] bg-white/80 px-3 text-sm font-semibold outline-none focus:border-blue-400"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
             />
             <select
               value={draft.frequency}
@@ -353,7 +353,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     event.target.value === 'custom' ? current.repeatDays : [],
                 }))
               }
-              className="h-10 rounded-xl border border-[#dfd1b6] bg-white/80 px-3 text-sm font-bold outline-none"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none"
             >
               <option value="daily">Every day</option>
               <option value="weekdays">Weekdays</option>
@@ -374,7 +374,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
           {draft.frequency === 'custom' && (
             <div className="mt-3">
-              <div className="text-xs font-bold text-[#8b7a66] mb-2">Repeat on</div>
+              <div className="text-xs font-bold text-slate-500 mb-2">Repeat on</div>
               <div className="flex flex-wrap gap-2">
                 {HABIT_WEEKDAYS.map((day) => {
                   const selected = draft.repeatDays.includes(day.value);
@@ -386,7 +386,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       className={`h-9 px-3 rounded-xl border text-xs font-black transition ${
                         selected
                           ? 'bg-blue-600 border-blue-600 text-white'
-                          : 'bg-white/80 border-[#dfd1b6] hover:border-blue-300'
+                          : 'bg-white border-slate-200 hover:border-blue-300'
                       }`}
                     >
                       {day.short}
@@ -403,7 +403,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           )}
 
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs font-bold text-[#8b7a66]">Color</span>
+            <span className="text-xs font-bold text-slate-500">Color</span>
             {COLORS.map((item) => (
               <button
                 key={item}
@@ -419,12 +419,12 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-[#ded0b4] bg-[#fffaf0] overflow-hidden">
-        <div className="px-3 py-3 border-b border-black/8 flex items-center justify-between gap-3">
+      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="px-3 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setWeekAnchor(addHabitDays(weekAnchor, -7))}
-            className="px-3 py-1.5 rounded-lg border border-[#dfd1b6] text-xs font-black hover:bg-black/5"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-black hover:bg-slate-100"
           >
             Previous
           </button>
@@ -445,14 +445,14 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             <button
               type="button"
               onClick={() => setWeekAnchor(today)}
-              className="px-3 py-1.5 rounded-lg border border-[#dfd1b6] text-xs font-black hover:bg-black/5"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-black hover:bg-slate-100"
             >
               This Week
             </button>
             <button
               type="button"
               onClick={() => setWeekAnchor(addHabitDays(weekAnchor, 7))}
-              className="px-3 py-1.5 rounded-lg border border-[#dfd1b6] text-xs font-black hover:bg-black/5"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-black hover:bg-slate-100"
             >
               Next
             </button>
@@ -461,15 +461,15 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
         <div className="overflow-x-auto">
           <div className="min-w-[850px]">
-            <div className="grid grid-cols-[280px_repeat(7,1fr)_90px_90px] border-b border-black/8 bg-[#fbf4e3]">
-              <div className="p-3 text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+            <div className="grid grid-cols-[280px_repeat(7,1fr)_90px_90px] border-b border-slate-200/80 bg-slate-50">
+              <div className="p-3 text-[10px] uppercase tracking-wider font-black text-slate-500">
                 Habit
               </div>
               {weekDates.map((dateKey) => {
                 const date = parseHabitDateKey(dateKey);
                 return (
                   <div key={dateKey} className="p-2 text-center">
-                    <div className="text-[10px] font-black uppercase text-[#8b7a66]">
+                    <div className="text-[10px] font-black uppercase text-slate-500">
                       {date.toLocaleDateString('en-US', {
                         weekday: 'short',
                         timeZone: 'UTC',
@@ -479,7 +479,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       className={`mt-1 mx-auto w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${
                         dateKey === today
                           ? 'bg-blue-600 text-white'
-                          : 'text-[#3f3426]'
+                          : 'text-slate-900'
                       }`}
                     >
                       {date.getUTCDate()}
@@ -487,19 +487,19 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   </div>
                 );
               })}
-              <div className="p-3 text-center text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+              <div className="p-3 text-center text-[10px] uppercase tracking-wider font-black text-slate-500">
                 Streak
               </div>
-              <div className="p-3 text-center text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+              <div className="p-3 text-center text-[10px] uppercase tracking-wider font-black text-slate-500">
                 30 Day
               </div>
             </div>
 
             {habits.length === 0 ? (
               <div className="py-14 text-center">
-                <Repeat2 className="w-8 h-8 mx-auto text-[#b7a58d]" />
+                <Repeat2 className="w-8 h-8 mx-auto text-slate-400" />
                 <div className="mt-2 text-sm font-black">No habits yet</div>
-                <div className="text-xs font-semibold text-[#8b7a66]">
+                <div className="text-xs font-semibold text-slate-500">
                   Add a small repeatable behavior to begin.
                 </div>
               </div>
@@ -509,7 +509,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
-                    className={`grid grid-cols-[280px_repeat(7,1fr)_90px_90px] border-b last:border-b-0 border-black/8 ${
+                    className={`grid grid-cols-[280px_repeat(7,1fr)_90px_90px] border-b last:border-b-0 border-slate-200/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
                     }`}
                   >
@@ -539,7 +539,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                           className="block text-left max-w-full"
                         >
                           <div className="text-sm font-black truncate">{habit.name}</div>
-                          <div className="text-[10px] font-bold text-[#8b7a66] truncate">
+                          <div className="text-[10px] font-bold text-slate-500 truncate">
                             {getHabitScheduleLabel(habit)}
                           </div>
                         </button>
@@ -547,7 +547,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       <button
                         type="button"
                         onClick={() => openEdit(habit)}
-                        className="w-7 h-7 rounded-lg text-[#8b7a66] hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                        className="w-7 h-7 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
                         title="Edit habit"
                         aria-label={`Edit ${habit.name}`}
                       >
@@ -563,7 +563,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                         className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                           historyHabitId === habit.id
                             ? 'bg-blue-100 text-blue-700'
-                            : 'text-[#8b7a66] hover:text-blue-600 hover:bg-blue-50'
+                            : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'
                         }`}
                         title="Completion history"
                         aria-label={`View ${habit.name} history`}
@@ -573,7 +573,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       <button
                         type="button"
                         onClick={() => void deleteHabit(habit.id)}
-                        className="w-7 h-7 rounded-lg text-[#a18f78] hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"
+                        className="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"
                         title="Delete habit"
                         aria-label={`Delete ${habit.name}`}
                       >
@@ -588,7 +588,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       return (
                         <div
                           key={dateKey}
-                          className="flex items-center justify-center border-l border-black/5"
+                          className="flex items-center justify-center border-l border-slate-200/60"
                         >
                           <button
                             type="button"
@@ -596,10 +596,10 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                             onClick={() => void toggleCheckIn(habit, dateKey)}
                             className={`w-8 h-8 rounded-full border flex items-center justify-center transition ${
                               !due || isFuture
-                                ? 'border-transparent bg-black/[0.025] cursor-not-allowed opacity-50'
+                                ? 'border-transparent bg-slate-50 cursor-not-allowed opacity-50'
                                 : checked
                                 ? colorClasses[habit.color].active
-                                : 'border-[#cdbfa8] bg-white hover:border-blue-400'
+                                : 'border-slate-300 bg-white hover:border-blue-400'
                             }`}
                             title={
                               isFuture
@@ -618,13 +618,13 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       );
                     })}
 
-                    <div className="border-l border-black/5 flex items-center justify-center">
+                    <div className="border-l border-slate-200/60 flex items-center justify-center">
                       <span className="inline-flex items-center gap-1 text-xs font-black">
                         <Flame className="w-3.5 h-3.5 text-orange-500" />
                         {stats.currentStreak}
                       </span>
                     </div>
-                    <div className="border-l border-black/5 flex items-center justify-center">
+                    <div className="border-l border-slate-200/60 flex items-center justify-center">
                       <span className="inline-flex items-center gap-1 text-xs font-black">
                         <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
                         {stats.thirty.rate}%
@@ -639,8 +639,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {historyHabit && historyStats && (
-        <section className="rounded-2xl border border-[#ded0b4] bg-[#fff8e8] overflow-hidden">
-          <div className="px-4 py-3 border-b border-black/8 flex items-center justify-between gap-3">
+        <section className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center text-xl shrink-0 ${
@@ -653,7 +653,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 <div className="text-base font-black truncate">
                   {historyHabit.name} History
                 </div>
-                <div className="text-[11px] font-semibold text-[#8b7a66]">
+                <div className="text-[11px] font-semibold text-slate-500">
                   {getHabitScheduleLabel(historyHabit)} • Detailed streak, trend, monthly & heatmap history
                 </div>
               </div>
@@ -661,7 +661,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             <button
               type="button"
               onClick={() => setHistoryHabitId(null)}
-              className="w-8 h-8 rounded-lg border border-[#dfd1b6] flex items-center justify-center hover:bg-black/5"
+              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
               aria-label="Close habit history"
             >
               <X className="w-4 h-4" />
@@ -670,56 +670,56 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/80 p-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <Flame className="w-4 h-4 text-orange-500" />
                 <div className="mt-2 text-xl font-black">{historyStats.currentStreak}</div>
-                <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+                <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
                   Current streak
                 </div>
               </div>
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/80 p-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <Trophy className="w-4 h-4 text-amber-500" />
                 <div className="mt-2 text-xl font-black">{historyStats.bestStreak}</div>
-                <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+                <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
                   Best streak
                 </div>
               </div>
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/80 p-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
                 <div className="mt-2 text-xl font-black">{historyStats.thirty.rate}%</div>
-                <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+                <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
                   Last 30 days
                 </div>
               </div>
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/80 p-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <BarChart3 className="w-4 h-4 text-violet-600" />
                 <div className="mt-2 text-xl font-black">{historyStats.ninety.rate}%</div>
-                <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+                <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
                   Last 90 days
                 </div>
               </div>
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/80 p-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <Target className="w-4 h-4 text-emerald-600" />
                 <div className="mt-2 text-xl font-black">{historyStats.allTime.rate}%</div>
-                <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+                <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
                   All-time rate
                 </div>
               </div>
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/80 p-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <Check className="w-4 h-4 text-emerald-600" />
                 <div className="mt-2 text-xl font-black">{historyStats.totalCheckIns}</div>
-                <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66]">
+                <div className="text-[10px] uppercase tracking-wider font-black text-slate-500">
                   Check-ins
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-3">
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="text-sm font-black">Completion Trend</div>
-                    <div className="text-[11px] font-semibold text-[#8b7a66]">
+                    <div className="text-[11px] font-semibold text-slate-500">
                       Weekly completion rate across the last 12 weeks.
                     </div>
                   </div>
@@ -738,7 +738,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   </div>
                 </div>
 
-                <div className="h-40 flex items-end gap-1.5 border-b border-[#dfd1b6] px-1">
+                <div className="h-40 flex items-end gap-1.5 border-b border-slate-200 px-1">
                   {weeklyTrend.map((week) => (
                     <div
                       key={week.key}
@@ -761,24 +761,24 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                           }}
                         />
                       </div>
-                      <div className="mt-1 text-[9px] font-black text-[#8b7a66] truncate w-full text-center">
+                      <div className="mt-1 text-[9px] font-black text-slate-500 truncate w-full text-center">
                         {week.label}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-bold text-[#8b7a66]">
+                <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-bold text-slate-500">
                   <span>80–100% strong</span>
                   <span>50–79% moderate</span>
                   <span>&lt;50% needs attention</span>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
                 <div className="mb-3">
                   <div className="text-sm font-black">Monthly Summary</div>
-                  <div className="text-[11px] font-semibold text-[#8b7a66]">
+                  <div className="text-[11px] font-semibold text-slate-500">
                     Completion by calendar month.
                   </div>
                 </div>
@@ -787,18 +787,18 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   {monthlySummaries.map((month) => (
                     <div
                       key={month.key}
-                      className="rounded-lg bg-[#fbf4e3] px-3 py-2.5"
+                      className="rounded-lg bg-slate-50 px-3 py-2.5"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <div className="text-xs font-black">{month.label}</div>
-                          <div className="text-[10px] font-semibold text-[#8b7a66]">
+                          <div className="text-[10px] font-semibold text-slate-500">
                             {month.completed}/{month.due} done • {month.missed} missed
                           </div>
                         </div>
                         <div className="text-sm font-black">{month.rate}%</div>
                       </div>
-                      <div className="mt-2 h-1.5 rounded-full bg-[#e9dfcd] overflow-hidden">
+                      <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
                             month.rate >= 80
@@ -816,15 +816,15 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
                   <div className="text-sm font-black">Calendar Heatmap</div>
-                  <div className="text-[11px] font-semibold text-[#8b7a66]">
+                  <div className="text-[11px] font-semibold text-slate-500">
                     Past 12 months • one square per calendar day.
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-[#8b7a66]">
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-slate-500">
                   <span className="inline-flex items-center gap-1">
                     <span className={`w-3 h-3 rounded-sm ${colorClasses[historyHabit.color].dot}`} />
                     Done
@@ -840,7 +840,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-12 gap-1 mb-1 pl-8 min-w-[760px] text-[9px] font-black text-[#8b7a66]">
+              <div className="grid grid-cols-12 gap-1 mb-1 pl-8 min-w-[760px] text-[9px] font-black text-slate-500">
                 {Array.from({ length: 12 }, (_, index) => {
                   const date = parseHabitDateKey(
                     addHabitDays(today, -Math.round(((11 - index) * 365) / 12))
@@ -858,7 +858,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
               <div className="overflow-x-auto pb-1">
                 <div className="flex gap-1 min-w-max">
-                  <div className="grid grid-rows-7 gap-1 pr-1 text-[9px] font-bold text-[#8b7a66]">
+                  <div className="grid grid-rows-7 gap-1 pr-1 text-[9px] font-bold text-slate-500">
                     {['Sun', '', 'Tue', '', 'Thu', '', 'Sat'].map((label, index) => (
                       <div key={index} className="w-7 h-[14px] leading-[14px]">
                         {label}
@@ -908,15 +908,15 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#e7dbc4] bg-white/70 p-3 sm:p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
                   <div className="text-sm font-black">Completion History</div>
-                  <div className="text-[11px] font-semibold text-[#8b7a66]">
+                  <div className="text-[11px] font-semibold text-slate-500">
                     {historyStats.allTime.completed} of {historyStats.allTime.due} scheduled check-ins completed.
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-[#8b7a66]">
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-slate-500">
                   <span className="inline-flex items-center gap-1">
                     <span className={`w-3 h-3 rounded-sm ${colorClasses[historyHabit.color].dot}`} />
                     Done
@@ -963,15 +963,15 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               </div>
 
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                <div className="rounded-lg bg-[#fbf4e3] px-3 py-2">
+                <div className="rounded-lg bg-slate-50 px-3 py-2">
                   <span className="font-black">30d:</span>{' '}
                   {historyStats.thirty.completed}/{historyStats.thirty.due} completed
                 </div>
-                <div className="rounded-lg bg-[#fbf4e3] px-3 py-2">
+                <div className="rounded-lg bg-slate-50 px-3 py-2">
                   <span className="font-black">90d:</span>{' '}
                   {historyStats.ninety.completed}/{historyStats.ninety.due} completed
                 </div>
-                <div className="rounded-lg bg-[#fbf4e3] px-3 py-2">
+                <div className="rounded-lg bg-slate-50 px-3 py-2">
                   <span className="font-black">All time:</span>{' '}
                   {historyStats.allTime.completed}/{historyStats.allTime.due} completed
                 </div>

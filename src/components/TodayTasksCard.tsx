@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { TaskItem, DashboardTheme } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
+import { PomodoroTimer } from './PomodoroTimer';
 import {
   CONFIGURED_TIMEZONE,
   getUpcomingDateOptions,
@@ -376,8 +377,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </div>
         </div>
 
-        {/* Date tabs + Add Task grouped in the card header */}
+        {/* Pomodoro + date tabs + task actions grouped in the card header */}
         <div className="flex flex-wrap items-center justify-end gap-1">
+          <PomodoroTimer className="mr-1" />
+
           <button
             type="button"
             onClick={() => setActiveDateTab('TODAY')}

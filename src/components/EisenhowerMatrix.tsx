@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   AlertCircle,
-  Ban,
   CalendarClock,
   CalendarDays,
   Check,
@@ -643,7 +642,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       className={`w-9 h-9 rounded-xl border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center`}
                       title={QUADRANT_ICONS[quadrant.icon].label}
                     >
-                      <QuadrantIconComponent className="w-4.5 h-4.5" />
+                      <QuadrantIconComponent className="w-4 h-4" />
                     </span>
                     <span
                       className={`absolute -right-1.5 -bottom-1.5 min-w-4 h-4 px-1 rounded-full ${theme.dot} text-white flex items-center justify-center text-[8px] font-black shadow-sm`}

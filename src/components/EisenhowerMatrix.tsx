@@ -540,7 +540,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight">
             Eisenhower Matrix
           </h2>
-          <p className="mt-1 text-sm font-semibold text-[#766653]">
+          <p className="mt-1 text-sm font-semibold text-slate-600">
             Drag with the grip handle, or use Move to on touch devices. Quadrant and priority are controlled separately.
           </p>
         </div>
@@ -551,11 +551,11 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
               Dragging task • choose a quadrant
             </div>
           )}
-          <div className="text-xs font-bold text-[#766653]">
+          <div className="text-xs font-bold text-slate-600">
             {tasks.filter((task) => !task.isCompleted).length} active •{' '}
             {tasks.filter((task) => task.isCompleted).length} done
           </div>
-          <label className="inline-flex items-center gap-2 rounded-xl border border-[#dfd1b6] bg-[#fffaf0] px-3 h-9 text-xs font-black">
+          <label className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-9 text-xs font-black">
             <input
               type="checkbox"
               checked={showCompleted}
@@ -610,8 +610,8 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
               className={`relative min-h-[300px] rounded-2xl border transition-all ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
-                    ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-[#f4ecd8]'
-                    : 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#f4ecd8] shadow-lg -translate-y-0.5'
+                    ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'
+                    : 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-50 shadow-lg -translate-y-0.5'
                   : ''
               }`}
             >
@@ -635,7 +635,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               )}
 
-              <div className="px-4 py-3 border-b border-black/8 flex items-start justify-between gap-2">
+              <div className="px-4 py-3 border-b border-slate-200/80 flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                   <div className="relative shrink-0 mt-0.5">
                     <span
@@ -662,7 +662,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               : current
                           )
                         }
-                        className="w-full h-8 rounded-lg border border-[#dfd1b6] bg-white px-2 text-sm font-black outline-none focus:border-blue-400"
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm font-black outline-none focus:border-blue-400"
                         aria-label={`Edit quadrant ${quadrant.roman} title`}
                       />
                       <input
@@ -674,12 +674,12 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               : current
                           )
                         }
-                        className="w-full h-8 rounded-lg border border-[#dfd1b6] bg-white px-2 text-[11px] font-bold outline-none focus:border-blue-400"
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold outline-none focus:border-blue-400"
                         aria-label={`Edit quadrant ${quadrant.roman} action`}
                       />
-                      <div className="rounded-xl border border-black/10 bg-white/70 p-2.5 space-y-2.5">
+                      <div className="rounded-xl border border-black/10 bg-white p-2.5 space-y-2.5">
                         <div>
-                          <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66] mb-1.5">
+                          <div className="text-[10px] uppercase tracking-wider font-black text-slate-500 mb-1.5">
                             Color theme
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -712,7 +712,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                         </div>
 
                         <div>
-                          <div className="text-[10px] uppercase tracking-wider font-black text-[#8b7a66] mb-1.5">
+                          <div className="text-[10px] uppercase tracking-wider font-black text-slate-500 mb-1.5">
                             Icon
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -738,7 +738,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                   className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${
                                     selected
                                       ? `${selectedTheme.iconSurface} ${selectedTheme.iconText} ${selectedTheme.accentBorder} ring-1 ring-current`
-                                      : 'bg-white border-[#dfd1b6] text-[#8b7a66] hover:border-blue-300 hover:text-blue-600'
+                                      : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'
                                   }`}
                                   title={option.label}
                                   aria-label={`Use ${option.label} icon`}
@@ -766,7 +766,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                         <button
                           type="button"
                           onClick={() => resetQuadrant(quadrant.id)}
-                          className="h-7 px-2 rounded-lg border border-[#dfd1b6] inline-flex items-center gap-1 text-[10px] font-black hover:bg-black/5"
+                          className="h-7 px-2 rounded-lg border border-slate-200 inline-flex items-center gap-1 text-[10px] font-black hover:bg-slate-100"
                         >
                           <RotateCcw className="w-3 h-3" />
                           Reset
@@ -774,7 +774,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                         <button
                           type="button"
                           onClick={cancelQuadrantEdit}
-                          className="w-7 h-7 rounded-lg border border-[#dfd1b6] flex items-center justify-center hover:bg-black/5"
+                          className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
                           aria-label="Cancel quadrant editing"
                         >
                           <X className="w-3 h-3" />
@@ -786,7 +786,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       <div className={`text-sm font-black ${theme.header}`}>
                         {quadrant.title}
                       </div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#8b7a66]">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         {quadrant.action}
                       </div>
                     </div>
@@ -798,7 +798,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     <button
                       type="button"
                       onClick={() => beginQuadrantEdit(quadrant)}
-                      className="w-7 h-7 rounded-lg text-[#8b7a66] hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                      className="w-7 h-7 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
                       title="Edit quadrant"
                       aria-label={`Edit ${quadrant.title}`}
                     >
@@ -827,7 +827,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       if (event.key === 'Enter') void addTask(quadrant.id);
                     }}
                     placeholder="Add task..."
-                    className="min-w-0 flex-1 h-9 rounded-xl border border-[#dfd1b6] bg-white/80 px-3 text-sm font-semibold outline-none focus:border-blue-400"
+                    className="min-w-0 flex-1 h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
                   />
                   <button
                     type="button"
@@ -846,7 +846,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     className={`min-h-[175px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-sm font-semibold transition ${
                       draggedTaskId
                         ? 'border-blue-200 bg-blue-50/40 text-blue-600'
-                        : `${theme.border} ${theme.iconText} bg-white/35`
+                        : `${theme.border} ${theme.iconText} bg-white`
                     }`}
                   >
                     <GripVertical className="w-5 h-5 mb-1 opacity-60" />
@@ -864,7 +864,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       return (
                         <div
                           key={task.id}
-                          className={`rounded-xl border ${theme.accentBorder} bg-white/90 px-2.5 py-2.5 shadow-sm transition-all ${
+                          className={`rounded-xl border ${theme.accentBorder} bg-white px-2.5 py-2.5 shadow-sm transition-all ${
                             busyTaskId === task.id ? 'opacity-60' : ''
                           } ${dragging ? 'opacity-40 scale-[0.99] border-blue-300' : ''}`}
                         >
@@ -883,10 +883,10 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               }}
                               onDragEnd={endDrag}
                               disabled={task.isCompleted}
-                              className={`mt-0.5 w-7 h-7 rounded-lg border border-[#e7dbc4] flex items-center justify-center shrink-0 ${
+                              className={`mt-0.5 w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center shrink-0 ${
                                 task.isCompleted
-                                  ? 'text-[#c4b6a2] cursor-not-allowed'
-                                  : 'text-[#8b7a66] cursor-grab active:cursor-grabbing hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50'
+                                  ? 'text-slate-300 cursor-not-allowed'
+                                  : 'text-slate-500 cursor-grab active:cursor-grabbing hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50'
                               }`}
                               title={
                                 task.isCompleted
@@ -904,7 +904,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               className={`mt-1 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                                 task.isCompleted
                                   ? 'bg-blue-600 border-blue-600 text-white'
-                                  : 'border-[#b9aa91] text-transparent hover:border-blue-500'
+                                  : 'border-slate-300 text-transparent hover:border-blue-500'
                               }`}
                               aria-label={
                                 task.isCompleted
@@ -923,8 +923,8 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               <div
                                 className={`text-sm font-bold break-words ${
                                   task.isCompleted
-                                    ? 'line-through text-[#9e8f7b]'
-                                    : 'text-[#3f3426]'
+                                    ? 'line-through text-slate-500'
+                                    : 'text-slate-900'
                                 }`}
                               >
                                 {task.taskOfTheDay}
@@ -964,7 +964,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                   disabled={
                                     task.isCompleted || busyTaskId === task.id
                                   }
-                                  className="h-7 rounded-lg border border-[#dfd1b6] bg-[#fffaf0] px-2 text-[10px] font-black text-[#6f604f] outline-none cursor-pointer disabled:opacity-50"
+                                  className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-black text-slate-600 outline-none cursor-pointer disabled:opacity-50"
                                   title="Move task to another quadrant"
                                   aria-label={`Move ${task.taskOfTheDay}`}
                                 >
@@ -975,13 +975,13 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                   ))}
                                 </select>
 
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8b7a66]">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500">
                                   <CalendarDays className="w-3 h-3" />
                                   {task.taskKey}
                                 </span>
 
                                 {task.timeEstimate && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#8b7a66]">
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500">
                                     <Clock3 className="w-3 h-3" />
                                     {task.timeEstimate}
                                   </span>
@@ -992,7 +992,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                             <button
                               type="button"
                               onClick={() => void onDeleteTask(task.id)}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#a18f78] hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 shrink-0"
                               title="Delete task"
                               aria-label="Delete task"
                             >

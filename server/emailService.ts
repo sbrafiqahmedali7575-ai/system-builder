@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import { generateDailyReviewToken } from './tokenService';
 import { db, collection, doc, setDoc } from './db';
 
 const DELIVERY_LOGS_COLLECTION = 'delivery_logs';
@@ -149,17 +148,10 @@ export function buildDailyConfirmationEmail(
 } {
   const baseUrl = getAppBaseUrl();
   const tasks = details.tasks || [];
-
-  const reviewToken = generateDailyReviewToken({
-    userId: 'rafiq',
-    taskDate: details.taskDate,
-    recordId: details.recordId,
-    taskIds: tasks.map((task) => task.id),
-  });
-
-  const reviewUrl = `${baseUrl}/api/daily-review?token=${encodeURIComponent(reviewToken)}`;
   const completedCount = tasks.filter((task) => task.isCompleted).length;
-  const subject = `System Builder • Review today’s tasks`;
+  const progressPercent =
+    tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+  const subject = 'System Builder • Today’s task status';
 
   const taskRows =
     tasks.length > 0
@@ -198,17 +190,14 @@ export function buildDailyConfirmationEmail(
     @media only screen and (max-width:520px){
       .email-shell{padding:12px 6px!important}
       .email-card{border-radius:12px!important}
-      .email-head{padding:18px 18px!important}
-      .email-body{padding:20px 18px!important}
-      .email-title{font-size:24px!important;line-height:1.25!important}
-      .email-copy{font-size:16px!important;line-height:1.6!important;color:#000000!important;font-weight:800!important}
-      .email-help{font-size:15px!important;line-height:1.55!important;color:#000000!important;font-weight:800!important}
-      .email-section-title{font-size:16px!important;color:#000000!important;font-weight:900!important}
-      .email-task{font-size:16px!important;line-height:1.55!important;color:#000000!important;font-weight:900!important}
-      .email-status{font-size:14px!important;color:#000000!important;font-weight:900!important}
-      .email-cta{font-size:16px!important;padding:16px 18px!important}
-      .email-note{font-size:14px!important;line-height:1.55!important;color:#000000!important;font-weight:800!important}
-      .email-footer{font-size:13px!important;padding:14px 18px!important;color:#000000!important;font-weight:800!important}
+      .email-head{padding:16px!important}
+      .email-body{padding:20px 16px!important}
+      .email-title{font-size:23px!important;line-height:1.25!important}
+      .email-copy{font-size:15px!important;line-height:1.55!important}
+      .email-section-title{font-size:15px!important}
+      .email-task{font-size:15px!important;line-height:1.5!important}
+      .email-status{font-size:13px!important}
+      .email-footer{font-size:12px!important;padding:14px 16px!important}
     }
   </style>
 </head>
@@ -218,37 +207,57 @@ export function buildDailyConfirmationEmail(
       <td align="center">
         <table class="email-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #dbe3ee;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,.08);">
           <tr>
-            <td class="email-head" style="padding:22px 26px;border-bottom:1px solid #e2e8f0;background:#ffffff;">
-              <div style="font-size:20px;font-weight:900;color:#0f172a;">System Builder</div>
-              <div style="margin-top:5px;font-size:12px;color:#64748b;font-family:monospace;">${escapeHtml(details.taskDate)}</div>
+            <td class="email-head" style="padding:18px 22px;border-bottom:1px solid #e2e8f0;background:#ffffff;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" style="vertical-align:middle;">
+                    <a href="${baseUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#0f172a;">
+                      <span style="display:inline-flex;width:36px;height:36px;border-radius:11px;background:#2563eb;color:#ffffff;align-items:center;justify-content:center;font-size:18px;font-weight:900;line-height:36px;text-align:center;">S</span>
+                      <span style="font-size:18px;font-weight:900;color:#0f172a;">System Builder</span>
+                    </a>
+                  </td>
+                  <td align="right" style="vertical-align:middle;font-size:12px;color:#64748b;font-family:monospace;">
+                    ${escapeHtml(details.taskDate)}
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
+
           <tr>
             <td class="email-body" style="padding:24px 26px;">
               <h1 class="email-title" style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#0f172a;font-weight:900;">Today’s Tasks</h1>
-              <p class="email-copy" style="margin:0 0 12px;color:#000000;font-size:15px;line-height:1.6;font-weight:800;">
+              <p class="email-copy" style="margin:0 0 16px;color:#000000;font-size:15px;line-height:1.6;font-weight:800;">
                 ${completedCount} of ${tasks.length} tasks currently completed.
               </p>
+
+              <div style="margin:0 0 20px;padding:14px;border:1px solid #dbeafe;border-radius:12px;background:#eff6ff;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
+                  <tr>
+                    <td style="font-size:13px;font-weight:900;color:#0f172a;">Overall Status</td>
+                    <td align="right" style="font-size:13px;font-weight:900;color:#2563eb;font-family:monospace;">${progressPercent}%</td>
+                  </tr>
+                </table>
+                <div style="width:100%;height:10px;border-radius:999px;background:#dbeafe;overflow:hidden;">
+                  <div style="width:${progressPercent}%;height:10px;border-radius:999px;background:#2563eb;"></div>
+                </div>
+                <div style="margin-top:7px;font-size:12px;font-weight:800;color:#475569;">
+                  ${completedCount} / ${tasks.length} completed
+                </div>
+              </div>
 
               <div class="email-section-title" style="margin:0 0 8px;color:#000000;font-size:15px;font-weight:900;">
                 Current Day Tasks &amp; Status
               </div>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:22px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
                 ${taskRows}
               </table>
-
-              <a class="email-cta" href="${reviewUrl}" target="_blank" style="display:block;background:#2563eb;color:#fff;text-decoration:none;text-align:center;font-size:16px;font-weight:900;padding:16px 18px;border-radius:10px;">
-                Submit
-              </a>
-
-              <p class="email-note" style="margin:16px 0 0;color:#000000;font-size:14px;line-height:1.55;font-weight:800;">
-                Tap Submit to open the compact task checklist. Check completed tasks, then press Mark Day.
-              </p>
             </td>
           </tr>
+
           <tr>
-            <td class="email-footer" style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#000000;font-size:13px;font-weight:800;">
-              System Builder • Daily task response
+            <td class="email-footer" style="padding:16px 26px;border-top:1px solid #e2e8f0;background:#f8fafc;text-align:center;color:#475569;font-size:13px;font-weight:800;">
+              Open System Builder to review and mark the current day.
             </td>
           </tr>
         </table>
@@ -265,20 +274,18 @@ export function buildDailyConfirmationEmail(
           .join('\n')
       : 'No tasks are scheduled for today.';
 
-  const text = `System Builder — Today’s Tasks
+  const text = `System Builder — Today’s Task Status
 
 Date: ${details.taskDate}
+Overall Status: ${progressPercent}% (${completedCount}/${tasks.length} completed)
 
 ${taskText}
 
-Open the task checklist:
-${reviewUrl}
-
-All checked = Completed.
-Any unchecked = Not Completed.
+Open System Builder:
+${baseUrl}
 `;
 
-  return { subject, html, text, reviewUrl };
+  return { subject, html, text, reviewUrl: baseUrl };
 }
 
 /**

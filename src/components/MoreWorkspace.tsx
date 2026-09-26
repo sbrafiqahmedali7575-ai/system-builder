@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Coffee, Grid2X2, Repeat2 } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Coffee, Grid2X2, Repeat2 } from 'lucide-react';
 import { DashboardTheme } from '../types';
 
-type MoreTab = 'eisenhower' | 'habits';
+type MoreTab = 'eisenhower' | 'habits' | 'calendar';
 
 interface MoreWorkspaceProps {
   theme: DashboardTheme;
@@ -26,6 +26,12 @@ const TABS: Array<{
     label: 'Habit Tracker',
     description: 'Track recurring habits and consistency.',
     icon: Repeat2,
+  },
+  {
+    id: 'calendar',
+    label: 'Calender',
+    description: 'View and organize dates, tasks, and planned activity.',
+    icon: CalendarDays,
   },
 ];
 

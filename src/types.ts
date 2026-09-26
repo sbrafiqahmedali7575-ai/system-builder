@@ -15,13 +15,14 @@ export interface DailyRecord {
 
 export type MatrixQuadrant = 'urgent-important' | 'important' | 'urgent' | 'neither';
 
-export type HabitFrequency = 'daily' | 'weekdays';
+export type HabitFrequency = 'daily' | 'weekdays' | 'custom';
 
 export interface HabitItem {
   id: string;
   name: string;
   emoji: string;
   frequency: HabitFrequency;
+  repeatDays?: number[]; // 0=Sunday ... 6=Saturday; used when frequency='custom'
   color: 'blue' | 'emerald' | 'amber' | 'rose' | 'violet';
   checkIns: string[]; // YYYY-MM-DD date keys
   createdAt: string;

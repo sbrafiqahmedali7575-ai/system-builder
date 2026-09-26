@@ -42,13 +42,13 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
 }) => (
   <section
     aria-label="Month calendar"
-    className="h-full min-h-[460px] sm:min-h-[560px] flex flex-col bg-white"
+    className="h-full min-h-[560px] flex flex-col bg-white"
   >
     <div className="grid grid-cols-7 border-b border-slate-100 bg-white shrink-0">
       {WEEKDAY_LABELS.map((day) => (
         <div
           key={day}
-          className="h-8 sm:h-9 flex items-center justify-center sm:justify-start px-1 sm:px-2 text-[9px] sm:text-[11px] font-semibold text-slate-400"
+          className="h-9 flex items-center justify-center sm:justify-start px-1 sm:px-2 text-[9px] sm:text-[11px] font-semibold text-slate-400"
         >
           <span className="sm:hidden">{day.slice(0, 1)}</span>
           <span className="hidden sm:inline">{day}</span>

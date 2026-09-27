@@ -628,7 +628,7 @@ async function startServer() {
   // Sends daily commitment reminder to sbrafiqahmedali7575@gmail.com.
   // Retrieves today's task in Asia/Kolkata timezone with Completed & Not Completed buttons.
   // Enforces persistent deduplication preventing double-sends for the same IST date.
-  app.all('/api/send-daily-reminder', async (req, res) => {
+  app.post('/api/send-daily-reminder', async (req, res) => {
     if (!(await isValidSchedulerBearer(req.headers.authorization))) {
       return res.status(401).json({
         success: false,
@@ -637,10 +637,9 @@ async function startServer() {
     }
 
     try {
-      const force = Boolean(req.body?.force);
-      const recipientOverride = req.body?.recipient || req.body?.recipientEmail || undefined;
-
-      const result = await triggerDailyReminder({ force, recipientOverride });
+      // Scheduler callers may trigger the configured reminder only. Recipient
+      // selection and forced duplicate sends are reserved for owner-only code paths.
+      const result = await triggerDailyReminder();
 
       // If already sent for this IST date and not forced
       if (result.alreadySent) {
@@ -690,7 +689,7 @@ async function startServer() {
   });
 
   // End-of-day fallback: no task creation or no explicit app/email response => Not Completed.
-  app.all('/api/finalize-day', async (req, res) => {
+  app.post('/api/finalize-day', async (req, res) => {
     if (!(await isValidSchedulerBearer(req.headers.authorization))) {
       return res.status(401).json({
         success: false,

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Check,
   History,
@@ -250,10 +250,18 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     }
   };
 
+  const deletingTaskIdsRef = useRef(new Set<string>());
   const deleteTask = async (taskId: string) => {
-    if (historyTaskId === taskId) setHistoryTaskId(null);
-    if (editingTaskId === taskId) closeForm();
-    await onDeleteTask(taskId);
+    // Guard against duplicate click/bubbled events while the first delete is running.
+    if (deletingTaskIdsRef.current.has(taskId)) return;
+    deletingTaskIdsRef.current.add(taskId);
+    try {
+      if (historyTaskId === taskId) setHistoryTaskId(null);
+      if (editingTaskId === taskId) closeForm();
+      await onDeleteTask(taskId);
+    } finally {
+      deletingTaskIdsRef.current.delete(taskId);
+    }
   };
 
   return (

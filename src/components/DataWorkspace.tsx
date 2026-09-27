@@ -76,7 +76,16 @@ export const DataWorkspace: React.FC = () => {
       const left = renderValue(a[effectiveSort.column]).toLocaleLowerCase();
       const right = renderValue(b[effectiveSort.column]).toLocaleLowerCase();
       const comparison = left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
-      return effectiveSort.direction === 'asc' ? comparison : -comparison;
+      const primary = effectiveSort.direction === 'asc' ? comparison : -comparison;
+      if (primary !== 0) return primary;
+
+      // Default Tasks tie-breaker: same scheduledDate -> taskId DESC.
+      if (!sort && active === 'tasks' && effectiveSort.column === 'scheduledDate') {
+        const leftTaskId = renderValue(a.taskId).toLocaleLowerCase();
+        const rightTaskId = renderValue(b.taskId).toLocaleLowerCase();
+        return -leftTaskId.localeCompare(rightTaskId, undefined, { numeric: true, sensitivity: 'base' });
+      }
+      return 0;
     });
   }, [rows, sort, active]);
 

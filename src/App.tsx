@@ -465,9 +465,18 @@ export default function App() {
   // TASK MANAGEMENT HANDLERS
   // ─────────────────────────────────────────────────────────────
 
+  // Reserve sequential canonical Task IDs (T1, T2, T3...).
+  const nextTaskIdRef = useRef(0);
+
   // Add a new task
   const handleAddTask = async (taskData: Omit<TaskItem, 'id'>) => {
-    const taskId = `T${Date.now().toString(36).toUpperCase()}`;
+    const highestExistingTaskNumber = tasks.reduce((highest, task) => {
+      const match = /^T(\d+)$/i.exec(task.id);
+      return match ? Math.max(highest, Number(match[1])) : highest;
+    }, 0);
+    const nextTaskNumber = Math.max(highestExistingTaskNumber, nextTaskIdRef.current) + 1;
+    nextTaskIdRef.current = nextTaskNumber;
+    const taskId = `T${nextTaskNumber}`;
     const newTask: TaskItem = {
       ...taskData,
       id: taskId,

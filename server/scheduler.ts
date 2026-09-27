@@ -327,9 +327,15 @@ export async function findTodayTaskOrRecord(): Promise<{
     const tasksSnap = await getDocs(collection(db, 'tasks'));
     const matchedTasks: any[] = [];
 
+    const targetTaskDateKey = normalizeSchedulerDateKey(dateKey);
+
     tasksSnap.forEach((d) => {
       const t = d.data();
-      if (t.taskKey === dateKey || t.taskKey === formattedDate) {
+      const taskDateKey = normalizeSchedulerDateKey(
+        String(t.taskKey || t.date || '')
+      );
+
+      if (taskDateKey === targetTaskDateKey) {
         matchedTasks.push({ id: d.id, ...t });
       }
     });

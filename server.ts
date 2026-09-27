@@ -478,10 +478,18 @@ async function startServer() {
   // or future static-server changes.
   app.use(
     [
+      '/.env',
+      '/.env.local',
+      '/.git',
+      '/package.json',
+      '/tsconfig.json',
+      '/vite.config.ts',
+      '/metadata.json',
       '/firebase-applet-config.json',
       '/firestore.rules',
       '/firebase-blueprint.json',
       '/bun.lock',
+      '/server.ts',
       '/server',
       '/scripts',
     ],

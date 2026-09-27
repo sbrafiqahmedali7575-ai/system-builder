@@ -691,13 +691,36 @@ export async function deleteTaskFromCloud(taskId: string): Promise<void> {
     return;
   }
 
-  // Delete the actual matched Firestore document. This remains correct even
-  // when a migrated document key differs from its canonical taskId.
-  await deleteDoc(existing.ref);
+  // Delete and renumber the affected date atomically so subscribers never
+  // observe a post-delete gap in taskOrder.
+  const batch = writeBatch(db);
+  batch.delete(existing.ref);
 
   if (dateKey) {
-    // Restore strict continuity for this date: taskId ASC => 1, 2, 3, ...
-    await normalizeTaskOrderForDate(dateKey);
+    const remainingForDate = snapshot.docs
+      .filter(
+        (taskDoc) =>
+          taskDoc.ref.path !== existing.ref.path &&
+          normalizeModelDateKey(taskDoc.data().scheduledDate) === dateKey
+      )
+      .sort((a, b) => {
+        const aTaskId = String(a.data().taskId || a.id);
+        const bTaskId = String(b.data().taskId || b.id);
+        return aTaskId.localeCompare(bTaskId, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
+    remainingForDate.forEach((taskDoc, index) => {
+      batch.set(
+        taskDoc.ref,
+        { taskOrder: index + 1, sortOrder: deleteField() },
+        { merge: true }
+      );
+    });
+  }
+
+  await batch.commit();
+
+  if (dateKey) {
     await rebuildDaySummary(dateKey);
   }
 }

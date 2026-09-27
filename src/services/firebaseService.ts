@@ -330,12 +330,13 @@ async function loadHabits(): Promise<HabitItem[]> {
     ? response.habits.map((habit) => ({
         ...habit,
         emoji: habit.emoji || '✓',
-        frequency:
+        frequency: (
           habit.frequency === 'custom'
             ? 'custom'
             : habit.frequency === 'weekdays'
             ? 'weekdays'
-            : 'daily',
+            : 'daily'
+        ) as HabitItem['frequency'],
         repeatDays: Array.isArray(habit.repeatDays)
           ? habit.repeatDays
           : [],

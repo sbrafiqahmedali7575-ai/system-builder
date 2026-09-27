@@ -163,14 +163,10 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
         reviewedHabits.push(reviewedHabit);
       }
 
-      const status = await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
-      setResult({
-        status,
-        completedTaskCount: selectedTaskIds.size,
-        totalTaskCount: todayTasks.length,
-        completedHabitCount: selectedHabitIds.size,
-        totalHabitCount: todayHabits.length,
-      });
+      await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
+      // Marking the day is the final step; close immediately instead of
+      // showing a second completion/result popup.
+      onClose();
     } catch (err: any) {
       setError(err?.message || 'Unable to mark the day. Please try again.');
     } finally {

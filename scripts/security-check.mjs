@@ -28,6 +28,13 @@ if (packageJson.dependencies?.firebase || packageJson.devDependencies?.firebase)
   failures.push('The Firebase browser SDK must not be a direct dependency.');
 }
 
+if (
+  String(packageJson.scripts?.build || '').includes('outfile=dist/server') ||
+  String(packageJson.scripts?.start || '').includes('dist/server')
+) {
+  failures.push('The backend bundle must never be written inside the public dist directory.');
+}
+
 const clientFiles = walk('src').filter((file) => /\.(ts|tsx|js|jsx)$/.test(file));
 for (const file of clientFiles) {
   const source = read(file);

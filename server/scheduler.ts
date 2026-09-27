@@ -661,7 +661,7 @@ export async function triggerDailyReminder(options?: {
       tasks: [],
       habits: [],
       recipientEmail: targetRecipient,
-      recipientName: settings.recipientName || 'Rafiq Ahmed',
+      recipientName: settings.recipientName || DEFAULT_SETTINGS.recipientName,
     };
 
     // Ensure recipient is set correctly

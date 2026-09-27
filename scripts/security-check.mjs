@@ -86,6 +86,7 @@ for (const file of ['server.ts', 'server/emailService.ts']) {
 
 const serverSource = read('server.ts');
 const schedulerSource = read('server/scheduler.ts');
+const dbSource = read('server/db.ts');
 const tokenServiceSource = read('server/tokenService.ts');
 const offlineStorageSource = read('src/services/offlineStorage.ts');
 const emailServiceSource = read('server/emailService.ts');
@@ -94,6 +95,12 @@ const firebaseDeployWorkflow = read('.github/workflows/deploy-firestore-rules.ym
 
 if (!/secret\.length\s*<\s*32/.test(tokenServiceSource)) {
   failures.push('CONFIRMATION_SECRET must enforce a minimum length of 32 characters.');
+}
+
+if (/process\.env\.FIREBASE_SERVICE_ACCOUNT_JSON/.test(dbSource)) {
+  failures.push(
+    'Runtime Firestore access must use Application Default Credentials, not a service-account JSON environment secret.'
+  );
 }
 
 if (!schedulerSource.includes('refusing to send without deduplication')) {

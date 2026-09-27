@@ -77,6 +77,37 @@ function getCookieValue(req: express.Request, name: string): string {
   return '';
 }
 
+const DAILY_REVIEW_CAPABILITY_COOKIE = 'system_builder_review_cap';
+const TASK_CONFIRM_CAPABILITY_COOKIE = 'system_builder_confirm_cap';
+const CAPABILITY_SESSION_SECONDS = 30 * 60;
+
+function setCapabilityCookie(
+  res: express.Response,
+  name: string,
+  token: string,
+  routePath: string
+): void {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.append(
+    'Set-Cookie',
+    `${name}=${encodeURIComponent(
+      token
+    )}; Path=${routePath}; HttpOnly; SameSite=Lax; Max-Age=${CAPABILITY_SESSION_SECONDS}${secure}`
+  );
+}
+
+function clearCapabilityCookie(
+  res: express.Response,
+  name: string,
+  routePath: string
+): void {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.append(
+    'Set-Cookie',
+    `${name}=; Path=${routePath}; HttpOnly; SameSite=Lax; Max-Age=0${secure}`
+  );
+}
+
 function createOwnerSession(): string {
   const secret = getOwnerAccessToken();
   if (!ownerAuthConfigured()) {
@@ -1139,14 +1170,32 @@ pause
   // then marks the records row Completed only when every task is checked.
   app.get('/api/daily-review', async (req, res) => {
     try {
-      const token = String(req.query.token || '');
+      const queryToken = String(req.query.token || '');
+      const token =
+        queryToken ||
+        getCookieValue(req, DAILY_REVIEW_CAPABILITY_COOKIE);
       const verification = verifyConfirmationToken(token);
 
       if (!verification.valid || !verification.payload) {
+        clearCapabilityCookie(
+          res,
+          DAILY_REVIEW_CAPABILITY_COOKIE,
+          '/api/daily-review'
+        );
         return renderErrorPage(res, verification.error || 'Invalid or expired daily review link.');
       }
 
       const { payload } = verification;
+
+      if (queryToken) {
+        setCapabilityCookie(
+          res,
+          DAILY_REVIEW_CAPABILITY_COOKIE,
+          token,
+          '/api/daily-review'
+        );
+        return res.redirect(303, '/api/daily-review');
+      }
       if (payload.action !== 'review') {
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
       }
@@ -1337,7 +1386,6 @@ pause
     <p class="help">Check the tasks you completed. When finished, press <strong>Mark Day</strong>.</p>
 
     <form method="POST" action="/api/daily-review">
-      <input type="hidden" name="token" value="${escapeHtml(token)}" />
       <div class="tasks">${taskMarkup}</div>
       <button class="submit" type="submit" ${dayTasks.length === 0 ? 'disabled' : ''}>
         Mark Day
@@ -1359,7 +1407,9 @@ pause
 
   app.post('/api/daily-review', async (req, res) => {
     try {
-      const token = String(req.body.token || '');
+      const token =
+        String(req.body.token || '') ||
+        getCookieValue(req, DAILY_REVIEW_CAPABILITY_COOKIE);
       const verification = verifyConfirmationToken(token);
 
       if (!verification.valid || !verification.payload) {
@@ -1506,6 +1556,11 @@ pause
 </body>
 </html>`;
 
+      clearCapabilityCookie(
+        res,
+        DAILY_REVIEW_CAPABILITY_COOKIE,
+        '/api/daily-review'
+      );
       res.setHeader('Content-Type', 'text/html; charset=utf-8').send(html);
     } catch (err: any) {
       console.error('Daily review submission error:', sanitizeError(err));

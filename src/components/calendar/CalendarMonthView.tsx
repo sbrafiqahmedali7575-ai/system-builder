@@ -10,6 +10,7 @@ export interface CalendarMonthViewProps {
   tasksByDate: Map<string, TaskItem[]>;
   getHabitsForDate: (dateKey: string) => HabitItem[];
   onSelectDate: (dateKey: string) => void;
+  onShowMore: (dateKey: string) => void;
   onToggleTask: (taskId: string) => Promise<void>;
   onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
 }
@@ -37,6 +38,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
   tasksByDate,
   getHabitsForDate,
   onSelectDate,
+  onShowMore,
   onToggleTask,
   onToggleHabit,
 }) => (
@@ -71,6 +73,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
             tasks={tasksByDate.get(dateKey) || []}
             habits={getHabitsForDate(dateKey)}
             onSelectDate={onSelectDate}
+            onShowMore={onShowMore}
             onToggleTask={onToggleTask}
             onToggleHabit={onToggleHabit}
             maxVisibleItems={MAX_VISIBLE_ITEMS}

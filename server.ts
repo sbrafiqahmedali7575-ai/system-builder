@@ -654,7 +654,6 @@ async function startServer() {
         taskName: result.taskName,
         status: result.status,
         sentAt: result.sentAt,
-        previewLinks: result.previewLinks,
       });
     } catch (err: any) {
       const safeError = sanitizeError(err);

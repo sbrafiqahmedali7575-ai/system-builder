@@ -19,39 +19,55 @@ function walk(directory) {
 }
 
 const firebaseConfig = JSON.parse(read('firebase-applet-config.json'));
-const allowedFirebaseConfigKeys = new Set(['projectId', 'firestoreDatabaseId']);
+const allowedFirebaseConfigKeys = new Set([
+  'projectId',
+  'firestoreDatabaseId',
+  'apiKey',
+  'authDomain',
+  'appId',
+  'messagingSenderId',
+]);
 for (const key of Object.keys(firebaseConfig)) {
   if (!allowedFirebaseConfigKeys.has(key)) {
     failures.push(
-      `firebase-applet-config.json contains unnecessary public client field: ${key}`
+      `firebase-applet-config.json contains an unnecessary Firebase client field: ${key}`
     );
   }
 }
 
-for (const sensitiveKey of [
+for (const requiredKey of [
+  'projectId',
+  'firestoreDatabaseId',
   'apiKey',
-  'appId',
   'authDomain',
-  'storageBucket',
+  'appId',
   'messagingSenderId',
-  'oAuthClientId',
-  'recaptchaSiteKey',
 ]) {
-  if (firebaseConfig[sensitiveKey]) {
+  if (!String(firebaseConfig[requiredKey] || '').trim()) {
     failures.push(
-      `firebase-applet-config.json must not retain unused client identifier: ${sensitiveKey}`
+      `firebase-applet-config.json is missing required public client field: ${requiredKey}`
     );
   }
 }
 
 const firestoreRules = read('firestore.rules');
+if (!firestoreRules.includes('notification_settings/daily-settings')) {
+  failures.push(
+    'Firestore rules must anchor browser ownership to the existing daily settings document.'
+  );
+}
+if (!firestoreRules.includes('request.auth.token.email')) {
+  failures.push(
+    'Firestore rules must require the authenticated Google account email.'
+  );
+}
 if (!/match \/\{document=\*\*\}[\s\S]*allow read, write: if false;/.test(firestoreRules)) {
-  failures.push('firestore.rules must deny all direct client reads and writes.');
+  failures.push('Firestore rules must retain a default-deny catch-all.');
 }
 
 const packageJson = JSON.parse(read('package.json'));
-if (packageJson.dependencies?.firebase || packageJson.devDependencies?.firebase) {
-  failures.push('The Firebase browser SDK must not be a direct dependency.');
+if (!packageJson.dependencies?.firebase) {
+  failures.push('The Firebase browser SDK is required for Starter Tier authenticated data access.');
 }
 
 if (
@@ -62,19 +78,43 @@ if (
 }
 
 const clientFiles = walk('src').filter((file) => /\.(ts|tsx|js|jsx)$/.test(file));
+const approvedFirebaseClientFiles = new Set([
+  'src/services/firebaseClient.ts',
+  'src/services/firebaseService.ts',
+]);
+
 for (const file of clientFiles) {
   const source = read(file);
-
-  if (
+  const usesFirebase =
     /from\s+['"]firebase(?:\/|['"])/.test(source) ||
-    /firebase-applet-config\.json/.test(source)
-  ) {
-    failures.push(`${file} directly imports Firebase client configuration or SDK code.`);
+    /firebase-applet-config\.json/.test(source);
+
+  if (usesFirebase && !approvedFirebaseClientFiles.has(file.replaceAll('\\\\', '/'))) {
+    failures.push(
+      `${file} uses Firebase outside the approved authentication/data service boundary.`
+    );
   }
 
   if (/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(source)) {
     failures.push(`${file} contains a hardcoded email address in client source.`);
   }
+}
+
+const firebaseClientSource = read('src/services/firebaseClient.ts');
+const firebaseServiceSource = read('src/services/firebaseService.ts');
+const ownerGateSource = read('src/components/OwnerAccessGate.tsx');
+
+if (!firebaseClientSource.includes('GoogleAuthProvider')) {
+  failures.push('Firebase owner authentication must use Google Sign-In.');
+}
+if (!firebaseClientSource.includes("'notification_settings', 'daily-settings'")) {
+  failures.push('Firebase owner verification must read the owner settings document.');
+}
+if (!firebaseServiceSource.includes("collection(firestoreDb, 'records')")) {
+  failures.push('Interactive records must use authenticated Firestore client access.');
+}
+if (!ownerGateSource.includes('signInFirebaseOwner')) {
+  failures.push('OwnerAccessGate must require Firebase Google owner verification.');
 }
 
 for (const file of ['server.ts', 'server/emailService.ts']) {

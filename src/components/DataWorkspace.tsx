@@ -18,6 +18,24 @@ const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> 
   countdowns: { countdownId: 'PK' },
 };
 
+const TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
+  users: ['userId', 'name', 'email'],
+  days: [
+    'dateKey',
+    'tasksCompleted',
+    'taskTotal',
+    'taskCompletionRate',
+    'habitsCompleted',
+    'habitTotal',
+    'habitCompletionRate',
+    'IsdayCompleted',
+  ],
+  tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'sortOrder', 'notes', 'Iscompleted'],
+  habits: ['habitId', 'name', 'repeatDays', 'activeFrom', 'isActive', 'color'],
+  habitLogs: ['habitLogId', 'habitId', 'dateKey', 'Iscompleted'],
+  countdowns: ['countdownId', 'title', 'targetDate', 'isActive'],
+};
+
 const COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
   { id: 'days', label: 'Days' },
   { id: 'tasks', label: 'Tasks' },
@@ -69,11 +87,7 @@ export const DataWorkspace: React.FC = () => {
     setActive(collection);
     setSort(null);
   };
-  const columns = useMemo(() => {
-    const keys = new Set<string>();
-    rows.forEach((row) => Object.keys(row).forEach((key) => keys.add(key)));
-    return ['id', ...Array.from(keys).filter((key) => key !== 'id')];
-  }, [rows]);
+  const columns = TABLE_COLUMNS[active];
 
   return (
     <div className="space-y-3 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">

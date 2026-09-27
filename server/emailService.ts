@@ -439,9 +439,6 @@ export async function sendDailyConfirmationEmail(
           user,
           pass: cleanPass,
         },
-        tls: {
-          rejectUnauthorized: false,
-        },
       });
 
       let senderAddress = providerInfo.fromEmail;
@@ -484,9 +481,6 @@ export async function sendDailyConfirmationEmail(
         status: 'delivered',
         provider: 'smtp',
         messageId: info.messageId,
-        previewLinks: {
-          reviewUrl: emailContent.reviewUrl,
-        },
       };
     } catch (err: any) {
       const safeErrorMessage = sanitizeError(err?.message || err);
@@ -507,9 +501,6 @@ export async function sendDailyConfirmationEmail(
         status: 'failed',
         provider: 'smtp',
         error: safeErrorMessage,
-        previewLinks: {
-          reviewUrl: emailContent.reviewUrl,
-        },
       };
     }
   }

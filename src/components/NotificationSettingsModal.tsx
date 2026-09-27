@@ -56,6 +56,8 @@ interface DeliveryLog {
   sentAt: string;
 }
 
+type OwnerAuthState = 'checking' | 'authorized' | 'required' | 'unconfigured';
+
 export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps> = ({
   isOpen,
   onClose,
@@ -86,11 +88,32 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   const [testResult, setTestResult] = useState<any>(null);
   const [logs, setLogs] = useState<DeliveryLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState<boolean>(false);
+  const [ownerAuthState, setOwnerAuthState] = useState<OwnerAuthState>('checking');
+  const [ownerToken, setOwnerToken] = useState<string>('');
+  const [ownerAuthError, setOwnerAuthError] = useState<string>('');
+  const [authenticating, setAuthenticating] = useState<boolean>(false);
+
+  const handleProtectedResponse = (res: Response): boolean => {
+    if (res.status === 401) {
+      setOwnerAuthState('required');
+      setOwnerAuthError('Owner session expired. Enter your owner access token again.');
+      return false;
+    }
+
+    if (res.status === 503) {
+      setOwnerAuthState('unconfigured');
+      setOwnerAuthError('');
+      return false;
+    }
+
+    return true;
+  };
 
   const fetchSettings = async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/notifications/settings');
+      if (!handleProtectedResponse(res)) return;
       const data = await res.json();
       if (res.ok && data.settings) {
         setSettings(data.settings);
@@ -108,6 +131,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     try {
       setLoadingLogs(true);
       const res = await fetch('/api/notifications/logs');
+      if (!handleProtectedResponse(res)) return;
       const data = await res.json();
       if (res.ok && data.logs) {
         setLogs(data.logs);
@@ -119,10 +143,67 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     }
   };
 
+  const initializeOwnerSession = async () => {
+    try {
+      setOwnerAuthState('checking');
+      setOwnerAuthError('');
+      setLoading(true);
+
+      const res = await fetch('/api/owner/session', { cache: 'no-store' });
+      const data = await res.json();
+
+      if (data.authenticated) {
+        setOwnerAuthState('authorized');
+        await Promise.all([fetchSettings(), fetchLogs()]);
+        return;
+      }
+
+      setOwnerAuthState(data.configured ? 'required' : 'unconfigured');
+    } catch (error) {
+      console.error('Failed to verify owner session:', error);
+      setOwnerAuthState('required');
+      setOwnerAuthError('Unable to verify owner session.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOwnerLogin = async () => {
+    if (!ownerToken.trim() || authenticating) return;
+
+    try {
+      setAuthenticating(true);
+      setOwnerAuthError('');
+
+      const res = await fetch('/api/owner/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: ownerToken }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 503) setOwnerAuthState('unconfigured');
+        setOwnerAuthError(data.error || 'Owner authentication failed.');
+        return;
+      }
+
+      setOwnerToken('');
+      setOwnerAuthState('authorized');
+      await Promise.all([fetchSettings(), fetchLogs()]);
+    } catch (error: any) {
+      setOwnerAuthError(error?.message || 'Owner authentication failed.');
+    } finally {
+      setAuthenticating(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
-      fetchSettings();
-      fetchLogs();
+      void initializeOwnerSession();
+    } else {
+      setOwnerToken('');
+      setOwnerAuthError('');
     }
   }, [isOpen]);
 
@@ -137,6 +218,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
+      if (!handleProtectedResponse(res)) return;
       if (res.ok) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
@@ -156,6 +238,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
+      if (!handleProtectedResponse(res)) return;
       const data = await res.json();
       setTestResult(data);
       fetchLogs();
@@ -189,6 +272,8 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
           </button>
         </div>
 
+        {ownerAuthState === 'authorized' ? (
+          <>
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-800 bg-slate-950/50 px-3 pt-1">
           <button
@@ -665,6 +750,68 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
             Close
           </button>
         </div>
+          </>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-5 sm:p-7">
+            <div className="mx-auto max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center">
+                  {ownerAuthState === 'checking' ? (
+                    <Loader2 className="w-5 h-5 text-teal-400 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="w-5 h-5 text-teal-400" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-black text-white">
+                    {ownerAuthState === 'checking'
+                      ? 'Checking owner session'
+                      : ownerAuthState === 'unconfigured'
+                      ? 'Owner authentication needs configuration'
+                      : 'Owner authentication required'}
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                    {ownerAuthState === 'unconfigured'
+                      ? 'Set OWNER_ACCESS_TOKEN in the server environment to a random value of at least 32 characters. Admin APIs now fail closed until it is configured.'
+                      : ownerAuthState === 'required'
+                      ? 'Enter the server-side OWNER_ACCESS_TOKEN to unlock notification settings, delivery logs, test email, and backup administration for this browser session.'
+                      : 'Verifying your secure owner session…'}
+                  </p>
+                </div>
+              </div>
+
+              {ownerAuthState === 'required' && (
+                <div className="mt-4 space-y-2">
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    value={ownerToken}
+                    onChange={(event) => setOwnerToken(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') void handleOwnerLogin();
+                    }}
+                    placeholder="Owner access token"
+                    className="h-10 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-teal-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleOwnerLogin()}
+                    disabled={!ownerToken.trim() || authenticating}
+                    className="h-10 w-full rounded-xl bg-teal-600 text-sm font-black text-white hover:bg-teal-500 disabled:opacity-50"
+                  >
+                    {authenticating ? 'Unlocking…' : 'Unlock Owner Controls'}
+                  </button>
+                </div>
+              )}
+
+              {ownerAuthError && (
+                <div className="mt-3 rounded-xl border border-rose-800/60 bg-rose-950/30 p-2 text-xs text-rose-300">
+                  {ownerAuthError}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

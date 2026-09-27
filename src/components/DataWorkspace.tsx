@@ -45,8 +45,9 @@ const COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
   { id: 'users', label: 'Users' },
 ];
 
-function renderValue(value: unknown): string {
+function renderValue(value: unknown, column?: string): string {
   if (value === null || value === undefined) return '—';
+  if ((column === 'IsdayCompleted' || column === 'Iscompleted') && typeof value === 'boolean') return value ? '1' : '0';
   if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
   if (Array.isArray(value)) return value.join(', ') || '—';
   if (typeof value === 'object') return JSON.stringify(value);
@@ -180,7 +181,7 @@ export const DataWorkspace: React.FC = () => {
                   <tr key={row.id} className="hover:bg-blue-50/40">
                     {columns.map((column) => (
                       <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {renderValue(row[column])}
+                        {renderValue(row[column], column)}
                       </td>
                     ))}
                   </tr>

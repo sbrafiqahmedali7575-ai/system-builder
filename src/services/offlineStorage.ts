@@ -15,6 +15,25 @@ const KEY_HABITS = 'habits_cache_v2';
 const KEY_PENDING_QUEUE = 'pending_offline_mutations_v1';
 const KEY_SYNC_CONFLICTS = 'sync_conflicts_v1';
 
+const LEGACY_LOCAL_STORAGE_KEYS = [
+  'RAFIQ_DAILY_COMMITMENT_RECORDS_V2',
+  'SYSTEM_BUILDER_TASKS_CACHE_V2',
+  'COMMITDAILY_TASKS_CACHE_V2',
+  'SYSTEM_BUILDER_HABITS_CACHE_V1',
+];
+
+export function purgeLegacyLocalStorage(): void {
+  if (typeof window === 'undefined') return;
+
+  for (const key of LEGACY_LOCAL_STORAGE_KEYS) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Storage can be unavailable in hardened/private browser contexts.
+    }
+  }
+}
+
 export type PendingMutation =
   | { type: 'record_add'; payload: DailyRecord; timestamp: number }
   | { type: 'record_update'; payload: DailyRecord; timestamp: number }

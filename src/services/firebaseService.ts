@@ -555,8 +555,9 @@ export function subscribeToTasks(
         });
       });
 
-      // Validate taskOrder on load. Each scheduledDate must be a continuous
-      // taskId-ASC sequence: 1, 2, 3, ... Repair Firestore only when needed.
+      // Normalize taskOrder in memory first so the UI never renders gaps.
+      // Persist any differences to Firestore in parallel.
+      const taskById = new Map(fetchedTasks.map((task) => [task.id, task]));
       const byDate = new Map<string, typeof snapshot.docs>();
       snapshot.docs.forEach((taskDoc) => {
         const dateKey = normalizeModelDateKey(taskDoc.data().scheduledDate);
@@ -574,8 +575,13 @@ export function subscribeToTasks(
           const bTaskId = String(b.data().taskId || b.id);
           return aTaskId.localeCompare(bTaskId, undefined, { numeric: true, sensitivity: 'base' });
         });
+
         taskDocs.forEach((taskDoc, index) => {
           const expectedOrder = index + 1;
+          const taskId = String(taskDoc.data().taskId || taskDoc.id);
+          const loadedTask = taskById.get(taskId);
+          if (loadedTask) loadedTask.taskOrder = expectedOrder;
+
           if (Number(taskDoc.data().taskOrder) !== expectedOrder || taskDoc.data().sortOrder !== undefined) {
             repairBatch.set(
               taskDoc.ref,
@@ -587,14 +593,17 @@ export function subscribeToTasks(
         });
       });
 
+      // Newest scheduledDate first; taskId DESC inside the same date.
+      fetchedTasks.sort((a, b) => {
+        const dateComparison = (b.taskKey || '').localeCompare(a.taskKey || '');
+        if (dateComparison !== 0) return dateComparison;
+        return b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' });
+      });
+      onUpdate(fetchedTasks);
+
       if (needsRepair) {
         await repairBatch.commit();
-        return; // The repaired snapshot will immediately re-run this listener.
       }
-
-      // Sort by taskKey descending so newest/today is first
-      fetchedTasks.sort((a, b) => (b.taskKey || '').localeCompare(a.taskKey || ''));
-      onUpdate(fetchedTasks);
     },
     (err) => {
       console.error('Firestore tasks real-time subscription error:', err);

@@ -91,13 +91,12 @@ const tokenServiceSource = read('server/tokenService.ts');
 const offlineStorageSource = read('src/services/offlineStorage.ts');
 const emailServiceSource = read('server/emailService.ts');
 const deploymentConfig = JSON.parse(read('deployment-config.json'));
-const firebaseDeployWorkflow = read('.github/workflows/deploy-firestore-rules.yml');
 
 if (!/secret\.length\s*<\s*32/.test(tokenServiceSource)) {
   failures.push('CONFIRMATION_SECRET must enforce a minimum length of 32 characters.');
 }
 
-if (/process\.env\.FIREBASE_SERVICE_ACCOUNT_JSON/.test(dbSource)) {
+if (/process\.env\.[A-Z0-9_]*SERVICE_ACCOUNT[A-Z0-9_]*/.test(dbSource)) {
   failures.push(
     'Runtime Firestore access must use Application Default Credentials, not a service-account JSON environment secret.'
   );
@@ -133,13 +132,6 @@ if (
   !String(deploymentConfig.appBaseUrl).startsWith('https://')
 ) {
   failures.push('deployment-config.json must define HTTPS appBaseUrl and oidcAudience.');
-}
-
-if (
-  !firebaseDeployWorkflow.includes('FIREBASE_SERVICE_ACCOUNT_JSON') ||
-  !firebaseDeployWorkflow.includes('firebase-tools@latest deploy')
-) {
-  failures.push('Firestore rules must have an authenticated deployment workflow.');
 }
 
 

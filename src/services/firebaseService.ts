@@ -95,8 +95,188 @@ export function handleFirestoreError(
 const RECORDS_COLLECTION = 'records';
 const TASKS_COLLECTION = 'tasks';
 const HABITS_COLLECTION = 'habits';
+const HABIT_LOGS_COLLECTION = 'habitLogs';
+const COUNTDOWNS_COLLECTION = 'countdowns';
 const SETTINGS_COLLECTION = 'notification_settings';
 const COUNTDOWN_SETTINGS_DOC = 'system_builder_countdown';
+
+function matrixQuadrantToRoman(
+  quadrant?: TaskItem['matrixQuadrant']
+): 'I' | 'II' | 'III' | 'IV' | null {
+  if (quadrant === 'urgent-important') return 'I';
+  if (quadrant === 'important') return 'II';
+  if (quadrant === 'urgent') return 'III';
+  if (quadrant === 'neither') return 'IV';
+  return null;
+}
+
+function storedQuadrantToMatrix(value: unknown): TaskItem['matrixQuadrant'] | undefined {
+  const raw = String(value ?? '');
+  if (raw === 'I' || raw === 'urgent-important') return 'urgent-important';
+  if (raw === 'II' || raw === 'important') return 'important';
+  if (raw === 'III' || raw === 'urgent') return 'urgent';
+  if (raw === 'IV' || raw === 'neither') return 'neither';
+  return undefined;
+}
+
+function taskStoragePayload(task: TaskItem): Record<string, unknown> {
+  return {
+    // Canonical single-user model fields.
+    taskId: task.id,
+    title: task.taskOfTheDay.trim(),
+    quadrant: matrixQuadrantToRoman(task.matrixQuadrant),
+    scheduledDate: task.taskKey,
+    sortOrder: Number.isInteger(task.sortOrder) && Number(task.sortOrder) >= 0
+      ? Number(task.sortOrder)
+      : 0,
+    notes: task.notes || '',
+    Iscompleted: task.isCompleted,
+
+    // Legacy compatibility fields retained until every consumer is migrated.
+    id: task.id,
+    taskKey: task.taskKey,
+    taskOfTheDay: task.taskOfTheDay.trim(),
+    isCompleted: task.isCompleted,
+    priority: task.priority || 'Normal',
+    timeEstimate: task.timeEstimate || '',
+    category: task.category || 'General',
+    updatedAt: new Date().toISOString(),
+    completedAt: task.completedAt || null,
+    matrixQuadrant: task.matrixQuadrant || null,
+  };
+}
+
+function habitRepeatDays(habit: HabitItem): number[] {
+  if (habit.frequency === 'daily') return [0, 1, 2, 3, 4, 5, 6];
+  if (habit.frequency === 'weekdays') return [1, 2, 3, 4, 5];
+  return [...new Set(
+    (habit.repeatDays || []).filter(
+      (day) => Number.isInteger(day) && day >= 0 && day <= 6
+    )
+  )];
+}
+
+function habitActiveFrom(habit: HabitItem): string {
+  if (habit.activeFrom) return habit.activeFrom;
+
+  const date = new Date(habit.createdAt);
+  if (Number.isNaN(date.getTime())) return '1970-01-01';
+
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, '0'),
+    String(date.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function habitColorToHex(color: HabitItem['color']): string {
+  const colors: Record<HabitItem['color'], string> = {
+    blue: '#3B82F6',
+    emerald: '#10B981',
+    amber: '#F59E0B',
+    rose: '#F43F5E',
+    violet: '#8B5CF6',
+  };
+  return colors[color];
+}
+
+function storedHabitColor(value: unknown): HabitItem['color'] {
+  const raw = String(value ?? '').toLowerCase();
+  const map: Record<string, HabitItem['color']> = {
+    blue: 'blue',
+    '#3b82f6': 'blue',
+    emerald: 'emerald',
+    '#10b981': 'emerald',
+    amber: 'amber',
+    '#f59e0b': 'amber',
+    rose: 'rose',
+    '#f43f5e': 'rose',
+    violet: 'violet',
+    '#8b5cf6': 'violet',
+  };
+  return map[raw] || 'blue';
+}
+
+function storedHabitFrequency(data: Record<string, unknown>): HabitItem['frequency'] {
+  if (data.frequency === 'daily' || data.frequency === 'weekdays' || data.frequency === 'custom') {
+    return data.frequency;
+  }
+
+  const days = Array.isArray(data.repeatDays)
+    ? [...new Set(
+        data.repeatDays
+          .map((value) => Number(value))
+          .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
+      )].sort()
+    : [];
+
+  if (days.length === 7) return 'daily';
+  if (days.join(',') === '1,2,3,4,5') return 'weekdays';
+  return 'custom';
+}
+
+function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
+  return {
+    // Canonical single-user model fields.
+    habitId: habit.id,
+    name: habit.name.trim(),
+    repeatDays: habitRepeatDays(habit),
+    activeFrom: habitActiveFrom(habit),
+    isActive: habit.isActive !== false,
+    color: habitColorToHex(habit.color),
+
+    // Legacy compatibility fields retained during migration.
+    id: habit.id,
+    emoji: habit.emoji,
+    frequency: habit.frequency,
+    skippedDates: habit.skippedDates || [],
+    extraDates: habit.extraDates || [],
+    checkIns: habit.checkIns || [],
+    createdAt: habit.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
+  const snapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
+  const checkedDates = new Set(habit.checkIns || []);
+  const batch = writeBatch(db);
+
+  snapshot.forEach((logDoc) => {
+    const data = logDoc.data();
+    if (String(data.habitId || '') !== habit.id) return;
+
+    const dateKey = String(data.dateKey || '');
+    if (dateKey && !checkedDates.has(dateKey)) {
+      batch.set(
+        logDoc.ref,
+        {
+          habitLogId: logDoc.id,
+          habitId: habit.id,
+          dateKey,
+          Iscompleted: false,
+        },
+        { merge: true }
+      );
+    }
+  });
+
+  for (const dateKey of checkedDates) {
+    const habitLogId = `${habit.id}_${dateKey}`;
+    batch.set(
+      doc(db, HABIT_LOGS_COLLECTION, habitLogId),
+      {
+        habitLogId,
+        habitId: habit.id,
+        dateKey,
+        Iscompleted: true,
+      },
+      { merge: true }
+    );
+  }
+
+  await batch.commit();
+}
 
 export interface CountdownSettings {
   targetDate: string;
@@ -133,15 +313,29 @@ export function subscribeToCountdownSettings(
 export async function saveCountdownSettings(
   settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
 ): Promise<void> {
-  await setDoc(
-    doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
-    {
-      targetDate: settings.targetDate,
-      reason: settings.reason,
-      updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
+  const updatedAt = new Date().toISOString();
+
+  await Promise.all([
+    setDoc(
+      doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
+      {
+        targetDate: settings.targetDate,
+        reason: settings.reason,
+        updatedAt,
+      },
+      { merge: true }
+    ),
+    setDoc(
+      doc(db, COUNTDOWNS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
+      {
+        countdownId: COUNTDOWN_SETTINGS_DOC,
+        title: settings.reason || 'Countdown',
+        targetDate: settings.targetDate,
+        isActive: Boolean(settings.targetDate),
+      },
+      { merge: true }
+    ),
+  ]);
 }
 
 /**
@@ -417,19 +611,24 @@ export function subscribeToTasks(
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         fetchedTasks.push({
-          id: docSnap.id,
-          taskKey: String(data.taskKey ?? ''),
-          taskOfTheDay: String(data.taskOfTheDay ?? ''),
-          isCompleted: Boolean(data.isCompleted),
+          id: String(data.taskId || docSnap.id),
+          taskKey: String(data.scheduledDate ?? data.taskKey ?? ''),
+          taskOfTheDay: String(data.title ?? data.taskOfTheDay ?? ''),
+          isCompleted:
+            typeof data.Iscompleted === 'boolean'
+              ? data.Iscompleted
+              : Boolean(data.isCompleted),
           priority: data.priority ? (data.priority as 'High' | 'Medium' | 'Normal') : 'Normal',
           timeEstimate: data.timeEstimate ? String(data.timeEstimate) : '',
           category: data.category ? String(data.category) : '',
           notes: data.notes ? String(data.notes) : '',
           updatedAt: data.updatedAt ? String(data.updatedAt) : '',
           completedAt: data.completedAt ? String(data.completedAt) : undefined,
-          matrixQuadrant: data.matrixQuadrant
-            ? (String(data.matrixQuadrant) as TaskItem['matrixQuadrant'])
-            : undefined,
+          matrixQuadrant: storedQuadrantToMatrix(data.quadrant ?? data.matrixQuadrant),
+          sortOrder:
+            Number.isInteger(Number(data.sortOrder)) && Number(data.sortOrder) >= 0
+              ? Number(data.sortOrder)
+              : 0,
         });
       });
 
@@ -451,19 +650,7 @@ export async function seedInitialTasks(tasks: TaskItem[]): Promise<void> {
   const batch = writeBatch(db);
   for (const t of tasks) {
     const docRef = doc(db, TASKS_COLLECTION, t.id);
-    batch.set(docRef, {
-      id: t.id,
-      taskKey: t.taskKey,
-      taskOfTheDay: t.taskOfTheDay,
-      isCompleted: t.isCompleted,
-      priority: t.priority || 'Normal',
-      timeEstimate: t.timeEstimate || '',
-      category: t.category || 'General',
-      notes: t.notes || '',
-      updatedAt: new Date().toISOString(),
-      completedAt: t.completedAt || null,
-      matrixQuadrant: t.matrixQuadrant || null,
-    });
+    batch.set(docRef, taskStoragePayload(t));
   }
   await batch.commit();
 }
@@ -478,7 +665,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   const normKey = standardizeDate(task.taskKey) || task.taskKey;
 
   // Prevent duplicate task ID
-  const duplicateId = existingTasks.find((t) => t.id === task.id);
+  const duplicateId = existingTasks.find((t) => String(t.taskId || t.id || '') === task.id);
   if (duplicateId) {
     throw new Error(`Duplicate task rejected: A task with ID ${task.id} already exists.`);
   }
@@ -486,30 +673,20 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   // Prevent duplicate task with identical title on the same date
   const duplicateName = existingTasks.find(
     (t) =>
-      t.id !== task.id &&
-      (standardizeDate(t.taskKey) === normKey || t.taskKey === task.taskKey) &&
-      t.taskOfTheDay &&
+      String(t.taskId || t.id || '') !== task.id &&
+      (standardizeDate(String(t.scheduledDate || t.taskKey || '')) === normKey ||
+        String(t.scheduledDate || t.taskKey || '') === task.taskKey) &&
+      (t.title || t.taskOfTheDay) &&
       task.taskOfTheDay &&
-      String(t.taskOfTheDay).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
+      String(t.title || t.taskOfTheDay).trim().toLowerCase() ===
+        String(task.taskOfTheDay).trim().toLowerCase()
   );
   if (duplicateName) {
     throw new Error(`Duplicate task rejected: A task named "${task.taskOfTheDay}" already exists for this date.`);
   }
 
   const docRef = doc(db, TASKS_COLLECTION, task.id);
-  await setDoc(docRef, {
-    id: task.id,
-    taskKey: task.taskKey,
-    taskOfTheDay: task.taskOfTheDay.trim(),
-    isCompleted: task.isCompleted,
-    priority: task.priority || 'Normal',
-    timeEstimate: task.timeEstimate || '',
-    category: task.category || 'General',
-    notes: task.notes || '',
-    updatedAt: new Date().toISOString(),
-    completedAt: task.completedAt || null,
-    matrixQuadrant: task.matrixQuadrant || null,
-  });
+  await setDoc(docRef, taskStoragePayload(task));
 }
 
 /**
@@ -535,23 +712,7 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   }
 
   const docRef = doc(db, TASKS_COLLECTION, task.id);
-  await setDoc(
-    docRef,
-    {
-      id: task.id,
-      taskKey: task.taskKey,
-      taskOfTheDay: task.taskOfTheDay.trim(),
-      isCompleted: task.isCompleted,
-      priority: task.priority || 'Normal',
-      timeEstimate: task.timeEstimate || '',
-      category: task.category || 'General',
-      notes: task.notes || '',
-      updatedAt: new Date().toISOString(),
-      completedAt: task.completedAt || null,
-      matrixQuadrant: task.matrixQuadrant || null,
-    },
-    { merge: true }
-  );
+  await setDoc(docRef, taskStoragePayload(task), { merge: true });
 }
 
 /**
@@ -573,19 +734,7 @@ export async function resetTasksInCloud(initialTasks: TaskItem[]): Promise<void>
   });
   for (const t of initialTasks) {
     const docRef = doc(db, TASKS_COLLECTION, t.id);
-    batch.set(docRef, {
-      id: t.id,
-      taskKey: t.taskKey,
-      taskOfTheDay: t.taskOfTheDay,
-      isCompleted: t.isCompleted,
-      priority: t.priority || 'Normal',
-      timeEstimate: t.timeEstimate || '',
-      category: t.category || 'General',
-      notes: t.notes || '',
-      updatedAt: new Date().toISOString(),
-      completedAt: t.completedAt || null,
-      matrixQuadrant: t.matrixQuadrant || null,
-    });
+    batch.set(docRef, taskStoragePayload(t));
   }
   await batch.commit();
 }
@@ -597,45 +746,80 @@ export function subscribeToHabits(
   onUpdate: (habits: HabitItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return onSnapshot(
+  let habitsSnapshot: Parameters<Parameters<typeof onSnapshot>[1]>[0] | null = null;
+  let habitLogsSnapshot: Parameters<Parameters<typeof onSnapshot>[1]>[0] | null = null;
+
+  const emit = () => {
+    if (!habitsSnapshot) return;
+
+    const completedDatesByHabit = new Map<string, Set<string>>();
+
+    if (habitLogsSnapshot) {
+      habitLogsSnapshot.forEach((logDoc) => {
+        const data = logDoc.data();
+        if (data.Iscompleted !== true) return;
+
+        const habitId = String(data.habitId || '');
+        const dateKey = String(data.dateKey || '');
+        if (!habitId || !dateKey) return;
+
+        if (!completedDatesByHabit.has(habitId)) {
+          completedDatesByHabit.set(habitId, new Set());
+        }
+        completedDatesByHabit.get(habitId)!.add(dateKey);
+      });
+    }
+
+    const habits: HabitItem[] = [];
+
+    habitsSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const habitId = String(data.habitId || docSnap.id);
+      const legacyCheckIns = Array.isArray(data.checkIns)
+        ? data.checkIns.map((value: unknown) => String(value))
+        : [];
+      const migratedCheckIns = completedDatesByHabit.get(habitId) || new Set<string>();
+      const checkIns = [...new Set([...legacyCheckIns, ...migratedCheckIns])].sort();
+
+      const activeFrom = data.activeFrom ? String(data.activeFrom) : undefined;
+      const fallbackCreatedAt = activeFrom
+        ? `${activeFrom}T00:00:00.000Z`
+        : new Date().toISOString();
+
+      habits.push({
+        id: habitId,
+        name: String(data.name ?? ''),
+        emoji: String(data.emoji ?? '✓'),
+        frequency: storedHabitFrequency(data),
+        repeatDays: Array.isArray(data.repeatDays)
+          ? data.repeatDays
+              .map((value: unknown) => Number(value))
+              .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
+          : undefined,
+        skippedDates: Array.isArray(data.skippedDates)
+          ? data.skippedDates.map((value: unknown) => String(value))
+          : [],
+        extraDates: Array.isArray(data.extraDates)
+          ? data.extraDates.map((value: unknown) => String(value))
+          : [],
+        color: storedHabitColor(data.color),
+        checkIns,
+        createdAt: String(data.createdAt ?? fallbackCreatedAt),
+        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+        activeFrom,
+        isActive: data.isActive !== false,
+      });
+    });
+
+    habits.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    onUpdate(habits);
+  };
+
+  const unsubscribeHabits = onSnapshot(
     collection(db, HABITS_COLLECTION),
     (snapshot) => {
-      const habits: HabitItem[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        habits.push({
-          id: docSnap.id,
-          name: String(data.name ?? ''),
-          emoji: String(data.emoji ?? '✓'),
-          frequency:
-            data.frequency === 'custom'
-              ? 'custom'
-              : data.frequency === 'weekdays'
-              ? 'weekdays'
-              : 'daily',
-          repeatDays: Array.isArray(data.repeatDays)
-            ? data.repeatDays
-                .map((value: unknown) => Number(value))
-                .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
-            : undefined,
-          skippedDates: Array.isArray(data.skippedDates)
-            ? data.skippedDates.map((value: unknown) => String(value))
-            : [],
-          extraDates: Array.isArray(data.extraDates)
-            ? data.extraDates.map((value: unknown) => String(value))
-            : [],
-          color: (['blue', 'emerald', 'amber', 'rose', 'violet'].includes(String(data.color))
-            ? String(data.color)
-            : 'blue') as HabitItem['color'],
-          checkIns: Array.isArray(data.checkIns)
-            ? data.checkIns.map((value: unknown) => String(value))
-            : [],
-          createdAt: String(data.createdAt ?? new Date().toISOString()),
-          updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-        });
-      });
-      habits.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-      onUpdate(habits);
+      habitsSnapshot = snapshot;
+      emit();
     },
     (err) => {
       console.error('Firestore habits real-time subscription error:', err);
@@ -646,23 +830,32 @@ export function subscribeToHabits(
       }
     }
   );
+
+  const unsubscribeHabitLogs = onSnapshot(
+    collection(db, HABIT_LOGS_COLLECTION),
+    (snapshot) => {
+      habitLogsSnapshot = snapshot;
+      emit();
+    },
+    (err) => {
+      // During rollout, older deployed rules may not allow habitLogs yet.
+      // Legacy checkIns remain authoritative until the new rules are deployed.
+      console.warn('HabitLogs are not available yet; using legacy habit check-ins:', err);
+      habitLogsSnapshot = null;
+      emit();
+    }
+  );
+
+  return () => {
+    unsubscribeHabits();
+    unsubscribeHabitLogs();
+  };
 }
 
 export async function addHabitToCloud(habit: HabitItem): Promise<void> {
   try {
-    await setDoc(doc(db, HABITS_COLLECTION, habit.id), {
-      id: habit.id,
-      name: habit.name,
-      emoji: habit.emoji,
-      frequency: habit.frequency,
-      repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
-      skippedDates: habit.skippedDates || [],
-      extraDates: habit.extraDates || [],
-      color: habit.color,
-      checkIns: habit.checkIns || [],
-      createdAt: habit.createdAt,
-      updatedAt: new Date().toISOString(),
-    });
+    await setDoc(doc(db, HABITS_COLLECTION, habit.id), habitStoragePayload(habit));
+    await syncHabitLogsFromHabit(habit);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `${HABITS_COLLECTION}/${habit.id}`);
   }
@@ -672,21 +865,10 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
   try {
     await setDoc(
       doc(db, HABITS_COLLECTION, habit.id),
-      {
-        id: habit.id,
-        name: habit.name,
-        emoji: habit.emoji,
-        frequency: habit.frequency,
-        repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
-        skippedDates: habit.skippedDates || [],
-        extraDates: habit.extraDates || [],
-        color: habit.color,
-        checkIns: habit.checkIns || [],
-        createdAt: habit.createdAt,
-        updatedAt: new Date().toISOString(),
-      },
+      habitStoragePayload(habit),
       { merge: true }
     );
+    await syncHabitLogsFromHabit(habit);
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, `${HABITS_COLLECTION}/${habit.id}`);
   }
@@ -694,7 +876,17 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
 
 export async function deleteHabitFromCloud(habitId: string): Promise<void> {
   try {
-    await deleteDoc(doc(db, HABITS_COLLECTION, habitId));
+    const logsSnapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
+    const batch = writeBatch(db);
+
+    logsSnapshot.forEach((logDoc) => {
+      if (String(logDoc.data().habitId || '') === habitId) {
+        batch.delete(logDoc.ref);
+      }
+    });
+
+    batch.delete(doc(db, HABITS_COLLECTION, habitId));
+    await batch.commit();
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${HABITS_COLLECTION}/${habitId}`);
   }
@@ -733,19 +925,7 @@ export async function syncAllDataInCloud(
     const docRef = doc(db, TASKS_COLLECTION, t.id);
     batch.set(
       docRef,
-      {
-        id: t.id,
-        taskKey: t.taskKey,
-        taskOfTheDay: t.taskOfTheDay,
-        isCompleted: t.isCompleted,
-        priority: t.priority || 'Normal',
-        timeEstimate: t.timeEstimate || '',
-        category: t.category || 'General',
-        notes: t.notes || '',
-        updatedAt: new Date().toISOString(),
-        completedAt: t.completedAt || null,
-        matrixQuadrant: t.matrixQuadrant || null,
-      },
+      taskStoragePayload(t),
       { merge: true }
     );
   }

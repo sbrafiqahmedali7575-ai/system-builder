@@ -52,7 +52,7 @@ For production on Google Cloud / Cloud Run, grant the runtime service account th
 
 For local or non-Google hosting, either configure standard Google Application Default Credentials or provide `FIREBASE_SERVICE_ACCOUNT_JSON` as a server-only environment variable containing the service-account JSON. Never commit service-account credentials.
 
-After deploying this version, deploy the repository's `firestore.rules` to the Firebase project. The source change alone does not modify already-deployed Firestore rules.
+Firestore rules deployment is automated by `.github/workflows/deploy-firestore-rules.yml` for the named Firestore database configured in `firebase.json`. Add a GitHub Actions repository secret named `FIREBASE_SERVICE_ACCOUNT_JSON` containing a service-account JSON credential with permission to deploy Firebase Rules, then run **Deploy Firestore Security Rules** once from GitHub Actions. Future changes to `firestore.rules` or `firebase.json` deploy automatically.
 
 The legacy Firebase web configuration file is not imported by browser code and the Firebase browser SDK is no longer a direct dependency. Firebase web API keys are public identifiers rather than authorization secrets; if the legacy key remains enabled, restrict its allowed APIs and HTTP referrers in Google Cloud Console.
 
@@ -68,3 +68,18 @@ The legacy Firebase web configuration file is not imported by browser code and t
 - Backend bundles and source maps are built outside the public `dist/` directory.
 - Production responses use CSP, HSTS, anti-framing, no-sniff, no-referrer, and restrictive Permissions-Policy headers.
 - CI runs `security:check` to prevent accidental reintroduction of browser Firebase access, open Firestore rules, disabled TLS verification, or public server bundles.
+
+
+## Deployment configuration
+
+`deployment-config.json` is the single checked-in source for the production app URL and GitHub scheduler OIDC audience. Both scheduler workflows and the server use this configuration, preventing endpoint/audience drift.
+
+`APP_BASE_URL` can override the checked-in app URL in the server runtime when needed. Notification defaults can be supplied with `DEFAULT_NOTIFICATION_EMAIL` and `DEFAULT_NOTIFICATION_NAME`; personal addresses and names are not hardcoded into application source.
+
+## Reliability and tests
+
+The quality gate runs security regression checks, behavioral tests, TypeScript validation, and the production build. Behavioral tests cover confirmation-token integrity and scope, IST date boundaries, scheduler time parsing, and habit scheduling.
+
+Offline mutations survive network errors, expired owner sessions, throttling, and server failures. Replayed offline changes carry their original mutation timestamp; if the server has a newer edit, the stale change is rejected and recorded as a local sync conflict rather than overwriting newer data.
+
+The owner session can be explicitly ended with the **Logout** control. Owner-login failure counters are stored in Firestore as hashed client identifiers so rate limiting remains effective across multiple server instances and restarts.

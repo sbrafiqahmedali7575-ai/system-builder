@@ -2,10 +2,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // System Builder is intentionally using the simple open-access model
-    // from the previously working version. The app and server both access
-    // this Firestore database without Firebase Authentication.
-    match /{document=**} {
+    // Global shared records accessible from any device via the web link
+    match /records/{recordId} {
+      allow read, write: if true;
+    }
+    match /tasks/{taskId} {
+      allow read, write: if true;
+    }
+    match /habits/{habitId} {
+      allow read, write: if true;
+    }
+    match /notification_settings/{settingId} {
+      allow read, write: if true;
+    }
+    match /delivery_logs/{logId} {
+      allow read, write: if true;
+    }
+    match /confirmation_tokens/{tokenId} {
+      allow read, write: if true;
+    }
+    match /daily_reminders_sent/{dateKey} {
       allow read, write: if true;
     }
   }

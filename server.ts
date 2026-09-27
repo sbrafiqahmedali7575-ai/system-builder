@@ -1543,21 +1543,30 @@ pause
       const completedCount = dayTasks.filter((task) => selectedIds.has(task.id)).length;
       const allCompleted = completedCount === dayTasks.length;
 
-      // Find the records row for the same date and update it, or create one when absent.
-      const recordsSnap = await getDocs(collection(db, 'records'));
-      const allRecords: any[] = [];
-      let matchedRecord: any = null;
+      // Update only the record ID signed into this review capability.
+      const signedRecordId = String(payload.recordId || '').trim();
+      if (!signedRecordId || signedRecordId.startsWith('review-')) {
+        return renderErrorPage(
+          res,
+          'This review link does not contain a valid signed record scope. Request a new daily review email.'
+        );
+      }
 
-      recordsSnap.forEach((d) => {
-        const record = { id: d.id, ...(d.data() as any) };
-        allRecords.push(record);
-        if (normalizeDateKey(record.date || '') === targetDateKey) {
-          matchedRecord = record;
+      const recordRef = doc(db, 'records', signedRecordId);
+      const recordSnap = await getDoc(recordRef);
+
+      if (recordSnap.exists()) {
+        const record = recordSnap.data();
+        if (
+          normalizeDateKey(String(record.date || '')) !== targetDateKey
+        ) {
+          return renderErrorPage(
+            res,
+            'The signed daily record no longer matches this review date.'
+          );
         }
-      });
 
-      if (matchedRecord) {
-        await updateDoc(doc(db, 'records', matchedRecord.id), {
+        await updateDoc(recordRef, {
           isCompleted: allCompleted,
           result: allCompleted ? 'TRUE' : 'FALSE',
           change: 0,
@@ -1567,17 +1576,15 @@ pause
           updatedAt: nowIso,
         });
       } else {
-        const highestDay = allRecords.reduce(
-          (maxDay, record) => Math.max(maxDay, Number(record.day) || 0),
+        const recordsSnap = await getDocs(collection(db, 'records'));
+        const highestDay = recordsSnap.docs.reduce(
+          (maxDay, item) =>
+            Math.max(maxDay, Number(item.data().day) || 0),
           0
         );
-        const recordId =
-          payload.recordId && !payload.recordId.startsWith('review-')
-            ? payload.recordId
-            : `record-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
-        await setDoc(doc(db, 'records', recordId), {
-          id: recordId,
+        await setDoc(recordRef, {
+          id: signedRecordId,
           day: highestDay + 1,
           date: payload.taskDate,
           isCompleted: allCompleted,

@@ -381,6 +381,69 @@ function normalizeDateKey(value: string): string {
   return raw.toLowerCase();
 }
 
+function isValidIsoDateKey(value: string): boolean {
+  const match = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function isValidAppDate(value: string): boolean {
+  return isValidIsoDateKey(normalizeDateKey(value));
+}
+
+async function rejectStaleClientMutation(
+  req: express.Request,
+  res: express.Response,
+  collectionName: string,
+  documentId: string
+): Promise<boolean> {
+  const rawMutationAt = String(
+    req.headers['x-system-builder-mutation-at'] || ''
+  ).trim();
+
+  if (!rawMutationAt) return false;
+
+  const mutationAt = Number(rawMutationAt);
+  if (
+    !Number.isFinite(mutationAt) ||
+    mutationAt <= 0 ||
+    mutationAt > Date.now() + 5 * 60 * 1000
+  ) {
+    res.status(400).json({
+      error: 'Invalid offline mutation timestamp.',
+    });
+    return true;
+  }
+
+  const snapshot = await getDoc(doc(db, collectionName, documentId));
+  if (!snapshot.exists()) return false;
+
+  const serverUpdatedAt = Date.parse(
+    String(snapshot.data().updatedAt || '')
+  );
+
+  if (Number.isFinite(serverUpdatedAt) && serverUpdatedAt > mutationAt) {
+    res.status(409).json({
+      error:
+        'A newer server change exists. The stale offline mutation was not applied.',
+      code: 'SYNC_CONFLICT',
+    });
+    return true;
+  }
+
+  return false;
+}
+
 function renderErrorPage(res: express.Response, message: string, status: number = 400) {
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -645,9 +708,19 @@ async function startServer() {
       const day = Number(body.day);
       const date = String(body.date || '').trim();
 
-      if (!id || !Number.isFinite(day) || day <= 0 || !date) {
-        return res.status(400).json({ error: 'Record id, positive day, and date are required.' });
+      if (
+        !id ||
+        !Number.isFinite(day) ||
+        day <= 0 ||
+        !date ||
+        !isValidAppDate(date)
+      ) {
+        return res.status(400).json({
+          error: 'Record id, positive day, and a valid calendar date are required.',
+        });
       }
+
+      if (await rejectStaleClientMutation(req, res, 'records', id)) return;
 
       const existing = await getDocs(collection(db, 'records'));
       const normalizedDate = normalizeDateKey(date);
@@ -696,6 +769,7 @@ async function startServer() {
     try {
       const id = String(req.params.id || '').trim();
       if (!id) return res.status(400).json({ error: 'Record id is required.' });
+      if (await rejectStaleClientMutation(req, res, 'records', id)) return;
       await deleteDoc(doc(db, 'records', id));
       res.json({ success: true });
     } catch (error) {
@@ -726,7 +800,7 @@ async function startServer() {
 
       if (
         !id ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(taskKey) ||
+        !isValidIsoDateKey(taskKey) ||
         !taskOfTheDay ||
         taskOfTheDay.length > 500
       ) {
@@ -734,6 +808,8 @@ async function startServer() {
           error: 'Task id, YYYY-MM-DD date, and a task title up to 500 characters are required.',
         });
       }
+
+      if (await rejectStaleClientMutation(req, res, 'tasks', id)) return;
 
       const existing = await getDocs(collection(db, 'tasks'));
       const duplicate = existing.docs.find((item) => {
@@ -789,6 +865,7 @@ async function startServer() {
     try {
       const id = String(req.params.id || '').trim();
       if (!id) return res.status(400).json({ error: 'Task id is required.' });
+      if (await rejectStaleClientMutation(req, res, 'tasks', id)) return;
       await deleteDoc(doc(db, 'tasks', id));
       res.json({ success: true });
     } catch (error) {
@@ -830,7 +907,7 @@ async function startServer() {
               new Set(
                 value
                   .map((item) => String(item))
-                  .filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item))
+                  .filter((item) => isValidIsoDateKey(item))
               )
             ).slice(0, 5000)
           : [];
@@ -847,6 +924,8 @@ async function startServer() {
             )
           )
         : [];
+
+      if (await rejectStaleClientMutation(req, res, 'habits', id)) return;
 
       const payload = {
         id,
@@ -877,6 +956,7 @@ async function startServer() {
     try {
       const id = String(req.params.id || '').trim();
       if (!id) return res.status(400).json({ error: 'Habit id is required.' });
+      if (await rejectStaleClientMutation(req, res, 'habits', id)) return;
       await deleteDoc(doc(db, 'habits', id));
       res.json({ success: true });
     } catch (error) {
@@ -900,7 +980,7 @@ async function startServer() {
       const targetDate = String(req.body?.targetDate || '').trim();
       const reason = String(req.body?.reason || '').trim();
 
-      if (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+      if (targetDate && !isValidIsoDateKey(targetDate)) {
         return res.status(400).json({
           error: 'Countdown target date must use YYYY-MM-DD format.',
         });

@@ -65,7 +65,11 @@ export const DataWorkspace: React.FC = () => {
 
   const rows = data[active];
   const sortedRows = useMemo(() => {
-    const effectiveSort = sort || (active === 'tasks' ? { column: 'scheduledDate', direction: 'asc' as const } : null);
+    const effectiveSort = sort || (active === 'tasks'
+      ? { column: 'scheduledDate', direction: 'asc' as const }
+      : active === 'days'
+        ? { column: 'dateKey', direction: 'desc' as const }
+        : null);
     if (!effectiveSort) return rows;
     return [...rows].sort((a, b) => {
       const left = renderValue(a[effectiveSort.column]).toLocaleLowerCase();

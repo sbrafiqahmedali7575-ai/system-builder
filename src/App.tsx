@@ -356,6 +356,9 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
+        setRecords((prev) =>
+          prev.map((record) => (record.id === target.id ? target : record))
+        );
         console.error('Error syncing status update to cloud:', e);
       }
     } finally {
@@ -370,6 +373,7 @@ export default function App() {
       return;
     }
 
+    const previousRecord = records.find((record) => record.id === updatedRecord.id);
     const withTimestamp = {
       ...updatedRecord,
       updatedAt: new Date().toISOString(),
@@ -392,6 +396,13 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
+        if (previousRecord) {
+          setRecords((prev) =>
+            prev.map((record) =>
+              record.id === previousRecord.id ? previousRecord : record
+            )
+          );
+        }
         console.error('Error syncing record update to cloud:', e);
       }
     } finally {
@@ -424,6 +435,9 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
+        setRecords((prev) =>
+          prev.filter((record) => record.id !== recordWithId.id)
+        );
         console.error('Error adding record to cloud:', e);
       }
     } finally {
@@ -611,7 +625,10 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
-        console.warn('Habit saved locally; cloud sync is unavailable:', err);
+        setHabits((current) =>
+          current.filter((item) => item.id !== habit.id)
+        );
+        console.error('Error adding habit to cloud:', err);
       }
     } finally {
       setIsSyncing(false);
@@ -619,6 +636,7 @@ export default function App() {
   };
 
   const handleUpdateHabit = async (habit: HabitItem) => {
+    const previousHabit = habits.find((item) => item.id === habit.id);
     setHabits((current) => current.map((item) => (item.id === habit.id ? habit : item)));
     try {
       setIsSyncing(true);
@@ -632,7 +650,14 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
-        console.warn('Habit update kept locally; cloud sync is unavailable:', err);
+        if (previousHabit) {
+          setHabits((current) =>
+            current.map((item) =>
+              item.id === previousHabit.id ? previousHabit : item
+            )
+          );
+        }
+        console.error('Error updating habit in cloud:', err);
       }
     } finally {
       setIsSyncing(false);
@@ -640,6 +665,7 @@ export default function App() {
   };
 
   const handleDeleteHabit = async (habitId: string) => {
+    const previousHabit = habits.find((item) => item.id === habitId);
     setHabits((current) => current.filter((item) => item.id !== habitId));
     try {
       setIsSyncing(true);
@@ -653,7 +679,14 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
-        console.warn('Habit deletion kept locally; cloud sync is unavailable:', err);
+        if (previousHabit) {
+          setHabits((current) =>
+            current.some((item) => item.id === previousHabit.id)
+              ? current
+              : [...current, previousHabit]
+          );
+        }
+        console.error('Error deleting habit from cloud:', err);
       }
     } finally {
       setIsSyncing(false);

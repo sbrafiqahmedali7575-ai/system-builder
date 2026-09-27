@@ -13,6 +13,7 @@ const KEY_RECORDS = 'records_cache_v2';
 const KEY_TASKS = 'tasks_cache_v2';
 const KEY_HABITS = 'habits_cache_v2';
 const KEY_PENDING_QUEUE = 'pending_offline_mutations_v1';
+const KEY_SYNC_CONFLICTS = 'sync_conflicts_v1';
 
 export type PendingMutation =
   | { type: 'record_add'; payload: DailyRecord; timestamp: number }
@@ -26,15 +27,90 @@ export type PendingMutation =
   | { type: 'habit_delete'; payload: { id: string }; timestamp: number };
 
 export interface SyncHandlers {
-  addRecord?: (record: DailyRecord) => Promise<void>;
-  updateRecord?: (record: DailyRecord) => Promise<void>;
-  deleteRecord?: (id: string) => Promise<void>;
-  addTask?: (task: TaskItem) => Promise<void>;
-  updateTask?: (task: TaskItem) => Promise<void>;
-  deleteTask?: (id: string) => Promise<void>;
-  addHabit?: (habit: HabitItem) => Promise<void>;
-  updateHabit?: (habit: HabitItem) => Promise<void>;
-  deleteHabit?: (id: string) => Promise<void>;
+  addRecord?: (record: DailyRecord, mutationAt?: number) => Promise<void>;
+  updateRecord?: (record: DailyRecord, mutationAt?: number) => Promise<void>;
+  deleteRecord?: (id: string, mutationAt?: number) => Promise<void>;
+  addTask?: (task: TaskItem, mutationAt?: number) => Promise<void>;
+  updateTask?: (task: TaskItem, mutationAt?: number) => Promise<void>;
+  deleteTask?: (id: string, mutationAt?: number) => Promise<void>;
+  addHabit?: (habit: HabitItem, mutationAt?: number) => Promise<void>;
+  updateHabit?: (habit: HabitItem, mutationAt?: number) => Promise<void>;
+  deleteHabit?: (id: string, mutationAt?: number) => Promise<void>;
+}
+
+export interface SyncConflict {
+  mutation: PendingMutation;
+  detectedAt: string;
+  message: string;
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'status' in error &&
+    Number.isFinite(Number((error as { status?: number }).status))
+  ) {
+    return Number((error as { status?: number }).status);
+  }
+  return undefined;
+}
+
+export function isRetryableSyncError(error?: unknown): boolean {
+  if (isNetworkOrOfflineError(error)) return true;
+  const status = getErrorStatus(error);
+  return (
+    status === 401 ||
+    status === 403 ||
+    status === 408 ||
+    status === 425 ||
+    status === 429 ||
+    (status !== undefined && status >= 500)
+  );
+}
+
+async function recordSyncConflict(
+  mutation: PendingMutation,
+  error: unknown
+): Promise<void> {
+  const current =
+    (await offlineStore.getItem<SyncConflict[]>(KEY_SYNC_CONFLICTS)) || [];
+  const message =
+    error instanceof Error ? error.message : String(error || 'Sync conflict');
+
+  const entityId =
+    mutation.payload && 'id' in mutation.payload
+      ? String(mutation.payload.id)
+      : '';
+  const filtered = current.filter((item) => {
+    const itemId =
+      item.mutation.payload && 'id' in item.mutation.payload
+        ? String(item.mutation.payload.id)
+        : '';
+    return !(item.mutation.type === mutation.type && itemId === entityId);
+  });
+
+  filtered.push({
+    mutation,
+    detectedAt: new Date().toISOString(),
+    message,
+  });
+
+  await offlineStore.setItem(KEY_SYNC_CONFLICTS, filtered.slice(-100));
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('system-builder-sync-conflict', {
+        detail: { message, entityId, type: mutation.type },
+      })
+    );
+  }
+}
+
+export async function getSyncConflicts(): Promise<SyncConflict[]> {
+  const conflicts =
+    await offlineStore.getItem<SyncConflict[]>(KEY_SYNC_CONFLICTS);
+  return Array.isArray(conflicts) ? conflicts : [];
 }
 
 /**
@@ -208,44 +284,54 @@ export async function processPendingSync(
       try {
         switch (mutation.type) {
           case 'task_add':
-            if (handlers.addTask) await handlers.addTask(mutation.payload);
+            if (handlers.addTask) await handlers.addTask(mutation.payload, mutation.timestamp);
             break;
           case 'task_update':
-            if (handlers.updateTask) await handlers.updateTask(mutation.payload);
+            if (handlers.updateTask) await handlers.updateTask(mutation.payload, mutation.timestamp);
             break;
           case 'task_delete':
-            if (handlers.deleteTask) await handlers.deleteTask(mutation.payload.id);
+            if (handlers.deleteTask) await handlers.deleteTask(mutation.payload.id, mutation.timestamp);
             break;
 
           case 'habit_add':
-            if (handlers.addHabit) await handlers.addHabit(mutation.payload);
+            if (handlers.addHabit) await handlers.addHabit(mutation.payload, mutation.timestamp);
             break;
           case 'habit_update':
-            if (handlers.updateHabit) await handlers.updateHabit(mutation.payload);
+            if (handlers.updateHabit) await handlers.updateHabit(mutation.payload, mutation.timestamp);
             break;
           case 'habit_delete':
-            if (handlers.deleteHabit) await handlers.deleteHabit(mutation.payload.id);
+            if (handlers.deleteHabit) await handlers.deleteHabit(mutation.payload.id, mutation.timestamp);
             break;
 
           case 'record_add':
-            if (handlers.addRecord) await handlers.addRecord(mutation.payload);
+            if (handlers.addRecord) await handlers.addRecord(mutation.payload, mutation.timestamp);
             break;
           case 'record_update':
-            if (handlers.updateRecord) await handlers.updateRecord(mutation.payload);
+            if (handlers.updateRecord) await handlers.updateRecord(mutation.payload, mutation.timestamp);
             break;
           case 'record_delete':
-            if (handlers.deleteRecord) await handlers.deleteRecord(mutation.payload.id);
+            if (handlers.deleteRecord) await handlers.deleteRecord(mutation.payload.id, mutation.timestamp);
             break;
         }
         synced++;
       } catch (err) {
-        if (isNetworkOrOfflineError(err)) {
-          // Still offline, retain in remaining queue
+        const status = getErrorStatus(err);
+
+        if (isRetryableSyncError(err)) {
+          // Authentication expiry, throttling, network faults and server errors
+          // are transient. Never discard the user's queued work.
           remaining.push(mutation);
           failed++;
+        } else if (status === 409) {
+          // The server has a newer edit. Keep a local audit record and let the
+          // server version win instead of overwriting it with stale offline data.
+          await recordSyncConflict(mutation, err);
+          failed++;
         } else {
-          // If permanent business validation error (e.g. duplicate or already deleted), don't loop forever
-          console.warn('Offline sync mutation discarded due to error:', err);
+          // Permanent validation failures are surfaced as conflicts rather than
+          // silently disappearing.
+          await recordSyncConflict(mutation, err);
+          failed++;
         }
       }
     }

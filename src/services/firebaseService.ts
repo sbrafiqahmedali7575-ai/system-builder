@@ -1,17 +1,7 @@
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  runTransaction,
-  setDoc,
-} from 'firebase/firestore';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
-import { getFirestoreDb } from './firebaseClient';
+import { getFirebaseRuntime } from './firebaseClient';
 
 export type Unsubscribe = () => void;
 
@@ -51,7 +41,9 @@ function normalizeFirebaseError(error: unknown): ApiRequestError {
 
   const code = firebaseErrorCode(error);
   const message =
-    error instanceof Error ? error.message : String(error || 'Firebase request failed.');
+    error instanceof Error
+      ? error.message
+      : String(error || 'Firebase request failed.');
 
   if (
     code.includes('permission-denied') ||
@@ -102,39 +94,43 @@ async function writeWithConflictCheck(
   value: Record<string, unknown>,
   clientMutationAt?: number
 ): Promise<void> {
-  const ref = doc(getFirestoreDb(), collectionName, id);
-  const payload = cleanForFirestore({
-    ...value,
-    updatedAt: serverTimestampIso(),
-  });
-
   try {
+    const { firestore, firestoreSdk } = await getFirebaseRuntime();
+    const ref = firestoreSdk.doc(firestore, collectionName, id);
+    const payload = cleanForFirestore({
+      ...value,
+      updatedAt: serverTimestampIso(),
+    });
+
     if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
-      await setDoc(ref, payload, { merge: true });
+      await firestoreSdk.setDoc(ref, payload, { merge: true });
       return;
     }
 
-    await runTransaction(getFirestoreDb(), async (transaction) => {
-      const snapshot = await transaction.get(ref);
+    await firestoreSdk.runTransaction(
+      firestore,
+      async (transaction: any) => {
+        const snapshot = await transaction.get(ref);
 
-      if (snapshot.exists()) {
-        const serverUpdatedAt = Date.parse(
-          String(snapshot.data().updatedAt || '')
-        );
-
-        if (
-          Number.isFinite(serverUpdatedAt) &&
-          serverUpdatedAt > Number(clientMutationAt)
-        ) {
-          throw new ApiRequestError(
-            'A newer cloud change exists. The stale offline mutation was not applied.',
-            409
+        if (snapshot.exists()) {
+          const serverUpdatedAt = Date.parse(
+            String(snapshot.data().updatedAt || '')
           );
-        }
-      }
 
-      transaction.set(ref, payload, { merge: true });
-    });
+          if (
+            Number.isFinite(serverUpdatedAt) &&
+            serverUpdatedAt > Number(clientMutationAt)
+          ) {
+            throw new ApiRequestError(
+              'A newer cloud change exists. The stale offline mutation was not applied.',
+              409
+            );
+          }
+        }
+
+        transaction.set(ref, payload, { merge: true });
+      }
+    );
   } catch (error) {
     throw normalizeFirebaseError(error);
   }
@@ -145,34 +141,38 @@ async function deleteWithConflictCheck(
   id: string,
   clientMutationAt?: number
 ): Promise<void> {
-  const ref = doc(getFirestoreDb(), collectionName, id);
-
   try {
+    const { firestore, firestoreSdk } = await getFirebaseRuntime();
+    const ref = firestoreSdk.doc(firestore, collectionName, id);
+
     if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
-      await deleteDoc(ref);
+      await firestoreSdk.deleteDoc(ref);
       return;
     }
 
-    await runTransaction(getFirestoreDb(), async (transaction) => {
-      const snapshot = await transaction.get(ref);
-      if (!snapshot.exists()) return;
+    await firestoreSdk.runTransaction(
+      firestore,
+      async (transaction: any) => {
+        const snapshot = await transaction.get(ref);
+        if (!snapshot.exists()) return;
 
-      const serverUpdatedAt = Date.parse(
-        String(snapshot.data().updatedAt || '')
-      );
-
-      if (
-        Number.isFinite(serverUpdatedAt) &&
-        serverUpdatedAt > Number(clientMutationAt)
-      ) {
-        throw new ApiRequestError(
-          'A newer cloud change exists. The stale offline delete was not applied.',
-          409
+        const serverUpdatedAt = Date.parse(
+          String(snapshot.data().updatedAt || '')
         );
-      }
 
-      transaction.delete(ref);
-    });
+        if (
+          Number.isFinite(serverUpdatedAt) &&
+          serverUpdatedAt > Number(clientMutationAt)
+        ) {
+          throw new ApiRequestError(
+            'A newer cloud change exists. The stale offline delete was not applied.',
+            409
+          );
+        }
+
+        transaction.delete(ref);
+      }
+    );
   } catch (error) {
     throw normalizeFirebaseError(error);
   }
@@ -206,9 +206,13 @@ function normalizeRecords(records: DailyRecord[]): DailyRecord[] {
 
 async function loadRecords(): Promise<DailyRecord[]> {
   try {
-    const snapshot = await getDocs(collection(getFirestoreDb(), 'records'));
+    const { firestore, firestoreSdk } = await getFirebaseRuntime();
+    const snapshot = await firestoreSdk.getDocs(
+      firestoreSdk.collection(firestore, 'records')
+    );
+
     return normalizeRecords(
-      snapshot.docs.map((item) => ({
+      snapshot.docs.map((item: any) => ({
         id: item.id,
         ...item.data(),
       })) as DailyRecord[]
@@ -218,34 +222,58 @@ async function loadRecords(): Promise<DailyRecord[]> {
   }
 }
 
+function lazySnapshotSubscription(
+  setup: (runtime: Awaited<ReturnType<typeof getFirebaseRuntime>>) => () => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  let active = true;
+  let unsubscribe = () => {};
+
+  void getFirebaseRuntime()
+    .then((runtime) => {
+      if (!active) return;
+      unsubscribe = setup(runtime);
+    })
+    .catch((error) => {
+      if (active) onError?.(normalizeFirebaseError(error));
+    });
+
+  return () => {
+    active = false;
+    unsubscribe();
+  };
+}
+
 export function subscribeToRecords(
   onUpdate: (records: DailyRecord[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
   let seeded = false;
 
-  return onSnapshot(
-    collection(getFirestoreDb(), 'records'),
-    (snapshot) => {
-      const records = normalizeRecords(
-        snapshot.docs.map((item) => ({
-          id: item.id,
-          ...item.data(),
-        })) as DailyRecord[]
-      );
+  return lazySnapshotSubscription(({ firestore, firestoreSdk }) => {
+    return firestoreSdk.onSnapshot(
+      firestoreSdk.collection(firestore, 'records'),
+      (snapshot: any) => {
+        const records = normalizeRecords(
+          snapshot.docs.map((item: any) => ({
+            id: item.id,
+            ...item.data(),
+          })) as DailyRecord[]
+        );
 
-      if (records.length === 0 && !seeded) {
-        seeded = true;
-        void seedInitialData(INITIAL_RECORDS).catch((error) => {
-          onError?.(normalizeFirebaseError(error));
-        });
-        return;
-      }
+        if (records.length === 0 && !seeded) {
+          seeded = true;
+          void seedInitialData(INITIAL_RECORDS).catch((error) => {
+            onError?.(normalizeFirebaseError(error));
+          });
+          return;
+        }
 
-      onUpdate(records);
-    },
-    (error) => onError?.(normalizeFirebaseError(error))
-  );
+        onUpdate(records);
+      },
+      (error: unknown) => onError?.(normalizeFirebaseError(error))
+    );
+  }, onError);
 }
 
 export async function seedInitialData(
@@ -320,9 +348,13 @@ function normalizeTasks(tasks: TaskItem[]): TaskItem[] {
 
 async function loadTasks(): Promise<TaskItem[]> {
   try {
-    const snapshot = await getDocs(collection(getFirestoreDb(), 'tasks'));
+    const { firestore, firestoreSdk } = await getFirebaseRuntime();
+    const snapshot = await firestoreSdk.getDocs(
+      firestoreSdk.collection(firestore, 'tasks')
+    );
+
     return normalizeTasks(
-      snapshot.docs.map((item) => ({
+      snapshot.docs.map((item: any) => ({
         id: item.id,
         ...item.data(),
       })) as TaskItem[]
@@ -336,20 +368,22 @@ export function subscribeToTasks(
   onUpdate: (tasks: TaskItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return onSnapshot(
-    collection(getFirestoreDb(), 'tasks'),
-    (snapshot) => {
-      onUpdate(
-        normalizeTasks(
-          snapshot.docs.map((item) => ({
-            id: item.id,
-            ...item.data(),
-          })) as TaskItem[]
-        )
-      );
-    },
-    (error) => onError?.(normalizeFirebaseError(error))
-  );
+  return lazySnapshotSubscription(({ firestore, firestoreSdk }) => {
+    return firestoreSdk.onSnapshot(
+      firestoreSdk.collection(firestore, 'tasks'),
+      (snapshot: any) => {
+        onUpdate(
+          normalizeTasks(
+            snapshot.docs.map((item: any) => ({
+              id: item.id,
+              ...item.data(),
+            })) as TaskItem[]
+          )
+        );
+      },
+      (error: unknown) => onError?.(normalizeFirebaseError(error))
+    );
+  }, onError);
 }
 
 export async function seedInitialTasks(
@@ -426,20 +460,22 @@ export function subscribeToHabits(
   onUpdate: (habits: HabitItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return onSnapshot(
-    collection(getFirestoreDb(), 'habits'),
-    (snapshot) => {
-      onUpdate(
-        normalizeHabits(
-          snapshot.docs.map((item) => ({
-            id: item.id,
-            ...item.data(),
-          })) as HabitItem[]
-        )
-      );
-    },
-    (error) => onError?.(normalizeFirebaseError(error))
-  );
+  return lazySnapshotSubscription(({ firestore, firestoreSdk }) => {
+    return firestoreSdk.onSnapshot(
+      firestoreSdk.collection(firestore, 'habits'),
+      (snapshot: any) => {
+        onUpdate(
+          normalizeHabits(
+            snapshot.docs.map((item: any) => ({
+              id: item.id,
+              ...item.data(),
+            })) as HabitItem[]
+          )
+        );
+      },
+      (error: unknown) => onError?.(normalizeFirebaseError(error))
+    );
+  }, onError);
 }
 
 export async function addHabitToCloud(
@@ -472,34 +508,36 @@ export function subscribeToCountdownSettings(
   onUpdate: (settings: CountdownSettings | null) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  const ref = doc(
-    getFirestoreDb(),
-    'notification_settings',
-    'system_builder_countdown'
-  );
+  return lazySnapshotSubscription(({ firestore, firestoreSdk }) => {
+    const ref = firestoreSdk.doc(
+      firestore,
+      'notification_settings',
+      'system_builder_countdown'
+    );
 
-  return onSnapshot(
-    ref,
-    (snapshot) => {
-      onUpdate(
-        snapshot.exists()
-          ? ({
-              ...snapshot.data(),
-            } as CountdownSettings)
-          : null
-      );
-    },
-    (error) => onError?.(normalizeFirebaseError(error))
-  );
+    return firestoreSdk.onSnapshot(
+      ref,
+      (snapshot: any) => {
+        onUpdate(
+          snapshot.exists()
+            ? ({ ...snapshot.data() } as CountdownSettings)
+            : null
+        );
+      },
+      (error: unknown) => onError?.(normalizeFirebaseError(error))
+    );
+  }, onError);
 }
 
 export async function saveCountdownSettings(
   settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
 ): Promise<void> {
   try {
-    await setDoc(
-      doc(
-        getFirestoreDb(),
+    const { firestore, firestoreSdk } = await getFirebaseRuntime();
+
+    await firestoreSdk.setDoc(
+      firestoreSdk.doc(
+        firestore,
         'notification_settings',
         'system_builder_countdown'
       ),

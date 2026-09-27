@@ -98,6 +98,7 @@ const RECORDS_COLLECTION = 'records';
 const TASKS_COLLECTION = 'tasks';
 const HABITS_COLLECTION = 'habits';
 const HABIT_LOGS_COLLECTION = 'habitLogs';
+const DAYS_COLLECTION = 'days';
 const COUNTDOWNS_COLLECTION = 'countdowns';
 const SETTINGS_COLLECTION = 'notification_settings';
 const COUNTDOWN_SETTINGS_DOC = 'system_builder_countdown';
@@ -278,6 +279,198 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   }
 
   await batch.commit();
+}
+
+function normalizeModelDateKey(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const iso = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (iso) {
+    return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
+  }
+
+  const standardized = standardizeDate(raw);
+  const named = standardized.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
+  if (!named) return '';
+
+  const monthMap: Record<string, string> = {
+    Jan: '01',
+    Feb: '02',
+    Mar: '03',
+    Apr: '04',
+    May: '05',
+    Jun: '06',
+    Jul: '07',
+    Aug: '08',
+    Sep: '09',
+    Oct: '10',
+    Nov: '11',
+    Dec: '12',
+  };
+
+  const month = monthMap[named[2]];
+  return month ? `${named[3]}-${month}-${named[1]}` : '';
+}
+
+function storedHabitIsDue(data: Record<string, unknown>, dateKey: string): boolean {
+  if (data.isActive === false) return false;
+
+  const activeFrom =
+    normalizeModelDateKey(data.activeFrom) ||
+    normalizeModelDateKey(data.createdAt) ||
+    '1970-01-01';
+
+  if (dateKey < activeFrom) return false;
+
+  const skippedDates = new Set(
+    Array.isArray(data.skippedDates)
+      ? data.skippedDates.map((value) => String(value))
+      : []
+  );
+  const extraDates = new Set(
+    Array.isArray(data.extraDates)
+      ? data.extraDates.map((value) => String(value))
+      : []
+  );
+
+  if (extraDates.has(dateKey)) return true;
+  if (skippedDates.has(dateKey)) return false;
+
+  const repeatDays = Array.isArray(data.repeatDays)
+    ? data.repeatDays
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
+    : [];
+
+  const frequency = storedHabitFrequency(data);
+  const effectiveDays =
+    frequency === 'daily'
+      ? [0, 1, 2, 3, 4, 5, 6]
+      : frequency === 'weekdays'
+      ? [1, 2, 3, 4, 5]
+      : repeatDays;
+
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return effectiveDays.includes(weekday);
+}
+
+async function rebuildDaySummary(dateKey: string): Promise<void> {
+  if (!dateKey) return;
+
+  const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
+    getDocs(collection(db, TASKS_COLLECTION)),
+    getDocs(collection(db, HABITS_COLLECTION)),
+    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
+  ]);
+
+  let taskTotal = 0;
+  let tasksCompleted = 0;
+
+  tasksSnap.forEach((taskDoc) => {
+    const data = taskDoc.data();
+    const taskDate = normalizeModelDateKey(data.scheduledDate || data.taskKey);
+    if (taskDate !== dateKey) return;
+
+    taskTotal += 1;
+    const completed =
+      typeof data.Iscompleted === 'boolean'
+        ? data.Iscompleted
+        : Boolean(data.isCompleted);
+    if (completed) tasksCompleted += 1;
+  });
+
+  const completedHabitIds = new Set<string>();
+  logsSnap.forEach((logDoc) => {
+    const data = logDoc.data();
+    if (
+      String(data.dateKey || '') === dateKey &&
+      data.Iscompleted === true &&
+      data.habitId
+    ) {
+      completedHabitIds.add(String(data.habitId));
+    }
+  });
+
+  let habitTotal = 0;
+  let habitsCompleted = 0;
+
+  habitsSnap.forEach((habitDoc) => {
+    const data = habitDoc.data() as Record<string, unknown>;
+    if (!storedHabitIsDue(data, dateKey)) return;
+
+    habitTotal += 1;
+    const habitId = String(data.habitId || habitDoc.id);
+    const legacyCheckIns = Array.isArray(data.checkIns)
+      ? data.checkIns.map((value) => String(value))
+      : [];
+
+    if (completedHabitIds.has(habitId) || legacyCheckIns.includes(dateKey)) {
+      habitsCompleted += 1;
+    }
+  });
+
+  const taskCompletionRate =
+    taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 10000) / 100 : 0;
+  const habitCompletionRate =
+    habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 10000) / 100 : 0;
+
+  await setDoc(
+    doc(db, DAYS_COLLECTION, dateKey),
+    {
+      dateKey,
+      tasksCompleted,
+      taskTotal,
+      taskCompletionRate,
+      habitsCompleted,
+      habitTotal,
+      habitCompletionRate,
+      IsdayCompleted: taskCompletionRate === 100,
+    },
+    { merge: true }
+  );
+}
+
+async function rebuildAllDaySummaries(): Promise<void> {
+  const [daysSnap, recordsSnap, tasksSnap, habitsSnap] = await Promise.all([
+    getDocs(collection(db, DAYS_COLLECTION)),
+    getDocs(collection(db, RECORDS_COLLECTION)),
+    getDocs(collection(db, TASKS_COLLECTION)),
+    getDocs(collection(db, HABITS_COLLECTION)),
+  ]);
+
+  const dateKeys = new Set<string>();
+
+  daysSnap.forEach((dayDoc) => {
+    const key = normalizeModelDateKey(dayDoc.data().dateKey || dayDoc.id);
+    if (key) dateKeys.add(key);
+  });
+
+  recordsSnap.forEach((recordDoc) => {
+    const key = normalizeModelDateKey(recordDoc.data().date);
+    if (key) dateKeys.add(key);
+  });
+
+  tasksSnap.forEach((taskDoc) => {
+    const data = taskDoc.data();
+    const key = normalizeModelDateKey(data.scheduledDate || data.taskKey);
+    if (key) dateKeys.add(key);
+  });
+
+  habitsSnap.forEach((habitDoc) => {
+    const data = habitDoc.data();
+    if (Array.isArray(data.checkIns)) {
+      data.checkIns.forEach((value: unknown) => {
+        const key = normalizeModelDateKey(value);
+        if (key) dateKeys.add(key);
+      });
+    }
+  });
+
+  for (const dateKey of [...dateKeys].sort()) {
+    await rebuildDaySummary(dateKey);
+  }
 }
 
 export interface CountdownSettings {
@@ -689,6 +882,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
 
   const docRef = doc(db, TASKS_COLLECTION, task.id);
   await setDoc(docRef, taskStoragePayload(task));
+  await rebuildDaySummary(normalizeModelDateKey(task.taskKey));
 }
 
 /**
@@ -697,6 +891,12 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
 export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
   const existingTasks = tasksSnap.docs.map((d) => d.data());
+  const previousTask = existingTasks.find(
+    (stored) => String(stored.taskId || stored.id || '') === task.id
+  );
+  const previousDateKey = normalizeModelDateKey(
+    previousTask?.scheduledDate || previousTask?.taskKey
+  );
 
   const normKey = standardizeDate(task.taskKey) || task.taskKey;
 
@@ -715,14 +915,32 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
 
   const docRef = doc(db, TASKS_COLLECTION, task.id);
   await setDoc(docRef, taskStoragePayload(task), { merge: true });
+
+  const nextDateKey = normalizeModelDateKey(task.taskKey);
+  await rebuildDaySummary(nextDateKey);
+  if (previousDateKey && previousDateKey !== nextDateKey) {
+    await rebuildDaySummary(previousDateKey);
+  }
 }
 
 /**
  * Delete a task
  */
 export async function deleteTaskFromCloud(taskId: string): Promise<void> {
+  const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
+  const existing = snapshot.docs.find(
+    (taskDoc) => String(taskDoc.data().taskId || taskDoc.data().id || taskDoc.id) === taskId
+  );
+  const dateKey = existing
+    ? normalizeModelDateKey(existing.data().scheduledDate || existing.data().taskKey)
+    : '';
+
   const docRef = doc(db, TASKS_COLLECTION, taskId);
   await deleteDoc(docRef);
+
+  if (dateKey) {
+    await rebuildDaySummary(dateKey);
+  }
 }
 
 /**
@@ -858,6 +1076,7 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
   try {
     await setDoc(doc(db, HABITS_COLLECTION, habit.id), habitStoragePayload(habit));
     await syncHabitLogsFromHabit(habit);
+    await rebuildAllDaySummaries();
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `${HABITS_COLLECTION}/${habit.id}`);
   }
@@ -871,6 +1090,7 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
       { merge: true }
     );
     await syncHabitLogsFromHabit(habit);
+    await rebuildAllDaySummaries();
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, `${HABITS_COLLECTION}/${habit.id}`);
   }
@@ -889,6 +1109,7 @@ export async function deleteHabitFromCloud(habitId: string): Promise<void> {
 
     batch.delete(doc(db, HABITS_COLLECTION, habitId));
     await batch.commit();
+    await rebuildAllDaySummaries();
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${HABITS_COLLECTION}/${habitId}`);
   }

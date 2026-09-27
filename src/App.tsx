@@ -43,10 +43,6 @@ const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
-const FRIDAY_2026_09_25_REPAIR_KEY =
-  'SYSTEM_BUILDER_REPAIR_2026_09_25_NOT_COMPLETED_V1';
-const FRIDAY_2026_09_25_STANDARD_DATE = '25-Sep-2026';
-
 type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }
   | { kind: 'delete' };
@@ -138,8 +134,6 @@ export default function App() {
   const pendingTaskMutationsRef = useRef<Map<string, PendingTaskMutation>>(
     new Map()
   );
-  const fridayRepairInFlightRef = useRef(false);
-
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -257,66 +251,6 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
-
-  // One-time historical correction requested for Friday, 25-Sep-2026.
-  // This intentionally bypasses the normal UI lock on previous days.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (
-      window.localStorage.getItem(FRIDAY_2026_09_25_REPAIR_KEY) === 'done'
-    ) {
-      return;
-    }
-    if (fridayRepairInFlightRef.current) return;
-
-    const target = records.find(
-      (record) =>
-        standardizeDate(record.date) === FRIDAY_2026_09_25_STANDARD_DATE
-    );
-
-    if (!target) return;
-
-    fridayRepairInFlightRef.current = true;
-
-    const corrected: DailyRecord = {
-      ...target,
-      isCompleted: false,
-      result: 'FALSE',
-      change: 0,
-      responseSource: 'APP',
-      responseSubmittedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setRecords((current) =>
-      current.map((record) =>
-        record.id === corrected.id ? corrected : record
-      )
-    );
-
-    void (async () => {
-      try {
-        await updateRecordInCloud(corrected);
-        window.localStorage.setItem(FRIDAY_2026_09_25_REPAIR_KEY, 'done');
-      } catch (error) {
-        if (isNetworkOrOfflineError(error)) {
-          await queueMutation({
-            type: 'record_update',
-            payload: corrected,
-            timestamp: Date.now(),
-          });
-          window.localStorage.setItem(FRIDAY_2026_09_25_REPAIR_KEY, 'done');
-        } else {
-          console.error(
-            'Unable to persist the 25-Sep-2026 historical correction:',
-            error
-          );
-        }
-      } finally {
-        fridayRepairInFlightRef.current = false;
-      }
-    })();
-  }, [records]);
 
   // Subscribe to real-time Firestore updates for tasks
   useEffect(() => {

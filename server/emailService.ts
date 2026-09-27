@@ -195,6 +195,7 @@ export function buildDailyConfirmationEmail(
       taskDate: details.taskDate,
       recordId: details.recordId,
       taskIds: tasks.map((task) => task.id),
+      habitIds: habits.map((habit) => habit.id),
     },
     1
   );

@@ -549,7 +549,23 @@ export default function App() {
   const handleDeleteTask = async (taskId: string) => {
     const previousTask = tasks.find((task) => task.id === taskId);
     pendingTaskMutationsRef.current.set(taskId, { kind: 'delete' });
-    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+    const normalizeAfterDelete = (current: TaskItem[]) => {
+      const remaining = current.filter((task) => task.id !== taskId);
+      if (!previousTask?.taskKey) return remaining;
+
+      const sameDate = remaining
+        .filter((task) => task.taskKey === previousTask.taskKey)
+        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' }));
+      const orderById = new Map(sameDate.map((task, index) => [task.id, index + 1]));
+
+      return remaining.map((task) =>
+        task.taskKey === previousTask.taskKey
+          ? { ...task, taskOrder: orderById.get(task.id) || 1 }
+          : task
+      );
+    };
+    setTasks((prev) => normalizeAfterDelete(prev));
+    setCachedTasks(normalizeAfterDelete(tasks));
 
     try {
       setIsSyncing(true);

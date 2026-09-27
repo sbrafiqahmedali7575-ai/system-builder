@@ -4,6 +4,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { fetchAllProjectData, generateAllCsvFiles } from './server/backupService';
+import { db, collection, getDocs, doc, getDoc } from './server/db';
 
 async function startServer() {
   const app = express();
@@ -14,6 +15,90 @@ async function startServer() {
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  // Read-only live migration reconciliation. Never writes or deletes Firestore data.
+  app.get('/api/migration/verify', async (_req, res) => {
+    try {
+      const [recordsSnap, tasksSnap, habitsSnap, daysSnap, logsSnap, countdownsSnap, usersSnap] =
+        await Promise.all([
+          getDocs(collection(db, 'records')),
+          getDocs(collection(db, 'tasks')),
+          getDocs(collection(db, 'habits')),
+          getDocs(collection(db, 'days')),
+          getDocs(collection(db, 'habitLogs')),
+          getDocs(collection(db, 'countdowns')),
+          getDocs(collection(db, 'users')),
+        ]);
+
+      const issues: string[] = [];
+      const oldTaskDocs = tasksSnap.docs.filter((d) => {
+        const x = d.data();
+        return 'taskKey' in x || 'taskOfTheDay' in x || 'isCompleted' in x || 'matrixQuadrant' in x;
+      });
+      const canonicalTaskDocs = tasksSnap.docs.filter((d) => {
+        const x = d.data();
+        return Boolean(x.taskId && x.scheduledDate !== undefined && x.title !== undefined && typeof x.Iscompleted === 'boolean');
+      });
+      if (canonicalTaskDocs.length !== tasksSnap.size) {
+        issues.push(`Tasks: ${tasksSnap.size - canonicalTaskDocs.length} document(s) are not canonical.`);
+      }
+
+      let expectedHabitLogs = 0;
+      habitsSnap.forEach((d) => {
+        const x = d.data();
+        if (Array.isArray(x.checkIns)) expectedHabitLogs += new Set(x.checkIns.filter(Boolean)).size;
+        if (!(x.habitId && x.name !== undefined && Array.isArray(x.repeatDays) && x.activeFrom && typeof x.isActive === 'boolean')) {
+          issues.push(`Habits/${d.id}: canonical fields are incomplete.`);
+        }
+      });
+      const completedLogs = logsSnap.docs.filter((d) => d.data().Iscompleted === true).length;
+      if (expectedHabitLogs > 0 && completedLogs < expectedHabitLogs) {
+        issues.push(`HabitLogs: expected at least ${expectedHabitLogs} completed logs from legacy checkIns; found ${completedLogs}.`);
+      }
+
+      const recordDates = new Set(recordsSnap.docs.map((d) => String(d.data().date || '')).filter(Boolean));
+      if (recordsSnap.size > 0 && daysSnap.size === 0) issues.push('Days: no target documents found although legacy records exist.');
+
+      daysSnap.forEach((d) => {
+        const x = d.data();
+        const required = ['dateKey','tasksCompleted','taskTotal','taskCompletionRate','habitsCompleted','habitTotal','habitCompletionRate','IsdayCompleted'];
+        const missing = required.filter((k) => x[k] === undefined);
+        if (missing.length) issues.push(`Days/${d.id}: missing ${missing.join(', ')}.`);
+        if (x.IsdayCompleted !== (Number(x.taskCompletionRate) === 100)) {
+          issues.push(`Days/${d.id}: IsdayCompleted does not match taskCompletionRate.`);
+        }
+      });
+
+      if (usersSnap.size === 0) issues.push('Users: no migrated user profile found.');
+      if (countdownsSnap.size === 0) {
+        // Countdown is optional, so absence is informational rather than a failure.
+      }
+
+      const report = {
+        verifiedAt: new Date().toISOString(),
+        readOnly: true,
+        safeToDeleteLegacyData: issues.length === 0,
+        counts: {
+          legacyRecords: recordsSnap.size,
+          tasks: tasksSnap.size,
+          canonicalTasks: canonicalTaskDocs.length,
+          legacyShapedTasksStillPresent: oldTaskDocs.length,
+          habits: habitsSnap.size,
+          habitLogs: logsSnap.size,
+          completedHabitLogs: completedLogs,
+          days: daysSnap.size,
+          users: usersSnap.size,
+          countdowns: countdownsSnap.size,
+        },
+        legacyRecordDateCount: recordDates.size,
+        issues,
+      };
+      return res.json(report);
+    } catch (err: any) {
+      console.error('Migration verification failed:', err);
+      return res.status(500).json({ safeToDeleteLegacyData: false, error: err.message || String(err) });
+    }
   });
 
   // Canonical Days CSV backup/export.

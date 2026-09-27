@@ -1,0 +1,52 @@
+name: Deploy Firestore Security Rules
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - firestore.rules
+      - firebase.json
+      - firebase-applet-config.json
+      - .github/workflows/deploy-firestore-rules.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-firestore-rules-main
+  cancel-in-progress: false
+
+jobs:
+  deploy-rules:
+    name: Deploy deny-all Firestore rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Validate deployment credential
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON repository secret is required to deploy Firestore rules."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
+
+      - name: Deploy Firestore rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: |
+          set -euo pipefail
+          PROJECT_ID=$(python3 -c 'import json; print(json.load(open("firebase-applet-config.json"))["projectId"])')
+          DATABASE_ID=$(python3 -c 'import json; print(json.load(open("firebase-applet-config.json"))["firestoreDatabaseId"])')
+          npx --yes firebase-tools@latest deploy             --only "firestore:$DATABASE_ID"             --project "$PROJECT_ID"             --non-interactive
+
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"

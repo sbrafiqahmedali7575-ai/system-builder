@@ -3,6 +3,7 @@ dotenv.config({ override: true });
 import express from 'express';
 import path from 'path';
 import crypto from 'crypto';
+import deploymentConfig from './deployment-config.json';
 import { createServer as createViteServer } from 'vite';
 import {
   db,
@@ -262,7 +263,7 @@ function requireOwner(
 }
 
 const GITHUB_OIDC_ISSUER = 'https://token.actions.githubusercontent.com';
-const GITHUB_OIDC_AUDIENCE = 'systembuilder08.ai.studio';
+const GITHUB_OIDC_AUDIENCE = String(deploymentConfig.oidcAudience || '').trim();
 const GITHUB_REPOSITORY = 'sbrafiqahmedali7575-ai/system-builder';
 const GITHUB_MAIN_REF = 'refs/heads/main';
 const GITHUB_SCHEDULER_WORKFLOWS = new Set([

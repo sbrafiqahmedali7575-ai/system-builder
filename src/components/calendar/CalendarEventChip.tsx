@@ -5,6 +5,7 @@ import type { HabitItem, TaskItem } from '../../types';
 type TaskChipProps = {
   kind: 'task';
   task: TaskItem;
+  disabled?: boolean;
   onClick: () => void;
 };
 
@@ -39,11 +40,12 @@ function taskChipClass(task: TaskItem): string {
 
 export const CalendarEventChip: React.FC<CalendarEventChipProps> = (props) => {
   if (props.kind === 'task') {
-    const { task, onClick } = props;
+    const { task, disabled = false, onClick } = props;
 
     return (
       <button
         type="button"
+        disabled={disabled}
         onClick={(event) => {
           event.stopPropagation();
           onClick();

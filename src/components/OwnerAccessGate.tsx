@@ -124,10 +124,17 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
     }
   };
 
+  const revisionBadge = (
+    <div className="fixed bottom-3 left-3 z-[100] rounded bg-black/80 px-2 py-1 font-mono text-[10px] text-white shadow-lg">
+      Rev: 9e47fbd
+    </div>
+  );
+
   if (state === 'authorized') {
     return (
       <>
         {children}
+        {revisionBadge}
 
         {syncConflictNotice && (
           <div className="fixed bottom-16 right-3 z-[90] max-w-sm rounded-xl border border-amber-500/40 bg-slate-950/95 p-3 text-xs text-amber-100 shadow-2xl backdrop-blur">
@@ -166,6 +173,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
+      {revisionBadge}
       <section className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 shrink-0 rounded-xl border border-teal-500/30 bg-teal-500/10 flex items-center justify-center">

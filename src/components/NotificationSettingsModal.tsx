@@ -71,8 +71,8 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
 
   const [settings, setSettings] = useState<SettingsState>({
     enabled: true,
-    recipientEmail: 'sbrafiqahmedali7575@gmail.com',
-    recipientName: 'Rafiq Ahmed',
+    recipientEmail: '',
+    recipientName: '',
     scheduledTime: '21:00',
     timezone: 'Asia/Kolkata',
   });

@@ -38,10 +38,6 @@ import {
   isNetworkOrOfflineError,
 } from './services/offlineStorage';
 
-const STORAGE_KEY = 'SYSTEM_BUILDER_RECORDS_CACHE_V3';
-const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
-const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
-const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
 type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }
   | { kind: 'delete' };
@@ -62,56 +58,11 @@ function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
 }
 
 export default function App() {
-  // Initialize records from localStorage cache or initial template data
-  const [records, setRecords] = useState<DailyRecord[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        } catch (e) {
-          console.error('Failed to parse cached records', e);
-        }
-      }
-    }
-    return INITIAL_RECORDS;
-  });
-
-  // Initialize tasks from localStorage cache
-  const [tasks, setTasks] = useState<TaskItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTasks = localStorage.getItem(TASKS_STORAGE_KEY) || localStorage.getItem(TASKS_LEGACY_STORAGE_KEY);
-      if (savedTasks) {
-        try {
-          const parsed = JSON.parse(savedTasks);
-          if (Array.isArray(parsed)) {
-            return parsed;
-          }
-        } catch (e) {
-          console.error('Failed to parse cached tasks', e);
-        }
-      }
-    }
-    return [];
-  });
-
-  const [habits, setHabits] = useState<HabitItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedHabits = localStorage.getItem(HABITS_STORAGE_KEY);
-      if (savedHabits) {
-        try {
-          const parsed = JSON.parse(savedHabits);
-          if (Array.isArray(parsed)) return parsed;
-        } catch (e) {
-          console.error('Failed to parse cached habits', e);
-        }
-      }
-    }
-    return [];
-  });
+  // Start from non-sensitive defaults; owner data hydrates from IndexedDB
+  // and the authenticated server API after the owner gate unlocks the SPA.
+  const [records, setRecords] = useState<DailyRecord[]>(INITIAL_RECORDS);
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [habits, setHabits] = useState<HabitItem[]>([]);
 
   const pendingTaskMutationsRef = useRef<Map<string, PendingTaskMutation>>(
     new Map()

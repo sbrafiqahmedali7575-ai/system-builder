@@ -119,6 +119,20 @@ if (!serverSource.includes('verifyPrivilegedFirestoreAccess')) {
   failures.push('Server startup must verify privileged IAM Firestore access.');
 }
 
+if (/name=["']token["']/.test(serverSource)) {
+  failures.push('Signed capability tokens must not be rendered into hidden form fields.');
+}
+
+const tokenPropagationSource = [
+  serverSource,
+  read('server/emailService.ts'),
+  read('server/scheduler.ts'),
+].join('\n');
+
+if (/previewLinks\s*:/.test(tokenPropagationSource)) {
+  failures.push('Signed capability links must not be returned through API or scheduler result objects.');
+}
+
 for (const route of [
   '/api/data/records',
   '/api/data/tasks',

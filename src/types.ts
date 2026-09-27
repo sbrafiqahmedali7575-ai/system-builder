@@ -29,6 +29,8 @@ export interface HabitItem {
   checkIns: string[]; // YYYY-MM-DD date keys
   createdAt: string;
   updatedAt?: string;
+  activeFrom?: string; // YYYY-MM-DD canonical habit start date
+  isActive?: boolean; // Canonical active flag in the single-user model
 }
 
 export interface TaskItem {
@@ -43,6 +45,7 @@ export interface TaskItem {
   updatedAt?: string;
   completedAt?: string;
   matrixQuadrant?: MatrixQuadrant;
+  sortOrder?: number; // Canonical order inside a quadrant
 }
 
 export type ToolsDensity = 'compact' | 'comfortable';

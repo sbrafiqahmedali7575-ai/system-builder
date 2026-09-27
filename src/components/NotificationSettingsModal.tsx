@@ -13,12 +13,21 @@ import {
   RefreshCw,
   Info,
 } from 'lucide-react';
-import { DashboardTheme } from '../types';
+import { DashboardTheme, HabitItem, TaskItem } from '../types';
+import {
+  CONFIGURED_TIMEZONE,
+  areDatesEqual,
+  formatCalendarDate,
+  getIsoDateKeyInTimezone,
+} from '../utils/taskDateUtils';
+import { isHabitDue } from '../utils/habitUtils';
 
 interface NotificationSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   theme: DashboardTheme;
+  tasks: TaskItem[];
+  habits: HabitItem[];
 }
 
 interface SettingsState {
@@ -60,6 +69,8 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
   isOpen,
   onClose,
   theme,
+  tasks,
+  habits,
 }) => {
   const [activeTab, setActiveTab] = useState<'settings' | 'logs'>('settings');
   const [loading, setLoading] = useState<boolean>(true);
@@ -152,10 +163,34 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
     try {
       setTesting(true);
       setTestResult(null);
+
+      const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+      const todayTasks = tasks.filter((task) =>
+        areDatesEqual(task.taskKey, todayDateKey)
+      );
+      const todayHabits = habits.filter((habit) =>
+        isHabitDue(habit, todayDateKey)
+      );
+
       const res = await fetch('/api/notifications/send-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskDate: formatCalendarDate(todayDateKey),
+          tasks: todayTasks.map((task) => ({
+            id: task.id,
+            title: task.taskOfTheDay,
+            isCompleted: task.isCompleted,
+          })),
+          habits: todayHabits.map((habit) => ({
+            id: habit.id,
+            name: habit.name,
+            emoji: habit.emoji,
+            isCheckedIn: habit.checkIns.includes(todayDateKey),
+          })),
+        }),
       });
+
       const data = await res.json();
       setTestResult(data);
       fetchLogs();

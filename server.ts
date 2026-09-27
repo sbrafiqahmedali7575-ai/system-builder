@@ -13,6 +13,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  runTransaction,
   verifyPrivilegedFirestoreAccess,
 } from './server/db';
 import { verifyConfirmationToken } from './server/tokenService';
@@ -41,6 +42,7 @@ const OWNER_SESSION_COOKIE = 'system_builder_owner';
 const OWNER_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const OWNER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const OWNER_LOGIN_MAX_FAILURES = 5;
+const OWNER_LOGIN_ATTEMPTS_COLLECTION = 'owner_login_attempts';
 
 type OwnerLoginAttempt = {
   failures: number;
@@ -167,6 +169,73 @@ function isOwnerAuthenticated(req: express.Request): boolean {
 
 function ownerAttemptKey(req: express.Request): string {
   return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+function ownerAttemptDocumentId(req: express.Request): string {
+  return crypto
+    .createHash('sha256')
+    .update(ownerAttemptKey(req))
+    .digest('hex')
+    .slice(0, 48);
+}
+
+async function isDistributedOwnerLoginBlocked(
+  req: express.Request
+): Promise<boolean> {
+  const snapshot = await getDoc(
+    doc(db, OWNER_LOGIN_ATTEMPTS_COLLECTION, ownerAttemptDocumentId(req))
+  );
+  if (!snapshot.exists()) return false;
+
+  const data = snapshot.data();
+  const failures = Number(data.failures || 0);
+  const resetAt = Number(data.resetAt || 0);
+  return failures >= OWNER_LOGIN_MAX_FAILURES && resetAt > Date.now();
+}
+
+async function recordDistributedOwnerLoginFailure(
+  req: express.Request
+): Promise<void> {
+  const ref = doc(
+    db,
+    OWNER_LOGIN_ATTEMPTS_COLLECTION,
+    ownerAttemptDocumentId(req)
+  );
+  const now = Date.now();
+
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    const current = snapshot.exists() ? snapshot.data() : {};
+    const activeWindow = Number(current.resetAt || 0) > now;
+    const failures = activeWindow ? Number(current.failures || 0) + 1 : 1;
+    const resetAt = activeWindow
+      ? Number(current.resetAt)
+      : now + OWNER_LOGIN_WINDOW_MS;
+
+    transaction.set(
+      ref,
+      {
+        failures,
+        resetAt,
+        updatedAt: new Date(now).toISOString(),
+      },
+      { merge: true }
+    );
+  });
+}
+
+async function clearDistributedOwnerLoginFailures(
+  req: express.Request
+): Promise<void> {
+  await setDoc(
+    doc(db, OWNER_LOGIN_ATTEMPTS_COLLECTION, ownerAttemptDocumentId(req)),
+    {
+      failures: 0,
+      resetAt: 0,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
 }
 
 function requireOwner(
@@ -625,7 +694,7 @@ async function startServer() {
     });
   });
 
-  app.post('/api/owner/login', (req, res) => {
+  app.post('/api/owner/login', async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
 
     if (!ownerAuthConfigured()) {
@@ -640,10 +709,32 @@ async function startServer() {
     const now = Date.now();
     const currentAttempt = ownerLoginAttempts.get(key);
 
-    if (currentAttempt && currentAttempt.resetAt > now && currentAttempt.failures >= OWNER_LOGIN_MAX_FAILURES) {
+    if (
+      currentAttempt &&
+      currentAttempt.resetAt > now &&
+      currentAttempt.failures >= OWNER_LOGIN_MAX_FAILURES
+    ) {
       return res.status(429).json({
         success: false,
         error: 'Too many failed owner login attempts. Try again later.',
+      });
+    }
+
+    try {
+      if (await isDistributedOwnerLoginBlocked(req)) {
+        return res.status(429).json({
+          success: false,
+          error: 'Too many failed owner login attempts. Try again later.',
+        });
+      }
+    } catch (error) {
+      console.error(
+        'Owner login rate-limit store unavailable:',
+        sanitizeError(error)
+      );
+      return res.status(503).json({
+        success: false,
+        error: 'Owner authentication is temporarily unavailable.',
       });
     }
 
@@ -656,6 +747,19 @@ async function startServer() {
       active.failures += 1;
       ownerLoginAttempts.set(key, active);
 
+      try {
+        await recordDistributedOwnerLoginFailure(req);
+      } catch (error) {
+        console.error(
+          'Unable to persist owner login failure:',
+          sanitizeError(error)
+        );
+        return res.status(503).json({
+          success: false,
+          error: 'Owner authentication is temporarily unavailable.',
+        });
+      }
+
       return res.status(401).json({
         success: false,
         error: 'Invalid owner access token.',
@@ -663,6 +767,18 @@ async function startServer() {
     }
 
     ownerLoginAttempts.delete(key);
+    try {
+      await clearDistributedOwnerLoginFailures(req);
+    } catch (error) {
+      console.error(
+        'Unable to clear owner login rate-limit state:',
+        sanitizeError(error)
+      );
+      return res.status(503).json({
+        success: false,
+        error: 'Owner authentication is temporarily unavailable.',
+      });
+    }
 
     const session = createOwnerSession();
     const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';

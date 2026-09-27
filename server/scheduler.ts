@@ -277,7 +277,12 @@ export async function finalizeDayIfNoResponse(targetDate = new Date()): Promise<
     records.push(record);
     highestDay = Math.max(highestDay, Number(record.day) || 0);
 
-    if (normalizeSchedulerDateKey(record.date || '') === targetKey) {
+    const recDate = String(record.date || '');
+    if (
+      normalizeSchedulerDateKey(recDate) === targetKey ||
+      recDate.toLowerCase() === formattedDate.toLowerCase() ||
+      record.id === `record-${dateKey}`
+    ) {
       matchedRecord = record;
     }
   });
@@ -308,9 +313,10 @@ export async function finalizeDayIfNoResponse(targetDate = new Date()): Promise<
   });
 
   const recordId = matchedRecord?.id || `record-${dateKey}`;
+  const nextSafeDay = highestDay > 0 ? highestDay + 1 : 1;
   const payload = {
     id: recordId,
-    day: matchedRecord?.day || highestDay + 1,
+    day: matchedRecord?.day || nextSafeDay,
     date: matchedRecord?.date || formattedDate,
     isCompleted: false,
     result: 'FALSE',

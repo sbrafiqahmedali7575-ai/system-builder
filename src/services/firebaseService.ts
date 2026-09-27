@@ -1,6 +1,17 @@
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  runTransaction,
+  setDoc,
+} from 'firebase/firestore';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
+import { firestoreDb } from './firebaseClient';
 
 export type Unsubscribe = () => void;
 
@@ -9,8 +20,6 @@ export interface CountdownSettings {
   reason: string;
   updatedAt?: string;
 }
-
-const POLL_INTERVAL_MS = 15_000;
 
 export class ApiRequestError extends Error {
   status?: number;
@@ -22,143 +31,164 @@ export class ApiRequestError extends Error {
   }
 }
 
-function mutationHeaders(clientMutationAt?: number): Record<string, string> {
-  if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
-    return {};
-  }
-
-  return {
-    'X-System-Builder-Mutation-At': String(Math.floor(Number(clientMutationAt))),
-  };
-}
-
-function notifyOwnerAuthRequired(): void {
+function notifyFirebaseAuthRequired(): void {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
-      new CustomEvent('system-builder-owner-auth-required')
+      new CustomEvent('system-builder-firebase-auth-required')
     );
   }
 }
 
-async function apiRequest<T>(
-  url: string,
-  init: RequestInit = {}
-): Promise<T> {
-  let response: Response;
+function firebaseErrorCode(error: unknown): string {
+  if (error && typeof error === 'object' && 'code' in error) {
+    return String((error as { code?: unknown }).code || '');
+  }
+  return '';
+}
+
+function normalizeFirebaseError(error: unknown): ApiRequestError {
+  if (error instanceof ApiRequestError) return error;
+
+  const code = firebaseErrorCode(error);
+  const message =
+    error instanceof Error ? error.message : String(error || 'Firebase request failed.');
+
+  if (
+    code.includes('permission-denied') ||
+    code.includes('unauthenticated')
+  ) {
+    notifyFirebaseAuthRequired();
+    return new ApiRequestError(
+      'Firebase owner authentication is required for this data.',
+      403
+    );
+  }
+
+  if (code.includes('resource-exhausted')) {
+    return new ApiRequestError(message, 429);
+  }
+
+  if (
+    code.includes('unavailable') ||
+    code.includes('deadline-exceeded') ||
+    code.includes('internal') ||
+    code.includes('network')
+  ) {
+    return new ApiRequestError(message, 503);
+  }
+
+  if (
+    code.includes('already-exists') ||
+    code.includes('failed-precondition') ||
+    code.includes('aborted')
+  ) {
+    return new ApiRequestError(message, 409);
+  }
+
+  return new ApiRequestError(message);
+}
+
+function cleanForFirestore<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function serverTimestampIso(): string {
+  return new Date().toISOString();
+}
+
+async function writeWithConflictCheck(
+  collectionName: string,
+  id: string,
+  value: Record<string, unknown>,
+  clientMutationAt?: number
+): Promise<void> {
+  const ref = doc(firestoreDb, collectionName, id);
+  const payload = cleanForFirestore({
+    ...value,
+    updatedAt: serverTimestampIso(),
+  });
 
   try {
-    response = await fetch(url, {
-      ...init,
-      credentials: 'same-origin',
-      headers: {
-        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-        ...(init.headers || {}),
-      },
+    if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
+      await setDoc(ref, payload, { merge: true });
+      return;
+    }
+
+    await runTransaction(firestoreDb, async (transaction) => {
+      const snapshot = await transaction.get(ref);
+
+      if (snapshot.exists()) {
+        const serverUpdatedAt = Date.parse(
+          String(snapshot.data().updatedAt || '')
+        );
+
+        if (
+          Number.isFinite(serverUpdatedAt) &&
+          serverUpdatedAt > Number(clientMutationAt)
+        ) {
+          throw new ApiRequestError(
+            'A newer cloud change exists. The stale offline mutation was not applied.',
+            409
+          );
+        }
+      }
+
+      transaction.set(ref, payload, { merge: true });
     });
   } catch (error) {
-    throw new ApiRequestError(
-      error instanceof Error
-        ? `Network request failed: ${error.message}`
-        : 'Network request failed.'
-    );
+    throw normalizeFirebaseError(error);
   }
-
-  let body: any = null;
-  const text = await response.text();
-  if (text) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      body = { error: text };
-    }
-  }
-
-  if (response.status === 401) {
-    notifyOwnerAuthRequired();
-    throw new ApiRequestError('Owner authentication required.', 401);
-  }
-
-  if (!response.ok) {
-    throw new ApiRequestError(
-      body?.error ||
-        `Server data request failed with status ${response.status}.`,
-      response.status
-    );
-  }
-
-  return body as T;
 }
 
-function subscribeWithPolling<T>(
-  load: () => Promise<T>,
-  onUpdate: (value: T) => void,
-  onError?: (error: Error) => void
-): Unsubscribe {
-  let active = true;
-  let inFlight = false;
+async function deleteWithConflictCheck(
+  collectionName: string,
+  id: string,
+  clientMutationAt?: number
+): Promise<void> {
+  const ref = doc(firestoreDb, collectionName, id);
 
-  const run = async () => {
-    if (!active || inFlight) return;
-    inFlight = true;
+  try {
+    if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
+      await deleteDoc(ref);
+      return;
+    }
 
-    try {
-      const value = await load();
-      if (active) onUpdate(value);
-    } catch (error) {
-      if (active && onError) {
-        onError(
-          error instanceof Error ? error : new Error(String(error))
+    await runTransaction(firestoreDb, async (transaction) => {
+      const snapshot = await transaction.get(ref);
+      if (!snapshot.exists()) return;
+
+      const serverUpdatedAt = Date.parse(
+        String(snapshot.data().updatedAt || '')
+      );
+
+      if (
+        Number.isFinite(serverUpdatedAt) &&
+        serverUpdatedAt > Number(clientMutationAt)
+      ) {
+        throw new ApiRequestError(
+          'A newer cloud change exists. The stale offline delete was not applied.',
+          409
         );
       }
-    } finally {
-      inFlight = false;
-    }
-  };
 
-  void run();
-
-  const intervalId =
-    typeof window !== 'undefined'
-      ? window.setInterval(run, POLL_INTERVAL_MS)
-      : undefined;
-
-  const handleRefresh = () => void run();
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('focus', handleRefresh);
-    window.addEventListener('online', handleRefresh);
+      transaction.delete(ref);
+    });
+  } catch (error) {
+    throw normalizeFirebaseError(error);
   }
-
-  return () => {
-    active = false;
-
-    if (typeof window !== 'undefined') {
-      if (intervalId !== undefined) {
-        window.clearInterval(intervalId);
-      }
-      window.removeEventListener('focus', handleRefresh);
-      window.removeEventListener('online', handleRefresh);
-    }
-  };
 }
 
-async function loadRecords(): Promise<DailyRecord[]> {
-  const response = await apiRequest<{ records?: DailyRecord[] }>(
-    '/api/data/records'
-  );
-
-  const fetched = Array.isArray(response.records)
-    ? response.records.map((record) => {
-        const rawDate = String(record.date || '');
-        return {
-          ...record,
-          date: standardizeDate(rawDate) || rawDate,
-          result: record.isCompleted ? 'TRUE' : 'FALSE',
-          day: Number(record.day || 0),
-          change: Number(record.change || 0),
-        } as DailyRecord;
-      })
-    : [];
+function normalizeRecords(records: DailyRecord[]): DailyRecord[] {
+  const fetched = records.map((record) => {
+    const rawDate = String(record.date || '');
+    return {
+      ...record,
+      date: standardizeDate(rawDate) || rawDate,
+      result: record.isCompleted ? 'TRUE' : 'FALSE',
+      day: Number(record.day || 0),
+      change: Number(record.change || 0),
+    } as DailyRecord;
+  });
 
   fetched.sort((a, b) => a.day - b.day);
 
@@ -174,26 +204,47 @@ async function loadRecords(): Promise<DailyRecord[]> {
   });
 }
 
+async function loadRecords(): Promise<DailyRecord[]> {
+  try {
+    const snapshot = await getDocs(collection(firestoreDb, 'records'));
+    return normalizeRecords(
+      snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      })) as DailyRecord[]
+    );
+  } catch (error) {
+    throw normalizeFirebaseError(error);
+  }
+}
+
 export function subscribeToRecords(
   onUpdate: (records: DailyRecord[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
   let seeded = false;
 
-  return subscribeWithPolling(
-    async () => {
-      const records = await loadRecords();
+  return onSnapshot(
+    collection(firestoreDb, 'records'),
+    (snapshot) => {
+      const records = normalizeRecords(
+        snapshot.docs.map((item) => ({
+          id: item.id,
+          ...item.data(),
+        })) as DailyRecord[]
+      );
 
       if (records.length === 0 && !seeded) {
         seeded = true;
-        await seedInitialData(INITIAL_RECORDS);
-        return loadRecords();
+        void seedInitialData(INITIAL_RECORDS).catch((error) => {
+          onError?.(normalizeFirebaseError(error));
+        });
+        return;
       }
 
-      return records;
+      onUpdate(records);
     },
-    onUpdate,
-    onError
+    (error) => onError?.(normalizeFirebaseError(error))
   );
 }
 
@@ -209,13 +260,11 @@ export async function addRecordToCloud(
   record: DailyRecord,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/records/${encodeURIComponent(record.id)}`,
-    {
-      method: 'PUT',
-      headers: mutationHeaders(clientMutationAt),
-      body: JSON.stringify(record),
-    }
+  await writeWithConflictCheck(
+    'records',
+    record.id,
+    record as unknown as Record<string, unknown>,
+    clientMutationAt
   );
 }
 
@@ -223,27 +272,14 @@ export async function updateRecordInCloud(
   record: DailyRecord,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/records/${encodeURIComponent(record.id)}`,
-    {
-      method: 'PUT',
-      headers: mutationHeaders(clientMutationAt),
-      body: JSON.stringify(record),
-    }
-  );
+  await addRecordToCloud(record, clientMutationAt);
 }
 
 export async function deleteRecordFromCloud(
   recordId: string,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/records/${encodeURIComponent(recordId)}`,
-    {
-      method: 'DELETE',
-      headers: mutationHeaders(clientMutationAt),
-    }
-  );
+  await deleteWithConflictCheck('records', recordId, clientMutationAt);
 }
 
 export async function bulkAddRecordsToCloud(
@@ -258,43 +294,62 @@ export async function resetRecordsInCloud(
   initialRecords: DailyRecord[]
 ): Promise<void> {
   const existing = await loadRecords();
-
   for (const record of existing) {
     await deleteRecordFromCloud(record.id);
   }
-
   await seedInitialData(initialRecords);
 }
 
-async function loadTasks(): Promise<TaskItem[]> {
-  const response = await apiRequest<{ tasks?: TaskItem[] }>(
-    '/api/data/tasks'
-  );
+function normalizeTasks(tasks: TaskItem[]): TaskItem[] {
+  const normalized = tasks.map((task) => ({
+    ...task,
+    priority: task.priority || 'Normal',
+    timeEstimate: task.timeEstimate || '',
+    category: task.category || '',
+    notes: task.notes || '',
+    completedAt: task.completedAt || undefined,
+    matrixQuadrant: task.matrixQuadrant || undefined,
+  }));
 
-  const tasks = Array.isArray(response.tasks)
-    ? response.tasks.map((task) => ({
-        ...task,
-        priority: task.priority || 'Normal',
-        timeEstimate: task.timeEstimate || '',
-        category: task.category || '',
-        notes: task.notes || '',
-        completedAt: task.completedAt || undefined,
-        matrixQuadrant: task.matrixQuadrant || undefined,
-      }))
-    : [];
-
-  tasks.sort((a, b) =>
+  normalized.sort((a, b) =>
     String(b.taskKey || '').localeCompare(String(a.taskKey || ''))
   );
 
-  return tasks;
+  return normalized;
+}
+
+async function loadTasks(): Promise<TaskItem[]> {
+  try {
+    const snapshot = await getDocs(collection(firestoreDb, 'tasks'));
+    return normalizeTasks(
+      snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      })) as TaskItem[]
+    );
+  } catch (error) {
+    throw normalizeFirebaseError(error);
+  }
 }
 
 export function subscribeToTasks(
   onUpdate: (tasks: TaskItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return subscribeWithPolling(loadTasks, onUpdate, onError);
+  return onSnapshot(
+    collection(firestoreDb, 'tasks'),
+    (snapshot) => {
+      onUpdate(
+        normalizeTasks(
+          snapshot.docs.map((item) => ({
+            id: item.id,
+            ...item.data(),
+          })) as TaskItem[]
+        )
+      );
+    },
+    (error) => onError?.(normalizeFirebaseError(error))
+  );
 }
 
 export async function seedInitialTasks(
@@ -309,13 +364,11 @@ export async function addTaskToCloud(
   task: TaskItem,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/tasks/${encodeURIComponent(task.id)}`,
-    {
-      method: 'PUT',
-      headers: mutationHeaders(clientMutationAt),
-      body: JSON.stringify(task),
-    }
+  await writeWithConflictCheck(
+    'tasks',
+    task.id,
+    task as unknown as Record<string, unknown>,
+    clientMutationAt
   );
 }
 
@@ -323,97 +376,81 @@ export async function updateTaskInCloud(
   task: TaskItem,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/tasks/${encodeURIComponent(task.id)}`,
-    {
-      method: 'PUT',
-      headers: mutationHeaders(clientMutationAt),
-      body: JSON.stringify(task),
-    }
-  );
+  await addTaskToCloud(task, clientMutationAt);
 }
 
 export async function deleteTaskFromCloud(
   taskId: string,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/tasks/${encodeURIComponent(taskId)}`,
-    {
-      method: 'DELETE',
-      headers: mutationHeaders(clientMutationAt),
-    }
-  );
+  await deleteWithConflictCheck('tasks', taskId, clientMutationAt);
 }
 
 export async function resetTasksInCloud(
   initialTasks: TaskItem[]
 ): Promise<void> {
   const existing = await loadTasks();
-
   for (const task of existing) {
     await deleteTaskFromCloud(task.id);
   }
-
   await seedInitialTasks(initialTasks);
 }
 
-async function loadHabits(): Promise<HabitItem[]> {
-  const response = await apiRequest<{ habits?: HabitItem[] }>(
-    '/api/data/habits'
-  );
+function normalizeHabits(habits: HabitItem[]): HabitItem[] {
+  const normalized = habits.map((habit) => ({
+    ...habit,
+    emoji: habit.emoji || '✓',
+    frequency: (
+      habit.frequency === 'custom'
+        ? 'custom'
+        : habit.frequency === 'weekdays'
+        ? 'weekdays'
+        : 'daily'
+    ) as HabitItem['frequency'],
+    repeatDays: Array.isArray(habit.repeatDays) ? habit.repeatDays : [],
+    skippedDates: Array.isArray(habit.skippedDates)
+      ? habit.skippedDates
+      : [],
+    extraDates: Array.isArray(habit.extraDates) ? habit.extraDates : [],
+    checkIns: Array.isArray(habit.checkIns) ? habit.checkIns : [],
+  }));
 
-  const habits = Array.isArray(response.habits)
-    ? response.habits.map((habit) => ({
-        ...habit,
-        emoji: habit.emoji || '✓',
-        frequency: (
-          habit.frequency === 'custom'
-            ? 'custom'
-            : habit.frequency === 'weekdays'
-            ? 'weekdays'
-            : 'daily'
-        ) as HabitItem['frequency'],
-        repeatDays: Array.isArray(habit.repeatDays)
-          ? habit.repeatDays
-          : [],
-        skippedDates: Array.isArray(habit.skippedDates)
-          ? habit.skippedDates
-          : [],
-        extraDates: Array.isArray(habit.extraDates)
-          ? habit.extraDates
-          : [],
-        checkIns: Array.isArray(habit.checkIns)
-          ? habit.checkIns
-          : [],
-      }))
-    : [];
-
-  habits.sort((a, b) =>
+  normalized.sort((a, b) =>
     String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
   );
 
-  return habits;
+  return normalized;
 }
 
 export function subscribeToHabits(
   onUpdate: (habits: HabitItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return subscribeWithPolling(loadHabits, onUpdate, onError);
+  return onSnapshot(
+    collection(firestoreDb, 'habits'),
+    (snapshot) => {
+      onUpdate(
+        normalizeHabits(
+          snapshot.docs.map((item) => ({
+            id: item.id,
+            ...item.data(),
+          })) as HabitItem[]
+        )
+      );
+    },
+    (error) => onError?.(normalizeFirebaseError(error))
+  );
 }
 
 export async function addHabitToCloud(
   habit: HabitItem,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/habits/${encodeURIComponent(habit.id)}`,
-    {
-      method: 'PUT',
-      headers: mutationHeaders(clientMutationAt),
-      body: JSON.stringify(habit),
-    }
+  await writeWithConflictCheck(
+    'habits',
+    habit.id,
+    habit as unknown as Record<string, unknown>,
+    clientMutationAt
   );
 }
 
@@ -421,52 +458,60 @@ export async function updateHabitInCloud(
   habit: HabitItem,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/habits/${encodeURIComponent(habit.id)}`,
-    {
-      method: 'PUT',
-      headers: mutationHeaders(clientMutationAt),
-      body: JSON.stringify(habit),
-    }
-  );
+  await addHabitToCloud(habit, clientMutationAt);
 }
 
 export async function deleteHabitFromCloud(
   habitId: string,
   clientMutationAt?: number
 ): Promise<void> {
-  await apiRequest(
-    `/api/data/habits/${encodeURIComponent(habitId)}`,
-    {
-      method: 'DELETE',
-      headers: mutationHeaders(clientMutationAt),
-    }
-  );
+  await deleteWithConflictCheck('habits', habitId, clientMutationAt);
 }
 
 export function subscribeToCountdownSettings(
   onUpdate: (settings: CountdownSettings | null) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return subscribeWithPolling(
-    async () => {
-      const response = await apiRequest<{
-        settings?: CountdownSettings | null;
-      }>('/api/data/countdown');
-      return response.settings || null;
+  const ref = doc(
+    firestoreDb,
+    'notification_settings',
+    'system_builder_countdown'
+  );
+
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      onUpdate(
+        snapshot.exists()
+          ? ({
+              ...snapshot.data(),
+            } as CountdownSettings)
+          : null
+      );
     },
-    onUpdate,
-    onError
+    (error) => onError?.(normalizeFirebaseError(error))
   );
 }
 
 export async function saveCountdownSettings(
   settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
 ): Promise<void> {
-  await apiRequest('/api/data/countdown', {
-    method: 'PUT',
-    body: JSON.stringify(settings),
-  });
+  try {
+    await setDoc(
+      doc(
+        firestoreDb,
+        'notification_settings',
+        'system_builder_countdown'
+      ),
+      {
+        ...cleanForFirestore(settings),
+        updatedAt: serverTimestampIso(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    throw normalizeFirebaseError(error);
+  }
 }
 
 export async function syncAllDataInCloud(

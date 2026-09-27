@@ -46,6 +46,7 @@ export function sanitizeError(rawMessage: any): string {
   const secrets = [
     process.env.SMTP_PASS,
     process.env.CONFIRMATION_SECRET,
+    process.env.OWNER_ACCESS_TOKEN,
     process.env.SCHEDULER_SECRET,
     process.env.GEMINI_API_KEY,
   ].filter((s): s is string => Boolean(s && s.trim().length > 0));

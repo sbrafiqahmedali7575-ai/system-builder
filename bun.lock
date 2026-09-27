@@ -11,7 +11,6 @@
         "canvas-confetti": "^1.9.4",
         "dotenv": "^17.2.3",
         "express": "^4.21.2",
-        "firebase": "^12.17.1",
         "framer-motion": "^13.4.2",
         "google-auth-library": "^10.9.1",
         "jszip": "^3.10.1",

@@ -88,25 +88,10 @@ const databaseRoot =
   `https://firestore.googleapis.com/v1/projects/${encodedProjectId}/databases/${encodedDatabaseId}`;
 const documentsRoot = `${databaseRoot}/documents`;
 
-function loadExplicitCredentials(): PlainObject | undefined {
-  const raw = String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '').trim();
-  if (!raw) return undefined;
-
-  try {
-    return JSON.parse(raw) as PlainObject;
-  } catch {
-    throw new Error(
-      'FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON. Refusing to initialize privileged Firestore access.'
-    );
-  }
-}
-
-const explicitCredentials = loadExplicitCredentials();
-
 const googleAuth = new GoogleAuth({
-  ...(explicitCredentials
-    ? { credentials: explicitCredentials }
-    : {}),
+  // AI Studio/Google-hosted deployments provide Application Default
+  // Credentials automatically. Keeping runtime service-account JSON out of
+  // the app avoids unnecessary long-lived private keys and secret prompts.
   scopes: [
     'https://www.googleapis.com/auth/datastore',
     'https://www.googleapis.com/auth/cloud-platform',

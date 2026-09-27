@@ -209,35 +209,45 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     setDraft({ title: '', dateKey: today, quadrant: '' });
   };
 
+  const savingTaskRef = useRef(false);
+  const [isSavingTask, setIsSavingTask] = useState(false);
   const saveTask = async () => {
+    if (savingTaskRef.current) return;
     const title = draft.title.trim();
     if (!title || !draft.dateKey || !draft.quadrant) return;
 
-    if (editingTaskId) {
-      const existing = tasks.find((task) => task.id === editingTaskId);
-      if (!existing) return;
+    savingTaskRef.current = true;
+    setIsSavingTask(true);
+    try {
+      if (editingTaskId) {
+        const existing = tasks.find((task) => task.id === editingTaskId);
+        if (!existing) return;
 
-      await onUpdateTask({
-        ...existing,
-        taskOfTheDay: title,
-        taskKey: draft.dateKey,
-        matrixQuadrant: draft.quadrant,
-        priority: priorityForQuadrant(draft.quadrant),
-        updatedAt: new Date().toISOString(),
-      });
-    } else {
-      await onAddTask({
-        taskKey: draft.dateKey,
-        taskOfTheDay: title,
-        isCompleted: false,
-        priority: priorityForQuadrant(draft.quadrant),
-        category: 'General',
-        matrixQuadrant: draft.quadrant,
-        updatedAt: new Date().toISOString(),
-      });
+        await onUpdateTask({
+          ...existing,
+          taskOfTheDay: title,
+          taskKey: draft.dateKey,
+          matrixQuadrant: draft.quadrant,
+          priority: priorityForQuadrant(draft.quadrant),
+          updatedAt: new Date().toISOString(),
+        });
+      } else {
+        await onAddTask({
+          taskKey: draft.dateKey,
+          taskOfTheDay: title,
+          isCompleted: false,
+          priority: priorityForQuadrant(draft.quadrant),
+          category: 'General',
+          matrixQuadrant: draft.quadrant,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      closeForm();
+    } finally {
+      savingTaskRef.current = false;
+      setIsSavingTask(false);
     }
-
-    closeForm();
   };
 
   const toggleTask = async (task: TaskItem) => {
@@ -450,10 +460,10 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
             <button
               type="button"
               onClick={() => void saveTask()}
-              disabled={!draft.title.trim() || !draft.dateKey || !draft.quadrant}
+              disabled={isSavingTask || !draft.title.trim() || !draft.dateKey || !draft.quadrant}
               className="h-10 rounded-xl bg-blue-600 text-white px-4 font-black text-sm disabled:opacity-40"
             >
-              {editingTaskId ? 'Update' : 'Save'}
+              {isSavingTask ? 'Saving…' : editingTaskId ? 'Update' : 'Save'}
             </button>
           </div>
         </div>

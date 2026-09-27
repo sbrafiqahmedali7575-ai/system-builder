@@ -107,10 +107,15 @@ const ownerGateSource = read('src/components/OwnerAccessGate.tsx');
 if (!firebaseClientSource.includes('GoogleAuthProvider')) {
   failures.push('Firebase owner authentication must use Google Sign-In.');
 }
+if (!firebaseClientSource.includes('getFirebaseRuntime')) {
+  failures.push('Firebase runtime must initialize lazily so preview rendering cannot be blocked at module load.');
+}
 if (!firebaseClientSource.includes("'notification_settings', 'daily-settings'")) {
   failures.push('Firebase owner verification must read the owner settings document.');
 }
-if (!firebaseServiceSource.includes("collection(firestoreDb, 'records')")) {
+if (
+  !firebaseServiceSource.includes("collection(getFirestoreDb(), 'records')")
+) {
   failures.push('Interactive records must use authenticated Firestore client access.');
 }
 if (!ownerGateSource.includes('signInFirebaseOwner')) {

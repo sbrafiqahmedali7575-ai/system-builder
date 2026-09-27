@@ -343,38 +343,68 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
 
   let taskTotal = 0;
   let tasksCompleted = 0;
-
   tasksSnap.forEach((taskDoc) => {
     const data = taskDoc.data();
-    const taskDate = normalizeModelDateKey(data.scheduledDate || data.taskKey);
-    if (taskDate !== dateKey) return;
-
+    if (normalizeModelDateKey(data.scheduledDate || data.taskKey) !== dateKey) return;
     taskTotal += 1;
-    const completed =
-      typeof data.Iscompleted === 'boolean'
-        ? data.Iscompleted
-        : Boolean(data.isCompleted);
-    if (completed) tasksCompleted += 1;
+    if (data.Iscompleted === true) tasksCompleted += 1;
   });
 
   const completedHabitIds = new Set<string>();
   logsSnap.forEach((logDoc) => {
     const data = logDoc.data();
-    if (
-      String(data.dateKey || '') === dateKey &&
-      data.Iscompleted === true &&
-      data.habitId
-    ) {
+    if (String(data.dateKey || '') === dateKey && data.Iscompleted === true && data.habitId) {
       completedHabitIds.add(String(data.habitId));
     }
   });
 
   let habitTotal = 0;
   let habitsCompleted = 0;
+  habitsSnap.forEach((habitDoc) => {
+    const data = habitDoc.data() as Record<string, unknown>;
+    if (!storedHabitIsDue(data, dateKey)) return;
+    habitTotal += 1;
+    const habitId = String(data.habitId || habitDoc.id);
+    if (completedHabitIds.has(habitId)) habitsCompleted += 1;
+  });
 
-  for (const dateKey of [...dateKeys].sort()) {
-    await rebuildDaySummary(dateKey);
-  }
+  const taskCompletionRate =
+    taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 10000) / 100 : 0;
+  const habitCompletionRate =
+    habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 10000) / 100 : 0;
+
+  await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
+    dateKey,
+    tasksCompleted,
+    taskTotal,
+    taskCompletionRate,
+    habitsCompleted,
+    habitTotal,
+    habitCompletionRate,
+    IsdayCompleted: taskCompletionRate === 100,
+  });
+}
+
+async function rebuildAllDaySummaries(): Promise<void> {
+  const [daysSnap, tasksSnap, logsSnap] = await Promise.all([
+    getDocs(collection(db, DAYS_COLLECTION)),
+    getDocs(collection(db, TASKS_COLLECTION)),
+    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
+  ]);
+  const dateKeys = new Set<string>();
+  daysSnap.forEach((d) => {
+    const key = normalizeModelDateKey(d.data().dateKey || d.id);
+    if (key) dateKeys.add(key);
+  });
+  tasksSnap.forEach((d) => {
+    const key = normalizeModelDateKey(d.data().scheduledDate || d.data().taskKey);
+    if (key) dateKeys.add(key);
+  });
+  logsSnap.forEach((d) => {
+    const key = normalizeModelDateKey(d.data().dateKey);
+    if (key) dateKeys.add(key);
+  });
+  for (const key of [...dateKeys].sort()) await rebuildDaySummary(key);
 }
 
 export interface CountdownSettings {

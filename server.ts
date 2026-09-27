@@ -373,9 +373,82 @@ async function startServer() {
     }
   });
 
-  // 3. Send test confirmation email directly via Gmail SMTP (Admin test action)
-  app.post('/api/notifications/send-test', async (_req, res) => {
+  // 3. Send test confirmation email directly via Gmail SMTP (Admin test action).
+  // Prefer the task/habit snapshot already loaded in the browser so the test
+  // email exactly mirrors the current app view instead of doing a second read.
+  app.post('/api/notifications/send-test', async (req, res) => {
     try {
+      const settings = await getNotificationSettings();
+      const kolkata = getKolkataTimeInfo();
+
+      const bodyTasks = Array.isArray(req.body?.tasks) ? req.body.tasks : null;
+      const bodyHabits = Array.isArray(req.body?.habits) ? req.body.habits : null;
+
+      if (bodyTasks && bodyHabits) {
+        const tasks = bodyTasks.slice(0, 100).map((task: any) => ({
+          id: String(task?.id || ''),
+          title: String(task?.title || 'Daily Task').trim().slice(0, 300),
+          isCompleted: Boolean(task?.isCompleted),
+        })).filter((task: any) => task.id && task.title);
+
+        const habits = bodyHabits.slice(0, 100).map((habit: any) => ({
+          id: String(habit?.id || ''),
+          name: String(habit?.name || 'Habit').trim().slice(0, 200),
+          emoji: String(habit?.emoji || '✓').slice(0, 16),
+          isCheckedIn: Boolean(habit?.isCheckedIn),
+        })).filter((habit: any) => habit.id && habit.name);
+
+        const taskDate = String(req.body?.taskDate || kolkata.formattedDate);
+        const taskName =
+          tasks.length > 1
+            ? `${tasks.length} tasks scheduled`
+            : tasks[0]?.title || 'Today’s Tasks';
+
+        const sendResult = await sendDailyConfirmationEmail(
+          {
+            recordId: `rec-${kolkata.dateKey}`,
+            taskId: tasks[0]?.id || `review-${kolkata.dateKey}`,
+            taskDate,
+            taskName,
+            isCompleted:
+              tasks.length > 0 && tasks.every((task: any) => task.isCompleted),
+            tasks,
+            habits,
+            recipientEmail: settings.recipientEmail,
+            recipientName: settings.recipientName,
+          },
+          undefined,
+          settings.recipientEmail
+        );
+
+        if (!sendResult.success) {
+          return res.status(500).json({
+            success: false,
+            error: sanitizeError(sendResult.error || 'Failed to send test email'),
+            date: taskDate,
+            recipient: settings.recipientEmail,
+            taskId: tasks[0]?.id || `review-${kolkata.dateKey}`,
+          });
+        }
+
+        return res.json({
+          success: true,
+          date: taskDate,
+          taskId: tasks[0]?.id || `review-${kolkata.dateKey}`,
+          recipient: settings.recipientEmail,
+          messageId: sendResult.messageId,
+          taskName,
+          status: sendResult.status,
+          previewLinks: sendResult.previewLinks,
+          result: {
+            status: sendResult.status,
+            messageId: sendResult.messageId,
+            previewLinks: sendResult.previewLinks,
+          },
+        });
+      }
+
+      // Backward compatibility for older clients that do not send a snapshot.
       const result = await triggerDailyReminder({ force: true });
 
       if (!result.success) {

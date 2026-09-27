@@ -30,6 +30,7 @@ import {
   triggerDailyReminder,
   finalizeDayIfNoResponse,
   startBackgroundScheduler,
+  isHabitDueForDate,
 } from './server/scheduler';
 import {
   fetchAllProjectData,
@@ -1246,13 +1247,14 @@ pause
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
       }
 
-      if (!Array.isArray(payload.taskIds)) {
+      if (!Array.isArray(payload.taskIds) || !Array.isArray(payload.habitIds)) {
         return renderErrorPage(
           res,
-          'This legacy review link does not contain a signed task scope. Request a new daily review email.'
+          'This legacy review link does not contain the complete signed task and habit scope. Request a new daily review email.'
         );
       }
       const signedTaskIds = new Set(payload.taskIds.map(String));
+      const signedHabitIds = new Set(payload.habitIds.map(String));
 
       const currentDateKey = normalizeDateKey(getKolkataTimeInfo().dateKey);
       const targetDateKey = normalizeDateKey(payload.taskDate);
@@ -1279,6 +1281,33 @@ pause
         String(a.updatedAt || a.id).localeCompare(String(b.updatedAt || b.id))
       );
 
+      const habitsSnap = await getDocs(collection(db, 'habits'));
+      const dayHabits: any[] = [];
+      habitsSnap.forEach((d) => {
+        const habit = { id: d.id, ...(d.data() as any) };
+        if (
+          signedHabitIds.has(String(habit.id)) &&
+          isHabitDueForDate(habit, targetDateKey)
+        ) {
+          dayHabits.push(habit);
+        }
+      });
+      dayHabits.sort((a, b) =>
+        String(a.name || a.id).localeCompare(String(b.name || b.id))
+      );
+
+      const currentTaskIds = new Set(dayTasks.map((task) => String(task.id)));
+      const currentHabitIds = new Set(dayHabits.map((habit) => String(habit.id)));
+      if (
+        currentTaskIds.size !== signedTaskIds.size ||
+        currentHabitIds.size !== signedHabitIds.size
+      ) {
+        return renderErrorPage(
+          res,
+          'Today’s tasks or habits changed after this email was sent. Request a fresh daily review email or review the day in System Builder.'
+        );
+      }
+
       const taskMarkup =
         dayTasks.length > 0
           ? dayTasks
@@ -1295,7 +1324,25 @@ pause
                   </label>`
               )
               .join('')
-          : '<div class="empty">No tasks were found for today.</div>';
+          : '<div class="empty">No tasks are scheduled for today.</div>';
+
+      const habitMarkup =
+        dayHabits.length > 0
+          ? dayHabits
+              .map(
+                (habit) => `
+                  <label class="task-row">
+                    <input
+                      type="checkbox"
+                      name="completedHabitIds"
+                      value="${escapeHtml(habit.id)}"
+                      ${Array.isArray(habit.checkIns) && habit.checkIns.includes(targetDateKey) ? 'checked' : ''}
+                    />
+                    <span>${escapeHtml(habit.emoji || '✓')} ${escapeHtml(habit.name || 'Habit')}</span>
+                  </label>`
+              )
+              .join('')
+          : '<div class="empty">No habits are due today.</div>';
 
       const html = `<!DOCTYPE html>
 <html lang="en">
@@ -1437,18 +1484,21 @@ pause
     >
       ×
     </button>
-    <div class="eyebrow">Current Day Tasks</div>
+    <div class="eyebrow">Current Day Review</div>
     <h1 id="mark-day-title">Mark Current Day</h1>
     <div class="date">${escapeHtml(payload.taskDate)}</div>
-    <p class="help">Check the tasks you completed. When finished, press <strong>Mark Day</strong>.</p>
+    <p class="help">Check every task and habit you completed. When finished, press <strong>Mark Day</strong>.</p>
 
     <form method="POST" action="/api/daily-review">
+      <div class="help" style="margin:0 0 8px;font-weight:900;">Tasks</div>
       <div class="tasks">${taskMarkup}</div>
-      <button class="submit" type="submit" ${dayTasks.length === 0 ? 'disabled' : ''}>
+      <div class="help" style="margin:14px 0 8px;font-weight:900;">Habits</div>
+      <div class="tasks">${habitMarkup}</div>
+      <button class="submit" type="submit" ${dayTasks.length === 0 && dayHabits.length === 0 ? 'disabled' : ''}>
         Mark Day
       </button>
       <div class="rule">
-        All tasks checked = Completed. Any task unchecked = Not Completed.
+        All scheduled tasks and due habits checked = Completed. Anything unchecked = Not Completed.
       </div>
     </form>
   </main>
@@ -1478,13 +1528,14 @@ pause
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
       }
 
-      if (!Array.isArray(payload.taskIds)) {
+      if (!Array.isArray(payload.taskIds) || !Array.isArray(payload.habitIds)) {
         return renderErrorPage(
           res,
-          'This legacy review link does not contain a signed task scope. Request a new daily review email.'
+          'This legacy review link does not contain the complete signed task and habit scope. Request a new daily review email.'
         );
       }
       const signedTaskIds = new Set(payload.taskIds.map(String));
+      const signedHabitIds = new Set(payload.habitIds.map(String));
 
       const currentDateKey = normalizeDateKey(getKolkataTimeInfo().dateKey);
       const submittedDateKey = normalizeDateKey(payload.taskDate);
@@ -1495,15 +1546,32 @@ pause
         );
       }
 
-      const selectedRaw = req.body.completedTaskIds;
-      const selectedIds = new Set<string>(
-        (Array.isArray(selectedRaw) ? selectedRaw : selectedRaw ? [selectedRaw] : []).map(String)
+      const selectedTaskRaw = req.body.completedTaskIds;
+      const selectedTaskIds = new Set<string>(
+        (Array.isArray(selectedTaskRaw)
+          ? selectedTaskRaw
+          : selectedTaskRaw
+          ? [selectedTaskRaw]
+          : []
+        ).map(String)
+      );
+      const selectedHabitRaw = req.body.completedHabitIds;
+      const selectedHabitIds = new Set<string>(
+        (Array.isArray(selectedHabitRaw)
+          ? selectedHabitRaw
+          : selectedHabitRaw
+          ? [selectedHabitRaw]
+          : []
+        ).map(String)
       );
 
-      if ([...selectedIds].some((id) => !signedTaskIds.has(id))) {
+      if (
+        [...selectedTaskIds].some((id) => !signedTaskIds.has(id)) ||
+        [...selectedHabitIds].some((id) => !signedHabitIds.has(id))
+      ) {
         return renderErrorPage(
           res,
-          'The submitted task list exceeds the scope of this signed review link.'
+          'The submitted task or habit list exceeds the scope of this signed review link.'
         );
       }
 
@@ -1524,24 +1592,69 @@ pause
         }
       });
 
-      if (dayTasks.length === 0) {
-        return renderErrorPage(res, 'No tasks were found for this date, so the day was not submitted.');
+      const habitsSnap = await getDocs(collection(db, 'habits'));
+      const dayHabits: any[] = [];
+      habitsSnap.forEach((d) => {
+        const habit = { id: d.id, ...(d.data() as any) };
+        if (
+          signedHabitIds.has(String(habit.id)) &&
+          isHabitDueForDate(habit, targetDateKey)
+        ) {
+          dayHabits.push(habit);
+        }
+      });
+
+      if (
+        dayTasks.length !== signedTaskIds.size ||
+        dayHabits.length !== signedHabitIds.size
+      ) {
+        return renderErrorPage(
+          res,
+          'Today’s tasks or habits changed after this email was sent. Request a fresh daily review email or review the day in System Builder.'
+        );
       }
 
-      // Save each checkbox independently.
-      await Promise.all(
-        dayTasks.map((task) => {
-          const completed = selectedIds.has(task.id);
+      if (dayTasks.length === 0 && dayHabits.length === 0) {
+        return renderErrorPage(
+          res,
+          'No tasks or habits were found for this date, so the day was not submitted.'
+        );
+      }
+
+      await Promise.all([
+        ...dayTasks.map((task) => {
+          const completed = selectedTaskIds.has(task.id);
           return updateDoc(doc(db, 'tasks', task.id), {
             isCompleted: completed,
             completedAt: completed ? (task.completedAt || nowIso) : null,
             updatedAt: nowIso,
           });
-        })
-      );
+        }),
+        ...dayHabits.map((habit) => {
+          const checkIns = new Set(
+            Array.isArray(habit.checkIns) ? habit.checkIns.map(String) : []
+          );
+          if (selectedHabitIds.has(habit.id)) checkIns.add(targetDateKey);
+          else checkIns.delete(targetDateKey);
 
-      const completedCount = dayTasks.filter((task) => selectedIds.has(task.id)).length;
-      const allCompleted = completedCount === dayTasks.length;
+          return updateDoc(doc(db, 'habits', habit.id), {
+            checkIns: Array.from(checkIns).sort(),
+            updatedAt: nowIso,
+          });
+        }),
+      ]);
+
+      const completedTaskCount = dayTasks.filter((task) =>
+        selectedTaskIds.has(task.id)
+      ).length;
+      const completedHabitCount = dayHabits.filter((habit) =>
+        selectedHabitIds.has(habit.id)
+      ).length;
+      const allCompleted =
+        (dayTasks.length === 0 || completedTaskCount === dayTasks.length) &&
+        (dayHabits.length === 0 || completedHabitCount === dayHabits.length);
+      const reviewSummary =
+        `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
 
       // Update only the record ID signed into this review capability.
       const signedRecordId = String(payload.recordId || '').trim();
@@ -1570,7 +1683,7 @@ pause
           isCompleted: allCompleted,
           result: allCompleted ? 'TRUE' : 'FALSE',
           change: 0,
-          summary: `${completedCount}/${dayTasks.length} tasks completed`,
+          summary: reviewSummary,
           responseSubmittedAt: nowIso,
           responseSource: 'EMAIL',
           updatedAt: nowIso,
@@ -1591,8 +1704,8 @@ pause
           result: allCompleted ? 'TRUE' : 'FALSE',
           change: 0,
           skill: 'Daily Tasks',
-          summary: `${completedCount}/${dayTasks.length} tasks completed`,
-          notes: 'Submitted from daily email checklist',
+          summary: reviewSummary,
+          notes: 'Submitted from daily email task and habit checklist',
           responseSubmittedAt: nowIso,
           responseSource: 'EMAIL',
           updatedAt: nowIso,
@@ -1623,7 +1736,7 @@ pause
   <main class="card">
     <div class="icon">${allCompleted ? '✓' : '◐'}</div>
     <h1>Day marked ${statusLabel}</h1>
-    <p>${completedCount} of ${dayTasks.length} tasks were submitted as completed for ${escapeHtml(payload.taskDate)}.</p>
+    <p>${completedTaskCount}/${dayTasks.length} tasks and ${completedHabitCount}/${dayHabits.length} habits were submitted as completed for ${escapeHtml(payload.taskDate)}.</p>
     <div class="actions">
       <button
         class="btn exit-btn"

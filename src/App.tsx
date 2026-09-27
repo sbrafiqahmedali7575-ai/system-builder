@@ -739,7 +739,6 @@ export default function App() {
     const allCompleted = allTasksCompleted && allHabitsCompleted;
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
-    const responseSource: DailyRecord['responseSource'] = 'APP';
     const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
     const existingRecord = records.find((record) =>
       areDatesEqual(record.date, formattedDate)
@@ -753,8 +752,6 @@ export default function App() {
         result: allCompleted ? 'TRUE' : 'FALSE',
         change: 0,
         summary,
-        responseSubmittedAt: nowIso,
-        responseSource,
         updatedAt: nowIso,
       };
 
@@ -794,8 +791,6 @@ export default function App() {
         skill: 'Daily Review',
         summary,
         notes: 'Submitted from current-day Review checklist',
-        responseSubmittedAt: nowIso,
-        responseSource,
         updatedAt: nowIso,
       };
 

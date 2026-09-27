@@ -3,9 +3,9 @@ import crypto from 'crypto';
 function getSecretKey(): string {
   const secret = (process.env.CONFIRMATION_SECRET || '').trim();
 
-  if (!secret) {
+  if (secret.length < 32) {
     throw new Error(
-      'CONFIRMATION_SECRET is not configured. Refusing to sign or verify confirmation links.'
+      'CONFIRMATION_SECRET must be configured with at least 32 characters. Refusing to sign or verify confirmation links.'
     );
   }
 
@@ -20,6 +20,7 @@ export interface ConfirmationTokenPayload {
   status?: 'completed' | 'pending';
   action?: 'completed' | 'not_completed' | 'pending' | 'review';
   taskIds?: string[];
+  habitIds?: string[];
   exp: number; // Unix timestamp ms
   nonce: string;
 }
@@ -62,12 +63,14 @@ export function generateDailyReviewToken(
     taskDate: string;
     recordId?: string;
     taskIds?: string[];
+    habitIds?: string[];
   },
   expiresInDays: number = 7
 ): string {
   const exp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
   const nonce = crypto.randomBytes(8).toString('hex');
   const taskIds = Array.from(new Set(params.taskIds || [])).filter(Boolean);
+  const habitIds = Array.from(new Set(params.habitIds || [])).filter(Boolean);
   const reviewId = `review-${params.taskDate}`;
 
   const payload: ConfirmationTokenPayload = {
@@ -77,6 +80,7 @@ export function generateDailyReviewToken(
     taskDate: params.taskDate,
     action: 'review',
     taskIds,
+    habitIds,
     exp,
     nonce,
   };

@@ -458,6 +458,23 @@ async function startServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Signed email capability links contain sensitive bearer material in the URL.
+  // Prevent caching, framing, and referrer leakage from these pages.
+  app.use(
+    ['/api/daily-review', '/api/task-confirmation', '/confirm'],
+    (_req, res, next) => {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Referrer-Policy', 'no-referrer');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
+      );
+      next();
+    }
+  );
+
   // 1. Minimal public health check. Do not expose SMTP/provider configuration.
   app.get('/api/health', (_req, res) => {
     const kolkata = getKolkataTimeInfo();

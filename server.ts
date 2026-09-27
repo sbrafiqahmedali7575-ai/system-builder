@@ -45,6 +45,8 @@ const OWNER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const OWNER_LOGIN_MAX_FAILURES = 5;
 const OWNER_LOGIN_ATTEMPTS_COLLECTION = 'owner_login_attempts';
 
+let privilegedFirestoreReady = false;
+
 type OwnerLoginAttempt = {
   failures: number;
   resetAt: number;
@@ -598,10 +600,20 @@ function renderErrorPage(res: express.Response, message: string, status: number 
 }
 
 async function startServer() {
-  // Fail closed if the hosted runtime does not provide a privileged Firestore
-  // identity. Direct client access is disabled, so starting without server
-  // data access would leave the app in a misleading partially-working state.
-  await verifyPrivilegedFirestoreAccess();
+  // Keep the owner/auth API reachable even when the hosted preview has not
+  // provisioned privileged Firestore credentials. Data operations remain
+  // fail-closed and report storageReady=false until privileged access works.
+  try {
+    await verifyPrivilegedFirestoreAccess();
+    privilegedFirestoreReady = true;
+    console.log('[Server] Privileged Firestore access verified.');
+  } catch (error) {
+    privilegedFirestoreReady = false;
+    console.warn(
+      '[Server] Privileged Firestore access unavailable:',
+      sanitizeError(error)
+    );
+  }
 
   const app = express();
   const PORT = 3000;
@@ -693,6 +705,7 @@ async function startServer() {
     res.json({
       configured: ownerAuthConfigured(),
       authenticated: isOwnerAuthenticated(req),
+      storageReady: privilegedFirestoreReady,
     });
   });
 
@@ -730,14 +743,13 @@ async function startServer() {
         });
       }
     } catch (error) {
-      console.error(
-        'Owner login rate-limit store unavailable:',
+      // The high-entropy owner token plus the process-local limiter still
+      // protect this personal app if Firestore is unavailable. Do not make
+      // owner login depend on the storage backend.
+      console.warn(
+        'Distributed owner login rate-limit store unavailable; using local limiter:',
         sanitizeError(error)
       );
-      return res.status(503).json({
-        success: false,
-        error: 'Owner authentication is temporarily unavailable.',
-      });
     }
 
     const supplied = String(req.body?.token || '');
@@ -752,14 +764,10 @@ async function startServer() {
       try {
         await recordDistributedOwnerLoginFailure(req);
       } catch (error) {
-        console.error(
-          'Unable to persist owner login failure:',
+        console.warn(
+          'Unable to persist owner login failure; local limiter remains active:',
           sanitizeError(error)
         );
-        return res.status(503).json({
-          success: false,
-          error: 'Owner authentication is temporarily unavailable.',
-        });
       }
 
       return res.status(401).json({
@@ -772,14 +780,10 @@ async function startServer() {
     try {
       await clearDistributedOwnerLoginFailures(req);
     } catch (error) {
-      console.error(
-        'Unable to clear owner login rate-limit state:',
+      console.warn(
+        'Unable to clear distributed owner login rate-limit state:',
         sanitizeError(error)
       );
-      return res.status(503).json({
-        success: false,
-        error: 'Owner authentication is temporarily unavailable.',
-      });
     }
 
     const session = createOwnerSession();
@@ -792,7 +796,10 @@ async function startServer() {
       )}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAgeSeconds}${secure}`
     );
 
-    return res.json({ success: true });
+    return res.json({
+      success: true,
+      storageReady: privilegedFirestoreReady,
+    });
   });
 
   app.post('/api/owner/logout', (_req, res) => {

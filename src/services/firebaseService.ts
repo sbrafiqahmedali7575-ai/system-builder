@@ -490,180 +490,34 @@ export function subscribeToRecords(
 /**
  * Seed initial records into Firestore using batch operations
  */
-export async function seedInitialData(records: DailyRecord[]): Promise<void> {
-  const batch = writeBatch(db);
-  for (const r of records) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(docRef, {
-      id: r.id,
-      day: r.day,
-      date: r.date,
-      isCompleted: r.isCompleted,
-      result: r.result,
-      change: r.change,
-      skill: r.skill || '',
-      summary: r.summary || '',
-      notes: r.notes || '',
-      updatedAt: new Date().toISOString(),
-    });
-  }
-  await batch.commit();
+export async function seedInitialData(_records: DailyRecord[]): Promise<void> {
+  // Legacy API retained for UI compatibility. Days are derived from Tasks + HabitLogs.
 }
 
-/**
- * Add a single record to Firestore with strict duplicate validation
- */
 export async function addRecordToCloud(record: DailyRecord): Promise<void> {
-  const recordsSnap = await getDocs(collection(db, RECORDS_COLLECTION));
-  const existingRecords = recordsSnap.docs.map((d) => d.data());
-
-  const formattedDate = standardizeDate(record.date) || record.date;
-
-  // Prevent duplicate day in Tasks table
-  const duplicateDay = existingRecords.find(
-    (r) => r.id !== record.id && Number(r.day) === Number(record.day)
-  );
-  if (duplicateDay) {
-    throw new Error(`Duplicate value rejected: Day ${record.day} already exists in Tasks table.`);
-  }
-
-  // Prevent duplicate date in Tasks table
-  const duplicateDate = existingRecords.find(
-    (r) =>
-      r.id !== record.id &&
-      (standardizeDate(r.date) === formattedDate ||
-        String(r.date || '').toLowerCase() === formattedDate.toLowerCase())
-  );
-  if (duplicateDate) {
-    throw new Error(`Duplicate value rejected: A task for date ${formattedDate} already exists in Tasks table.`);
-  }
-
-  const docRef = doc(db, RECORDS_COLLECTION, record.id);
-  await setDoc(docRef, {
-    id: record.id,
-    day: record.day,
-    date: formattedDate,
-    isCompleted: record.isCompleted,
-    result: record.result,
-    change: record.change,
-    skill: record.skill || '',
-    summary: record.summary || '',
-    notes: record.notes || '',
-    ...(record.responseSubmittedAt ? { responseSubmittedAt: record.responseSubmittedAt } : {}),
-    ...(record.responseSource ? { responseSource: record.responseSource } : {}),
-    updatedAt: new Date().toISOString(),
-  });
+  const dateKey = normalizeModelDateKey(record.date);
+  if (dateKey) await rebuildDaySummary(dateKey);
 }
 
-/**
- * Update an existing record in Firestore with duplicate prevention
- */
 export async function updateRecordInCloud(record: DailyRecord): Promise<void> {
-  const recordsSnap = await getDocs(collection(db, RECORDS_COLLECTION));
-  const existingRecords = recordsSnap.docs.map((d) => d.data());
-
-  const formattedDate = standardizeDate(record.date) || record.date;
-
-  // Prevent assigning an existing day number of another task
-  const duplicateDay = existingRecords.find(
-    (r) => r.id !== record.id && Number(r.day) === Number(record.day)
-  );
-  if (duplicateDay) {
-    throw new Error(`Duplicate value rejected: Day ${record.day} is already assigned to another task.`);
-  }
-
-  // Prevent assigning an existing date of another task
-  const duplicateDate = existingRecords.find(
-    (r) =>
-      r.id !== record.id &&
-      (standardizeDate(r.date) === formattedDate ||
-        String(r.date || '').toLowerCase() === formattedDate.toLowerCase())
-  );
-  if (duplicateDate) {
-    throw new Error(`Duplicate value rejected: A task for date ${formattedDate} already exists in Tasks table.`);
-  }
-
-  const docRef = doc(db, RECORDS_COLLECTION, record.id);
-  await setDoc(
-    docRef,
-    {
-      id: record.id,
-      day: record.day,
-      date: formattedDate,
-      isCompleted: record.isCompleted,
-      result: record.result,
-      change: record.change,
-      skill: record.skill || '',
-      summary: record.summary || '',
-      notes: record.notes || '',
-      ...(record.responseSubmittedAt ? { responseSubmittedAt: record.responseSubmittedAt } : {}),
-      ...(record.responseSource ? { responseSource: record.responseSource } : {}),
-      updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
+  const dateKey = normalizeModelDateKey(record.date);
+  if (dateKey) await rebuildDaySummary(dateKey);
 }
 
-/**
- * Delete a record from Firestore
- */
 export async function deleteRecordFromCloud(recordId: string): Promise<void> {
-  const docRef = doc(db, RECORDS_COLLECTION, recordId);
-  await deleteDoc(docRef);
+  const dateKey = normalizeModelDateKey(recordId);
+  if (dateKey) await deleteDoc(doc(db, DAYS_COLLECTION, dateKey));
 }
 
-/**
- * Bulk add or import records to Firestore
- */
 export async function bulkAddRecordsToCloud(records: DailyRecord[]): Promise<void> {
-  const batch = writeBatch(db);
-  for (const r of records) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(
-      docRef,
-      {
-        id: r.id,
-        day: r.day,
-        date: r.date,
-        isCompleted: r.isCompleted,
-        result: r.result,
-        change: r.change,
-        skill: r.skill || '',
-        summary: r.summary || '',
-        notes: r.notes || '',
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+  for (const record of records) {
+    const dateKey = normalizeModelDateKey(record.date);
+    if (dateKey) await rebuildDaySummary(dateKey);
   }
-  await batch.commit();
 }
 
-/**
- * Reset all records in Firestore to the initial template dataset
- */
-export async function resetRecordsInCloud(initialRecords: DailyRecord[]): Promise<void> {
-  const snapshot = await getDocs(collection(db, RECORDS_COLLECTION));
-  const batch = writeBatch(db);
-  snapshot.forEach((docSnap) => {
-    batch.delete(docSnap.ref);
-  });
-  for (const r of initialRecords) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(docRef, {
-      id: r.id,
-      day: r.day,
-      date: r.date,
-      isCompleted: r.isCompleted,
-      result: r.result,
-      change: r.change,
-      skill: r.skill || '',
-      summary: r.summary || '',
-      notes: r.notes || '',
-      updatedAt: new Date().toISOString(),
-    });
-  }
-  await batch.commit();
+export async function resetRecordsInCloud(_initialRecords: DailyRecord[]): Promise<void> {
+  await rebuildAllDaySummaries();
 }
 
 /**
@@ -784,11 +638,12 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   // Prevent duplicate task with identical title on the same date (excluding self)
   const duplicateName = existingTasks.find(
     (t) =>
-      t.id !== task.id &&
-      (standardizeDate(t.taskKey) === normKey || t.taskKey === task.taskKey) &&
-      t.taskOfTheDay &&
+      String(t.taskId || t.id || '') !== task.id &&
+      (standardizeDate(String(t.scheduledDate || t.taskKey || '')) === normKey ||
+        String(t.scheduledDate || t.taskKey || '') === task.taskKey) &&
+      (t.title || t.taskOfTheDay) &&
       task.taskOfTheDay &&
-      String(t.taskOfTheDay).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
+      String(t.title || t.taskOfTheDay).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
   );
   if (duplicateName) {
     throw new Error(`Another task named "${task.taskOfTheDay}" already exists for this date.`);
@@ -997,40 +852,14 @@ export async function deleteHabitFromCloud(habitId: string): Promise<void> {
  * Synchronize all records and tasks in Firestore (Task of the Day = Summary)
  */
 export async function syncAllDataInCloud(
-  records: DailyRecord[],
+  _records: DailyRecord[],
   tasks: TaskItem[]
 ): Promise<void> {
   const batch = writeBatch(db);
-
-  for (const r of records) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(
-      docRef,
-      {
-        id: r.id,
-        day: r.day,
-        date: r.date,
-        isCompleted: r.isCompleted,
-        result: r.result,
-        change: r.change,
-        skill: r.skill,
-        summary: r.summary,
-        notes: r.notes || '',
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-  }
-
   for (const t of tasks) {
-    const docRef = doc(db, TASKS_COLLECTION, t.id);
-    batch.set(
-      docRef,
-      taskStoragePayload(t),
-      { merge: true }
-    );
+    batch.set(doc(db, TASKS_COLLECTION, t.id), taskStoragePayload(t));
   }
-
   await batch.commit();
+  await rebuildAllDaySummaries();
 }
 

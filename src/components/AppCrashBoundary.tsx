@@ -1,11 +1,13 @@
-import React from 'react';
+import { Component, type PropsWithChildren } from 'react';
+
+type AppCrashBoundaryProps = PropsWithChildren<{}>;
 
 interface AppCrashBoundaryState {
   error: string;
 }
 
-export class AppCrashBoundary extends React.Component<
-  React.PropsWithChildren,
+export class AppCrashBoundary extends Component<
+  AppCrashBoundaryProps,
   AppCrashBoundaryState
 > {
   state: AppCrashBoundaryState = { error: '' };

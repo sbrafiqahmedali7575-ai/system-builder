@@ -2,6 +2,72 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedInWithEmail() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+
+    function ownerSettingsPath() {
+      return /databases/$(database)/documents/notification_settings/daily-settings;
+    }
+
+    function isOwner() {
+      return signedInWithEmail()
+        && exists(ownerSettingsPath())
+        && get(ownerSettingsPath()).data.recipientEmail == request.auth.token.email;
+    }
+
+    // This existing document anchors ownership without hardcoding a personal
+    // email address in source. The recipient email may only be changed through
+    // the privileged server path, not directly by browser clients.
+    match /notification_settings/daily-settings {
+      allow read: if signedInWithEmail()
+        && resource.data.recipientEmail == request.auth.token.email;
+
+      allow update: if signedInWithEmail()
+        && resource.data.recipientEmail == request.auth.token.email
+        && request.resource.data.recipientEmail == resource.data.recipientEmail;
+
+      allow create, delete: if false;
+    }
+
+    // Interactive app data is available only to the Google account that owns
+    // the daily settings document.
+    match /records/{documentId} {
+      allow read, write: if isOwner();
+    }
+
+    match /tasks/{documentId} {
+      allow read, write: if isOwner();
+    }
+
+    match /habits/{documentId} {
+      allow read, write: if isOwner();
+    }
+
+    match /notification_settings/system_builder_countdown {
+      allow read, write: if isOwner();
+    }
+
+    // Logs and reminder ledgers are readable by the owner. Background server
+    // jobs write them with IAM credentials, which bypass Security Rules.
+    match /delivery_logs/{documentId} {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+
+    match /daily_reminders_sent/{documentId} {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+
+    // Distributed owner-login throttling remains server-only.
+    match /owner_login_attempts/{documentId} {
+      allow read, write: if false;
+    }
+
+    // Default deny for every collection not explicitly listed above.
     match /{document=**} {
       allow read, write: if false;
     }

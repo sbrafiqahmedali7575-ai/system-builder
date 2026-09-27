@@ -132,7 +132,7 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
   let count = 0;
 
   for (const write of writes) {
-    batch.set(write.ref, write.data, { merge: true });
+    batch.set(write.ref, write.data);
     count += 1;
 
     if (count >= MIGRATION_BATCH_LIMIT) {
@@ -308,8 +308,6 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
           title: String(data.reason || data.title || 'Countdown').trim(),
           targetDate,
           isActive: data.isActive !== false,
-          // Preserve the old semantic value until every consumer uses title.
-          reason: String(data.reason || ''),
         },
       });
       result.countdowns = 1;

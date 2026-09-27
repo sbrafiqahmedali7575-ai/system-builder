@@ -4,8 +4,6 @@ import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
 import { ReportView } from './components/ReportView';
 import { AddRecordModal } from './components/AddRecordModal';
-import { NotificationSettingsModal } from './components/NotificationSettingsModal';
-import { ConfirmationPage } from './components/ConfirmationPage';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
 import { MoreWorkspace } from './components/MoreWorkspace';
@@ -65,23 +63,6 @@ function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
 }
 
 export default function App() {
-  // Check if current URL is a secure confirmation link
-  const [confirmToken, setConfirmToken] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('token');
-    }
-    return null;
-  });
-
-  const [confirmAction, setConfirmAction] = useState<string | undefined>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('action') || undefined;
-    }
-    return undefined;
-  });
-
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
     if (typeof window !== 'undefined') {
@@ -139,7 +120,6 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState<boolean>(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('review') === '1';
@@ -164,8 +144,6 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       const params = new URLSearchParams(window.location.search);
-      setConfirmToken(params.get('token'));
-      setConfirmAction(params.get('action') || undefined);
       setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
       setIsToolsOpen(window.location.pathname === '/tools');
     };
@@ -761,11 +739,7 @@ export default function App() {
     const allCompleted = allTasksCompleted && allHabitsCompleted;
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
-    const responseSource: DailyRecord['responseSource'] =
-      typeof window !== 'undefined' &&
-      new URLSearchParams(window.location.search).get('review') === '1'
-        ? 'EMAIL'
-        : 'APP';
+    const responseSource: DailyRecord['responseSource'] = 'APP';
     const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
     const existingRecord = records.find((record) =>
       areDatesEqual(record.date, formattedDate)
@@ -895,25 +869,6 @@ export default function App() {
     }
   };
 
-  const handleReturnToDashboard = () => {
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/');
-    }
-    setConfirmToken(null);
-  };
-
-  // If user arrives via confirmation email token link, show confirmation screen
-  if (confirmToken) {
-    return (
-      <ConfirmationPage
-        token={confirmToken}
-        initialAction={confirmAction}
-        theme={theme}
-        onReturnToDashboard={handleReturnToDashboard}
-      />
-    );
-  }
-
   if (isLibraryOpen) {
     return <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />;
   }
@@ -952,7 +907,6 @@ export default function App() {
       {/* 1. Clean Navigation Header */}
       <PowerBiHeader
         onOpenAddModal={() => setIsAddModalOpen(true)}
-        onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
         onOpenTools={handleOpenTools}
         theme={theme}
@@ -993,15 +947,6 @@ export default function App() {
         onAddRecord={handleAddRecord}
         theme={theme}
         existingRecords={records}
-      />
-
-      {/* 4. Daily Email Notification Settings Modal */}
-      <NotificationSettingsModal
-        isOpen={isNotificationModalOpen}
-        onClose={() => setIsNotificationModalOpen(false)}
-        theme={theme}
-        tasks={tasks}
-        habits={habits}
       />
 
       {/* 5. Header-triggered current-day review */}

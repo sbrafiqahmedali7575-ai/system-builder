@@ -584,9 +584,9 @@ async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
   const matching = snapshot.docs
     .filter((d) => normalizeModelDateKey(d.data().scheduledDate) === dateKey)
     .sort((a, b) => {
-      const ao = Number(a.data().taskOrder || a.data().sortOrder || Number.MAX_SAFE_INTEGER);
-      const bo = Number(b.data().taskOrder || b.data().sortOrder || Number.MAX_SAFE_INTEGER);
-      return ao - bo || a.id.localeCompare(b.id);
+      const aTaskId = String(a.data().taskId || a.id);
+      const bTaskId = String(b.data().taskId || b.id);
+      return aTaskId.localeCompare(bTaskId, undefined, { numeric: true, sensitivity: 'base' });
     });
   if (!matching.length) return;
   const batch = writeBatch(db);

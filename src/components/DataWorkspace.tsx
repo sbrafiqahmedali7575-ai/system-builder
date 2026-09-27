@@ -68,7 +68,7 @@ export const DataWorkspace: React.FC = () => {
   const sortedRows = useMemo(() => {
     const effectiveSort = sort || (active === 'tasks'
       ? { column: 'scheduledDate', direction: 'desc' as const }
-      : active === 'days'
+      : active === 'days' || active === 'habitLogs'
         ? { column: 'dateKey', direction: 'desc' as const }
         : null);
     if (!effectiveSort) return rows;

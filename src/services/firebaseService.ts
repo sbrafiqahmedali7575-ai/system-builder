@@ -615,7 +615,7 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
         String(t.scheduledDate || '') === task.taskKey) &&
       t.title &&
       task.taskOfTheDay &&
-      Stringt.title.trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
+      String(t.title).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
   );
   if (duplicateName) {
     throw new Error(`Another task named "${task.taskOfTheDay}" already exists for this date.`);

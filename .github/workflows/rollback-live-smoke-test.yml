@@ -1,0 +1,195 @@
+name: Rollback Live Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rollback-live-smoke-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test Firestore and app flows
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { initializeApp } from 'firebase/app';
+          import {
+            getFirestore,
+            doc,
+            setDoc,
+            getDoc,
+            updateDoc,
+            deleteDoc,
+          } from 'firebase/firestore';
+
+          const config = JSON.parse(fs.readFileSync('firebase-applet-config.json', 'utf8'));
+          const app = initializeApp(config);
+          const db = config.firestoreDatabaseId && config.firestoreDatabaseId !== '(default)'
+            ? getFirestore(app, config.firestoreDatabaseId)
+            : getFirestore(app);
+
+          const baseUrl = 'https://systembuilder08.ai.studio';
+          const stamp = Date.now();
+          const taskId = `smoke-task-${stamp}`;
+          const habitId = `smoke-habit-${stamp}`;
+          const now = new Date();
+          const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).formatToParts(now);
+          const get = (type) => parts.find((p) => p.type === type)?.value;
+          const dateKey = `${get('year')}-${get('month')}-${get('day')}`;
+          const results = [];
+
+          async function test(name, fn) {
+            try {
+              const detail = await fn();
+              results.push({ name, status: 'PASS', detail });
+              console.log(`PASS :: ${name} :: ${detail ?? ''}`);
+            } catch (error) {
+              const detail = error instanceof Error ? error.message : String(error);
+              results.push({ name, status: 'FAIL', detail });
+              console.log(`FAIL :: ${name} :: ${detail}`);
+            }
+          }
+
+          try {
+            await test('Add Task', async () => {
+              const ref = doc(db, 'tasks', taskId);
+              await setDoc(ref, {
+                id: taskId,
+                taskKey: dateKey,
+                taskOfTheDay: '[SMOKE TEST] Temporary task',
+                isCompleted: false,
+                priority: 'Normal',
+                category: 'General',
+                updatedAt: new Date().toISOString(),
+                completedAt: null,
+                matrixQuadrant: null,
+              });
+              const snap = await getDoc(ref);
+              if (!snap.exists()) throw new Error('Task write returned but document was not readable.');
+              return 'temporary task inserted and read back';
+            });
+
+            await test('Task Completion', async () => {
+              const ref = doc(db, 'tasks', taskId);
+              const existing = await getDoc(ref);
+              if (!existing.exists()) throw new Error('Temporary task was not available for completion test.');
+              await updateDoc(ref, {
+                isCompleted: true,
+                completedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+              const snap = await getDoc(ref);
+              if (!snap.exists() || snap.data().isCompleted !== true) {
+                throw new Error('Task completion state did not persist.');
+              }
+              return 'completion update persisted';
+            });
+
+            await test('Habit Updates', async () => {
+              const ref = doc(db, 'habits', habitId);
+              await setDoc(ref, {
+                id: habitId,
+                name: '[SMOKE TEST] Temporary habit',
+                emoji: '✓',
+                frequency: 'daily',
+                repeatDays: [],
+                skippedDates: [],
+                extraDates: [],
+                color: 'blue',
+                checkIns: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+              await updateDoc(ref, {
+                checkIns: [dateKey],
+                updatedAt: new Date().toISOString(),
+              });
+              const snap = await getDoc(ref);
+              if (!snap.exists() || !Array.isArray(snap.data().checkIns) || !snap.data().checkIns.includes(dateKey)) {
+                throw new Error('Habit check-in update did not persist.');
+              }
+              return 'habit create and check-in update persisted';
+            });
+
+            let originalSettings = null;
+            await test('Notification Settings', async () => {
+              const getRes = await fetch(`${baseUrl}/api/notifications/settings`);
+              const getText = await getRes.text();
+              if (!getRes.ok) throw new Error(`GET failed HTTP ${getRes.status}: ${getText.slice(0, 300)}`);
+              let payload;
+              try { payload = JSON.parse(getText); } catch { throw new Error('GET returned non-JSON response.'); }
+              if (!payload?.settings) throw new Error('GET response did not include settings.');
+              originalSettings = payload.settings;
+
+              const postRes = await fetch(`${baseUrl}/api/notifications/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(originalSettings),
+              });
+              const postText = await postRes.text();
+              if (!postRes.ok) throw new Error(`POST failed HTTP ${postRes.status}: ${postText.slice(0, 300)}`);
+              return 'settings read and same values written back successfully';
+            });
+
+            await test('Email Flow', async () => {
+              const res = await fetch(`${baseUrl}/api/notifications/send-test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  taskDate: dateKey,
+                  tasks: [{
+                    id: taskId,
+                    title: '[SMOKE TEST] Email flow verification',
+                    isCompleted: true,
+                  }],
+                  habits: [{
+                    id: habitId,
+                    name: '[SMOKE TEST] Habit',
+                    emoji: '✓',
+                    isCheckedIn: true,
+                  }],
+                }),
+              });
+              const text = await res.text();
+              if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 500)}`);
+              let payload;
+              try { payload = JSON.parse(text); } catch { throw new Error('Email endpoint returned non-JSON response.'); }
+              if (!payload?.success) throw new Error(`Endpoint did not report success: ${text.slice(0, 500)}`);
+              return `email endpoint succeeded with status ${payload.status || payload.result?.status || 'unknown'}`;
+            });
+          } finally {
+            for (const [collectionName, id] of [['tasks', taskId], ['habits', habitId]]) {
+              try {
+                await deleteDoc(doc(db, collectionName, id));
+                console.log(`CLEANUP :: deleted ${collectionName}/${id}`);
+              } catch (error) {
+                console.log(`CLEANUP_FAIL :: ${collectionName}/${id} :: ${error instanceof Error ? error.message : String(error)}`);
+              }
+            }
+          }
+
+          console.log('SMOKE_RESULTS_JSON=' + JSON.stringify(results));
+          const failed = results.filter((r) => r.status === 'FAIL');
+          if (failed.length) process.exitCode = 1;
+          NODE

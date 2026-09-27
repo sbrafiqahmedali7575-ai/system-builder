@@ -598,17 +598,10 @@ function renderErrorPage(res: express.Response, message: string, status: number 
 }
 
 async function startServer() {
-  // Verify privileged IAM credentials on startup. Log warning if credentials
-  // need configuration in local/dev environment so server startup completes.
-  try {
-    await verifyPrivilegedFirestoreAccess();
-    console.log('[Server] Privileged Firestore access verified via Google IAM.');
-  } catch (error) {
-    console.warn(
-      '[Server] Privileged Firestore IAM access check:',
-      error instanceof Error ? error.message : error
-    );
-  }
+  // Fail closed if the hosted runtime does not provide a privileged Firestore
+  // identity. Direct client access is disabled, so starting without server
+  // data access would leave the app in a misleading partially-working state.
+  await verifyPrivilegedFirestoreAccess();
 
   const app = express();
   const PORT = 3000;

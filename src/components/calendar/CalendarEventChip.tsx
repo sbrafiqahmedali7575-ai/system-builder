@@ -51,9 +51,13 @@ export const CalendarEventChip: React.FC<CalendarEventChipProps> = (props) => {
           onClick();
         }}
         aria-label={`${task.taskOfTheDay}. ${
-          task.isCompleted ? 'Completed' : 'To do'
+          disabled
+            ? 'Future task locked'
+            : task.isCompleted
+            ? 'Completed'
+            : 'To do'
         }.`}
-        className={`pointer-events-auto w-full min-w-0 h-[20px] px-1.5 rounded-[3px] flex items-center gap-1 text-left text-[9px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${taskChipClass(
+        className={`pointer-events-auto w-full min-w-0 h-[20px] px-1.5 rounded-[3px] flex items-center gap-1 text-left text-[9px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-55 disabled:cursor-default ${taskChipClass(
           task
         )}`}
       >

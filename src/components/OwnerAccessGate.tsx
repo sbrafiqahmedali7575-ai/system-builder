@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Loader2, LockKeyhole, LogOut, ShieldCheck } from 'lucide-react';
 
 type OwnerState = 'checking' | 'authorized' | 'required' | 'unconfigured';
 
@@ -14,6 +14,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [syncConflictNotice, setSyncConflictNotice] = useState('');
 
   const checkSession = useCallback(async () => {
     try {
@@ -45,12 +46,20 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
     };
 
     const handleFocus = () => void checkSession();
+    const handleSyncConflict = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      setSyncConflictNotice(
+        detail?.message ||
+          'A newer server change was kept instead of an older offline edit.'
+      );
+    };
 
     window.addEventListener(
       'system-builder-owner-auth-required',
       handleAuthRequired
     );
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('system-builder-sync-conflict', handleSyncConflict);
 
     const intervalId = window.setInterval(
       () => void checkSession(),
@@ -63,6 +72,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
         handleAuthRequired
       );
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('system-builder-sync-conflict', handleSyncConflict);
       window.clearInterval(intervalId);
     };
   }, [checkSession]);
@@ -101,8 +111,57 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
     }
   };
 
+  const logout = async () => {
+    try {
+      await fetch('/api/owner/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+    } finally {
+      setToken('');
+      setState('required');
+      setError('');
+    }
+  };
+
   if (state === 'authorized') {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+
+        {syncConflictNotice && (
+          <div className="fixed bottom-16 right-3 z-[90] max-w-sm rounded-xl border border-amber-500/40 bg-slate-950/95 p-3 text-xs text-amber-100 shadow-2xl backdrop-blur">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+              <div className="min-w-0">
+                <div className="font-black text-amber-300">Offline sync conflict</div>
+                <div className="mt-1 leading-relaxed text-slate-300">
+                  {syncConflictNotice}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSyncConflictNotice('')}
+                  className="mt-2 font-bold text-amber-300 hover:text-amber-200"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => void logout()}
+          className="fixed bottom-3 right-3 z-[80] inline-flex h-10 items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/90 px-3 text-xs font-black text-slate-200 shadow-xl backdrop-blur hover:border-slate-500 hover:bg-slate-900"
+          title="End owner session"
+          aria-label="Log out of System Builder"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="hidden sm:inline">Logout</span>
+        </button>
+      </>
+    );
   }
 
   return (

@@ -190,7 +190,7 @@ export default function App() {
   // the single-user collections/fields. The legacy data remains in place for
   // compatibility, and the completion flag is written only after a full success.
   useEffect(() => {
-    if (confirmToken || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
     if (localStorage.getItem(DATA_MODEL_MIGRATION_KEY) === '1') {
       return;

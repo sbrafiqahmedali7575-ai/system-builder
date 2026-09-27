@@ -21,7 +21,7 @@ export function formatCsvRow(fields: any[]): string {
 }
 
 export interface BackupData {
-  records: any[];
+  days: any[];
   tasks: any[];
   timestamp: string;
 }
@@ -30,62 +30,56 @@ export interface BackupData {
  * Fetch all project data from Firestore collections
  */
 export async function fetchAllProjectData(): Promise<BackupData> {
-  const [recordsSnap, tasksSnap] = await Promise.all([
-    getDocs(collection(db, 'records')).catch(() => ({ docs: [] } as any)),
+  const [daysSnap, tasksSnap] = await Promise.all([
+    getDocs(collection(db, 'days')).catch(() => ({ docs: [] } as any)),
     getDocs(collection(db, 'tasks')).catch(() => ({ docs: [] } as any)),
   ]);
 
-  const records: any[] = [];
-  recordsSnap.forEach((d: any) => {
-    records.push({ id: d.id, ...d.data() });
+  const days: any[] = [];
+  daysSnap.forEach((d: any) => {
+    days.push({ id: d.id, ...d.data() });
   });
-  records.sort((a, b) => (Number(a.day) || 0) - (Number(b.day) || 0));
+  days.sort((a, b) => String(a.dateKey || a.id).localeCompare(String(b.dateKey || b.id)));
 
   const tasks: any[] = [];
   tasksSnap.forEach((d: any) => {
     tasks.push({ id: d.id, ...d.data() });
   });
-  tasks.sort((a, b) => String(a.taskKey || '').localeCompare(String(b.taskKey || '')));
+  tasks.sort((a, b) => String(a.scheduledDate || '').localeCompare(String(b.scheduledDate || '')));
 
   return {
-    records,
+    days,
     tasks,
     timestamp: new Date().toISOString(),
   };
 }
 
 /**
- * Generates records.csv string keeping only the 5 exact columns:
- * id,day,date,isCompleted,notes
+ * Generates days.csv from the canonical Days collection.
  */
-export function generateRecordsCsv(records: any[]): string {
+export function generateDaysCsv(days: any[]): string {
   const headers = [
-    'id',
-    'day',
-    'date',
-    'isCompleted',
-    'notes',
+    'dateKey','tasksCompleted','taskTotal','taskCompletionRate',
+    'habitsCompleted','habitTotal','habitCompletionRate','IsdayCompleted'
   ];
-
-  const rows = records.map((r) => {
-    const isComp = r.isCompleted === true;
-    return [
-      r.id ?? '',
-      r.day ?? '',
-      r.date ?? '',
-      isComp ? 'TRUE' : 'FALSE',
-      r.notes ?? '',
-    ];
-  });
-
+  const rows = days.map((d) => [
+    d.dateKey ?? d.id ?? '',
+    d.tasksCompleted ?? 0,
+    d.taskTotal ?? 0,
+    d.taskCompletionRate ?? 0,
+    d.habitsCompleted ?? 0,
+    d.habitTotal ?? 0,
+    d.habitCompletionRate ?? 0,
+    d.IsdayCompleted === true ? 'TRUE' : 'FALSE',
+  ]);
   return [formatCsvRow(headers), ...rows.map(formatCsvRow)].join('\r\n');
 }
 
 /**
- * Bundle only records.csv into export map (other tables removed per user request)
+ * Bundle only days.csv into export map (other tables removed per user request)
  */
 export function generateAllCsvFiles(data: BackupData): Record<string, string> {
   return {
-    'records.csv': generateRecordsCsv(data.records),
+    'days.csv': generateDaysCsv(data.days),
   };
 }

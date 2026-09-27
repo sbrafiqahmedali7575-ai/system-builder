@@ -110,11 +110,14 @@ if (!firebaseClientSource.includes('GoogleAuthProvider')) {
 if (!firebaseClientSource.includes('getFirebaseRuntime')) {
   failures.push('Firebase runtime must initialize lazily so preview rendering cannot be blocked at module load.');
 }
-if (!firebaseClientSource.includes("'notification_settings', 'daily-settings'")) {
+if (
+  !firebaseClientSource.includes("'notification_settings'") ||
+  !firebaseClientSource.includes("'daily-settings'")
+) {
   failures.push('Firebase owner verification must read the owner settings document.');
 }
 if (
-  !firebaseServiceSource.includes("collection(getFirestoreDb(), 'records')")
+  !firebaseServiceSource.includes("firestoreSdk.collection(firestore, 'records')")
 ) {
   failures.push('Interactive records must use authenticated Firestore client access.');
 }

@@ -94,7 +94,6 @@ export function handleFirestoreError(
   throw new Error(JSON.stringify(errInfo));
 }
 
-const RECORDS_COLLECTION = 'records';
 const TASKS_COLLECTION = 'tasks';
 const HABITS_COLLECTION = 'habits';
 const HABIT_LOGS_COLLECTION = 'habitLogs';
@@ -321,7 +320,7 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
   let tasksCompleted = 0;
   tasksSnap.forEach((taskDoc) => {
     const data = taskDoc.data();
-    if (normalizeModelDateKey(data.scheduledDate || data.taskKey) !== dateKey) return;
+    if (normalizeModelDateKey(data.scheduledDate) !== dateKey) return;
     taskTotal += 1;
     if (data.Iscompleted === true) tasksCompleted += 1;
   });
@@ -373,7 +372,7 @@ async function rebuildAllDaySummaries(): Promise<void> {
     if (key) dateKeys.add(key);
   });
   tasksSnap.forEach((d) => {
-    const key = normalizeModelDateKey(d.data().scheduledDate || d.data().taskKey);
+    const key = normalizeModelDateKey(d.data().scheduledDate);
     if (key) dateKeys.add(key);
   });
   logsSnap.forEach((d) => {
@@ -581,7 +580,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
         String(t.scheduledDate || '') === task.taskKey) &&
       t.title &&
       task.taskOfTheDay &&
-      Stringt.title.trim().toLowerCase() ===
+      String(t.title).trim().toLowerCase() ===
         String(task.taskOfTheDay).trim().toLowerCase()
   );
   if (duplicateName) {
@@ -641,7 +640,7 @@ export async function deleteTaskFromCloud(taskId: string): Promise<void> {
     (taskDoc) => String(taskDoc.data().taskId || taskDoc.data().id || taskDoc.id) === taskId
   );
   const dateKey = existing
-    ? normalizeModelDateKey(existing.data().scheduledDate || existing.data().taskKey)
+    ? normalizeModelDateKey(existing.data().scheduledDate)
     : '';
 
   const docRef = doc(db, TASKS_COLLECTION, taskId);

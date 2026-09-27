@@ -38,11 +38,13 @@ import {
   processPendingSync,
   isNetworkOrOfflineError,
 } from './services/offlineStorage';
+import { migrateLegacyDataModel } from './services/dataModelMigration';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
+const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V1_MIGRATED';
 type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }
   | { kind: 'delete' };
@@ -205,6 +207,42 @@ export default function App() {
       isMounted = false;
     };
   }, []);
+
+  // One-time, non-destructive migration from the legacy Firestore model to
+  // the single-user collections/fields. The legacy data remains in place for
+  // compatibility, and the completion flag is written only after a full success.
+  useEffect(() => {
+    if (confirmToken || typeof window === 'undefined') return;
+
+    if (localStorage.getItem(DATA_MODEL_MIGRATION_KEY) === '1') {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function runDataModelMigration() {
+      try {
+        const result = await migrateLegacyDataModel();
+        if (cancelled) return;
+
+        localStorage.setItem(DATA_MODEL_MIGRATION_KEY, '1');
+        console.info('System Builder data model migration completed:', result);
+      } catch (error) {
+        // Migration is intentionally best-effort while the app remains backward compatible.
+        // A Firestore permission failure must not prevent the dashboard from loading.
+        console.warn(
+          'System Builder data model migration is pending and will retry later:',
+          error
+        );
+      }
+    }
+
+    runDataModelMigration();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [confirmToken]);
 
   // Background sync for queued offline mutations when online
   useEffect(() => {

@@ -418,22 +418,20 @@ export function subscribeToCountdownSettings(
   onError?: (error: Error) => void
 ): Unsubscribe {
   return onSnapshot(
-    doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
+    doc(db, COUNTDOWNS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
     (snapshot) => {
       if (!snapshot.exists()) {
         onUpdate(null);
         return;
       }
-
       const data = snapshot.data();
       onUpdate({
         targetDate: String(data.targetDate ?? ''),
-        reason: String(data.reason ?? ''),
-        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
+        reason: String(data.title ?? ''),
       });
     },
     (err) => {
-      console.error('Firestore countdown settings subscription error:', err);
+      console.error('Firestore countdown subscription error:', err);
       if (onError) onError(err);
     }
   );
@@ -442,29 +440,12 @@ export function subscribeToCountdownSettings(
 export async function saveCountdownSettings(
   settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
 ): Promise<void> {
-  const updatedAt = new Date().toISOString();
-
-  await Promise.all([
-    setDoc(
-      doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
-      {
-        targetDate: settings.targetDate,
-        reason: settings.reason,
-        updatedAt,
-      },
-      { merge: true }
-    ),
-    setDoc(
-      doc(db, COUNTDOWNS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
-      {
-        countdownId: COUNTDOWN_SETTINGS_DOC,
-        title: settings.reason || 'Countdown',
-        targetDate: settings.targetDate,
-        isActive: Boolean(settings.targetDate),
-      },
-      { merge: true }
-    ),
-  ]);
+  await setDoc(doc(db, COUNTDOWNS_COLLECTION, COUNTDOWN_SETTINGS_DOC), {
+    countdownId: COUNTDOWN_SETTINGS_DOC,
+    title: settings.reason || 'Countdown',
+    targetDate: settings.targetDate,
+    isActive: Boolean(settings.targetDate),
+  });
 }
 
 /**

@@ -12,6 +12,8 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
+  verifyPrivilegedFirestoreAccess,
 } from './server/db';
 import { verifyConfirmationToken } from './server/tokenService';
 import {
@@ -431,6 +433,10 @@ function renderErrorPage(res: express.Response, message: string, status: number 
 }
 
 async function startServer() {
+  // Fail closed when privileged IAM credentials are unavailable. The browser
+  // no longer has direct Firestore access, so server identity is mandatory.
+  await verifyPrivilegedFirestoreAccess();
+
   const app = express();
   const PORT = 3000;
 
@@ -536,6 +542,310 @@ async function startServer() {
       `${OWNER_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`
     );
     res.json({ success: true });
+  });
+
+  // Owner-only application data API. Browser code must use these routes rather
+  // than connecting to Firestore directly.
+  app.get('/api/data/records', requireOwner, async (_req, res) => {
+    try {
+      const snapshot = await getDocs(collection(db, 'records'));
+      const records = snapshot.docs
+        .map((item) => ({ id: item.id, ...item.data() }))
+        .sort((a: any, b: any) => (Number(a.day) || 0) - (Number(b.day) || 0));
+      res.json({ records });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.put('/api/data/records/:id', requireOwner, async (req, res) => {
+    try {
+      const id = String(req.params.id || '').trim();
+      const body = req.body || {};
+      const day = Number(body.day);
+      const date = String(body.date || '').trim();
+
+      if (!id || !Number.isFinite(day) || day <= 0 || !date) {
+        return res.status(400).json({ error: 'Record id, positive day, and date are required.' });
+      }
+
+      const existing = await getDocs(collection(db, 'records'));
+      const normalizedDate = normalizeDateKey(date);
+      const duplicate = existing.docs.find((item) => {
+        if (item.id === id) return false;
+        const data = item.data();
+        return (
+          Number(data.day) === day ||
+          normalizeDateKey(String(data.date || '')) === normalizedDate
+        );
+      });
+
+      if (duplicate) {
+        return res.status(409).json({
+          error: 'Another record already uses this day number or date.',
+        });
+      }
+
+      const payload = {
+        id,
+        day,
+        date,
+        isCompleted: Boolean(body.isCompleted),
+        result: body.isCompleted ? 'TRUE' : 'FALSE',
+        change: Number.isFinite(Number(body.change)) ? Number(body.change) : 0,
+        skill: String(body.skill || '').slice(0, 120),
+        summary: String(body.summary || '').slice(0, 500),
+        notes: String(body.notes || '').slice(0, 4000),
+        ...(body.responseSubmittedAt
+          ? { responseSubmittedAt: String(body.responseSubmittedAt).slice(0, 80) }
+          : {}),
+        ...(body.responseSource
+          ? { responseSource: String(body.responseSource).slice(0, 40) }
+          : {}),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'records', id), payload);
+      res.json({ success: true, record: payload });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.delete('/api/data/records/:id', requireOwner, async (req, res) => {
+    try {
+      const id = String(req.params.id || '').trim();
+      if (!id) return res.status(400).json({ error: 'Record id is required.' });
+      await deleteDoc(doc(db, 'records', id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.get('/api/data/tasks', requireOwner, async (_req, res) => {
+    try {
+      const snapshot = await getDocs(collection(db, 'tasks'));
+      const tasks = snapshot.docs
+        .map((item) => ({ id: item.id, ...item.data() }))
+        .sort((a: any, b: any) =>
+          String(b.taskKey || '').localeCompare(String(a.taskKey || ''))
+        );
+      res.json({ tasks });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.put('/api/data/tasks/:id', requireOwner, async (req, res) => {
+    try {
+      const id = String(req.params.id || '').trim();
+      const body = req.body || {};
+      const taskKey = String(body.taskKey || '').trim();
+      const taskOfTheDay = String(body.taskOfTheDay || '').trim();
+
+      if (
+        !id ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(taskKey) ||
+        !taskOfTheDay ||
+        taskOfTheDay.length > 500
+      ) {
+        return res.status(400).json({
+          error: 'Task id, YYYY-MM-DD date, and a task title up to 500 characters are required.',
+        });
+      }
+
+      const existing = await getDocs(collection(db, 'tasks'));
+      const duplicate = existing.docs.find((item) => {
+        if (item.id === id) return false;
+        const data = item.data();
+        return (
+          String(data.taskKey || '') === taskKey &&
+          String(data.taskOfTheDay || '').trim().toLowerCase() ===
+            taskOfTheDay.toLowerCase()
+        );
+      });
+
+      if (duplicate) {
+        return res.status(409).json({
+          error: 'Another task with this title already exists for the selected date.',
+        });
+      }
+
+      const allowedPriorities = new Set(['High', 'Medium', 'Normal']);
+      const allowedQuadrants = new Set([
+        'urgent-important',
+        'important',
+        'urgent',
+        'neither',
+      ]);
+
+      const payload = {
+        id,
+        taskKey,
+        taskOfTheDay,
+        isCompleted: Boolean(body.isCompleted),
+        priority: allowedPriorities.has(String(body.priority))
+          ? String(body.priority)
+          : 'Normal',
+        timeEstimate: String(body.timeEstimate || '').slice(0, 80),
+        category: String(body.category || 'General').slice(0, 120),
+        notes: String(body.notes || '').slice(0, 4000),
+        updatedAt: new Date().toISOString(),
+        completedAt: body.completedAt ? String(body.completedAt).slice(0, 80) : null,
+        matrixQuadrant: allowedQuadrants.has(String(body.matrixQuadrant))
+          ? String(body.matrixQuadrant)
+          : null,
+      };
+
+      await setDoc(doc(db, 'tasks', id), payload);
+      res.json({ success: true, task: payload });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.delete('/api/data/tasks/:id', requireOwner, async (req, res) => {
+    try {
+      const id = String(req.params.id || '').trim();
+      if (!id) return res.status(400).json({ error: 'Task id is required.' });
+      await deleteDoc(doc(db, 'tasks', id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.get('/api/data/habits', requireOwner, async (_req, res) => {
+    try {
+      const snapshot = await getDocs(collection(db, 'habits'));
+      const habits = snapshot.docs
+        .map((item) => ({ id: item.id, ...item.data() }))
+        .sort((a: any, b: any) =>
+          String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
+        );
+      res.json({ habits });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.put('/api/data/habits/:id', requireOwner, async (req, res) => {
+    try {
+      const id = String(req.params.id || '').trim();
+      const body = req.body || {};
+      const name = String(body.name || '').trim();
+      const allowedFrequencies = new Set(['daily', 'weekdays', 'custom']);
+      const allowedColors = new Set(['blue', 'emerald', 'amber', 'rose', 'violet']);
+
+      if (!id || !name || name.length > 200) {
+        return res.status(400).json({
+          error: 'Habit id and a name up to 200 characters are required.',
+        });
+      }
+
+      const normalizeDateList = (value: unknown): string[] =>
+        Array.isArray(value)
+          ? Array.from(
+              new Set(
+                value
+                  .map((item) => String(item))
+                  .filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item))
+              )
+            ).slice(0, 5000)
+          : [];
+
+      const repeatDays = Array.isArray(body.repeatDays)
+        ? Array.from(
+            new Set(
+              body.repeatDays
+                .map((item: unknown) => Number(item))
+                .filter(
+                  (item: number) =>
+                    Number.isInteger(item) && item >= 0 && item <= 6
+                )
+            )
+          )
+        : [];
+
+      const payload = {
+        id,
+        name,
+        emoji: String(body.emoji || '✓').slice(0, 16),
+        frequency: allowedFrequencies.has(String(body.frequency))
+          ? String(body.frequency)
+          : 'daily',
+        repeatDays,
+        skippedDates: normalizeDateList(body.skippedDates),
+        extraDates: normalizeDateList(body.extraDates),
+        color: allowedColors.has(String(body.color))
+          ? String(body.color)
+          : 'blue',
+        checkIns: normalizeDateList(body.checkIns),
+        createdAt: String(body.createdAt || new Date().toISOString()).slice(0, 80),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'habits', id), payload);
+      res.json({ success: true, habit: payload });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.delete('/api/data/habits/:id', requireOwner, async (req, res) => {
+    try {
+      const id = String(req.params.id || '').trim();
+      if (!id) return res.status(400).json({ error: 'Habit id is required.' });
+      await deleteDoc(doc(db, 'habits', id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.get('/api/data/countdown', requireOwner, async (_req, res) => {
+    try {
+      const snapshot = await getDoc(
+        doc(db, 'notification_settings', 'system_builder_countdown')
+      );
+      res.json({ settings: snapshot.exists() ? snapshot.data() : null });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
+  });
+
+  app.put('/api/data/countdown', requireOwner, async (req, res) => {
+    try {
+      const targetDate = String(req.body?.targetDate || '').trim();
+      const reason = String(req.body?.reason || '').trim();
+
+      if (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+        return res.status(400).json({
+          error: 'Countdown target date must use YYYY-MM-DD format.',
+        });
+      }
+
+      if (reason.length > 160) {
+        return res.status(400).json({
+          error: 'Countdown reason must be 160 characters or fewer.',
+        });
+      }
+
+      const payload = {
+        targetDate,
+        reason,
+        updatedAt: new Date().toISOString(),
+      };
+      await setDoc(
+        doc(db, 'notification_settings', 'system_builder_countdown'),
+        payload,
+        { merge: true }
+      );
+      res.json({ success: true, settings: payload });
+    } catch (error) {
+      res.status(500).json({ error: sanitizeError(error) });
+    }
   });
 
   // 2. Owner-only notification settings API

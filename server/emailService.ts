@@ -31,11 +31,6 @@ export interface SendEmailResult {
   provider: 'smtp' | 'simulator';
   messageId?: string;
   error?: string;
-  previewLinks?: {
-    reviewUrl?: string;
-    completedUrl?: string;
-    notCompletedUrl?: string;
-  };
   emailHtml?: string;
 }
 
@@ -523,9 +518,6 @@ export async function sendDailyConfirmationEmail(
     status: 'pending_configuration',
     provider: 'simulator',
     error: 'Awaiting Gmail SMTP credentials in Settings',
-    previewLinks: {
-      reviewUrl: emailContent.reviewUrl,
-    },
     emailHtml: emailContent.html,
   };
 }

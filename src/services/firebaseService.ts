@@ -427,6 +427,27 @@ export async function saveCountdownSettings(
  * Subscribe to real-time updates from Firestore.
  * Automatically initializes initial sample data if the collection is empty.
  */
+
+export type CanonicalCollectionName = 'users' | 'days' | 'tasks' | 'habits' | 'habitLogs' | 'countdowns';
+export type CanonicalDataRow = { id: string; [key: string]: unknown };
+
+export function subscribeToCanonicalData(
+  onUpdate: (data: Record<CanonicalCollectionName, CanonicalDataRow[]>) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  const names: CanonicalCollectionName[] = ['users', 'days', 'tasks', 'habits', 'habitLogs', 'countdowns'];
+  const state = Object.fromEntries(names.map((name) => [name, []])) as Record<CanonicalCollectionName, CanonicalDataRow[]>;
+  const unsubs = names.map((name) => onSnapshot(
+    collection(db, name),
+    (snapshot) => {
+      state[name] = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      onUpdate({ ...state });
+    },
+    (err) => onError?.(err)
+  ));
+  return () => unsubs.forEach((unsubscribe) => unsubscribe());
+}
+
 export function subscribeToRecords(
   onUpdate: (records: DailyRecord[]) => void,
   onError?: (error: Error) => void

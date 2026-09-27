@@ -1,10 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Database, RefreshCw } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Database, KeyRound, RefreshCw } from 'lucide-react';
 import {
   subscribeToCanonicalData,
   type CanonicalCollectionName,
   type CanonicalDataRow,
 } from '../services/firebaseService';
+
+type SortDirection = 'asc' | 'desc';
+type SortState = { column: string; direction: SortDirection } | null;
+
+const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> = {
+  users: { userId: 'PK' },
+  days: { dateKey: 'PK' },
+  tasks: { taskId: 'PK', scheduledDate: 'FK' },
+  habits: { habitId: 'PK' },
+  habitLogs: { habitLogId: 'PK', habitId: 'FK', dateKey: 'FK' },
+  countdowns: { countdownId: 'PK' },
+};
 
 const COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
   { id: 'users', label: 'Users' },
@@ -29,10 +41,34 @@ export const DataWorkspace: React.FC = () => {
     users: [], days: [], tasks: [], habits: [], habitLogs: [], countdowns: [],
   });
   const [error, setError] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortState>(null);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
 
   const rows = data[active];
+  const sortedRows = useMemo(() => {
+    if (!sort) return rows;
+    return [...rows].sort((a, b) => {
+      const left = renderValue(a[sort.column]).toLocaleLowerCase();
+      const right = renderValue(b[sort.column]).toLocaleLowerCase();
+      const comparison = left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
+      return sort.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [rows, sort]);
+
+  const cycleSort = (column: string) => {
+    if (!KEY_COLUMNS[active][column]) return;
+    setSort((current) => {
+      if (!current || current.column !== column) return { column, direction: 'asc' };
+      if (current.direction === 'asc') return { column, direction: 'desc' };
+      return null;
+    });
+  };
+
+  const selectCollection = (collection: CanonicalCollectionName) => {
+    setActive(collection);
+    setSort(null);
+  };
   const columns = useMemo(() => {
     const keys = new Set<string>();
     rows.forEach((row) => Object.keys(row).forEach((key) => keys.add(key)));
@@ -59,7 +95,7 @@ export const DataWorkspace: React.FC = () => {
             <button
               key={collection.id}
               type="button"
-              onClick={() => setActive(collection.id)}
+              onClick={() => selectCollection(collection.id)}
               className={`relative rounded-xl border px-2 py-2 text-left transition-all ${selected
                 ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200'
                 : 'border-slate-200 bg-white hover:bg-slate-50'}`}
@@ -91,15 +127,39 @@ export const DataWorkspace: React.FC = () => {
             <table className="w-full min-w-max border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-white shadow-sm">
                 <tr>
-                  {columns.map((column) => (
-                    <th key={column} className="border-b border-r border-slate-200 px-2.5 py-2 text-[10px] uppercase tracking-wide font-black text-slate-500 whitespace-nowrap">
-                      {column}
-                    </th>
-                  ))}
+                  {columns.map((column) => {
+                    const keyType = KEY_COLUMNS[active][column];
+                    const isSorted = sort?.column === column;
+                    return (
+                      <th key={column} className="border-b border-r border-slate-200 p-0 text-[10px] uppercase tracking-wide font-black text-slate-500 whitespace-nowrap">
+                        {keyType ? (
+                          <button
+                            type="button"
+                            onClick={() => cycleSort(column)}
+                            className="w-full px-2.5 py-2 inline-flex items-center gap-1.5 text-left hover:bg-slate-100 transition-colors"
+                            title={`Sort by ${column} (${keyType})`}
+                          >
+                            <KeyRound className="w-3 h-3 text-amber-500 shrink-0" />
+                            <span>{column}</span>
+                            <span className="rounded bg-slate-100 px-1 py-0.5 text-[8px] text-slate-500">{keyType}</span>
+                            {isSorted ? (
+                              sort?.direction === 'asc'
+                                ? <ArrowUp className="w-3 h-3 text-blue-600 ml-auto" />
+                                : <ArrowDown className="w-3 h-3 text-blue-600 ml-auto" />
+                            ) : (
+                              <ChevronsUpDown className="w-3 h-3 text-slate-300 ml-auto" />
+                            )}
+                          </button>
+                        ) : (
+                          <div className="px-2.5 py-2">{column}</div>
+                        )}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {sortedRows.map((row) => (
                   <tr key={row.id} className="hover:bg-blue-50/40">
                     {columns.map((column) => (
                       <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">

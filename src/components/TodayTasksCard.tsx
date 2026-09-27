@@ -219,11 +219,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       return;
     }
 
-    if (!newTaskQuadrant) {
-      setPanelError('Please select a quadrant from I to IV.');
-      return;
-    }
-
     // Guard: duplicate within same date
     const duplicate = tasks.find(
       (t) =>
@@ -242,9 +237,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         taskKey: panelTargetDateKey,
         taskOfTheDay: trimmedTitle,
         isCompleted: false,
-        priority: priorityForQuadrant(newTaskQuadrant),
+        priority: newTaskQuadrant
+          ? priorityForQuadrant(newTaskQuadrant)
+          : 'Normal',
         category: 'General',
-        matrixQuadrant: newTaskQuadrant,
+        matrixQuadrant: newTaskQuadrant || undefined,
       });
 
       // Keep panel open, add to session list, clear input and refocus!
@@ -868,7 +865,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       htmlFor="new-task-quadrant"
                       className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1"
                     >
-                      Quadrant
+                      Quadrant <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span>
                     </label>
                     <select
                       id="new-task-quadrant"
@@ -884,7 +881,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       }`}
                       aria-label="Select task quadrant"
                     >
-                      <option value="">Select quadrant</option>
+                      <option value="">No quadrant</option>
                       {TASK_QUADRANT_OPTIONS.map((quadrant) => (
                         <option key={quadrant.value} value={quadrant.value}>
                           {quadrant.roman} — {quadrant.label}
@@ -892,15 +889,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       ))}
                     </select>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      I = do first · II = schedule · III = delegate · IV = eliminate
+                      Optional · I = do first · II = schedule · III = delegate · IV = eliminate
                     </p>
                   </div>
 
                   <button
                     type="submit"
-                    disabled={isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant}
+                    disabled={isAddingTask || !newTaskTitle.trim()}
                     className={`h-[34px] px-3 rounded-xl font-semibold text-xs inline-flex items-center justify-center gap-1 transition shadow-xs shrink-0 sm:mt-[21px] ${
-                      isAddingTask || !newTaskTitle.trim() || !newTaskQuadrant
+                      isAddingTask || !newTaskTitle.trim()
                         ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
                         : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'
                     }`}

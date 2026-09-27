@@ -56,8 +56,21 @@ export function sanitizeError(rawMessage: any): string {
     }
   }
 
-  // Redact any password or secret assignment in SMTP debug output
-  sanitized = sanitized.replace(/(password|pass|auth|secret|token)\s*[:=]\s*["']?([^\s"',;]+)["']?/gi, '$1: "***REDACTED***"');
+  // Redact any password or secret assignment in SMTP debug output.
+  sanitized = sanitized.replace(
+    /(password|pass|auth|secret|token)\s*[:=]\s*["']?([^\s"',;]+)["']?/gi,
+    '$1: "***REDACTED***"'
+  );
+
+  // Redact bearer credentials and sensitive URL query parameters.
+  sanitized = sanitized.replace(
+    /(authorization\s*:\s*bearer\s+)[^\s]+/gi,
+    '$1***REDACTED***'
+  );
+  sanitized = sanitized.replace(
+    /([?&](?:token|key|api_key|apikey)=)[^&\s]+/gi,
+    '$1***REDACTED***'
+  );
 
   return sanitized;
 }

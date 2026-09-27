@@ -43,7 +43,7 @@ export interface TaskItem {
   updatedAt?: string;
   completedAt?: string;
   matrixQuadrant?: MatrixQuadrant;
-  sortOrder?: number; // Canonical order inside a quadrant
+  taskOrder?: number; // Canonical contiguous order within scheduledDate
 }
 
 export type ToolsDensity = 'compact' | 'comfortable';

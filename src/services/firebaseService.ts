@@ -239,7 +239,7 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   });
 
   for (const dateKey of checkedDates) {
-    const habitLogId = `${habit.id}_${dateKey}`;
+    const habitLogId = `HL-${habit.id}-${dateKey.replace(/-/g, '')}`;
     batch.set(
       doc(db, HABIT_LOGS_COLLECTION, habitLogId),
       {

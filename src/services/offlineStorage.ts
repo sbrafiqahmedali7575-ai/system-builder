@@ -15,7 +15,6 @@ const KEY_HABITS = 'habits_cache_v2';
 const KEY_PENDING_QUEUE = 'pending_offline_mutations_v1';
 
 // Legacy localStorage fallback keys for one-time seamless migration
-const LEGACY_RECORDS_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const LEGACY_TASKS_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const LEGACY_TASKS_FALLBACK_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const LEGACY_HABITS_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
@@ -76,7 +75,6 @@ export async function getCachedRecords(): Promise<DailyRecord[] | null> {
 
     // Attempt migration from localStorage if IndexedDB has not been populated yet
     if (typeof window !== 'undefined') {
-      const legacy = localStorage.getItem(LEGACY_RECORDS_KEY);
       if (legacy) {
         try {
           const parsed = JSON.parse(legacy);
@@ -100,7 +98,6 @@ export async function setCachedRecords(records: DailyRecord[]): Promise<void> {
     await offlineStore.setItem(KEY_RECORDS, records);
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(LEGACY_RECORDS_KEY, JSON.stringify(records));
       } catch {
         // LocalStorage may exceed quota with large datasets; IndexedDB is the source of truth
       }

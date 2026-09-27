@@ -11,7 +11,7 @@ import {
 import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
-import { firestoreDb } from './firebaseClient';
+import { getFirestoreDb } from './firebaseClient';
 
 export type Unsubscribe = () => void;
 
@@ -102,7 +102,7 @@ async function writeWithConflictCheck(
   value: Record<string, unknown>,
   clientMutationAt?: number
 ): Promise<void> {
-  const ref = doc(firestoreDb, collectionName, id);
+  const ref = doc(getFirestoreDb(), collectionName, id);
   const payload = cleanForFirestore({
     ...value,
     updatedAt: serverTimestampIso(),
@@ -114,7 +114,7 @@ async function writeWithConflictCheck(
       return;
     }
 
-    await runTransaction(firestoreDb, async (transaction) => {
+    await runTransaction(getFirestoreDb(), async (transaction) => {
       const snapshot = await transaction.get(ref);
 
       if (snapshot.exists()) {
@@ -145,7 +145,7 @@ async function deleteWithConflictCheck(
   id: string,
   clientMutationAt?: number
 ): Promise<void> {
-  const ref = doc(firestoreDb, collectionName, id);
+  const ref = doc(getFirestoreDb(), collectionName, id);
 
   try {
     if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
@@ -153,7 +153,7 @@ async function deleteWithConflictCheck(
       return;
     }
 
-    await runTransaction(firestoreDb, async (transaction) => {
+    await runTransaction(getFirestoreDb(), async (transaction) => {
       const snapshot = await transaction.get(ref);
       if (!snapshot.exists()) return;
 
@@ -206,7 +206,7 @@ function normalizeRecords(records: DailyRecord[]): DailyRecord[] {
 
 async function loadRecords(): Promise<DailyRecord[]> {
   try {
-    const snapshot = await getDocs(collection(firestoreDb, 'records'));
+    const snapshot = await getDocs(collection(getFirestoreDb(), 'records'));
     return normalizeRecords(
       snapshot.docs.map((item) => ({
         id: item.id,
@@ -225,7 +225,7 @@ export function subscribeToRecords(
   let seeded = false;
 
   return onSnapshot(
-    collection(firestoreDb, 'records'),
+    collection(getFirestoreDb(), 'records'),
     (snapshot) => {
       const records = normalizeRecords(
         snapshot.docs.map((item) => ({
@@ -320,7 +320,7 @@ function normalizeTasks(tasks: TaskItem[]): TaskItem[] {
 
 async function loadTasks(): Promise<TaskItem[]> {
   try {
-    const snapshot = await getDocs(collection(firestoreDb, 'tasks'));
+    const snapshot = await getDocs(collection(getFirestoreDb(), 'tasks'));
     return normalizeTasks(
       snapshot.docs.map((item) => ({
         id: item.id,
@@ -337,7 +337,7 @@ export function subscribeToTasks(
   onError?: (error: Error) => void
 ): Unsubscribe {
   return onSnapshot(
-    collection(firestoreDb, 'tasks'),
+    collection(getFirestoreDb(), 'tasks'),
     (snapshot) => {
       onUpdate(
         normalizeTasks(
@@ -427,7 +427,7 @@ export function subscribeToHabits(
   onError?: (error: Error) => void
 ): Unsubscribe {
   return onSnapshot(
-    collection(firestoreDb, 'habits'),
+    collection(getFirestoreDb(), 'habits'),
     (snapshot) => {
       onUpdate(
         normalizeHabits(

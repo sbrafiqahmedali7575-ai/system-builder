@@ -12,6 +12,10 @@ export default defineConfig(() => {
       },
     },
     build: {
+      // Firebase is intentionally isolated; its minified chunk is ~521 kB but
+      // compresses to ~121 kB. Keep the warning threshold just above that
+      // known vendor chunk while still flagging unexpected bundle growth.
+      chunkSizeWarningLimit: 550,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -28,7 +32,13 @@ export default defineConfig(() => {
             if (id.includes('framer-motion') || id.includes('/motion/')) {
               return 'motion';
             }
-            if (id.includes('react-dom') || id.includes('/react/')) {
+            if (
+              id.includes('react-dom') ||
+              id.includes('/react/') ||
+              id.includes('/scheduler/') ||
+              id.includes('/react-is/') ||
+              id.includes('/use-sync-external-store/')
+            ) {
               return 'react';
             }
             return 'vendor';

@@ -45,6 +45,21 @@ function priorityForQuadrant(
   return 'Normal';
 }
 
+function taskQuadrantSortRank(quadrant?: MatrixQuadrant): number {
+  switch (quadrant) {
+    case 'urgent-important':
+      return 1;
+    case 'important':
+      return 2;
+    case 'urgent':
+      return 3;
+    case 'neither':
+      return 5;
+    default:
+      return 4;
+  }
+}
+
 
 function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
   switch (quadrant) {
@@ -137,10 +152,30 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     return tasks.filter((t) => areDatesEqual(t.taskKey, activeDateKey));
   }, [tasks, activeDateKey]);
 
-  // Split and order tasks: incomplete first, completed below
+  // Split for progress counts, then display in Eisenhower quadrant order:
+  // I → II → III → unassigned → IV. Within each group, incomplete tasks stay above completed tasks.
   const incompleteTasks = useMemo(() => dateTasks.filter((t) => !t.isCompleted), [dateTasks]);
   const completedTasks = useMemo(() => dateTasks.filter((t) => t.isCompleted), [dateTasks]);
-  const sortedTasks = useMemo(() => [...incompleteTasks, ...completedTasks], [incompleteTasks, completedTasks]);
+  const sortedTasks = useMemo(
+    () =>
+      dateTasks
+        .map((task, index) => ({ task, index }))
+        .sort((a, b) => {
+          const quadrantDiff =
+            taskQuadrantSortRank(a.task.matrixQuadrant) -
+            taskQuadrantSortRank(b.task.matrixQuadrant);
+
+          if (quadrantDiff !== 0) return quadrantDiff;
+
+          if (a.task.isCompleted !== b.task.isCompleted) {
+            return a.task.isCompleted ? 1 : -1;
+          }
+
+          return a.index - b.index;
+        })
+        .map(({ task }) => task),
+    [dateTasks]
+  );
 
   const totalTasksCount = dateTasks.length;
   const completedCount = completedTasks.length;

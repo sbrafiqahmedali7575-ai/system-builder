@@ -1,135 +1,268 @@
 {
   "entities": {
-    "Record": {
-      "title": "DailyRecord",
-      "description": "A daily tracking record for skill learning progress.",
+    "User": {
+      "title": "User",
+      "description": "Single System Builder user profile.",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Unique identifier of the record" },
-        "day": { "type": "number", "description": "Day sequence number" },
-        "date": { "type": "string", "description": "Date label string, e.g. 1-Aug-26" },
-        "isCompleted": { "type": "boolean", "description": "Whether the milestone was completed" },
-        "result": { "type": "string", "description": "Result representation: TRUE or FALSE" },
-        "change": { "type": "number", "description": "Daily change percentage rate" },
-        "skill": { "type": "string", "description": "Skill / domain category" },
-        "summary": { "type": "string", "description": "Summary or topic of the milestone" },
-        "notes": { "type": "string", "description": "Optional notes or observations" },
-        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+        "userId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
       },
-      "required": ["id", "day", "date", "isCompleted", "result", "change", "skill", "summary"]
+      "required": [
+        "userId",
+        "name",
+        "email"
+      ]
+    },
+    "Day": {
+      "title": "Day",
+      "description": "Derived daily task and habit completion summary.",
+      "type": "object",
+      "properties": {
+        "dateKey": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "tasksCompleted": {
+          "type": "integer"
+        },
+        "taskTotal": {
+          "type": "integer"
+        },
+        "taskCompletionRate": {
+          "type": "number"
+        },
+        "habitsCompleted": {
+          "type": "integer"
+        },
+        "habitTotal": {
+          "type": "integer"
+        },
+        "habitCompletionRate": {
+          "type": "number"
+        },
+        "IsdayCompleted": {
+          "type": "boolean",
+          "description": "True only when taskCompletionRate is 100."
+        }
+      },
+      "required": [
+        "dateKey",
+        "tasksCompleted",
+        "taskTotal",
+        "taskCompletionRate",
+        "habitsCompleted",
+        "habitTotal",
+        "habitCompletionRate",
+        "IsdayCompleted"
+      ]
     },
     "Task": {
-      "title": "TaskItem",
-      "description": "A task of the day item with date key and completion status.",
+      "title": "Task",
+      "description": "Single-user scheduled task in Eisenhower quadrant order.",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Unique identifier of the task" },
-        "taskKey": { "type": "string", "description": "Task key providing date, e.g. 2026-08-26" },
-        "taskOfTheDay": { "type": "string", "description": "Task description or objective for the day" },
-        "isCompleted": { "type": "boolean", "description": "Whether the task is completed" },
-        "priority": { "type": "string", "description": "Priority level: High, Medium, or Normal" },
-        "timeEstimate": { "type": "string", "description": "Time estimate e.g. 30m, 1h" },
-        "category": { "type": "string", "description": "Optional domain or skill category" },
-        "notes": { "type": "string", "description": "Optional notes or deliverables" },
-        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" },
-        "completedAt": { "type": "string", "description": "ISO timestamp when task was marked done" }
+        "taskId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "quadrant": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "I",
+            "II",
+            "III",
+            "IV",
+            null
+          ]
+        },
+        "scheduledDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "sortOrder": {
+          "type": "integer"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "Iscompleted": {
+          "type": "boolean"
+        }
       },
-      "required": ["id", "taskKey", "taskOfTheDay", "isCompleted"]
+      "required": [
+        "taskId",
+        "title",
+        "scheduledDate",
+        "sortOrder",
+        "notes",
+        "Iscompleted"
+      ]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "Recurring habit definition.",
+      "type": "object",
+      "properties": {
+        "habitId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "repeatDays": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "activeFrom": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color"
+        }
+      },
+      "required": [
+        "habitId",
+        "name",
+        "repeatDays",
+        "activeFrom",
+        "isActive",
+        "color"
+      ]
+    },
+    "HabitLog": {
+      "title": "HabitLog",
+      "description": "One habit completion state for one date.",
+      "type": "object",
+      "properties": {
+        "habitLogId": {
+          "type": "string"
+        },
+        "habitId": {
+          "type": "string"
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "Iscompleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "habitLogId",
+        "habitId",
+        "dateKey",
+        "Iscompleted"
+      ]
+    },
+    "Countdown": {
+      "title": "Countdown",
+      "description": "Single-user countdown target.",
+      "type": "object",
+      "properties": {
+        "countdownId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "targetDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "isActive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "countdownId",
+        "title",
+        "targetDate",
+        "isActive"
+      ]
     },
     "NotificationSettings": {
       "title": "NotificationSettings",
-      "description": "Daily email confirmation preferences and scheduling configuration.",
+      "description": "System configuration retained outside the analytical six-collection model.",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Settings identifier" },
-        "enabled": { "type": "boolean", "description": "Whether daily email notifications are enabled" },
-        "recipientEmail": { "type": "string", "description": "Target email address for confirmations" },
-        "recipientName": { "type": "string", "description": "Recipient full name" },
-        "scheduledTime": { "type": "string", "description": "Scheduled delivery time in HH:mm 24hr format" },
-        "timezone": { "type": "string", "description": "Timezone for scheduling e.g. Asia/Kolkata" },
-        "lastSentDate": { "type": "string", "description": "Date string of last sent email to prevent duplicate runs" },
-        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+        "id": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "recipientEmail": {
+          "type": "string"
+        },
+        "recipientName": {
+          "type": "string"
+        },
+        "scheduledTime": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "lastSentDate": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
       },
-      "required": ["id", "enabled", "recipientEmail", "recipientName", "scheduledTime", "timezone"]
-    },
-    "DeliveryLog": {
-      "title": "EmailDeliveryLog",
-      "description": "Log entry of an automated or test daily confirmation email delivery.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string", "description": "Log entry identifier" },
-        "recipient": { "type": "string", "description": "Recipient email address" },
-        "subject": { "type": "string", "description": "Subject of the email" },
-        "date": { "type": "string", "description": "Target task date e.g. 2026-09-08" },
-        "taskTitle": { "type": "string", "description": "Task of the day title" },
-        "status": { "type": "string", "description": "Delivery status: delivered, failed, skipped, simulated" },
-        "provider": { "type": "string", "description": "Provider used: resend, smtp, or simulator" },
-        "error": { "type": "string", "description": "Error message if delivery failed" },
-        "sentAt": { "type": "string", "description": "ISO timestamp of attempt" }
-      },
-      "required": ["id", "recipient", "subject", "date", "status", "sentAt"]
-    },
-    "DailyReminderSent": {
-      "title": "DailyReminderSent",
-      "description": "Persistent record preventing duplicate daily reminder sends for the same IST date.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string", "description": "Date key in Asia/Kolkata timezone e.g. 10-Sep-2026 or 2026-09-10" },
-        "dateKey": { "type": "string", "description": "Normalized IST date key" },
-        "formattedDate": { "type": "string", "description": "Formatted date e.g. 10-Sep-2026" },
-        "recipient": { "type": "string", "description": "Recipient email address" },
-        "taskId": { "type": "string", "description": "Associated task or record ID" },
-        "taskName": { "type": "string", "description": "Name of the task sent" },
-        "messageId": { "type": "string", "description": "Email provider message ID" },
-        "status": { "type": "string", "description": "Status of the reminder dispatch" },
-        "sentAt": { "type": "string", "description": "ISO timestamp of when the reminder was sent" }
-      },
-      "required": ["id", "dateKey", "formattedDate", "recipient", "status", "sentAt"]
-    },
-    "Habit": {
-      "title": "HabitItem",
-      "description": "A recurring habit with schedule frequencies and check-ins.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string", "description": "Unique identifier of the habit" },
-        "name": { "type": "string", "description": "Habit name or objective" },
-        "emoji": { "type": "string", "description": "Icon emoji representing the habit" },
-        "frequency": { "type": "string", "description": "Frequency: daily, weekdays, or custom" },
-        "repeatDays": { "type": "array", "description": "Days of week for custom frequency (0-6)" },
-        "skippedDates": { "type": "array", "description": "Skipped dates in YYYY-MM-DD" },
-        "extraDates": { "type": "array", "description": "Extra active dates in YYYY-MM-DD" },
-        "color": { "type": "string", "description": "Habit display color tag" },
-        "checkIns": { "type": "array", "description": "Dates where habit was checked in" },
-        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
-        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
-      },
-      "required": ["id", "name", "frequency", "color", "checkIns", "createdAt"]
+      "required": [
+        "id",
+        "enabled",
+        "recipientEmail",
+        "recipientName",
+        "scheduledTime",
+        "timezone"
+      ]
     }
   },
   "firestore": {
-    "/records/{recordId}": {
-      "schema": "Record",
-      "description": "Global shared skill tracking records synchronized across all devices accessing the link."
+    "/users/{userId}": {
+      "schema": "User"
+    },
+    "/days/{dateKey}": {
+      "schema": "Day"
     },
     "/tasks/{taskId}": {
-      "schema": "Task",
-      "description": "Global shared tasks of the day synchronized across all devices."
+      "schema": "Task"
     },
     "/habits/{habitId}": {
-      "schema": "Habit",
-      "description": "Global shared habit tracking items and check-in records."
+      "schema": "Habit"
+    },
+    "/habitLogs/{habitLogId}": {
+      "schema": "HabitLog"
+    },
+    "/countdowns/{countdownId}": {
+      "schema": "Countdown"
     },
     "/notification_settings/{settingId}": {
       "schema": "NotificationSettings",
-      "description": "User notification configuration and schedule settings."
-    },
-    "/delivery_logs/{logId}": {
-      "schema": "DeliveryLog",
-      "description": "Historical audit logs of email deliveries, errors, and skips."
-    },
-    "/daily_reminders_sent/{dateKey}": {
-      "schema": "DailyReminderSent",
-      "description": "Deduplication ledger preventing repeat reminder emails for the same IST date."
+      "description": "Retained application configuration. Existing delivery/reminder collections remain operational during migration."
     }
   }
 }

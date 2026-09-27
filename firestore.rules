@@ -2,10 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // System Builder data is private. Browser/mobile Firebase SDK access is
-    // intentionally disabled; all application data access goes through the
-    // owner-authenticated server API. Server jobs use Google IAM credentials
-    // and therefore do not rely on Firebase Security Rules.
     match /{document=**} {
       allow read, write: if false;
     }

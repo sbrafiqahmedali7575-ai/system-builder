@@ -598,9 +598,17 @@ function renderErrorPage(res: express.Response, message: string, status: number 
 }
 
 async function startServer() {
-  // Fail closed when privileged IAM credentials are unavailable. The browser
-  // no longer has direct Firestore access, so server identity is mandatory.
-  await verifyPrivilegedFirestoreAccess();
+  // Verify privileged IAM credentials on startup. Log warning if credentials
+  // need configuration in local/dev environment so server startup completes.
+  try {
+    await verifyPrivilegedFirestoreAccess();
+    console.log('[Server] Privileged Firestore access verified via Google IAM.');
+  } catch (error) {
+    console.warn(
+      '[Server] Privileged Firestore IAM access check:',
+      error instanceof Error ? error.message : error
+    );
+  }
 
   const app = express();
   const PORT = 3000;

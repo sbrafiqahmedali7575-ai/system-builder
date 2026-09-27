@@ -29,8 +29,8 @@ if (packageJson.dependencies?.firebase || packageJson.devDependencies?.firebase)
 }
 
 if (
-  String(packageJson.scripts?.build || '').includes('outfile=dist/server') ||
-  String(packageJson.scripts?.start || '').includes('dist/server')
+  /--outfile=dist\//.test(String(packageJson.scripts?.build || '')) ||
+  /^node\s+dist\//.test(String(packageJson.scripts?.start || '').trim())
 ) {
   failures.push('The backend bundle must never be written inside the public dist directory.');
 }

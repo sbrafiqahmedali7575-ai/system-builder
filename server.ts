@@ -600,7 +600,7 @@ async function startServer() {
   });
 
   // 5. One-Click Records CSV Backup & Export Endpoint (records.csv ONLY)
-  // Cleaned columns: id, day, date, Iscompleted: isCompleted, notes
+  // Cleaned columns: id, day, date, isCompleted, notes
   app.get('/api/backup/export', async (req, res) => {
     try {
       const format = String(req.query.format || 'csv').toLowerCase();
@@ -693,7 +693,7 @@ dir "%TARGET_DIR%\\records.csv"
 echo.
 echo ======================================================================
 echo  SUCCESS! records.csv replaced in "%TARGET_DIR%".
-echo  Columns: id, day, date, Iscompleted: isCompleted, notes
+echo  Columns: id, day, date, isCompleted, notes
 echo  Ready for SQL Server / Power BI reload.
 echo ======================================================================
 pause
@@ -1143,8 +1143,8 @@ pause
           const tSnap = await getDoc(doc(db, 'tasks', payload.taskId));
           if (tSnap.exists()) {
             const t = tSnap.data();
-            taskName = t.title || taskName;
-            currentStatus = Boolean(t.Iscompleted);
+            taskName = t.taskOfTheDay || taskName;
+            currentStatus = Boolean(t.isCompleted);
           }
         }
       } catch (e) {
@@ -1406,7 +1406,7 @@ pause
             const rData = recSnap.data();
             targetTaskName = rData.summary || targetTaskName;
             await updateDoc(recRef, {
-              Iscompleted: isCompleted,
+              isCompleted,
               result: isCompleted ? 'TRUE' : 'FALSE',
               change: 0,
               updatedAt: nowIso,
@@ -1431,7 +1431,7 @@ pause
           ) {
             targetTaskName = r.summary || targetTaskName;
             await updateDoc(doc(db, 'records', d.id), {
-              Iscompleted: isCompleted,
+              isCompleted,
               result: isCompleted ? 'TRUE' : 'FALSE',
               change: 0,
               updatedAt: nowIso,
@@ -1453,7 +1453,7 @@ pause
               id: fallbackRecId,
               day: nextDay,
               date: targetDate,
-              Iscompleted: isCompleted,
+              isCompleted,
               result: isCompleted ? 'TRUE' : 'FALSE',
               change: 0,
               skill: 'Daily Commitment',
@@ -1474,9 +1474,9 @@ pause
           const taskSnap = await getDoc(taskRef);
           if (taskSnap.exists()) {
             const tData = taskSnap.data();
-            targetTaskName = tData.title || targetTaskName;
+            targetTaskName = tData.taskOfTheDay || targetTaskName;
             await updateDoc(taskRef, {
-              Iscompleted: isCompleted,
+              isCompleted,
               completedAt: isCompleted ? nowIso : null,
               updatedAt: nowIso,
             });
@@ -1491,13 +1491,13 @@ pause
         tasksSnap.forEach(async (d) => {
           const t = d.data();
           if (
-            t.scheduledDate === targetDate ||
+            t.taskKey === targetDate ||
             t.date === targetDate ||
-            String(t.scheduledDate || '').toLowerCase() === String(targetDate || '').toLowerCase()
+            String(t.taskKey || '').toLowerCase() === String(targetDate || '').toLowerCase()
           ) {
-            targetTaskName = t.title || targetTaskName;
+            targetTaskName = t.taskOfTheDay || targetTaskName;
             await updateDoc(doc(db, 'tasks', d.id), {
-              Iscompleted: isCompleted,
+              isCompleted,
               completedAt: isCompleted ? nowIso : null,
               updatedAt: nowIso,
             });
@@ -1521,7 +1521,7 @@ pause
           success: true,
           message: confirmationHeading,
           targetDate,
-          Iscompleted: isCompleted,
+          isCompleted,
           status: targetStatus,
         });
       }

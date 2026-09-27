@@ -120,7 +120,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
 
         {/* Right Desktop Controls */}
         <div className="hidden md:flex items-center space-x-1.5">
-          {/* Email Notification Settings Button */}
           {onOpenLibrary && (
             <motion.button
               whileHover={{ y: -2 }}
@@ -164,19 +163,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
 
         {/* Mobile Header Right Controls */}
         <div className="flex md:hidden items-center space-x-1">
-          {onOpenNotificationModal && (
-            <motion.button
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onOpenNotificationModal}
-              className="p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
-              title="Configure 09:00 PM IST Daily Email Alerts"
-              aria-label="Email Alerts"
-            >
-              <Bell className="w-4 h-4" />
-            </motion.button>
-          )}
-
           {onOpenLibrary && (
             <motion.button
               whileHover={{ y: -2 }}

@@ -100,7 +100,6 @@ const HABITS_COLLECTION = 'habits';
 const HABIT_LOGS_COLLECTION = 'habitLogs';
 const DAYS_COLLECTION = 'days';
 const COUNTDOWNS_COLLECTION = 'countdowns';
-const SETTINGS_COLLECTION = 'notification_settings';
 const COUNTDOWN_SETTINGS_DOC = 'system_builder_countdown';
 
 function matrixQuadrantToRoman(

@@ -46,10 +46,14 @@ export function parseScheduledMinutes(value: string | undefined): number {
   return hour * 60 + minute;
 }
 
+const defaultNotificationEmail = String(
+  process.env.DEFAULT_NOTIFICATION_EMAIL || ''
+).trim();
+
 export const DEFAULT_SETTINGS: NotificationSettingsData = {
   id: SETTINGS_DOC_ID,
-  enabled: true,
-  recipientEmail: String(process.env.DEFAULT_NOTIFICATION_EMAIL || '').trim(),
+  enabled: Boolean(defaultNotificationEmail),
+  recipientEmail: defaultNotificationEmail,
   recipientName: String(process.env.DEFAULT_NOTIFICATION_NAME || 'Owner').trim() || 'Owner',
   scheduledTime: '21:00', // 09:00 PM IST
   timezone: 'Asia/Kolkata',
@@ -435,7 +439,7 @@ export async function findTodayTaskOrRecord(): Promise<{
     };
   } catch (err) {
     console.error('Error finding today tasks or record:', sanitizeError(err));
-    return null;
+    throw err;
   }
 }
 

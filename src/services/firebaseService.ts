@@ -440,7 +440,31 @@ export function subscribeToCanonicalData(
   const unsubs = names.map((name) => onSnapshot(
     collection(db, name),
     (snapshot) => {
-      state[name] = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const rows = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (name === 'tasks') {
+        const byDate = new Map<string, CanonicalDataRow[]>();
+        rows.forEach((row) => {
+          const dateKey = normalizeModelDateKey(row.scheduledDate);
+          if (!dateKey) return;
+          const group = byDate.get(dateKey) || [];
+          group.push(row);
+          byDate.set(dateKey, group);
+        });
+        byDate.forEach((tasksForDate) => {
+          tasksForDate
+            .sort((a, b) =>
+              String(a.taskId || a.id).localeCompare(
+                String(b.taskId || b.id),
+                undefined,
+                { numeric: true, sensitivity: 'base' }
+              )
+            )
+            .forEach((row, index) => {
+              row.taskOrder = index + 1;
+            });
+        });
+      }
+      state[name] = rows;
       onUpdate({ ...state });
     },
     (err) => onError?.(err)

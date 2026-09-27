@@ -32,7 +32,7 @@ export function generateConfirmationToken(
     taskDate: string;
     status: 'completed' | 'pending';
   },
-  expiresInDays: number = 30
+  expiresInDays: number = 2
 ): string {
   const exp = Date.now() + expiresInDays * 24 * 60 * 60 * 1000;
   const nonce = crypto.randomBytes(8).toString('hex');

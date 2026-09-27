@@ -126,9 +126,9 @@ function taskStoragePayload(task: TaskItem): Record<string, unknown> {
     title: task.taskOfTheDay.trim(),
     quadrant: matrixQuadrantToRoman(task.matrixQuadrant),
     scheduledDate: normalizeModelDateKey(task.taskKey) || task.taskKey,
-    sortOrder: Number.isInteger(task.sortOrder) && Number(task.sortOrder) >= 0
-      ? Number(task.sortOrder)
-      : 0,
+    taskOrder: Number.isInteger(task.taskOrder) && Number(task.taskOrder) > 0
+      ? Number(task.taskOrder)
+      : 1,
     notes: task.notes || '',
     Iscompleted: task.isCompleted,
   };
@@ -548,10 +548,10 @@ export function subscribeToTasks(
           updatedAt: data.updatedAt ? String(data.updatedAt) : '',
           completedAt: data.completedAt ? String(data.completedAt) : undefined,
           matrixQuadrant: storedQuadrantToMatrix(data.quadrant),
-          sortOrder:
-            Number.isInteger(Number(data.sortOrder)) && Number(data.sortOrder) >= 0
-              ? Number(data.sortOrder)
-              : 0,
+          taskOrder:
+            Number.isInteger(Number(data.taskOrder)) && Number(data.taskOrder) > 0
+              ? Number(data.taskOrder)
+              : 1,
         });
       });
 
@@ -575,6 +575,24 @@ export async function seedInitialTasks(tasks: TaskItem[]): Promise<void> {
     const docRef = doc(db, TASKS_COLLECTION, t.id);
     batch.set(docRef, taskStoragePayload(t));
   }
+  await batch.commit();
+}
+
+async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
+  if (!dateKey) return;
+  const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
+  const matching = snapshot.docs
+    .filter((d) => normalizeModelDateKey(d.data().scheduledDate) === dateKey)
+    .sort((a, b) => {
+      const ao = Number(a.data().taskOrder || a.data().sortOrder || Number.MAX_SAFE_INTEGER);
+      const bo = Number(b.data().taskOrder || b.data().sortOrder || Number.MAX_SAFE_INTEGER);
+      return ao - bo || a.id.localeCompare(b.id);
+    });
+  if (!matching.length) return;
+  const batch = writeBatch(db);
+  matching.forEach((d, index) => {
+    batch.set(d.ref, { taskOrder: index + 1, sortOrder: deleteField() }, { merge: true });
+  });
   await batch.commit();
 }
 
@@ -609,7 +627,9 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   }
 
   const docRef = doc(db, TASKS_COLLECTION, task.id);
-  await setDoc(docRef, taskStoragePayload(task));
+  const sameDateCount = existingTasks.filter((t) => normalizeModelDateKey(t.scheduledDate) === normalizeModelDateKey(task.taskKey)).length;
+  await setDoc(docRef, { ...taskStoragePayload(task), taskOrder: sameDateCount + 1 });
+  await normalizeTaskOrderForDate(normalizeModelDateKey(task.taskKey));
   await rebuildDaySummary(normalizeModelDateKey(task.taskKey));
 }
 
@@ -646,8 +666,10 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   await setDoc(docRef, taskStoragePayload(task), { merge: true });
 
   const nextDateKey = normalizeModelDateKey(task.taskKey);
+  await normalizeTaskOrderForDate(nextDateKey);
   await rebuildDaySummary(nextDateKey);
   if (previousDateKey && previousDateKey !== nextDateKey) {
+    await normalizeTaskOrderForDate(previousDateKey);
     await rebuildDaySummary(previousDateKey);
   }
 }
@@ -668,6 +690,7 @@ export async function deleteTaskFromCloud(taskId: string): Promise<void> {
   await deleteDoc(docRef);
 
   if (dateKey) {
+    await normalizeTaskOrderForDate(dateKey);
     await rebuildDaySummary(dateKey);
   }
 }

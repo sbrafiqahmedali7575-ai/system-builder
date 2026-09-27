@@ -141,13 +141,9 @@ export function getEmailProviderStatus(): {
 
   const provider: 'smtp' | 'none' = smtpConfigured ? 'smtp' : 'none';
 
-  let fromEmail = process.env.EMAIL_FROM;
-  if (!fromEmail || !fromEmail.trim()) {
-    if (smtpUser && smtpUser.includes('@')) {
-      fromEmail = `System Builder <${smtpUser}>`;
-    } else {
-      fromEmail = 'System Builder <sbrafiqahmedali7575@gmail.com>';
-    }
+  let fromEmail = String(process.env.EMAIL_FROM || '').trim();
+  if (!fromEmail && smtpUser && smtpUser.includes('@')) {
+    fromEmail = `System Builder <${smtpUser}>`;
   }
 
   return {
@@ -421,7 +417,16 @@ export async function sendDailyConfirmationEmail(
   recipientOverride?: string
 ): Promise<SendEmailResult> {
   const providerInfo = getEmailProviderStatus();
-  const recipient = recipientOverride || details.recipientEmail || 'sbrafiqahmedali7575@gmail.com';
+  const recipient = String(recipientOverride || details.recipientEmail || '').trim();
+  if (!recipient) {
+    return {
+      success: false,
+      status: 'pending_configuration',
+      provider: providerInfo.provider,
+      error: 'Notification recipient is not configured.',
+    };
+  }
+
   const emailContent = buildDailyConfirmationEmail(details);
 
   const logId = `log-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;

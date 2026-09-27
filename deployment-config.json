@@ -1,4 +1,4 @@
 {
   "appBaseUrl": "https://systembuilder08.ai.studio",
-  "oidcAudience": "system-builder-scheduler-v1"
+  "oidcAudience": "systembuilder08.ai.studio"
 }

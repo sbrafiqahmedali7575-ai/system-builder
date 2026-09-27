@@ -1246,6 +1246,14 @@ pause
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
       }
 
+      if (!Array.isArray(payload.taskIds)) {
+        return renderErrorPage(
+          res,
+          'This legacy review link does not contain a signed task scope. Request a new daily review email.'
+        );
+      }
+      const signedTaskIds = new Set(payload.taskIds.map(String));
+
       const currentDateKey = normalizeDateKey(getKolkataTimeInfo().dateKey);
       const targetDateKey = normalizeDateKey(payload.taskDate);
       if (targetDateKey !== currentDateKey) {
@@ -1259,7 +1267,10 @@ pause
 
       tasksSnap.forEach((d) => {
         const task = { id: d.id, ...(d.data() as any) };
-        if (normalizeDateKey(task.taskKey || task.date || '') === targetDateKey) {
+        if (
+          signedTaskIds.has(String(task.id)) &&
+          normalizeDateKey(task.taskKey || task.date || '') === targetDateKey
+        ) {
           dayTasks.push(task);
         }
       });
@@ -1467,6 +1478,14 @@ pause
         return renderErrorPage(res, 'This link is not a daily checklist review link.');
       }
 
+      if (!Array.isArray(payload.taskIds)) {
+        return renderErrorPage(
+          res,
+          'This legacy review link does not contain a signed task scope. Request a new daily review email.'
+        );
+      }
+      const signedTaskIds = new Set(payload.taskIds.map(String));
+
       const currentDateKey = normalizeDateKey(getKolkataTimeInfo().dateKey);
       const submittedDateKey = normalizeDateKey(payload.taskDate);
       if (submittedDateKey !== currentDateKey) {
@@ -1481,6 +1500,13 @@ pause
         (Array.isArray(selectedRaw) ? selectedRaw : selectedRaw ? [selectedRaw] : []).map(String)
       );
 
+      if ([...selectedIds].some((id) => !signedTaskIds.has(id))) {
+        return renderErrorPage(
+          res,
+          'The submitted task list exceeds the scope of this signed review link.'
+        );
+      }
+
       const targetDateKey = normalizeDateKey(payload.taskDate);
       const nowIso = new Date().toISOString();
 
@@ -1490,7 +1516,10 @@ pause
 
       tasksSnap.forEach((d) => {
         const task = { id: d.id, ...(d.data() as any) };
-        if (normalizeDateKey(task.taskKey || task.date || '') === targetDateKey) {
+        if (
+          signedTaskIds.has(String(task.id)) &&
+          normalizeDateKey(task.taskKey || task.date || '') === targetDateKey
+        ) {
           dayTasks.push(task);
         }
       });

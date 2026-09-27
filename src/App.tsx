@@ -36,6 +36,7 @@ import {
   queueMutation,
   processPendingSync,
   isNetworkOrOfflineError,
+  purgeLegacyLocalStorage,
 } from './services/offlineStorage';
 
 type PendingTaskMutation =
@@ -108,6 +109,7 @@ export default function App() {
 
     async function hydrateFromIndexedDB() {
       try {
+        purgeLegacyLocalStorage();
         const [cachedRecords, cachedTasks, cachedHabits] = await Promise.all([
           getCachedRecords(),
           getCachedTasks(),

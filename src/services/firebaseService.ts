@@ -11,6 +11,8 @@ import {
   getDocFromServer,
   writeBatch,
   Unsubscribe,
+  type QuerySnapshot,
+  type DocumentData,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
@@ -746,8 +748,8 @@ export function subscribeToHabits(
   onUpdate: (habits: HabitItem[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  let habitsSnapshot: Parameters<Parameters<typeof onSnapshot>[1]>[0] | null = null;
-  let habitLogsSnapshot: Parameters<Parameters<typeof onSnapshot>[1]>[0] | null = null;
+  let habitsSnapshot: QuerySnapshot<DocumentData> | null = null;
+  let habitLogsSnapshot: QuerySnapshot<DocumentData> | null = null;
 
   const emit = () => {
     if (!habitsSnapshot) return;

@@ -12,18 +12,6 @@ service cloud.firestore {
     match /habits/{habitId} {
       allow read, write: if true;
     }
-    match /notification_settings/{settingId} {
-      allow read, write: if true;
-    }
-    match /delivery_logs/{logId} {
-      allow read, write: if true;
-    }
-    match /confirmation_tokens/{tokenId} {
-      allow read, write: if true;
-    }
-    match /daily_reminders_sent/{dateKey} {
-      allow read, write: if true;
-    }
     match /users/{userId} {
       allow read, write: if true;
     }

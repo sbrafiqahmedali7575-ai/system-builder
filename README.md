@@ -52,7 +52,7 @@ For production on Google Cloud / Cloud Run, grant the runtime service account th
 
 The application runtime uses Google Application Default Credentials for privileged Firestore access. AI Studio/Google-hosted deployments provide these credentials automatically. For local or non-Google hosting, configure standard Google Application Default Credentials outside the app rather than injecting a long-lived service-account JSON secret into the runtime.
 
-Firestore rules deployment is automated by `.github/workflows/deploy-firestore-rules.yml` for the named Firestore database configured in `firebase.json`. Add a GitHub Actions repository secret named `FIREBASE_SERVICE_ACCOUNT_JSON` containing a service-account JSON credential with permission to deploy Firebase Rules, then run **Deploy Firestore Security Rules** once from GitHub Actions. Future changes to `firestore.rules` or `firebase.json` deploy automatically.
+The checked-in `firestore.rules` remains deny-all for direct browser/mobile access. This Starter Tier project does not expose the IAM/service-account controls needed for the repository to publish those rules automatically, so rules deployment must be handled through the hosting platform when that capability is available.
 
 The legacy Firebase web configuration file is not imported by browser code and the Firebase browser SDK is no longer a direct dependency. Firebase web API keys are public identifiers rather than authorization secrets; if the legacy key remains enabled, restrict its allowed APIs and HTTP referrers in Google Cloud Console.
 

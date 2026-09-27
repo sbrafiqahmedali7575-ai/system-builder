@@ -1467,7 +1467,6 @@ pause
       tasksSnap.forEach((d) => {
         const task = { id: d.id, ...(d.data() as any) };
         if (
-          signedTaskIds.has(String(task.id)) &&
           normalizeDateKey(task.taskKey || task.date || '') === targetDateKey
         ) {
           dayTasks.push(task);
@@ -1482,10 +1481,7 @@ pause
       const dayHabits: any[] = [];
       habitsSnap.forEach((d) => {
         const habit = { id: d.id, ...(d.data() as any) };
-        if (
-          signedHabitIds.has(String(habit.id)) &&
-          isHabitDueForDate(habit, targetDateKey)
-        ) {
+        if (isHabitDueForDate(habit, targetDateKey)) {
           dayHabits.push(habit);
         }
       });
@@ -1497,7 +1493,9 @@ pause
       const currentHabitIds = new Set(dayHabits.map((habit) => String(habit.id)));
       if (
         currentTaskIds.size !== signedTaskIds.size ||
-        currentHabitIds.size !== signedHabitIds.size
+        currentHabitIds.size !== signedHabitIds.size ||
+        [...currentTaskIds].some((id) => !signedTaskIds.has(id)) ||
+        [...currentHabitIds].some((id) => !signedHabitIds.has(id))
       ) {
         return renderErrorPage(
           res,
@@ -1782,7 +1780,6 @@ pause
       tasksSnap.forEach((d) => {
         const task = { id: d.id, ...(d.data() as any) };
         if (
-          signedTaskIds.has(String(task.id)) &&
           normalizeDateKey(task.taskKey || task.date || '') === targetDateKey
         ) {
           dayTasks.push(task);
@@ -1793,17 +1790,18 @@ pause
       const dayHabits: any[] = [];
       habitsSnap.forEach((d) => {
         const habit = { id: d.id, ...(d.data() as any) };
-        if (
-          signedHabitIds.has(String(habit.id)) &&
-          isHabitDueForDate(habit, targetDateKey)
-        ) {
+        if (isHabitDueForDate(habit, targetDateKey)) {
           dayHabits.push(habit);
         }
       });
 
+      const currentTaskIds = new Set(dayTasks.map((task) => String(task.id)));
+      const currentHabitIds = new Set(dayHabits.map((habit) => String(habit.id)));
       if (
         dayTasks.length !== signedTaskIds.size ||
-        dayHabits.length !== signedHabitIds.size
+        dayHabits.length !== signedHabitIds.size ||
+        [...currentTaskIds].some((id) => !signedTaskIds.has(id)) ||
+        [...currentHabitIds].some((id) => !signedHabitIds.has(id))
       ) {
         return renderErrorPage(
           res,

@@ -25,7 +25,7 @@ const SETTINGS_DOC_ID = 'daily-settings';
 const DAILY_REMINDERS_SENT_COLLECTION = 'daily_reminders_sent';
 const SMTP_RETRY_BACKOFF_MS = 2 * 60 * 1000;
 
-function parseScheduledMinutes(value: string | undefined): number {
+export function parseScheduledMinutes(value: string | undefined): number {
   const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})$/);
   if (!match) return 21 * 60;
 
@@ -49,8 +49,8 @@ function parseScheduledMinutes(value: string | undefined): number {
 export const DEFAULT_SETTINGS: NotificationSettingsData = {
   id: SETTINGS_DOC_ID,
   enabled: true,
-  recipientEmail: 'sbrafiqahmedali7575@gmail.com',
-  recipientName: 'Rafiq Ahmed',
+  recipientEmail: String(process.env.DEFAULT_NOTIFICATION_EMAIL || '').trim(),
+  recipientName: String(process.env.DEFAULT_NOTIFICATION_NAME || 'Owner').trim() || 'Owner',
   scheduledTime: '21:00', // 09:00 PM IST
   timezone: 'Asia/Kolkata',
   lastSentDate: '',
@@ -61,18 +61,24 @@ export const DEFAULT_SETTINGS: NotificationSettingsData = {
  * Get current notification settings from Firestore
  */
 export async function getNotificationSettings(): Promise<NotificationSettingsData> {
+  const docRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
   try {
-    const docRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       return snap.data() as NotificationSettingsData;
     }
-    // Initialize default if not existing
+
+    // Missing settings are initialized explicitly. Transport/IAM/Firestore
+    // errors are never converted into enabled defaults because that could
+    // send mail against stale or unintended configuration.
     await setDoc(docRef, DEFAULT_SETTINGS);
     return DEFAULT_SETTINGS;
   } catch (err) {
-    console.error('Error reading notification settings:', err);
-    return DEFAULT_SETTINGS;
+    console.error(
+      'Error reading notification settings; refusing to fail open:',
+      sanitizeError(err)
+    );
+    throw err;
   }
 }
 
@@ -128,6 +134,22 @@ export async function saveNotificationSettings(
   const docRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
   await setDoc(docRef, updated, { merge: true });
   return updated;
+}
+
+async function saveNotificationLastSentDate(dateKey: string): Promise<void> {
+  const normalized = normalizeSchedulerDateKey(dateKey);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    throw new Error('Refusing to persist an invalid last-sent date.');
+  }
+
+  await setDoc(
+    doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID),
+    {
+      lastSentDate: normalized,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
 }
 
 /**
@@ -200,7 +222,7 @@ function dateKeyFromUnknown(value: any): string {
   ].join('-');
 }
 
-function isHabitDueForDate(habit: any, dateKey: string): boolean {
+export function isHabitDueForDate(habit: any, dateKey: string): boolean {
   const startKey = dateKeyFromUnknown(habit?.createdAt);
   if (startKey && dateKey < startKey) return false;
 
@@ -446,8 +468,21 @@ export async function triggerDailyReminder(options?: {
   const { timeStr, dateKey, formattedDate } = getKolkataTimeInfo();
   const settings = await getNotificationSettings();
   const targetRecipient =
-    options?.recipientOverride || settings.recipientEmail || 'sbrafiqahmedali7575@gmail.com';
+    options?.recipientOverride || String(settings.recipientEmail || '').trim();
   const force = Boolean(options?.force);
+
+  if (!targetRecipient) {
+    return {
+      success: false,
+      alreadySent: false,
+      date: formattedDate,
+      taskId: '',
+      recipient: '',
+      status: 'pending_configuration',
+      error: 'Notification recipient is not configured.',
+      message: 'Configure a recipient email before sending reminders.',
+    };
+  }
 
   // Every non-forced caller must obey the same notification switch and scheduled time.
   // This includes the in-process timer, GitHub Actions, shell scripts, and external schedulers.
@@ -596,7 +631,21 @@ export async function triggerDailyReminder(options?: {
           };
         }
       } catch (err) {
-        console.warn('Warning acquiring distributed atomic lock in Firestore:', sanitizeError(err));
+        const cleanError = sanitizeError(err);
+        console.warn(
+          'Unable to acquire distributed reminder lock; refusing to send without deduplication:',
+          cleanError
+        );
+        return {
+          success: false,
+          alreadySent: false,
+          date: formattedDate,
+          taskId: '',
+          recipient: targetRecipient,
+          status: 'lock_unavailable',
+          error: cleanError,
+          message: 'Reminder was not sent because the distributed deduplication lock was unavailable.',
+        };
       }
     }
 
@@ -689,7 +738,7 @@ export async function triggerDailyReminder(options?: {
       await Promise.all([
         setDoc(doc(db, DAILY_REMINDERS_SENT_COLLECTION, formattedDate), reminderRecord, { merge: true }),
         setDoc(doc(db, DAILY_REMINDERS_SENT_COLLECTION, dateKey), { ...reminderRecord, id: dateKey }, { merge: true }),
-        saveNotificationSettings({ lastSentDate: dateKey }),
+        saveNotificationLastSentDate(dateKey),
       ]);
     } catch (err) {
       console.error('Failed to store persistent deduplication record in Firestore:', sanitizeError(err));

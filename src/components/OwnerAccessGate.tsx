@@ -1,12 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, Loader2, LockKeyhole, LogOut, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Loader2, LockKeyhole, LogIn, LogOut, ShieldCheck } from 'lucide-react';
+import {
+  getFirebaseOwnerStatus,
+  onFirebaseOwnerAuthChanged,
+  signInFirebaseOwner,
+  signOutFirebaseOwner,
+} from '../services/firebaseClient';
 
 type OwnerState =
   | 'checking'
   | 'authorized'
   | 'required'
   | 'unconfigured'
-  | 'storage-unavailable';
+  | 'firebase-auth-required'
+  | 'firebase-forbidden';
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -39,7 +46,35 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [firebaseSubmitting, setFirebaseSubmitting] = useState(false);
   const [syncConflictNotice, setSyncConflictNotice] = useState('');
+  const [serverStorageReady, setServerStorageReady] = useState(true);
+
+  const resolveFirebaseAccess = useCallback(
+    async (storageReady?: boolean) => {
+      setServerStorageReady(storageReady !== false);
+
+      const firebaseStatus = await getFirebaseOwnerStatus();
+
+      if (!firebaseStatus.signedIn) {
+        setState('firebase-auth-required');
+        setError('');
+        return;
+      }
+
+      if (!firebaseStatus.authorized) {
+        setState('firebase-forbidden');
+        setError(
+          'This Google account is signed in, but Firestore does not recognize it as the System Builder owner.'
+        );
+        return;
+      }
+
+      setState('authorized');
+      setError('');
+    },
+    []
+  );
 
   const checkSession = useCallback(async () => {
     try {
@@ -54,16 +89,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
       }>(response);
 
       if (data.authenticated) {
-        if (data.storageReady === false) {
-          setState('storage-unavailable');
-          setError(
-            'Owner authentication is working, but the Firestore data backend is unavailable in this AI Studio preview.'
-          );
-          return;
-        }
-
-        setState('authorized');
-        setError('');
+        await resolveFirebaseAccess(data.storageReady);
         return;
       }
 
@@ -72,7 +98,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
       setState('required');
       setError('Unable to verify the owner session.');
     }
-  }, []);
+  }, [resolveFirebaseAccess]);
 
   useEffect(() => {
     void checkSession();
@@ -97,6 +123,9 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
     );
     window.addEventListener('focus', handleFocus);
     window.addEventListener('system-builder-sync-conflict', handleSyncConflict);
+    const unsubscribeFirebaseAuth = onFirebaseOwnerAuthChanged(() => {
+      void checkSession();
+    });
 
     const intervalId = window.setInterval(
       () => void checkSession(),
@@ -110,6 +139,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
       );
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('system-builder-sync-conflict', handleSyncConflict);
+      unsubscribeFirebaseAuth();
       window.clearInterval(intervalId);
     };
   }, [checkSession]);
@@ -140,16 +170,7 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
       }
 
       setToken('');
-
-      if (data.storageReady === false) {
-        setState('storage-unavailable');
-        setError(
-          'Owner token accepted. Firestore privileged access is not available in this AI Studio preview, so application data remains locked.'
-        );
-        return;
-      }
-
-      setState('authorized');
+      await resolveFirebaseAccess(data.storageReady);
     } catch (loginError) {
       setError(
         loginError instanceof Error
@@ -161,12 +182,34 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (firebaseSubmitting) return;
+
+    try {
+      setFirebaseSubmitting(true);
+      setError('');
+      await signInFirebaseOwner();
+      await resolveFirebaseAccess(serverStorageReady);
+    } catch (loginError) {
+      setError(
+        loginError instanceof Error
+          ? loginError.message
+          : 'Google sign-in failed.'
+      );
+    } finally {
+      setFirebaseSubmitting(false);
+    }
+  };
+
   const logout = async () => {
     try {
-      await fetch('/api/owner/logout', {
-        method: 'POST',
-        credentials: 'same-origin',
-      });
+      await Promise.allSettled([
+        fetch('/api/owner/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+        }),
+        signOutFirebaseOwner(),
+      ]);
     } finally {
       setToken('');
       setState('required');
@@ -185,6 +228,12 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
       <>
         {children}
         {revisionBadge}
+
+        {!serverStorageReady && (
+          <div className="fixed top-3 left-1/2 z-[85] w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 rounded-xl border border-amber-500/40 bg-slate-950/95 px-3 py-2 text-center text-[11px] font-semibold text-amber-200 shadow-xl backdrop-blur">
+            AI Studio preview is using Firebase Auth + Security Rules for app data. Server-side background Firestore jobs remain unavailable in this preview.
+          </div>
+        )}
 
         {syncConflictNotice && (
           <div className="fixed bottom-16 right-3 z-[90] max-w-sm rounded-xl border border-amber-500/40 bg-slate-950/95 p-3 text-xs text-amber-100 shadow-2xl backdrop-blur">
@@ -245,15 +294,19 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
                 ? 'Checking owner access'
                 : state === 'unconfigured'
                 ? 'Owner security needs configuration'
-                : state === 'storage-unavailable'
-                ? 'Data backend unavailable'
+                : state === 'firebase-auth-required'
+                ? 'Google verification required'
+                : state === 'firebase-forbidden'
+                ? 'Google account not authorized'
                 : 'Owner access required'}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               {state === 'unconfigured'
                 ? 'Set OWNER_ACCESS_TOKEN in the server environment to a random value of at least 32 characters. The app and privileged data APIs remain locked until it is configured.'
-                : state === 'storage-unavailable'
-                ? 'Your owner session is valid, but the server cannot currently access Firestore with a privileged identity. No application data will be exposed or modified until that connection is available.'
+                : state === 'firebase-auth-required'
+                ? 'Your owner token is accepted. Sign in with Google so Firebase Security Rules can verify that you own the existing System Builder data.'
+                : state === 'firebase-forbidden'
+                ? 'Use the Google account whose email matches the existing System Builder notification owner setting.'
                 : state === 'required'
                 ? 'Enter your server-side owner access token. The token is exchanged for a 12-hour HttpOnly session cookie and is not stored in browser JavaScript.'
                 : 'Verifying the secure owner session…'}
@@ -261,14 +314,35 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
           </div>
         </div>
 
-        {state === 'storage-unavailable' && (
-          <button
-            type="button"
-            onClick={() => void checkSession()}
-            className="mt-5 h-11 w-full rounded-xl border border-slate-700 bg-slate-950 text-sm font-black text-slate-100 hover:border-teal-500"
-          >
-            Retry data connection
-          </button>
+        {(state === 'firebase-auth-required' ||
+          state === 'firebase-forbidden') && (
+          <div className="mt-5 space-y-2">
+            <button
+              type="button"
+              onClick={() => void signInWithGoogle()}
+              disabled={firebaseSubmitting}
+              className="h-11 w-full rounded-xl bg-teal-600 text-sm font-black text-white hover:bg-teal-500 disabled:opacity-50"
+            >
+              <span className="inline-flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                {firebaseSubmitting
+                  ? 'Connecting…'
+                  : state === 'firebase-forbidden'
+                  ? 'Choose another Google account'
+                  : 'Continue with Google'}
+              </span>
+            </button>
+
+            {state === 'firebase-forbidden' && (
+              <button
+                type="button"
+                onClick={() => void signOutFirebaseOwner().then(() => checkSession())}
+                className="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 text-xs font-black text-slate-300 hover:border-slate-500"
+              >
+                Sign out of Firebase
+              </button>
+            )}
+          </div>
         )}
 
         {state === 'required' && (

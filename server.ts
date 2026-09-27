@@ -1573,7 +1573,10 @@ pause
   // Safe against email link scanners: GET only renders confirmation page, NO database mutation.
   app.get('/api/task-confirmation', async (req, res) => {
     try {
-      const token = (req.query.token as string) || '';
+      const queryToken = (req.query.token as string) || '';
+      const token =
+        queryToken ||
+        getCookieValue(req, TASK_CONFIRM_CAPABILITY_COOKIE);
       const taskId = (req.query.taskId as string) || '';
       const taskDate = (req.query.taskDate as string) || '';
       const rawStatus = (req.query.status as string) || (req.query.action as string) || '';
@@ -1602,6 +1605,16 @@ pause
       // Check status alignment if explicitly provided in query
       if (rawStatus && rawStatus !== effectiveStatus && rawStatus !== (effectiveStatus === 'completed' ? 'completed' : 'not_completed')) {
         return renderErrorPage(res, 'Requested status does not match the signed token.');
+      }
+
+      if (queryToken) {
+        setCapabilityCookie(
+          res,
+          TASK_CONFIRM_CAPABILITY_COOKIE,
+          token,
+          '/api/task-confirmation'
+        );
+        return res.redirect(303, '/api/task-confirmation');
       }
 
       // Fetch the specific task/record from Firestore strictly for effectiveDate
@@ -1823,7 +1836,6 @@ pause
     </div>
 
     <form method="POST" action="/api/task-confirmation">
-      <input type="hidden" name="token" value="${escapeHtml(token)}" />
       <input type="hidden" name="taskId" value="${escapeHtml(payload.taskId || taskId)}" />
       <input type="hidden" name="recordId" value="${escapeHtml(payload.recordId)}" />
       <input type="hidden" name="taskDate" value="${escapeHtml(effectiveDate)}" />
@@ -1849,7 +1861,9 @@ pause
   // Ensures an older email updates ONLY its original task and date—not today's task.
   app.post('/api/task-confirmation', async (req, res) => {
     try {
-      const token = (req.body.token as string) || '';
+      const token =
+        (req.body.token as string) ||
+        getCookieValue(req, TASK_CONFIRM_CAPABILITY_COOKIE);
       const formTaskDate = (req.body.taskDate as string) || '';
       const formStatus = (req.body.status as string) || '';
 
@@ -2002,6 +2016,11 @@ pause
       // If client asked for JSON (e.g. fetch call)
       const acceptsJson = req.is('json') || req.headers['accept']?.includes('application/json');
       if (acceptsJson && req.body.format === 'json') {
+        clearCapabilityCookie(
+          res,
+          TASK_CONFIRM_CAPABILITY_COOKIE,
+          '/api/task-confirmation'
+        );
         return res.json({
           success: true,
           message: confirmationHeading,
@@ -2156,6 +2175,11 @@ pause
 </body>
 </html>`;
 
+      clearCapabilityCookie(
+        res,
+        TASK_CONFIRM_CAPABILITY_COOKIE,
+        '/api/task-confirmation'
+      );
       res.setHeader('Content-Type', 'text/html; charset=utf-8').send(successHtml);
     } catch (err: any) {
       console.error('Error confirming task status:', err);

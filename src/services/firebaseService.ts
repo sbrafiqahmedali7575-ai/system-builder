@@ -124,28 +124,15 @@ function storedQuadrantToMatrix(value: unknown): TaskItem['matrixQuadrant'] | un
 
 function taskStoragePayload(task: TaskItem): Record<string, unknown> {
   return {
-    // Canonical single-user model fields.
     taskId: task.id,
     title: task.taskOfTheDay.trim(),
     quadrant: matrixQuadrantToRoman(task.matrixQuadrant),
-    scheduledDate: task.taskKey,
+    scheduledDate: normalizeModelDateKey(task.taskKey) || task.taskKey,
     sortOrder: Number.isInteger(task.sortOrder) && Number(task.sortOrder) >= 0
       ? Number(task.sortOrder)
       : 0,
     notes: task.notes || '',
     Iscompleted: task.isCompleted,
-
-    // Legacy compatibility fields retained until every consumer is migrated.
-    id: task.id,
-    taskKey: task.taskKey,
-    taskOfTheDay: task.taskOfTheDay.trim(),
-    isCompleted: task.isCompleted,
-    priority: task.priority || 'Normal',
-    timeEstimate: task.timeEstimate || '',
-    category: task.category || 'General',
-    updatedAt: new Date().toISOString(),
-    completedAt: task.completedAt || null,
-    matrixQuadrant: task.matrixQuadrant || null,
   };
 }
 
@@ -220,23 +207,12 @@ function storedHabitFrequency(data: Record<string, unknown>): HabitItem['frequen
 
 function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
   return {
-    // Canonical single-user model fields.
     habitId: habit.id,
     name: habit.name.trim(),
     repeatDays: habitRepeatDays(habit),
     activeFrom: habitActiveFrom(habit),
     isActive: habit.isActive !== false,
     color: habitColorToHex(habit.color),
-
-    // Legacy compatibility fields retained during migration.
-    id: habit.id,
-    emoji: habit.emoji,
-    frequency: habit.frequency,
-    skippedDates: habit.skippedDates || [],
-    extraDates: habit.extraDates || [],
-    checkIns: habit.checkIns || [],
-    createdAt: habit.createdAt,
-    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -356,7 +332,7 @@ function storedHabitIsDue(data: Record<string, unknown>, dateKey: string): boole
   return effectiveDays.includes(weekday);
 }
 
-async function rebuildDaySummary(dateKey: string): Promise<void> {
+export async function rebuildDaySummary(dateKey: string): Promise<void> {
   if (!dateKey) return;
 
   const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
@@ -395,78 +371,6 @@ async function rebuildDaySummary(dateKey: string): Promise<void> {
 
   let habitTotal = 0;
   let habitsCompleted = 0;
-
-  habitsSnap.forEach((habitDoc) => {
-    const data = habitDoc.data() as Record<string, unknown>;
-    if (!storedHabitIsDue(data, dateKey)) return;
-
-    habitTotal += 1;
-    const habitId = String(data.habitId || habitDoc.id);
-    const legacyCheckIns = Array.isArray(data.checkIns)
-      ? data.checkIns.map((value) => String(value))
-      : [];
-
-    if (completedHabitIds.has(habitId) || legacyCheckIns.includes(dateKey)) {
-      habitsCompleted += 1;
-    }
-  });
-
-  const taskCompletionRate =
-    taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 10000) / 100 : 0;
-  const habitCompletionRate =
-    habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 10000) / 100 : 0;
-
-  await setDoc(
-    doc(db, DAYS_COLLECTION, dateKey),
-    {
-      dateKey,
-      tasksCompleted,
-      taskTotal,
-      taskCompletionRate,
-      habitsCompleted,
-      habitTotal,
-      habitCompletionRate,
-      IsdayCompleted: taskCompletionRate === 100,
-    },
-    { merge: true }
-  );
-}
-
-async function rebuildAllDaySummaries(): Promise<void> {
-  const [daysSnap, recordsSnap, tasksSnap, habitsSnap] = await Promise.all([
-    getDocs(collection(db, DAYS_COLLECTION)),
-    getDocs(collection(db, RECORDS_COLLECTION)),
-    getDocs(collection(db, TASKS_COLLECTION)),
-    getDocs(collection(db, HABITS_COLLECTION)),
-  ]);
-
-  const dateKeys = new Set<string>();
-
-  daysSnap.forEach((dayDoc) => {
-    const key = normalizeModelDateKey(dayDoc.data().dateKey || dayDoc.id);
-    if (key) dateKeys.add(key);
-  });
-
-  recordsSnap.forEach((recordDoc) => {
-    const key = normalizeModelDateKey(recordDoc.data().date);
-    if (key) dateKeys.add(key);
-  });
-
-  tasksSnap.forEach((taskDoc) => {
-    const data = taskDoc.data();
-    const key = normalizeModelDateKey(data.scheduledDate || data.taskKey);
-    if (key) dateKeys.add(key);
-  });
-
-  habitsSnap.forEach((habitDoc) => {
-    const data = habitDoc.data();
-    if (Array.isArray(data.checkIns)) {
-      data.checkIns.forEach((value: unknown) => {
-        const key = normalizeModelDateKey(value);
-        if (key) dateKeys.add(key);
-      });
-    }
-  });
 
   for (const dateKey of [...dateKeys].sort()) {
     await rebuildDaySummary(dateKey);
@@ -541,66 +445,32 @@ export function subscribeToRecords(
   onUpdate: (records: DailyRecord[]) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  const recordsCol = collection(db, RECORDS_COLLECTION);
-
   return onSnapshot(
-    recordsCol,
-    async (snapshot) => {
-      if (snapshot.empty) {
-        // Seed default template data if remote database is empty
-        try {
-          await seedInitialData(INITIAL_RECORDS);
-        } catch (e) {
-          console.error('Error seeding initial records to Firestore:', e);
-          onUpdate(INITIAL_RECORDS);
-        }
-        return;
-      }
+    collection(db, DAYS_COLLECTION),
+    (snapshot) => {
+      const rows = snapshot.docs
+        .map((dayDoc) => {
+          const data = dayDoc.data();
+          const dateKey = String(data.dateKey || dayDoc.id);
+          return { dateKey, data };
+        })
+        .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 
-      const fetchedRecords: DailyRecord[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const rawDate = String(data.date ?? '');
-        fetchedRecords.push({
-          id: docSnap.id,
-          day: Number(data.day ?? 0),
-          date: standardizeDate(rawDate) || rawDate,
-          isCompleted: Boolean(data.isCompleted),
-          result: data.isCompleted ? 'TRUE' : 'FALSE',
-          change: Number(data.change ?? 0),
-          skill: String(data.skill ?? 'Power BI'),
-          summary: String(data.summary ?? ''),
-          notes: data.notes ? String(data.notes) : '',
-          responseSubmittedAt: data.responseSubmittedAt ? String(data.responseSubmittedAt) : undefined,
-          responseSource: data.responseSource
-            ? (String(data.responseSource) as DailyRecord['responseSource'])
-            : undefined,
-          updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-        });
-      });
-
-      // Sort sequentially by Day number
-      fetchedRecords.sort((a, b) => a.day - b.day);
-
-      // Deduplicate to guarantee strictly unique day values across all records in the Tasks table
-      const seenDays = new Set<number>();
-      const dedupedRecords: DailyRecord[] = [];
-      for (const rec of fetchedRecords) {
-        let safeDay = rec.day;
-        if (seenDays.has(safeDay) || safeDay <= 0) {
-          safeDay = 1;
-          while (seenDays.has(safeDay)) {
-            safeDay++;
-          }
-        }
-        seenDays.add(safeDay);
-        dedupedRecords.push(safeDay === rec.day ? rec : { ...rec, day: safeDay });
-      }
-
-      onUpdate(dedupedRecords);
+      const records: DailyRecord[] = rows.map(({ dateKey, data }, index) => ({
+        id: dateKey,
+        day: index + 1,
+        date: dateKey,
+        isCompleted: data.IsdayCompleted === true,
+        result: data.IsdayCompleted === true ? 'TRUE' : 'FALSE',
+        change: 0,
+        skill: 'Daily Review',
+        summary: `${Number(data.tasksCompleted || 0)}/${Number(data.taskTotal || 0)} tasks • ${Number(data.habitsCompleted || 0)}/${Number(data.habitTotal || 0)} habits`,
+        notes: '',
+      }));
+      onUpdate(records);
     },
     (err) => {
-      console.error('Firestore real-time subscription error:', err);
+      console.error('Firestore days real-time subscription error:', err);
       if (onError) onError(err);
     }
   );
@@ -995,11 +865,8 @@ export function subscribeToHabits(
     habitsSnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const habitId = String(data.habitId || docSnap.id);
-      const legacyCheckIns = Array.isArray(data.checkIns)
-        ? data.checkIns.map((value: unknown) => String(value))
-        : [];
       const migratedCheckIns = completedDatesByHabit.get(habitId) || new Set<string>();
-      const checkIns = [...new Set([...legacyCheckIns, ...migratedCheckIns])].sort();
+      const checkIns = [...migratedCheckIns].sort();
 
       const activeFrom = data.activeFrom ? String(data.activeFrom) : undefined;
       const fallbackCreatedAt = activeFrom

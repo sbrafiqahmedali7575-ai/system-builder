@@ -34,10 +34,6 @@ import {
   generateAllCsvFiles,
 } from './server/backupService';
 
-function getSchedulerSecret(): string {
-  return (process.env.SCHEDULER_SECRET || '').trim();
-}
-
 const OWNER_SESSION_COOKIE = 'system_builder_owner';
 const OWNER_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const OWNER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -194,19 +190,6 @@ function getBearerToken(authHeader: string | undefined): string {
   return raw.slice(7).trim();
 }
 
-function matchesSchedulerSecret(token: string): boolean {
-  const expected = getSchedulerSecret();
-  if (!expected || !token) return false;
-
-  const expectedBuffer = Buffer.from(expected);
-  const providedBuffer = Buffer.from(token);
-
-  return (
-    expectedBuffer.length === providedBuffer.length &&
-    crypto.timingSafeEqual(expectedBuffer, providedBuffer)
-  );
-}
-
 async function getGithubOidcJwks(): Promise<GithubOidcJwk[]> {
   const now = Date.now();
   if (
@@ -322,10 +305,6 @@ async function isValidSchedulerBearer(
 ): Promise<boolean> {
   const token = getBearerToken(authHeader);
   if (!token) return false;
-
-  if (matchesSchedulerSecret(token)) {
-    return true;
-  }
 
   try {
     return await isValidGithubActionsOidcToken(token);
@@ -622,9 +601,8 @@ async function startServer() {
   });
 
   // 4. Production endpoint for external scheduler: GET/POST /api/send-daily-reminder
-  // Protected with Authorization: Bearer <token>. Accepts either the optional
-  // SCHEDULER_SECRET or a verified GitHub Actions OIDC token from an approved
-  // scheduler workflow on this repository's main branch.
+  // Protected with a short-lived GitHub Actions OIDC bearer token from an
+  // approved scheduler workflow on this repository's main branch.
   // Sends daily commitment reminder to sbrafiqahmedali7575@gmail.com.
   // Retrieves today's task in Asia/Kolkata timezone with Completed & Not Completed buttons.
   // Enforces persistent deduplication preventing double-sends for the same IST date.

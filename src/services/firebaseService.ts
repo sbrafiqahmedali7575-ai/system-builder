@@ -220,35 +220,44 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   const checkedDates = new Set(habit.checkIns || []);
   const batch = writeBatch(db);
 
-  snapshot.forEach((logDoc) => {
+  const usedNumbers = new Set<number>();
+  const existingByDate = new Map<string, typeof snapshot.docs[number]>();
+  snapshot.docs.forEach((logDoc) => {
     const data = logDoc.data();
-    if (String(data.habitId || '') !== habit.id) return;
+    const id = String(data.habitLogId || logDoc.id);
+    const match = /^HL(\d+)$/i.exec(id);
+    if (match) usedNumbers.add(Number(match[1]));
+    if (String(data.habitId || '') === habit.id) {
+      const dateKey = String(data.dateKey || '');
+      if (dateKey && !existingByDate.has(dateKey)) existingByDate.set(dateKey, logDoc);
+    }
+  });
 
-    const dateKey = String(data.dateKey || '');
-    if (dateKey && !checkedDates.has(dateKey)) {
-      batch.set(
-        logDoc.ref,
-        {
-          habitLogId: logDoc.id,
-          habitId: habit.id,
-          dateKey,
-          Iscompleted: false,
-        },
-        { merge: true }
-      );
+  let nextNumber = 1;
+  const nextHabitLogId = () => {
+    while (usedNumbers.has(nextNumber)) nextNumber += 1;
+    const id = `HL${nextNumber}`;
+    usedNumbers.add(nextNumber);
+    nextNumber += 1;
+    return id;
+  };
+
+  existingByDate.forEach((logDoc, dateKey) => {
+    if (!checkedDates.has(dateKey)) {
+      batch.set(logDoc.ref, { Iscompleted: false }, { merge: true });
     }
   });
 
   for (const dateKey of checkedDates) {
-    const habitLogId = `HL-${habit.id}-${dateKey.replace(/-/g, '')}`;
+    const existing = existingByDate.get(dateKey);
+    if (existing) {
+      batch.set(existing.ref, { Iscompleted: true }, { merge: true });
+      continue;
+    }
+    const habitLogId = nextHabitLogId();
     batch.set(
       doc(db, HABIT_LOGS_COLLECTION, habitLogId),
-      {
-        habitLogId,
-        habitId: habit.id,
-        dateKey,
-        Iscompleted: true,
-      },
+      { habitLogId, habitId: habit.id, dateKey, Iscompleted: true },
       { merge: true }
     );
   }

@@ -1,4 +1,4 @@
-import { db, collection, getDocs, doc, getDoc } from './db';
+import { db, collection, getDocs } from './db';
 
 /**
  * Escapes a single CSV value according to RFC 4180:
@@ -23,8 +23,6 @@ export function formatCsvRow(fields: any[]): string {
 export interface BackupData {
   records: any[];
   tasks: any[];
-  deliveryLogs: any[];
-  settings: any;
   timestamp: string;
 }
 
@@ -32,11 +30,9 @@ export interface BackupData {
  * Fetch all project data from Firestore collections
  */
 export async function fetchAllProjectData(): Promise<BackupData> {
-  const [recordsSnap, tasksSnap, logsSnap, settingsSnap] = await Promise.all([
+  const [recordsSnap, tasksSnap] = await Promise.all([
     getDocs(collection(db, 'records')).catch(() => ({ docs: [] } as any)),
     getDocs(collection(db, 'tasks')).catch(() => ({ docs: [] } as any)),
-    getDocs(collection(db, 'delivery_logs')).catch(() => ({ docs: [] } as any)),
-    getDoc(doc(db, 'notification_settings', 'daily-settings')).catch(() => null),
   ]);
 
   const records: any[] = [];
@@ -51,28 +47,9 @@ export async function fetchAllProjectData(): Promise<BackupData> {
   });
   tasks.sort((a, b) => String(a.taskKey || '').localeCompare(String(b.taskKey || '')));
 
-  const deliveryLogs: any[] = [];
-  logsSnap.forEach((d: any) => {
-    deliveryLogs.push({ id: d.id, ...d.data() });
-  });
-  deliveryLogs.sort((a, b) => String(b.sentAt || '').localeCompare(String(a.sentAt || '')));
-
-  const settings = settingsSnap && settingsSnap.exists()
-    ? { id: settingsSnap.id, ...settingsSnap.data() }
-    : {
-        id: 'daily-settings',
-        enabled: true,
-        recipientEmail: 'sbrafiqahmedali7575@gmail.com',
-        recipientName: 'Rafiq Ahmed',
-        scheduledTime: '21:00',
-        timezone: 'Asia/Kolkata',
-      };
-
   return {
     records,
     tasks,
-    deliveryLogs,
-    settings,
     timestamp: new Date().toISOString(),
   };
 }

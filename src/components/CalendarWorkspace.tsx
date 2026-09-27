@@ -125,16 +125,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   const [showCompleted, setShowCompleted] = useState(true);
   const [showHabits, setShowHabits] = useState(true);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
-  const [viewMenuOpen, setViewMenuOpen] = useState(false);
 
   const compact = density === 'compact';
 
-  const tasksByDate = useMemo(() => {
+  const allTasksByDate = useMemo(() => {
     const map = new Map<string, TaskItem[]>();
 
     tasks.forEach((task) => {
-      if (!showCompleted && task.isCompleted) return;
-
       const list = map.get(task.taskKey) || [];
       list.push(task);
       map.set(task.taskKey, list);
@@ -160,7 +157,21 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
     }
 
     return map;
-  }, [tasks, showCompleted]);
+  }, [tasks]);
+
+  const tasksByDate = useMemo(() => {
+    if (showCompleted) return allTasksByDate;
+
+    const map = new Map<string, TaskItem[]>();
+    allTasksByDate.forEach((items, dateKey) => {
+      const visibleItems = items.filter((task) => !task.isCompleted);
+      if (visibleItems.length > 0) {
+        map.set(dateKey, visibleItems);
+      }
+    });
+
+    return map;
+  }, [allTasksByDate, showCompleted]);
 
   const getHabitsForDate = useCallback(
     (dateKey: string): HabitItem[] =>
@@ -172,7 +183,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
   const getDaySummary = useCallback(
     (dateKey: string): CalendarDaySummary => {
-      const dayTasks = tasksByDate.get(dateKey) || [];
+      const dayTasks = allTasksByDate.get(dateKey) || [];
       const dayHabits = getHabitsForDate(dateKey);
 
       const completedTasks = dayTasks.filter((task) => task.isCompleted).length;
@@ -196,7 +207,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           : null,
       };
     },
-    [tasksByDate, getHabitsForDate]
+    [allTasksByDate, getHabitsForDate]
   );
 
   const calendarDays = useMemo(() => {
@@ -228,7 +239,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   const changeView = useCallback(
     (nextView: CalendarView) => {
       setView(nextView);
-      setViewMenuOpen(false);
       setCursor(startOfMonth(parseKey(selectedDate)));
     },
     [selectedDate]
@@ -299,6 +309,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         ? String(cursor.getUTCFullYear())
         : cursor.toLocaleDateString('en-US', {
             month: 'long',
+            year: 'numeric',
             timeZone: 'UTC',
           }),
     [view, cursor]
@@ -348,8 +359,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
       <CalendarTopBar
         view={view}
         periodLabel={periodLabel}
-        viewMenuOpen={viewMenuOpen}
-        onToggleViewMenu={() => setViewMenuOpen((current) => !current)}
         onViewChange={changeView}
         onPrevious={() => navigatePeriod(-1)}
         onNext={() => navigatePeriod(1)}
@@ -390,7 +399,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               setCursor(target);
               setSelectedDate(keyFromDate(target));
               setView('month');
-              setViewMenuOpen(false);
             }}
           />
         )}
@@ -410,8 +418,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         )}
       </div>
 
-      <CalendarViewSwitcher value={view} onChange={changeView} />
-
       {addTaskOpen && (
         <QuickAddTaskDialog
           selectedDate={selectedDate}
@@ -429,8 +435,6 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 interface CalendarTopBarProps {
   view: CalendarView;
   periodLabel: string;
-  viewMenuOpen: boolean;
-  onToggleViewMenu: () => void;
   onViewChange: (view: CalendarView) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -566,13 +570,6 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     {children}
   </button>
 );
-
-interface CalendarViewSwitcherProps {
-  value: CalendarView;
-  onChange: (view: CalendarView) => void;
-}
-
-const CalendarViewSwitcher: React.FC<CalendarViewSwitcherProps> = () => null;
 
 interface QuickAddTaskDialogProps {
   selectedDate: string;

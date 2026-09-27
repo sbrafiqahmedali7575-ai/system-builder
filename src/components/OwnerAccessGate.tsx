@@ -1,7 +1,32 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, Loader2, LockKeyhole, LogOut, ShieldCheck } from 'lucide-react';
 
-type OwnerState = 'checking' | 'authorized' | 'required' | 'unconfigured';
+type OwnerState =
+  | 'checking'
+  | 'authorized'
+  | 'required'
+  | 'unconfigured'
+  | 'storage-unavailable';
+
+async function readJsonResponse<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!contentType.toLowerCase().includes('application/json')) {
+    const looksLikeHtml = /^\s*<!doctype|^\s*<html/i.test(text);
+    throw new Error(
+      looksLikeHtml
+        ? 'The System Builder server API is unavailable in this preview. The page returned HTML instead of the expected JSON API response.'
+        : `Unexpected server response (${response.status}).`
+    );
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error('The System Builder server returned invalid JSON.');
+  }
+}
 
 interface OwnerAccessGateProps {
   children: React.ReactNode;
@@ -22,9 +47,21 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
         cache: 'no-store',
         credentials: 'same-origin',
       });
-      const data = await response.json();
+      const data = await readJsonResponse<{
+        configured?: boolean;
+        authenticated?: boolean;
+        storageReady?: boolean;
+      }>(response);
 
       if (data.authenticated) {
+        if (data.storageReady === false) {
+          setState('storage-unavailable');
+          setError(
+            'Owner authentication is working, but the Firestore data backend is unavailable in this AI Studio preview.'
+          );
+          return;
+        }
+
         setState('authorized');
         setError('');
         return;
@@ -90,7 +127,11 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
-      const data = await response.json();
+      const data = await readJsonResponse<{
+        success?: boolean;
+        error?: string;
+        storageReady?: boolean;
+      }>(response);
 
       if (!response.ok) {
         if (response.status === 503) setState('unconfigured');
@@ -99,6 +140,15 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
       }
 
       setToken('');
+
+      if (data.storageReady === false) {
+        setState('storage-unavailable');
+        setError(
+          'Owner token accepted. Firestore privileged access is not available in this AI Studio preview, so application data remains locked.'
+        );
+        return;
+      }
+
       setState('authorized');
     } catch (loginError) {
       setError(
@@ -195,17 +245,31 @@ export const OwnerAccessGate: React.FC<OwnerAccessGateProps> = ({
                 ? 'Checking owner access'
                 : state === 'unconfigured'
                 ? 'Owner security needs configuration'
+                : state === 'storage-unavailable'
+                ? 'Data backend unavailable'
                 : 'Owner access required'}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               {state === 'unconfigured'
                 ? 'Set OWNER_ACCESS_TOKEN in the server environment to a random value of at least 32 characters. The app and privileged data APIs remain locked until it is configured.'
+                : state === 'storage-unavailable'
+                ? 'Your owner session is valid, but the server cannot currently access Firestore with a privileged identity. No application data will be exposed or modified until that connection is available.'
                 : state === 'required'
                 ? 'Enter your server-side owner access token. The token is exchanged for a 12-hour HttpOnly session cookie and is not stored in browser JavaScript.'
                 : 'Verifying the secure owner session…'}
             </p>
           </div>
         </div>
+
+        {state === 'storage-unavailable' && (
+          <button
+            type="button"
+            onClick={() => void checkSession()}
+            className="mt-5 h-11 w-full rounded-xl border border-slate-700 bg-slate-950 text-sm font-black text-slate-100 hover:border-teal-500"
+          >
+            Retry data connection
+          </button>
+        )}
 
         {state === 'required' && (
           <div className="mt-5 space-y-2">

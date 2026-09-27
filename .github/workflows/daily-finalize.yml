@@ -33,7 +33,6 @@ jobs:
           body=$(echo "$response" | sed -e '$d')
           status=$(echo "$response" | tail -n1 | cut -d':' -f2)
 
-          echo "Response: $body"
           echo "Status: $status"
 
           if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then

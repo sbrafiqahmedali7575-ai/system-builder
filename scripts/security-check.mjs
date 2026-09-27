@@ -18,6 +18,32 @@ function walk(directory) {
   });
 }
 
+const firebaseConfig = JSON.parse(read('firebase-applet-config.json'));
+const allowedFirebaseConfigKeys = new Set(['projectId', 'firestoreDatabaseId']);
+for (const key of Object.keys(firebaseConfig)) {
+  if (!allowedFirebaseConfigKeys.has(key)) {
+    failures.push(
+      `firebase-applet-config.json contains unnecessary public client field: ${key}`
+    );
+  }
+}
+
+for (const sensitiveKey of [
+  'apiKey',
+  'appId',
+  'authDomain',
+  'storageBucket',
+  'messagingSenderId',
+  'oAuthClientId',
+  'recaptchaSiteKey',
+]) {
+  if (firebaseConfig[sensitiveKey]) {
+    failures.push(
+      `firebase-applet-config.json must not retain unused client identifier: ${sensitiveKey}`
+    );
+  }
+}
+
 const firestoreRules = read('firestore.rules');
 if (!/match \/\{document=\*\*\}[\s\S]*allow read, write: if false;/.test(firestoreRules)) {
   failures.push('firestore.rules must deny all direct client reads and writes.');
@@ -55,6 +81,40 @@ for (const file of ['server.ts', 'server/emailService.ts']) {
 }
 
 const serverSource = read('server.ts');
+
+for (const protectedPath of [
+  '/firebase-applet-config.json',
+  '/firestore.rules',
+  '/firebase-blueprint.json',
+  '/server.ts',
+  '/server',
+  '/scripts',
+]) {
+  if (!serverSource.includes(protectedPath)) {
+    failures.push(`Server source/config denylist is missing: ${protectedPath}`);
+  }
+}
+
+for (const ownerRoutePattern of [
+  /app\.get\('\/api\/data\/records',\s*requireOwner/,
+  /app\.put\('\/api\/data\/records\/:id',\s*requireOwner/,
+  /app\.delete\('\/api\/data\/records\/:id',\s*requireOwner/,
+  /app\.get\('\/api\/data\/tasks',\s*requireOwner/,
+  /app\.put\('\/api\/data\/tasks\/:id',\s*requireOwner/,
+  /app\.delete\('\/api\/data\/tasks\/:id',\s*requireOwner/,
+  /app\.get\('\/api\/data\/habits',\s*requireOwner/,
+  /app\.put\('\/api\/data\/habits\/:id',\s*requireOwner/,
+  /app\.delete\('\/api\/data\/habits\/:id',\s*requireOwner/,
+  /app\.get\('\/api\/data\/countdown',\s*requireOwner/,
+  /app\.put\('\/api\/data\/countdown',\s*requireOwner/,
+]) {
+  if (!ownerRoutePattern.test(serverSource)) {
+    failures.push(
+      `A data API route is missing requireOwner: ${ownerRoutePattern}`
+    );
+  }
+}
+
 if (!serverSource.includes('verifyPrivilegedFirestoreAccess')) {
   failures.push('Server startup must verify privileged IAM Firestore access.');
 }

@@ -5,7 +5,6 @@ import { PowerBiHeader } from './components/PowerBiHeader';
 import { ReportView } from './components/ReportView';
 import { AddRecordModal } from './components/AddRecordModal';
 import { NotificationSettingsModal } from './components/NotificationSettingsModal';
-import { ConfirmationPage } from './components/ConfirmationPage';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
 import { MoreWorkspace } from './components/MoreWorkspace';
@@ -63,23 +62,6 @@ function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
 }
 
 export default function App() {
-  // Check if current URL is a secure confirmation link
-  const [confirmToken, setConfirmToken] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('token');
-    }
-    return null;
-  });
-
-  const [confirmAction, setConfirmAction] = useState<string | undefined>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('action') || undefined;
-    }
-    return undefined;
-  });
-
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
     if (typeof window !== 'undefined') {
@@ -161,9 +143,6 @@ export default function App() {
   // Listen to popstate in case of browser navigation
   useEffect(() => {
     const handleLocationChange = () => {
-      const params = new URLSearchParams(window.location.search);
-      setConfirmToken(params.get('token'));
-      setConfirmAction(params.get('action') || undefined);
       setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
       setIsToolsOpen(window.location.pathname === '/tools');
     };
@@ -856,25 +835,6 @@ export default function App() {
       }
     }
   };
-
-  const handleReturnToDashboard = () => {
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/');
-    }
-    setConfirmToken(null);
-  };
-
-  // If user arrives via confirmation email token link, show confirmation screen
-  if (confirmToken) {
-    return (
-      <ConfirmationPage
-        token={confirmToken}
-        initialAction={confirmAction}
-        theme={theme}
-        onReturnToDashboard={handleReturnToDashboard}
-      />
-    );
-  }
 
   if (isLibraryOpen) {
     return <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />;

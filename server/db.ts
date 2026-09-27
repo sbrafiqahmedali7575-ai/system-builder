@@ -101,9 +101,11 @@ function loadExplicitCredentials(): PlainObject | undefined {
   }
 }
 
+const explicitCredentials = loadExplicitCredentials();
+
 const googleAuth = new GoogleAuth({
-  ...(loadExplicitCredentials()
-    ? { credentials: loadExplicitCredentials() }
+  ...(explicitCredentials
+    ? { credentials: explicitCredentials }
     : {}),
   scopes: [
     'https://www.googleapis.com/auth/datastore',
@@ -468,5 +470,8 @@ export async function runTransaction<T>(
 }
 
 export async function verifyPrivilegedFirestoreAccess(): Promise<void> {
-  await getAccessToken();
+  await firestoreRequest(
+    `${documentsRoot}/records?pageSize=1`,
+    { method: 'GET' }
+  );
 }

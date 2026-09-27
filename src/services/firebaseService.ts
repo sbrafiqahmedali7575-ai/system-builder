@@ -291,26 +291,9 @@ function normalizeModelDateKey(value: unknown): string {
 function storedHabitIsDue(data: Record<string, unknown>, dateKey: string): boolean {
   if (data.isActive === false) return false;
 
-  const activeFrom =
-    normalizeModelDateKey(data.activeFrom) ||
-    normalizeModelDateKey(data.createdAt) ||
-    '1970-01-01';
+  const activeFrom = normalizeModelDateKey(data.activeFrom) || '1970-01-01';
 
   if (dateKey < activeFrom) return false;
-
-  const skippedDates = new Set(
-    Array.isArray(data.skippedDates)
-      ? data.skippedDates.map((value) => String(value))
-      : []
-  );
-  const extraDates = new Set(
-    Array.isArray(data.extraDates)
-      ? data.extraDates.map((value) => String(value))
-      : []
-  );
-
-  if (extraDates.has(dateKey)) return true;
-  if (skippedDates.has(dateKey)) return false;
 
   const repeatDays = Array.isArray(data.repeatDays)
     ? data.repeatDays
@@ -318,13 +301,7 @@ function storedHabitIsDue(data: Record<string, unknown>, dateKey: string): boole
         .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
     : [];
 
-  const frequency = storedHabitFrequency(data);
-  const effectiveDays =
-    frequency === 'daily'
-      ? [0, 1, 2, 3, 4, 5, 6]
-      : frequency === 'weekdays'
-      ? [1, 2, 3, 4, 5]
-      : repeatDays;
+  const effectiveDays = repeatDays;
 
   const [year, month, day] = dateKey.split('-').map(Number);
   const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
@@ -541,19 +518,16 @@ export function subscribeToTasks(
         const data = docSnap.data();
         fetchedTasks.push({
           id: String(data.taskId || docSnap.id),
-          taskKey: String(data.scheduledDate ?? data.taskKey ?? ''),
-          taskOfTheDay: String(data.title ?? data.taskOfTheDay ?? ''),
-          isCompleted:
-            typeof data.Iscompleted === 'boolean'
-              ? data.Iscompleted
-              : Boolean(data.isCompleted),
+          taskKey: String(data.scheduledDate ?? ''),
+          taskOfTheDay: String(data.title ?? ''),
+          isCompleted: data.Iscompleted === true,
           priority: data.priority ? (data.priority as 'High' | 'Medium' | 'Normal') : 'Normal',
           timeEstimate: data.timeEstimate ? String(data.timeEstimate) : '',
           category: data.category ? String(data.category) : '',
           notes: data.notes ? String(data.notes) : '',
           updatedAt: data.updatedAt ? String(data.updatedAt) : '',
           completedAt: data.completedAt ? String(data.completedAt) : undefined,
-          matrixQuadrant: storedQuadrantToMatrix(data.quadrant ?? data.matrixQuadrant),
+          matrixQuadrant: storedQuadrantToMatrix(data.quadrant),
           sortOrder:
             Number.isInteger(Number(data.sortOrder)) && Number(data.sortOrder) >= 0
               ? Number(data.sortOrder)
@@ -594,7 +568,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   const normKey = standardizeDate(task.taskKey) || task.taskKey;
 
   // Prevent duplicate task ID
-  const duplicateId = existingTasks.find((t) => String(t.taskId || t.id || '') === task.id);
+  const duplicateId = existingTasks.find((t) => String(t.taskId || '') === task.id);
   if (duplicateId) {
     throw new Error(`Duplicate task rejected: A task with ID ${task.id} already exists.`);
   }
@@ -602,12 +576,12 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   // Prevent duplicate task with identical title on the same date
   const duplicateName = existingTasks.find(
     (t) =>
-      String(t.taskId || t.id || '') !== task.id &&
-      (standardizeDate(String(t.scheduledDate || t.taskKey || '')) === normKey ||
-        String(t.scheduledDate || t.taskKey || '') === task.taskKey) &&
-      (t.title || t.taskOfTheDay) &&
+      String(t.taskId || '') !== task.id &&
+      (standardizeDate(String(t.scheduledDate || '')) === normKey ||
+        String(t.scheduledDate || '') === task.taskKey) &&
+      t.title &&
       task.taskOfTheDay &&
-      String(t.title || t.taskOfTheDay).trim().toLowerCase() ===
+      Stringt.title.trim().toLowerCase() ===
         String(task.taskOfTheDay).trim().toLowerCase()
   );
   if (duplicateName) {
@@ -626,10 +600,10 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
   const existingTasks = tasksSnap.docs.map((d) => d.data());
   const previousTask = existingTasks.find(
-    (stored) => String(stored.taskId || stored.id || '') === task.id
+    (stored) => String(stored.taskId || '') === task.id
   );
   const previousDateKey = normalizeModelDateKey(
-    previousTask?.scheduledDate || previousTask?.taskKey
+    previousTask?.scheduledDate
   );
 
   const normKey = standardizeDate(task.taskKey) || task.taskKey;
@@ -637,12 +611,12 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   // Prevent duplicate task with identical title on the same date (excluding self)
   const duplicateName = existingTasks.find(
     (t) =>
-      String(t.taskId || t.id || '') !== task.id &&
-      (standardizeDate(String(t.scheduledDate || t.taskKey || '')) === normKey ||
-        String(t.scheduledDate || t.taskKey || '') === task.taskKey) &&
-      (t.title || t.taskOfTheDay) &&
+      String(t.taskId || '') !== task.id &&
+      (standardizeDate(String(t.scheduledDate || '')) === normKey ||
+        String(t.scheduledDate || '') === task.taskKey) &&
+      t.title &&
       task.taskOfTheDay &&
-      String(t.title || t.taskOfTheDay).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
+      Stringt.title.trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
   );
   if (duplicateName) {
     throw new Error(`Another task named "${task.taskOfTheDay}" already exists for this date.`);
@@ -790,11 +764,8 @@ export function subscribeToHabits(
       emit();
     },
     (err) => {
-      // During rollout, older deployed rules may not allow habitLogs yet.
-      // Legacy checkIns remain authoritative until the new rules are deployed.
-      console.warn('HabitLogs are not available yet; using legacy habit check-ins:', err);
-      habitLogsSnapshot = null;
-      emit();
+      console.error('Firestore habitLogs subscription error:', err);
+      if (onError) onError(err);
     }
   );
 

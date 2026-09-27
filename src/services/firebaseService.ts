@@ -1,102 +1,8 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  deleteDoc,
-  onSnapshot,
-  getDocs,
-  getDocFromServer,
-  writeBatch,
-  Unsubscribe,
-} from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
-import { INITIAL_RECORDS, INITIAL_TASKS } from '../data/initialData';
+import { INITIAL_RECORDS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
 
-// Initialize Firebase App
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-// Target specific Firestore Database ID if configured
-export const db =
-  firebaseConfig.firestoreDatabaseId &&
-  firebaseConfig.firestoreDatabaseId !== '(default)'
-    ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-    : getFirestore(app);
-
-export const auth = getAuth(app);
-
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
-    }
-  }
-}
-testConnection();
-
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-export interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-    providerInfo?: {
-      providerId?: string | null;
-      email?: string | null;
-    }[];
-  };
-}
-
-export function handleFirestoreError(
-  error: unknown,
-  operationType: OperationType,
-  path: string | null
-): never {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo:
-        auth.currentUser?.providerData?.map((provider) => ({
-          providerId: provider.providerId,
-          email: provider.email,
-        })) || [],
-    },
-    operationType,
-    path,
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
-const RECORDS_COLLECTION = 'records';
-const TASKS_COLLECTION = 'tasks';
-const HABITS_COLLECTION = 'habits';
-const SETTINGS_COLLECTION = 'notification_settings';
-const COUNTDOWN_SETTINGS_DOC = 'system_builder_countdown';
+export type Unsubscribe = () => void;
 
 export interface CountdownSettings {
   targetDate: string;
@@ -104,652 +10,428 @@ export interface CountdownSettings {
   updatedAt?: string;
 }
 
+const POLL_INTERVAL_MS = 15_000;
+
+function notifyOwnerAuthRequired(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('system-builder-owner-auth-required')
+    );
+  }
+}
+
+async function apiRequest<T>(
+  url: string,
+  init: RequestInit = {}
+): Promise<T> {
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...init,
+      credentials: 'same-origin',
+      headers: {
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(init.headers || {}),
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? `Network request failed: ${error.message}`
+        : 'Network request failed.'
+    );
+  }
+
+  let body: any = null;
+  const text = await response.text();
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = { error: text };
+    }
+  }
+
+  if (response.status === 401) {
+    notifyOwnerAuthRequired();
+    throw new Error('Owner authentication required.');
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      body?.error ||
+        `Server data request failed with status ${response.status}.`
+    );
+  }
+
+  return body as T;
+}
+
+function subscribeWithPolling<T>(
+  load: () => Promise<T>,
+  onUpdate: (value: T) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  let active = true;
+  let inFlight = false;
+
+  const run = async () => {
+    if (!active || inFlight) return;
+    inFlight = true;
+
+    try {
+      const value = await load();
+      if (active) onUpdate(value);
+    } catch (error) {
+      if (active && onError) {
+        onError(
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
+    } finally {
+      inFlight = false;
+    }
+  };
+
+  void run();
+
+  const intervalId =
+    typeof window !== 'undefined'
+      ? window.setInterval(run, POLL_INTERVAL_MS)
+      : undefined;
+
+  const handleRefresh = () => void run();
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('focus', handleRefresh);
+    window.addEventListener('online', handleRefresh);
+  }
+
+  return () => {
+    active = false;
+
+    if (typeof window !== 'undefined') {
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId);
+      }
+      window.removeEventListener('focus', handleRefresh);
+      window.removeEventListener('online', handleRefresh);
+    }
+  };
+}
+
+async function loadRecords(): Promise<DailyRecord[]> {
+  const response = await apiRequest<{ records?: DailyRecord[] }>(
+    '/api/data/records'
+  );
+
+  const fetched = Array.isArray(response.records)
+    ? response.records.map((record) => {
+        const rawDate = String(record.date || '');
+        return {
+          ...record,
+          date: standardizeDate(rawDate) || rawDate,
+          result: record.isCompleted ? 'TRUE' : 'FALSE',
+          day: Number(record.day || 0),
+          change: Number(record.change || 0),
+        } as DailyRecord;
+      })
+    : [];
+
+  fetched.sort((a, b) => a.day - b.day);
+
+  const seenDays = new Set<number>();
+  return fetched.map((record) => {
+    let safeDay = record.day;
+    if (safeDay <= 0 || seenDays.has(safeDay)) {
+      safeDay = 1;
+      while (seenDays.has(safeDay)) safeDay += 1;
+    }
+    seenDays.add(safeDay);
+    return safeDay === record.day ? record : { ...record, day: safeDay };
+  });
+}
+
+export function subscribeToRecords(
+  onUpdate: (records: DailyRecord[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  let seeded = false;
+
+  return subscribeWithPolling(
+    async () => {
+      const records = await loadRecords();
+
+      if (records.length === 0 && !seeded) {
+        seeded = true;
+        await seedInitialData(INITIAL_RECORDS);
+        return loadRecords();
+      }
+
+      return records;
+    },
+    onUpdate,
+    onError
+  );
+}
+
+export async function seedInitialData(
+  records: DailyRecord[]
+): Promise<void> {
+  for (const record of records) {
+    await updateRecordInCloud(record);
+  }
+}
+
+export async function addRecordToCloud(
+  record: DailyRecord
+): Promise<void> {
+  await apiRequest(
+    `/api/data/records/${encodeURIComponent(record.id)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(record),
+    }
+  );
+}
+
+export async function updateRecordInCloud(
+  record: DailyRecord
+): Promise<void> {
+  await apiRequest(
+    `/api/data/records/${encodeURIComponent(record.id)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(record),
+    }
+  );
+}
+
+export async function deleteRecordFromCloud(
+  recordId: string
+): Promise<void> {
+  await apiRequest(
+    `/api/data/records/${encodeURIComponent(recordId)}`,
+    { method: 'DELETE' }
+  );
+}
+
+export async function bulkAddRecordsToCloud(
+  records: DailyRecord[]
+): Promise<void> {
+  for (const record of records) {
+    await updateRecordInCloud(record);
+  }
+}
+
+export async function resetRecordsInCloud(
+  initialRecords: DailyRecord[]
+): Promise<void> {
+  const existing = await loadRecords();
+
+  for (const record of existing) {
+    await deleteRecordFromCloud(record.id);
+  }
+
+  await seedInitialData(initialRecords);
+}
+
+async function loadTasks(): Promise<TaskItem[]> {
+  const response = await apiRequest<{ tasks?: TaskItem[] }>(
+    '/api/data/tasks'
+  );
+
+  const tasks = Array.isArray(response.tasks)
+    ? response.tasks.map((task) => ({
+        ...task,
+        priority: task.priority || 'Normal',
+        timeEstimate: task.timeEstimate || '',
+        category: task.category || '',
+        notes: task.notes || '',
+        completedAt: task.completedAt || undefined,
+        matrixQuadrant: task.matrixQuadrant || undefined,
+      }))
+    : [];
+
+  tasks.sort((a, b) =>
+    String(b.taskKey || '').localeCompare(String(a.taskKey || ''))
+  );
+
+  return tasks;
+}
+
+export function subscribeToTasks(
+  onUpdate: (tasks: TaskItem[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  return subscribeWithPolling(loadTasks, onUpdate, onError);
+}
+
+export async function seedInitialTasks(
+  tasks: TaskItem[]
+): Promise<void> {
+  for (const task of tasks) {
+    await updateTaskInCloud(task);
+  }
+}
+
+export async function addTaskToCloud(
+  task: TaskItem
+): Promise<void> {
+  await apiRequest(
+    `/api/data/tasks/${encodeURIComponent(task.id)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(task),
+    }
+  );
+}
+
+export async function updateTaskInCloud(
+  task: TaskItem
+): Promise<void> {
+  await apiRequest(
+    `/api/data/tasks/${encodeURIComponent(task.id)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(task),
+    }
+  );
+}
+
+export async function deleteTaskFromCloud(
+  taskId: string
+): Promise<void> {
+  await apiRequest(
+    `/api/data/tasks/${encodeURIComponent(taskId)}`,
+    { method: 'DELETE' }
+  );
+}
+
+export async function resetTasksInCloud(
+  initialTasks: TaskItem[]
+): Promise<void> {
+  const existing = await loadTasks();
+
+  for (const task of existing) {
+    await deleteTaskFromCloud(task.id);
+  }
+
+  await seedInitialTasks(initialTasks);
+}
+
+async function loadHabits(): Promise<HabitItem[]> {
+  const response = await apiRequest<{ habits?: HabitItem[] }>(
+    '/api/data/habits'
+  );
+
+  const habits = Array.isArray(response.habits)
+    ? response.habits.map((habit) => ({
+        ...habit,
+        emoji: habit.emoji || '✓',
+        frequency:
+          habit.frequency === 'custom'
+            ? 'custom'
+            : habit.frequency === 'weekdays'
+            ? 'weekdays'
+            : 'daily',
+        repeatDays: Array.isArray(habit.repeatDays)
+          ? habit.repeatDays
+          : [],
+        skippedDates: Array.isArray(habit.skippedDates)
+          ? habit.skippedDates
+          : [],
+        extraDates: Array.isArray(habit.extraDates)
+          ? habit.extraDates
+          : [],
+        checkIns: Array.isArray(habit.checkIns)
+          ? habit.checkIns
+          : [],
+      }))
+    : [];
+
+  habits.sort((a, b) =>
+    String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
+  );
+
+  return habits;
+}
+
+export function subscribeToHabits(
+  onUpdate: (habits: HabitItem[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  return subscribeWithPolling(loadHabits, onUpdate, onError);
+}
+
+export async function addHabitToCloud(
+  habit: HabitItem
+): Promise<void> {
+  await apiRequest(
+    `/api/data/habits/${encodeURIComponent(habit.id)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(habit),
+    }
+  );
+}
+
+export async function updateHabitInCloud(
+  habit: HabitItem
+): Promise<void> {
+  await apiRequest(
+    `/api/data/habits/${encodeURIComponent(habit.id)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(habit),
+    }
+  );
+}
+
+export async function deleteHabitFromCloud(
+  habitId: string
+): Promise<void> {
+  await apiRequest(
+    `/api/data/habits/${encodeURIComponent(habitId)}`,
+    { method: 'DELETE' }
+  );
+}
+
 export function subscribeToCountdownSettings(
   onUpdate: (settings: CountdownSettings | null) => void,
   onError?: (error: Error) => void
 ): Unsubscribe {
-  return onSnapshot(
-    doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        onUpdate(null);
-        return;
-      }
-
-      const data = snapshot.data();
-      onUpdate({
-        targetDate: String(data.targetDate ?? ''),
-        reason: String(data.reason ?? ''),
-        updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-      });
+  return subscribeWithPolling(
+    async () => {
+      const response = await apiRequest<{
+        settings?: CountdownSettings | null;
+      }>('/api/data/countdown');
+      return response.settings || null;
     },
-    (err) => {
-      console.error('Firestore countdown settings subscription error:', err);
-      if (onError) onError(err);
-    }
+    onUpdate,
+    onError
   );
 }
 
 export async function saveCountdownSettings(
   settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
 ): Promise<void> {
-  await setDoc(
-    doc(db, SETTINGS_COLLECTION, COUNTDOWN_SETTINGS_DOC),
-    {
-      targetDate: settings.targetDate,
-      reason: settings.reason,
-      updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
-}
-
-/**
- * Subscribe to real-time updates from Firestore.
- * Automatically initializes initial sample data if the collection is empty.
- */
-export function subscribeToRecords(
-  onUpdate: (records: DailyRecord[]) => void,
-  onError?: (error: Error) => void
-): Unsubscribe {
-  const recordsCol = collection(db, RECORDS_COLLECTION);
-
-  return onSnapshot(
-    recordsCol,
-    async (snapshot) => {
-      if (snapshot.empty) {
-        // Seed default template data if remote database is empty
-        try {
-          await seedInitialData(INITIAL_RECORDS);
-        } catch (e) {
-          console.error('Error seeding initial records to Firestore:', e);
-          onUpdate(INITIAL_RECORDS);
-        }
-        return;
-      }
-
-      const fetchedRecords: DailyRecord[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const rawDate = String(data.date ?? '');
-        fetchedRecords.push({
-          id: docSnap.id,
-          day: Number(data.day ?? 0),
-          date: standardizeDate(rawDate) || rawDate,
-          isCompleted: Boolean(data.isCompleted),
-          result: data.isCompleted ? 'TRUE' : 'FALSE',
-          change: Number(data.change ?? 0),
-          skill: String(data.skill ?? 'Power BI'),
-          summary: String(data.summary ?? ''),
-          notes: data.notes ? String(data.notes) : '',
-          responseSubmittedAt: data.responseSubmittedAt ? String(data.responseSubmittedAt) : undefined,
-          responseSource: data.responseSource
-            ? (String(data.responseSource) as DailyRecord['responseSource'])
-            : undefined,
-          updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-        });
-      });
-
-      // Sort sequentially by Day number
-      fetchedRecords.sort((a, b) => a.day - b.day);
-
-      // Deduplicate to guarantee strictly unique day values across all records in the Tasks table
-      const seenDays = new Set<number>();
-      const dedupedRecords: DailyRecord[] = [];
-      for (const rec of fetchedRecords) {
-        let safeDay = rec.day;
-        if (seenDays.has(safeDay) || safeDay <= 0) {
-          safeDay = 1;
-          while (seenDays.has(safeDay)) {
-            safeDay++;
-          }
-        }
-        seenDays.add(safeDay);
-        dedupedRecords.push(safeDay === rec.day ? rec : { ...rec, day: safeDay });
-      }
-
-      onUpdate(dedupedRecords);
-    },
-    (err) => {
-      console.error('Firestore real-time subscription error:', err);
-      if (onError) onError(err);
-    }
-  );
-}
-
-/**
- * Seed initial records into Firestore using batch operations
- */
-export async function seedInitialData(records: DailyRecord[]): Promise<void> {
-  const batch = writeBatch(db);
-  for (const r of records) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(docRef, {
-      id: r.id,
-      day: r.day,
-      date: r.date,
-      isCompleted: r.isCompleted,
-      result: r.result,
-      change: r.change,
-      skill: r.skill || '',
-      summary: r.summary || '',
-      notes: r.notes || '',
-      updatedAt: new Date().toISOString(),
-    });
-  }
-  await batch.commit();
-}
-
-/**
- * Add a single record to Firestore with strict duplicate validation
- */
-export async function addRecordToCloud(record: DailyRecord): Promise<void> {
-  const recordsSnap = await getDocs(collection(db, RECORDS_COLLECTION));
-  const existingRecords = recordsSnap.docs.map((d) => d.data());
-
-  const formattedDate = standardizeDate(record.date) || record.date;
-
-  // Prevent duplicate day in Tasks table
-  const duplicateDay = existingRecords.find(
-    (r) => r.id !== record.id && Number(r.day) === Number(record.day)
-  );
-  if (duplicateDay) {
-    throw new Error(`Duplicate value rejected: Day ${record.day} already exists in Tasks table.`);
-  }
-
-  // Prevent duplicate date in Tasks table
-  const duplicateDate = existingRecords.find(
-    (r) =>
-      r.id !== record.id &&
-      (standardizeDate(r.date) === formattedDate ||
-        String(r.date || '').toLowerCase() === formattedDate.toLowerCase())
-  );
-  if (duplicateDate) {
-    throw new Error(`Duplicate value rejected: A task for date ${formattedDate} already exists in Tasks table.`);
-  }
-
-  const docRef = doc(db, RECORDS_COLLECTION, record.id);
-  await setDoc(docRef, {
-    id: record.id,
-    day: record.day,
-    date: formattedDate,
-    isCompleted: record.isCompleted,
-    result: record.result,
-    change: record.change,
-    skill: record.skill || '',
-    summary: record.summary || '',
-    notes: record.notes || '',
-    ...(record.responseSubmittedAt ? { responseSubmittedAt: record.responseSubmittedAt } : {}),
-    ...(record.responseSource ? { responseSource: record.responseSource } : {}),
-    updatedAt: new Date().toISOString(),
+  await apiRequest('/api/data/countdown', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
   });
 }
 
-/**
- * Update an existing record in Firestore with duplicate prevention
- */
-export async function updateRecordInCloud(record: DailyRecord): Promise<void> {
-  const recordsSnap = await getDocs(collection(db, RECORDS_COLLECTION));
-  const existingRecords = recordsSnap.docs.map((d) => d.data());
-
-  const formattedDate = standardizeDate(record.date) || record.date;
-
-  // Prevent assigning an existing day number of another task
-  const duplicateDay = existingRecords.find(
-    (r) => r.id !== record.id && Number(r.day) === Number(record.day)
-  );
-  if (duplicateDay) {
-    throw new Error(`Duplicate value rejected: Day ${record.day} is already assigned to another task.`);
-  }
-
-  // Prevent assigning an existing date of another task
-  const duplicateDate = existingRecords.find(
-    (r) =>
-      r.id !== record.id &&
-      (standardizeDate(r.date) === formattedDate ||
-        String(r.date || '').toLowerCase() === formattedDate.toLowerCase())
-  );
-  if (duplicateDate) {
-    throw new Error(`Duplicate value rejected: A task for date ${formattedDate} already exists in Tasks table.`);
-  }
-
-  const docRef = doc(db, RECORDS_COLLECTION, record.id);
-  await setDoc(
-    docRef,
-    {
-      id: record.id,
-      day: record.day,
-      date: formattedDate,
-      isCompleted: record.isCompleted,
-      result: record.result,
-      change: record.change,
-      skill: record.skill || '',
-      summary: record.summary || '',
-      notes: record.notes || '',
-      ...(record.responseSubmittedAt ? { responseSubmittedAt: record.responseSubmittedAt } : {}),
-      ...(record.responseSource ? { responseSource: record.responseSource } : {}),
-      updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
-}
-
-/**
- * Delete a record from Firestore
- */
-export async function deleteRecordFromCloud(recordId: string): Promise<void> {
-  const docRef = doc(db, RECORDS_COLLECTION, recordId);
-  await deleteDoc(docRef);
-}
-
-/**
- * Bulk add or import records to Firestore
- */
-export async function bulkAddRecordsToCloud(records: DailyRecord[]): Promise<void> {
-  const batch = writeBatch(db);
-  for (const r of records) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(
-      docRef,
-      {
-        id: r.id,
-        day: r.day,
-        date: r.date,
-        isCompleted: r.isCompleted,
-        result: r.result,
-        change: r.change,
-        skill: r.skill || '',
-        summary: r.summary || '',
-        notes: r.notes || '',
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-  }
-  await batch.commit();
-}
-
-/**
- * Reset all records in Firestore to the initial template dataset
- */
-export async function resetRecordsInCloud(initialRecords: DailyRecord[]): Promise<void> {
-  const snapshot = await getDocs(collection(db, RECORDS_COLLECTION));
-  const batch = writeBatch(db);
-  snapshot.forEach((docSnap) => {
-    batch.delete(docSnap.ref);
-  });
-  for (const r of initialRecords) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(docRef, {
-      id: r.id,
-      day: r.day,
-      date: r.date,
-      isCompleted: r.isCompleted,
-      result: r.result,
-      change: r.change,
-      skill: r.skill || '',
-      summary: r.summary || '',
-      notes: r.notes || '',
-      updatedAt: new Date().toISOString(),
-    });
-  }
-  await batch.commit();
-}
-
-/**
- * Subscribe to real-time updates for tasks collection
- */
-export function subscribeToTasks(
-  onUpdate: (tasks: TaskItem[]) => void,
-  onError?: (error: Error) => void
-): Unsubscribe {
-  const tasksCol = collection(db, TASKS_COLLECTION);
-
-  return onSnapshot(
-    tasksCol,
-    async (snapshot) => {
-      if (snapshot.empty) {
-        onUpdate([]);
-        return;
-      }
-
-      const fetchedTasks: TaskItem[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        fetchedTasks.push({
-          id: docSnap.id,
-          taskKey: String(data.taskKey ?? ''),
-          taskOfTheDay: String(data.taskOfTheDay ?? ''),
-          isCompleted: Boolean(data.isCompleted),
-          priority: data.priority ? (data.priority as 'High' | 'Medium' | 'Normal') : 'Normal',
-          timeEstimate: data.timeEstimate ? String(data.timeEstimate) : '',
-          category: data.category ? String(data.category) : '',
-          notes: data.notes ? String(data.notes) : '',
-          updatedAt: data.updatedAt ? String(data.updatedAt) : '',
-          completedAt: data.completedAt ? String(data.completedAt) : undefined,
-          matrixQuadrant: data.matrixQuadrant
-            ? (String(data.matrixQuadrant) as TaskItem['matrixQuadrant'])
-            : undefined,
-        });
-      });
-
-      // Sort by taskKey descending so newest/today is first
-      fetchedTasks.sort((a, b) => (b.taskKey || '').localeCompare(a.taskKey || ''));
-      onUpdate(fetchedTasks);
-    },
-    (err) => {
-      console.error('Firestore tasks real-time subscription error:', err);
-      if (onError) onError(err);
-    }
-  );
-}
-
-/**
- * Seed initial tasks
- */
-export async function seedInitialTasks(tasks: TaskItem[]): Promise<void> {
-  const batch = writeBatch(db);
-  for (const t of tasks) {
-    const docRef = doc(db, TASKS_COLLECTION, t.id);
-    batch.set(docRef, {
-      id: t.id,
-      taskKey: t.taskKey,
-      taskOfTheDay: t.taskOfTheDay,
-      isCompleted: t.isCompleted,
-      priority: t.priority || 'Normal',
-      timeEstimate: t.timeEstimate || '',
-      category: t.category || 'General',
-      notes: t.notes || '',
-      updatedAt: new Date().toISOString(),
-      completedAt: t.completedAt || null,
-      matrixQuadrant: t.matrixQuadrant || null,
-    });
-  }
-  await batch.commit();
-}
-
-/**
- * Add a new task with duplicate prevention on the same date
- */
-export async function addTaskToCloud(task: TaskItem): Promise<void> {
-  const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
-  const existingTasks = tasksSnap.docs.map((d) => d.data());
-
-  const normKey = standardizeDate(task.taskKey) || task.taskKey;
-
-  // Prevent duplicate task ID
-  const duplicateId = existingTasks.find((t) => t.id === task.id);
-  if (duplicateId) {
-    throw new Error(`Duplicate task rejected: A task with ID ${task.id} already exists.`);
-  }
-
-  // Prevent duplicate task with identical title on the same date
-  const duplicateName = existingTasks.find(
-    (t) =>
-      t.id !== task.id &&
-      (standardizeDate(t.taskKey) === normKey || t.taskKey === task.taskKey) &&
-      t.taskOfTheDay &&
-      task.taskOfTheDay &&
-      String(t.taskOfTheDay).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
-  );
-  if (duplicateName) {
-    throw new Error(`Duplicate task rejected: A task named "${task.taskOfTheDay}" already exists for this date.`);
-  }
-
-  const docRef = doc(db, TASKS_COLLECTION, task.id);
-  await setDoc(docRef, {
-    id: task.id,
-    taskKey: task.taskKey,
-    taskOfTheDay: task.taskOfTheDay.trim(),
-    isCompleted: task.isCompleted,
-    priority: task.priority || 'Normal',
-    timeEstimate: task.timeEstimate || '',
-    category: task.category || 'General',
-    notes: task.notes || '',
-    updatedAt: new Date().toISOString(),
-    completedAt: task.completedAt || null,
-    matrixQuadrant: task.matrixQuadrant || null,
-  });
-}
-
-/**
- * Update an existing task with duplicate prevention
- */
-export async function updateTaskInCloud(task: TaskItem): Promise<void> {
-  const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
-  const existingTasks = tasksSnap.docs.map((d) => d.data());
-
-  const normKey = standardizeDate(task.taskKey) || task.taskKey;
-
-  // Prevent duplicate task with identical title on the same date (excluding self)
-  const duplicateName = existingTasks.find(
-    (t) =>
-      t.id !== task.id &&
-      (standardizeDate(t.taskKey) === normKey || t.taskKey === task.taskKey) &&
-      t.taskOfTheDay &&
-      task.taskOfTheDay &&
-      String(t.taskOfTheDay).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
-  );
-  if (duplicateName) {
-    throw new Error(`Another task named "${task.taskOfTheDay}" already exists for this date.`);
-  }
-
-  const docRef = doc(db, TASKS_COLLECTION, task.id);
-  await setDoc(
-    docRef,
-    {
-      id: task.id,
-      taskKey: task.taskKey,
-      taskOfTheDay: task.taskOfTheDay.trim(),
-      isCompleted: task.isCompleted,
-      priority: task.priority || 'Normal',
-      timeEstimate: task.timeEstimate || '',
-      category: task.category || 'General',
-      notes: task.notes || '',
-      updatedAt: new Date().toISOString(),
-      completedAt: task.completedAt || null,
-      matrixQuadrant: task.matrixQuadrant || null,
-    },
-    { merge: true }
-  );
-}
-
-/**
- * Delete a task
- */
-export async function deleteTaskFromCloud(taskId: string): Promise<void> {
-  const docRef = doc(db, TASKS_COLLECTION, taskId);
-  await deleteDoc(docRef);
-}
-
-/**
- * Reset tasks to initial set
- */
-export async function resetTasksInCloud(initialTasks: TaskItem[]): Promise<void> {
-  const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
-  const batch = writeBatch(db);
-  snapshot.forEach((docSnap) => {
-    batch.delete(docSnap.ref);
-  });
-  for (const t of initialTasks) {
-    const docRef = doc(db, TASKS_COLLECTION, t.id);
-    batch.set(docRef, {
-      id: t.id,
-      taskKey: t.taskKey,
-      taskOfTheDay: t.taskOfTheDay,
-      isCompleted: t.isCompleted,
-      priority: t.priority || 'Normal',
-      timeEstimate: t.timeEstimate || '',
-      category: t.category || 'General',
-      notes: t.notes || '',
-      updatedAt: new Date().toISOString(),
-      completedAt: t.completedAt || null,
-      matrixQuadrant: t.matrixQuadrant || null,
-    });
-  }
-  await batch.commit();
-}
-
-/**
- * Subscribe to real-time habit updates.
- */
-export function subscribeToHabits(
-  onUpdate: (habits: HabitItem[]) => void,
-  onError?: (error: Error) => void
-): Unsubscribe {
-  return onSnapshot(
-    collection(db, HABITS_COLLECTION),
-    (snapshot) => {
-      const habits: HabitItem[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        habits.push({
-          id: docSnap.id,
-          name: String(data.name ?? ''),
-          emoji: String(data.emoji ?? '✓'),
-          frequency:
-            data.frequency === 'custom'
-              ? 'custom'
-              : data.frequency === 'weekdays'
-              ? 'weekdays'
-              : 'daily',
-          repeatDays: Array.isArray(data.repeatDays)
-            ? data.repeatDays
-                .map((value: unknown) => Number(value))
-                .filter((value: number) => Number.isInteger(value) && value >= 0 && value <= 6)
-            : undefined,
-          skippedDates: Array.isArray(data.skippedDates)
-            ? data.skippedDates.map((value: unknown) => String(value))
-            : [],
-          extraDates: Array.isArray(data.extraDates)
-            ? data.extraDates.map((value: unknown) => String(value))
-            : [],
-          color: (['blue', 'emerald', 'amber', 'rose', 'violet'].includes(String(data.color))
-            ? String(data.color)
-            : 'blue') as HabitItem['color'],
-          checkIns: Array.isArray(data.checkIns)
-            ? data.checkIns.map((value: unknown) => String(value))
-            : [],
-          createdAt: String(data.createdAt ?? new Date().toISOString()),
-          updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
-        });
-      });
-      habits.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-      onUpdate(habits);
-    },
-    (err) => {
-      console.error('Firestore habits real-time subscription error:', err);
-      try {
-        handleFirestoreError(err, OperationType.GET, HABITS_COLLECTION);
-      } catch (wrapped) {
-        if (onError) onError(wrapped instanceof Error ? wrapped : new Error(String(wrapped)));
-      }
-    }
-  );
-}
-
-export async function addHabitToCloud(habit: HabitItem): Promise<void> {
-  try {
-    await setDoc(doc(db, HABITS_COLLECTION, habit.id), {
-      id: habit.id,
-      name: habit.name,
-      emoji: habit.emoji,
-      frequency: habit.frequency,
-      repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
-      skippedDates: habit.skippedDates || [],
-      extraDates: habit.extraDates || [],
-      color: habit.color,
-      checkIns: habit.checkIns || [],
-      createdAt: habit.createdAt,
-      updatedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `${HABITS_COLLECTION}/${habit.id}`);
-  }
-}
-
-export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
-  try {
-    await setDoc(
-      doc(db, HABITS_COLLECTION, habit.id),
-      {
-        id: habit.id,
-        name: habit.name,
-        emoji: habit.emoji,
-        frequency: habit.frequency,
-        repeatDays: habit.frequency === 'custom' ? habit.repeatDays || [] : [],
-        skippedDates: habit.skippedDates || [],
-        extraDates: habit.extraDates || [],
-        color: habit.color,
-        checkIns: habit.checkIns || [],
-        createdAt: habit.createdAt,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, `${HABITS_COLLECTION}/${habit.id}`);
-  }
-}
-
-export async function deleteHabitFromCloud(habitId: string): Promise<void> {
-  try {
-    await deleteDoc(doc(db, HABITS_COLLECTION, habitId));
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, `${HABITS_COLLECTION}/${habitId}`);
-  }
-}
-
-/**
- * Synchronize all records and tasks in Firestore (Task of the Day = Summary)
- */
 export async function syncAllDataInCloud(
   records: DailyRecord[],
   tasks: TaskItem[]
 ): Promise<void> {
-  const batch = writeBatch(db);
-
-  for (const r of records) {
-    const docRef = doc(db, RECORDS_COLLECTION, r.id);
-    batch.set(
-      docRef,
-      {
-        id: r.id,
-        day: r.day,
-        date: r.date,
-        isCompleted: r.isCompleted,
-        result: r.result,
-        change: r.change,
-        skill: r.skill,
-        summary: r.summary,
-        notes: r.notes || '',
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+  for (const record of records) {
+    await updateRecordInCloud(record);
   }
 
-  for (const t of tasks) {
-    const docRef = doc(db, TASKS_COLLECTION, t.id);
-    batch.set(
-      docRef,
-      {
-        id: t.id,
-        taskKey: t.taskKey,
-        taskOfTheDay: t.taskOfTheDay,
-        isCompleted: t.isCompleted,
-        priority: t.priority || 'Normal',
-        timeEstimate: t.timeEstimate || '',
-        category: t.category || 'General',
-        notes: t.notes || '',
-        updatedAt: new Date().toISOString(),
-        completedAt: t.completedAt || null,
-        matrixQuadrant: t.matrixQuadrant || null,
-      },
-      { merge: true }
-    );
+  for (const task of tasks) {
+    await updateTaskInCloud(task);
   }
-
-  await batch.commit();
 }
-

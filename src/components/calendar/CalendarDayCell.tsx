@@ -107,6 +107,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
               key={task.id}
               kind="task"
               task={task}
+              disabled={isFuture}
               onClick={() => void onToggleTask(task.id)}
             />
           ))}

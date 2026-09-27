@@ -40,7 +40,6 @@ jobs:
             body=$(echo "$response" | sed -e '$d')
             status=$(echo "$response" | tail -n1 | cut -d':' -f2)
 
-            echo "Response: $body"
             echo "Status: $status"
 
             if [ "$status" = "200" ]; then

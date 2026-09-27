@@ -19,12 +19,12 @@ const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> 
 };
 
 const COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
-  { id: 'users', label: 'Users' },
   { id: 'days', label: 'Days' },
   { id: 'tasks', label: 'Tasks' },
-  { id: 'habits', label: 'Habits' },
   { id: 'habitLogs', label: 'HabitLogs' },
+  { id: 'habits', label: 'Habits' },
   { id: 'countdowns', label: 'Countdowns' },
+  { id: 'users', label: 'Users' },
 ];
 
 function renderValue(value: unknown): string {
@@ -80,8 +80,6 @@ export const DataWorkspace: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 lg:shrink-0">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">Firestore workspace</p>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight">Canonical Data</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Live, read-only view of the six System Builder collections.</p>
         </div>
         <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500">
           <RefreshCw className="w-3.5 h-3.5" /> Live sync

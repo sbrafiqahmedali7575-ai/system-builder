@@ -437,9 +437,15 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                   <div className="text-[10px] uppercase font-bold text-slate-500 font-sans">
                     External Webhook Trigger (cron-job.org / Cloud Scheduler):
                   </div>
-                  <div className="overflow-x-auto select-all text-teal-300 bg-black/40 p-1 rounded border border-slate-800/80 break-all">
-                    curl -X POST {typeof window !== 'undefined' ? window.location.origin : 'https://ais-pre-vvkki5ofvlos77ccgutcla-146310585503.asia-east1.run.app'}/api/send-daily-reminder \<br />
-                    &nbsp;&nbsp;-H "Authorization: Bearer commit-daily-scheduler-secret-auth-key-2026"
+                  <div className="overflow-x-auto text-teal-300 bg-black/40 p-1 rounded border border-slate-800/80 break-all">
+                    POST {typeof window !== 'undefined' ? window.location.origin : 'https://your-app.example.com'}/api/send-daily-reminder<br />
+                    <span className="text-slate-400">
+                      Authorization: Bearer &lt;server-side scheduler credential&gt;
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-sans leading-relaxed">
+                    GitHub Actions uses short-lived OIDC automatically. If you use another scheduler,
+                    configure SCHEDULER_SECRET only on the server/scheduler and never place it in browser code.
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-slate-400 font-sans pt-0.5">
                     <span>• Timezone: <strong className="text-slate-200">Asia/Kolkata (IST)</strong></span>

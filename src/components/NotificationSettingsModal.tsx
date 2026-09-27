@@ -431,21 +431,20 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  The server now includes an <strong>internal background runner</strong> that automatically checks Asia/Kolkata time every 30 seconds and dispatches your daily reminder at <strong>09:00 PM IST</strong>. For 100% reliability when the container sleeps, you can also connect an external cron (e.g. cron-job.org or Google Cloud Scheduler).
+                  The server includes an <strong>internal background runner</strong> and the repository includes GitHub Actions fallbacks for sleeping containers. Scheduled webhook calls are accepted only from the approved <strong>main-branch GitHub Actions workflows</strong> using short-lived OIDC tokens.
                 </p>
                 <div className="bg-slate-900/90 rounded-lg p-1.5 border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
                   <div className="text-[10px] uppercase font-bold text-slate-500 font-sans">
-                    External Webhook Trigger (cron-job.org / Cloud Scheduler):
+                    Scheduler authentication:
                   </div>
                   <div className="overflow-x-auto text-teal-300 bg-black/40 p-1 rounded border border-slate-800/80 break-all">
                     POST {typeof window !== 'undefined' ? window.location.origin : 'https://your-app.example.com'}/api/send-daily-reminder<br />
                     <span className="text-slate-400">
-                      Authorization: Bearer &lt;server-side scheduler credential&gt;
+                      Authorization: short-lived GitHub Actions OIDC bearer token
                     </span>
                   </div>
                   <div className="text-[10px] text-slate-500 font-sans leading-relaxed">
-                    GitHub Actions uses short-lived OIDC automatically. If you use another scheduler,
-                    configure SCHEDULER_SECRET only on the server/scheduler and never place it in browser code.
+                    Static scheduler bearer secrets are not accepted. This prevents previously exposed or copied credentials from authorizing reminder or finalization calls.
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-slate-400 font-sans pt-0.5">
                     <span>• Timezone: <strong className="text-slate-200">Asia/Kolkata (IST)</strong></span>
@@ -464,7 +463,7 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                       Daily Confirmation Emails
                     </label>
                     <p className="text-slate-400 text-xs">
-                      Dispatched daily at 09:00 PM IST via external scheduler
+                      Dispatched daily at the configured IST time via internal runner + GitHub Actions
                     </p>
                   </div>
                   <button

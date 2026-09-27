@@ -1941,115 +1941,92 @@ pause
 
       let targetTaskName = 'Daily Commitment';
 
-      // 1. Update ONLY the record for targetDate in Firestore
+      // Update only objects explicitly named by the signed capability token.
+      // A token for one task/date must never gain authority over sibling tasks
+      // merely because they share the same date.
       let recordUpdated = false;
       if (targetRecordId) {
-        try {
-          const recRef = doc(db, 'records', targetRecordId);
-          const recSnap = await getDoc(recRef);
-          if (recSnap.exists()) {
-            const rData = recSnap.data();
-            targetTaskName = rData.summary || targetTaskName;
-            await updateDoc(recRef, {
-              isCompleted,
-              result: isCompleted ? 'TRUE' : 'FALSE',
-              change: 0,
-              updatedAt: nowIso,
-            });
-            recordUpdated = true;
+        const recRef = doc(db, 'records', targetRecordId);
+        const recSnap = await getDoc(recRef);
+
+        if (recSnap.exists()) {
+          const record = recSnap.data();
+          if (normalizeDateKey(record.date || '') !== normalizeDateKey(targetDate)) {
+            return renderErrorPage(
+              res,
+              'The signed record no longer matches the confirmation date.'
+            );
           }
-        } catch (recErr) {
-          console.warn('Record doc update error:', recErr);
+
+          targetTaskName = record.summary || targetTaskName;
+          await updateDoc(recRef, {
+            isCompleted,
+            result: isCompleted ? 'TRUE' : 'FALSE',
+            change: 0,
+            updatedAt: nowIso,
+          });
+          recordUpdated = true;
         }
       }
 
-      // Query records specifically for targetDate to ensure older emails update ONLY the targeted date
-      try {
+      if (!recordUpdated) {
         const recordsSnap = await getDocs(collection(db, 'records'));
-        const allRecords: any[] = [];
-        for (const d of recordsSnap.docs) {
-          const r = { id: d.id, ...(d.data() as any) };
-          allRecords.push(r);
-          if (
-            r.date === targetDate ||
-            String(r.date || '').toLowerCase() === String(targetDate || '').toLowerCase()
-          ) {
-            targetTaskName = r.summary || targetTaskName;
-            await updateDoc(doc(db, 'records', d.id), {
-              isCompleted,
-              result: isCompleted ? 'TRUE' : 'FALSE',
-              change: 0,
-              updatedAt: nowIso,
-            });
-            recordUpdated = true;
-          }
-        }
+        const matchingRecords = recordsSnap.docs.filter((item) => {
+          const record = item.data();
+          return normalizeDateKey(record.date || '') === normalizeDateKey(targetDate);
+        });
 
-        // If no record exists for that past date, create one specifically for targetDate with unique next day
-        if (!recordUpdated) {
-          const existingDays = allRecords
-            .map((r) => Number(r.day || 0))
-            .filter((d) => !isNaN(d) && d > 0);
-          const nextDay = (existingDays.length > 0 ? Math.max(...existingDays) : 0) + 1;
-          const fallbackRecId = targetRecordId || `rec-${Date.now()}`;
-          await setDoc(
-            doc(db, 'records', fallbackRecId),
-            {
-              id: fallbackRecId,
-              day: nextDay,
-              date: targetDate,
-              isCompleted,
-              result: isCompleted ? 'TRUE' : 'FALSE',
-              change: 0,
-              skill: 'Daily Commitment',
-              summary: targetTaskName,
-              updatedAt: nowIso,
-            },
-            { merge: true }
+        // Preserve legacy email links only when the date identifies exactly one
+        // existing record. Never fan out a capability across multiple records.
+        if (matchingRecords.length === 1) {
+          const match = matchingRecords[0];
+          const record = match.data();
+          targetTaskName = record.summary || targetTaskName;
+          await updateDoc(doc(db, 'records', match.id), {
+            isCompleted,
+            result: isCompleted ? 'TRUE' : 'FALSE',
+            change: 0,
+            updatedAt: nowIso,
+          });
+          recordUpdated = true;
+        } else if (matchingRecords.length > 1) {
+          return renderErrorPage(
+            res,
+            'This legacy confirmation link is ambiguous and cannot be applied safely.'
           );
         }
-      } catch (scanErr) {
-        console.warn('Records scan warning:', scanErr);
       }
 
-      // 2. Update ONLY the task for targetTaskId or targetDate in Firestore
-      if (targetTaskId) {
-        try {
-          const taskRef = doc(db, 'tasks', targetTaskId);
-          const taskSnap = await getDoc(taskRef);
-          if (taskSnap.exists()) {
-            const tData = taskSnap.data();
-            targetTaskName = tData.taskOfTheDay || targetTaskName;
-            await updateDoc(taskRef, {
-              isCompleted,
-              completedAt: isCompleted ? nowIso : null,
-              updatedAt: nowIso,
-            });
-          }
-        } catch (taskErr) {
-          console.warn('Task doc update warning:', taskErr);
-        }
+      if (!recordUpdated) {
+        return renderErrorPage(
+          res,
+          'The record referenced by this confirmation link no longer exists.'
+        );
       }
 
-      try {
-        const tasksSnap = await getDocs(collection(db, 'tasks'));
-        tasksSnap.forEach(async (d) => {
-          const t = d.data();
+      if (targetTaskId && !targetTaskId.startsWith('review-')) {
+        const taskRef = doc(db, 'tasks', targetTaskId);
+        const taskSnap = await getDoc(taskRef);
+
+        if (taskSnap.exists()) {
+          const task = taskSnap.data();
           if (
-            t.taskKey === targetDate ||
-            t.date === targetDate ||
-            String(t.taskKey || '').toLowerCase() === String(targetDate || '').toLowerCase()
+            normalizeDateKey(task.taskKey || task.date || '') !==
+            normalizeDateKey(targetDate)
           ) {
-            targetTaskName = t.taskOfTheDay || targetTaskName;
-            await updateDoc(doc(db, 'tasks', d.id), {
-              isCompleted,
-              completedAt: isCompleted ? nowIso : null,
-              updatedAt: nowIso,
-            });
+            return renderErrorPage(
+              res,
+              'The signed task no longer matches the confirmation date.'
+            );
           }
-        });
-      } catch (taskScanErr) {
-        console.warn('Tasks scan warning:', taskScanErr);
+
+          targetTaskName = task.taskOfTheDay || targetTaskName;
+          await updateDoc(taskRef, {
+            isCompleted,
+            completedAt: isCompleted ? nowIso : null,
+            updatedAt: nowIso,
+          });
+        }
       }
 
       // Exact prompt requirements:

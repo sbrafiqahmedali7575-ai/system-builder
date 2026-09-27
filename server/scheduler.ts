@@ -83,9 +83,45 @@ export async function saveNotificationSettings(
   updates: Partial<NotificationSettingsData>
 ): Promise<NotificationSettingsData> {
   const current = await getNotificationSettings();
+
+  const recipientEmail =
+    typeof updates.recipientEmail === 'string'
+      ? updates.recipientEmail.trim()
+      : current.recipientEmail;
+  const recipientName =
+    typeof updates.recipientName === 'string'
+      ? updates.recipientName.trim()
+      : current.recipientName;
+  const scheduledTime =
+    typeof updates.scheduledTime === 'string'
+      ? updates.scheduledTime.trim()
+      : current.scheduledTime;
+  const enabled =
+    typeof updates.enabled === 'boolean' ? updates.enabled : current.enabled;
+
+  if (
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail) ||
+    recipientEmail.length > 254
+  ) {
+    throw new Error('A valid recipient email address is required.');
+  }
+
+  if (!recipientName || recipientName.length > 120) {
+    throw new Error('Recipient name must be between 1 and 120 characters.');
+  }
+
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(scheduledTime)) {
+    throw new Error('Scheduled time must use 24-hour HH:MM format.');
+  }
+
   const updated: NotificationSettingsData = {
     ...current,
-    ...updates,
+    id: SETTINGS_DOC_ID,
+    enabled,
+    recipientEmail,
+    recipientName,
+    scheduledTime,
+    timezone: 'Asia/Kolkata',
     updatedAt: new Date().toISOString(),
   };
 

@@ -474,6 +474,22 @@ async function startServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Never expose backend source/config files through Vite development serving
+  // or future static-server changes.
+  app.use(
+    [
+      '/firebase-applet-config.json',
+      '/firestore.rules',
+      '/firebase-blueprint.json',
+      '/bun.lock',
+      '/server',
+      '/scripts',
+    ],
+    (_req, res) => {
+      res.status(404).end();
+    }
+  );
+
   // Baseline browser hardening for the SPA and JSON APIs.
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');

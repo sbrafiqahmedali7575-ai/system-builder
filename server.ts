@@ -994,7 +994,7 @@ pause
       <button
         class="btn exit-btn"
         type="button"
-        onclick="window.close(); setTimeout(function(){ document.body.innerHTML=''; window.location.replace('about:blank'); }, 120);"
+        onclick="window.close(); setTimeout(function(){ if (history.length > 1) { history.back(); } else { window.location.replace('about:blank'); } }, 120);"
       >
         Exit
       </button>

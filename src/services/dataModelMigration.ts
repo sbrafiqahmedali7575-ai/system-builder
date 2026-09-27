@@ -289,6 +289,38 @@ async function migrateCanonicalIds(): Promise<void> {
   }
 }
 
+async function backfillTaskOrder(): Promise<void> {
+  const snapshot = await getDocs(collection(db, 'tasks'));
+  const byDate = new Map<string, typeof snapshot.docs>();
+
+  for (const taskDoc of snapshot.docs) {
+    const dateKey = toDateKey(taskDoc.data().scheduledDate);
+    if (!dateKey) continue;
+    const group = byDate.get(dateKey) || [];
+    group.push(taskDoc);
+    byDate.set(dateKey, group);
+  }
+
+  const writes: QueuedWrite[] = [];
+  for (const tasks of byDate.values()) {
+    tasks.sort((a, b) => {
+      const aId = String(a.data().taskId || a.id);
+      const bId = String(b.data().taskId || b.id);
+      return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
+    });
+    tasks.forEach((taskDoc, index) => {
+      const data = taskDoc.data() as Record<string, unknown>;
+      const { sortOrder: _legacySortOrder, ...withoutLegacySortOrder } = data;
+      writes.push({
+        ref: taskDoc.ref,
+        data: { ...withoutLegacySortOrder, taskOrder: index + 1 },
+      });
+    });
+  }
+
+  await commitQueuedWrites(writes);
+}
+
 export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult> {
   const [
     recordsSnap,
@@ -498,5 +530,6 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
 
   await commitQueuedWrites(writes);
   await migrateCanonicalIds();
+  await backfillTaskOrder();
   return result;
 }

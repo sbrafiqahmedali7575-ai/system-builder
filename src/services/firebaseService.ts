@@ -473,7 +473,7 @@ export function subscribeToCountdownSettings(
   onError?: (error: Error) => void
 ): Unsubscribe {
   const ref = doc(
-    firestoreDb,
+    getFirestoreDb(),
     'notification_settings',
     'system_builder_countdown'
   );
@@ -499,7 +499,7 @@ export async function saveCountdownSettings(
   try {
     await setDoc(
       doc(
-        firestoreDb,
+        getFirestoreDb(),
         'notification_settings',
         'system_builder_countdown'
       ),

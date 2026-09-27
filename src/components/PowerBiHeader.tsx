@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, BookOpen, Database, Wrench } from 'lucide-react';
+import { BookOpen, Database, Wrench } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 
@@ -18,7 +18,6 @@ const HEADER_QUOTES = [
 
 interface PowerBiHeaderProps {
   onOpenAddModal?: () => void;
-  onOpenNotificationModal?: () => void;
   onOpenLibrary?: () => void;
   onOpenTools?: () => void;
   theme?: DashboardTheme;
@@ -31,7 +30,6 @@ interface PowerBiHeaderProps {
 }
 
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
-  onOpenNotificationModal,
   onOpenLibrary,
   onOpenTools,
   totalRecordsCount = 0,
@@ -123,19 +121,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
         {/* Right Desktop Controls */}
         <div className="hidden md:flex items-center space-x-1.5">
           {/* Email Notification Settings Button */}
-          {onOpenNotificationModal && (
-            <motion.button
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onOpenNotificationModal}
-              className="flex items-center space-x-1 px-1.5 py-1 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
-              title="Configure 09:00 PM IST Daily Email Alerts"
-            >
-              <Bell className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-              <span>9 PM Alerts</span>
-            </motion.button>
-          )}
-
           {onOpenLibrary && (
             <motion.button
               whileHover={{ y: -2 }}

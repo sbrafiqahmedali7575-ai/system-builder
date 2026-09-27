@@ -6,6 +6,7 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  deleteField,
   onSnapshot,
   getDocs,
   getDocFromServer,

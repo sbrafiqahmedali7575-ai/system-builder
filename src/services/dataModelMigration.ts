@@ -342,9 +342,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         scheduledDate,
         title,
         quadrant: matrixQuadrantToRoman(data.quadrant || data.matrixQuadrant),
-        sortOrder:
-          Number.isInteger(Number(data.sortOrder)) && Number(data.sortOrder) >= 0
-            ? Number(data.sortOrder)
+        taskOrder:
+          Number.isInteger(Number(data.taskOrder || data.sortOrder)) && Number(data.taskOrder || data.sortOrder) >= 0
+            ? Number(data.taskOrder || data.sortOrder)
             : index + 1,
         notes: String(data.notes || ''),
         Iscompleted: isCompleted,
@@ -357,7 +357,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
           title: normalized.title,
           quadrant: normalized.quadrant,
           scheduledDate: normalized.scheduledDate,
-          sortOrder: normalized.sortOrder,
+          taskOrder: normalized.taskOrder,
           notes: normalized.notes,
           Iscompleted: normalized.Iscompleted,
         },

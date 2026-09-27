@@ -643,32 +643,6 @@ export const NotificationSettingsModal: React.FC<NotificationSettingsModalProps>
                       </div>
                     )}
 
-                    {testResult.previewLinks && (
-                      <div className="pt-1 border-t border-slate-800 space-y-1">
-                        <div className="text-[11px] font-bold text-teal-400 flex items-center gap-0.5">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Generated Cryptographic Confirmation Links (Click to test):</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-1">
-                          <a
-                            href={testResult.previewLinks.completedUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1 rounded bg-teal-950/40 border border-teal-800/60 hover:border-teal-400 text-teal-300 font-bold text-center block transition text-[11px]"
-                          >
-                            ✓ Test: Mark Completed Link
-                          </a>
-                          <a
-                            href={testResult.previewLinks.notCompletedUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1 rounded bg-slate-800/60 border border-slate-700 hover:border-slate-500 text-slate-300 font-bold text-center block transition text-[11px]"
-                          >
-                            ✕ Test: Mark Not Completed Link
-                          </a>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

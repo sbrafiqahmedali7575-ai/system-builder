@@ -71,6 +71,10 @@ for (const file of clientFiles) {
   ) {
     failures.push(`${file} directly imports Firebase client configuration or SDK code.`);
   }
+
+  if (/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(source)) {
+    failures.push(`${file} contains a hardcoded email address in client source.`);
+  }
 }
 
 for (const file of ['server.ts', 'server/emailService.ts']) {

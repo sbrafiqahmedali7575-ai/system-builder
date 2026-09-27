@@ -467,7 +467,7 @@ export default function App() {
 
   // Add a new task
   const handleAddTask = async (taskData: Omit<TaskItem, 'id'>) => {
-    const taskId = `task-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const taskId = `T${Date.now().toString(36).toUpperCase()}`;
     const newTask: TaskItem = {
       ...taskData,
       id: taskId,
@@ -625,7 +625,7 @@ export default function App() {
   const handleAddHabit = async (habitData: Omit<HabitItem, 'id'>) => {
     const habit: HabitItem = {
       ...habitData,
-      id: `habit-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      id: String(Math.max(0, ...habits.map((item) => Number.parseInt(item.id, 10)).filter(Number.isFinite)) + 1),
       updatedAt: new Date().toISOString(),
     };
     setHabits((current) => [...current, habit]);

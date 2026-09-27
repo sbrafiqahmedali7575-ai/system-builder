@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { generateDailyReviewToken } from './tokenService';
+import deploymentConfig from '../deployment-config.json';
 import { db, collection, doc, setDoc } from './db';
 
 const DELIVERY_LOGS_COLLECTION = 'delivery_logs';
@@ -75,15 +76,18 @@ export function sanitizeError(rawMessage: any): string {
   return sanitized;
 }
 
-const CURRENT_APP_BASE_URL = 'https://systembuilder08.ai.studio';
-
 /**
  * Returns the canonical public production URL for all email links.
- * Keep this authoritative so a stale APP_BASE_URL deployment variable cannot
- * send users to the retired rafiqcommitdaily.ai.studio domain.
+ * APP_BASE_URL may override the checked-in deployment default at runtime.
  */
 export function getAppBaseUrl(): string {
-  return CURRENT_APP_BASE_URL;
+  const configured = String(
+    process.env.APP_BASE_URL || deploymentConfig.appBaseUrl || ''
+  ).trim();
+  if (!/^https:\/\//i.test(configured)) {
+    throw new Error('APP_BASE_URL must be an absolute HTTPS URL.');
+  }
+  return configured.replace(/\/$/, '');
 }
 
 function normalizeEmailAddress(value: unknown): string {

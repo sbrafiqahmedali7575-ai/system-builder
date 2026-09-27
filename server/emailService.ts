@@ -422,7 +422,7 @@ export async function sendDailyConfirmationEmail(
     return {
       success: false,
       status: 'pending_configuration',
-      provider: providerInfo.provider,
+      provider: providerInfo.provider === 'smtp' ? 'smtp' : 'simulator',
       error: 'Notification recipient is not configured.',
     };
   }

@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  deleteDoc,
   writeBatch,
   type DocumentReference,
   type WriteBatch,
@@ -154,6 +155,140 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
  * - Non-destructive: legacy fields and source collections remain untouched.
  * - Same-ID migration: existing task/habit document IDs are preserved.
  */
+function simpleTaskId(index: number): string {
+  return `T${index + 1}`;
+}
+
+function simpleHabitLogId(index: number): string {
+  return `HL${index + 1}`;
+}
+
+function isSimpleHabitId(value: string): boolean {
+  return /^[1-9]\d*$/.test(value);
+}
+
+function isSimpleTaskId(value: string): boolean {
+  return /^T[1-9]\d*$/.test(value);
+}
+
+function isSimpleHabitLogId(value: string): boolean {
+  return /^HL[1-9]\d*$/.test(value);
+}
+
+/**
+ * Re-keys the canonical collections to compact stable IDs while preserving
+ * HabitLogs.habitId -> Habits.habitId. Existing simple IDs are retained.
+ */
+async function migrateCanonicalIds(): Promise<void> {
+  const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
+    getDocs(collection(db, 'tasks')),
+    getDocs(collection(db, 'habits')),
+    getDocs(collection(db, 'habitLogs')),
+  ]);
+
+  const sortedHabits = [...habitsSnap.docs].sort((a, b) => a.id.localeCompare(b.id));
+  const habitIdMap = new Map<string, string>();
+  const usedHabitIds = new Set(
+    sortedHabits.map((d) => String(d.data().habitId || d.id)).filter(isSimpleHabitId)
+  );
+  let nextHabit = 1;
+  for (const d of sortedHabits) {
+    const oldId = String(d.data().habitId || d.id);
+    if (isSimpleHabitId(oldId)) {
+      habitIdMap.set(oldId, oldId);
+      habitIdMap.set(d.id, oldId);
+      continue;
+    }
+    while (usedHabitIds.has(String(nextHabit))) nextHabit += 1;
+    const newId = String(nextHabit++);
+    usedHabitIds.add(newId);
+    habitIdMap.set(oldId, newId);
+    habitIdMap.set(d.id, newId);
+  }
+
+  const sortedTasks = [...tasksSnap.docs].sort((a, b) => {
+    const ad = String(a.data().scheduledDate || '');
+    const bd = String(b.data().scheduledDate || '');
+    return ad.localeCompare(bd) || a.id.localeCompare(b.id);
+  });
+  const usedTaskIds = new Set(
+    sortedTasks.map((d) => String(d.data().taskId || d.id)).filter(isSimpleTaskId)
+  );
+  const taskIdMap = new Map<string, string>();
+  let nextTask = 1;
+  for (const d of sortedTasks) {
+    const oldId = String(d.data().taskId || d.id);
+    if (isSimpleTaskId(oldId)) {
+      taskIdMap.set(d.id, oldId);
+      continue;
+    }
+    while (usedTaskIds.has(simpleTaskId(nextTask - 1))) nextTask += 1;
+    const newId = simpleTaskId(nextTask - 1);
+    nextTask += 1;
+    usedTaskIds.add(newId);
+    taskIdMap.set(d.id, newId);
+  }
+
+  const sortedLogs = [...logsSnap.docs].sort((a, b) => {
+    const ad = String(a.data().dateKey || '');
+    const bd = String(b.data().dateKey || '');
+    return ad.localeCompare(bd) || a.id.localeCompare(b.id);
+  });
+  const usedLogIds = new Set(
+    sortedLogs.map((d) => String(d.data().habitLogId || d.id)).filter(isSimpleHabitLogId)
+  );
+  const logIdMap = new Map<string, string>();
+  let nextLog = 1;
+  for (const d of sortedLogs) {
+    const oldId = String(d.data().habitLogId || d.id);
+    if (isSimpleHabitLogId(oldId)) {
+      logIdMap.set(d.id, oldId);
+      continue;
+    }
+    while (usedLogIds.has(simpleHabitLogId(nextLog - 1))) nextLog += 1;
+    const newId = simpleHabitLogId(nextLog - 1);
+    nextLog += 1;
+    usedLogIds.add(newId);
+    logIdMap.set(d.id, newId);
+  }
+
+  const writes: QueuedWrite[] = [];
+  for (const d of sortedHabits) {
+    const newId = habitIdMap.get(d.id)!;
+    const data = d.data() as Record<string, unknown>;
+    writes.push({ ref: doc(db, 'habits', newId), data: { ...data, habitId: newId } });
+  }
+  for (const d of sortedTasks) {
+    const newId = taskIdMap.get(d.id)!;
+    const data = d.data() as Record<string, unknown>;
+    writes.push({ ref: doc(db, 'tasks', newId), data: { ...data, taskId: newId } });
+  }
+  for (const d of sortedLogs) {
+    const newId = logIdMap.get(d.id)!;
+    const data = d.data() as Record<string, unknown>;
+    const oldHabitId = String(data.habitId || '');
+    const newHabitId = habitIdMap.get(oldHabitId) || oldHabitId;
+    writes.push({
+      ref: doc(db, 'habitLogs', newId),
+      data: { ...data, habitLogId: newId, habitId: newHabitId },
+    });
+  }
+
+  await commitQueuedWrites(writes);
+
+  // Delete only superseded document keys, after all replacement docs/FKs exist.
+  const deletes = [
+    ...sortedHabits.filter((d) => habitIdMap.get(d.id) !== d.id).map((d) => d.ref),
+    ...sortedTasks.filter((d) => taskIdMap.get(d.id) !== d.id).map((d) => d.ref),
+    ...sortedLogs.filter((d) => logIdMap.get(d.id) !== d.id).map((d) => d.ref),
+  ];
+  for (let i = 0; i < deletes.length; i += MIGRATION_BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    deletes.slice(i, i + MIGRATION_BATCH_LIMIT).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+}
+
 export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult> {
   const [
     recordsSnap,
@@ -362,5 +497,6 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   }
 
   await commitQueuedWrites(writes);
+  await migrateCanonicalIds();
   return result;
 }

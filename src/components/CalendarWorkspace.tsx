@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  X,
 } from 'lucide-react';
 import type { HabitItem, TaskItem, ToolsDensity } from '../types';
 import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
@@ -125,6 +126,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   const [showCompleted, setShowCompleted] = useState(true);
   const [showHabits, setShowHabits] = useState(true);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [detailsDate, setDetailsDate] = useState<string | null>(null);
 
   const compact = density === 'compact';
 
@@ -412,11 +414,27 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
             tasksByDate={tasksByDate}
             getHabitsForDate={getHabitsForDate}
             onSelectDate={selectDate}
+            onShowMore={(dateKey) => {
+              selectDate(dateKey);
+              setDetailsDate(dateKey);
+            }}
             onToggleTask={onToggleTaskStatus}
             onToggleHabit={toggleHabit}
           />
         )}
       </div>
+
+      {detailsDate && (
+        <CalendarDayDetailsDialog
+          dateKey={detailsDate}
+          today={today}
+          tasks={tasksByDate.get(detailsDate) || []}
+          habits={getHabitsForDate(detailsDate)}
+          onClose={() => setDetailsDate(null)}
+          onToggleTask={onToggleTaskStatus}
+          onToggleHabit={toggleHabit}
+        />
+      )}
 
       {addTaskOpen && (
         <QuickAddTaskDialog
@@ -571,6 +589,120 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
   </button>
 );
 
+interface CalendarDayDetailsDialogProps {
+  dateKey: string;
+  today: string;
+  tasks: TaskItem[];
+  habits: HabitItem[];
+  onClose: () => void;
+  onToggleTask: (taskId: string) => Promise<void>;
+  onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
+}
+
+const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
+  dateKey,
+  today,
+  tasks,
+  habits,
+  onClose,
+  onToggleTask,
+  onToggleHabit,
+}) => {
+  const isFuture = dateKey > today;
+  const totalItems = tasks.length + habits.length;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[2px]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={'Items for ' + longDate(dateKey)}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-md max-h-[80vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+          <div>
+            <div className="text-sm font-bold text-slate-900">
+              {longDate(dateKey)}
+            </div>
+            <div className="mt-0.5 text-[10px] font-semibold text-slate-500">
+              {totalItems} item{totalItems === 1 ? '' : 's'}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close day details"
+            className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="max-h-[calc(80vh-64px)] overflow-y-auto p-3 space-y-3">
+          {totalItems === 0 && (
+            <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-xs font-semibold text-slate-500">
+              No visible tasks or habits for this date.
+            </div>
+          )}
+
+          {tasks.length > 0 && (
+            <section>
+              <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Tasks</div>
+              <div className="space-y-1.5">
+                {tasks.map((task) => (
+                  <button
+                    key={task.id}
+                    type="button"
+                    disabled={isFuture}
+                    onClick={() => void onToggleTask(task.id)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 flex items-center gap-2 text-left hover:bg-slate-50 disabled:opacity-55 disabled:cursor-default"
+                  >
+                    <input type="checkbox" checked={task.isCompleted} readOnly tabIndex={-1} className="pointer-events-none" />
+                    <span className={task.isCompleted ? 'min-w-0 flex-1 text-xs font-semibold text-slate-400 line-through' : 'min-w-0 flex-1 text-xs font-semibold text-slate-800'}>
+                      {task.taskOfTheDay}
+                    </span>
+                    {task.timeEstimate && (
+                      <span className="shrink-0 text-[9px] font-medium text-slate-400">{task.timeEstimate}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {habits.length > 0 && (
+            <section>
+              <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Habits</div>
+              <div className="space-y-1.5">
+                {habits.map((habit) => {
+                  const checked = habit.checkIns.includes(dateKey);
+                  return (
+                    <button
+                      key={habit.id}
+                      type="button"
+                      disabled={isFuture}
+                      onClick={() => void onToggleHabit(habit, dateKey)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 flex items-center gap-2 text-left hover:bg-slate-50 disabled:opacity-55 disabled:cursor-default"
+                    >
+                      <input type="checkbox" checked={checked} readOnly tabIndex={-1} className="pointer-events-none" />
+                      <span className="min-w-0 flex-1 text-xs font-semibold text-slate-800">
+                        {habit.emoji} {habit.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 interface QuickAddTaskDialogProps {
   selectedDate: string;
   onClose: () => void;

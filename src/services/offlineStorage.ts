@@ -14,11 +14,6 @@ const KEY_TASKS = 'tasks_cache_v2';
 const KEY_HABITS = 'habits_cache_v2';
 const KEY_PENDING_QUEUE = 'pending_offline_mutations_v1';
 
-// Legacy localStorage fallback keys for one-time seamless migration
-const LEGACY_TASKS_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
-const LEGACY_TASKS_FALLBACK_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
-const LEGACY_HABITS_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
-
 export type PendingMutation =
   | { type: 'record_add'; payload: DailyRecord; timestamp: number }
   | { type: 'record_update'; payload: DailyRecord; timestamp: number }
@@ -93,43 +88,16 @@ export async function setCachedRecords(
 export async function getCachedTasks(): Promise<TaskItem[] | null> {
   try {
     const cached = await offlineStore.getItem<TaskItem[]>(KEY_TASKS);
-    if (Array.isArray(cached)) {
-      return cached;
-    }
-
-    // Migration from localStorage
-    if (typeof window !== 'undefined') {
-      const legacy =
-        localStorage.getItem(LEGACY_TASKS_KEY) ||
-        localStorage.getItem(LEGACY_TASKS_FALLBACK_KEY);
-      if (legacy) {
-        try {
-          const parsed = JSON.parse(legacy);
-          if (Array.isArray(parsed)) {
-            await setCachedTasks(parsed);
-            return parsed;
-          }
-        } catch {
-          // ignore parsing error
-        }
-      }
-    }
+    return Array.isArray(cached) ? cached : null;
   } catch (err) {
     console.warn('Error reading tasks from IndexedDB:', err);
+    return null;
   }
-  return null;
 }
 
 export async function setCachedTasks(tasks: TaskItem[]): Promise<void> {
   try {
     await offlineStore.setItem(KEY_TASKS, tasks);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(LEGACY_TASKS_KEY, JSON.stringify(tasks));
-      } catch {
-        // quota ignore
-      }
-    }
   } catch (err) {
     console.warn('Error writing tasks to IndexedDB:', err);
   }
@@ -142,41 +110,16 @@ export async function setCachedTasks(tasks: TaskItem[]): Promise<void> {
 export async function getCachedHabits(): Promise<HabitItem[] | null> {
   try {
     const cached = await offlineStore.getItem<HabitItem[]>(KEY_HABITS);
-    if (Array.isArray(cached)) {
-      return cached;
-    }
-
-    // Migration from localStorage
-    if (typeof window !== 'undefined') {
-      const legacy = localStorage.getItem(LEGACY_HABITS_KEY);
-      if (legacy) {
-        try {
-          const parsed = JSON.parse(legacy);
-          if (Array.isArray(parsed)) {
-            await setCachedHabits(parsed);
-            return parsed;
-          }
-        } catch {
-          // ignore parsing error
-        }
-      }
-    }
+    return Array.isArray(cached) ? cached : null;
   } catch (err) {
     console.warn('Error reading habits from IndexedDB:', err);
+    return null;
   }
-  return null;
 }
 
 export async function setCachedHabits(habits: HabitItem[]): Promise<void> {
   try {
     await offlineStore.setItem(KEY_HABITS, habits);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(LEGACY_HABITS_KEY, JSON.stringify(habits));
-      } catch {
-        // quota ignore
-      }
-    }
   } catch (err) {
     console.warn('Error writing habits to IndexedDB:', err);
   }

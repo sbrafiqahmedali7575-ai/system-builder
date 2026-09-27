@@ -42,7 +42,7 @@ const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
-const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V2_MIGRATED';
+const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V3_MIGRATED';
 type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }
   | { kind: 'delete' };
@@ -220,7 +220,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [confirmToken]);
+  }, []);
 
   // Background sync for queued offline mutations when online
   useEffect(() => {

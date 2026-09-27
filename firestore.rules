@@ -24,5 +24,17 @@ service cloud.firestore {
     match /daily_reminders_sent/{dateKey} {
       allow read, write: if true;
     }
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    match /days/{dateKey} {
+      allow read, write: if true;
+    }
+    match /habitLogs/{habitLogId} {
+      allow read, write: if true;
+    }
+    match /countdowns/{countdownId} {
+      allow read, write: if true;
+    }
   }
 }

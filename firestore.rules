@@ -2,27 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global shared records accessible from any device via the web link
-    match /records/{recordId} {
-      allow read, write: if true;
-    }
-    match /tasks/{taskId} {
-      allow read, write: if true;
-    }
-    match /habits/{habitId} {
-      allow read, write: if true;
-    }
-    match /notification_settings/{settingId} {
-      allow read, write: if true;
-    }
-    match /delivery_logs/{logId} {
-      allow read, write: if true;
-    }
-    match /confirmation_tokens/{tokenId} {
-      allow read, write: if true;
-    }
-    match /daily_reminders_sent/{dateKey} {
-      allow read, write: if true;
+    // System Builder data is private. Browser/mobile Firebase SDK access is
+    // intentionally disabled; all application data access goes through the
+    // owner-authenticated server API. Server jobs use Google IAM credentials
+    // and therefore do not rely on Firebase Security Rules.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

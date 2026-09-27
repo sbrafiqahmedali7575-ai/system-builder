@@ -1,0 +1,99 @@
+name: Rollback REST Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rollback-rest-smoke-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test live Firestore and server flows
+        shell: bash
+        run: |
+          set +e
+          PROJECT_ID=$(python3 -c 'import json; c=json.load(open("firebase-applet-config.json")); print(c["projectId"])')
+          DATABASE_ID=$(python3 -c 'import json; c=json.load(open("firebase-applet-config.json")); print(c["firestoreDatabaseId"])')
+          API_KEY=$(python3 -c 'import json; c=json.load(open("firebase-applet-config.json")); print(c["apiKey"])')
+          BASE="https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/$DATABASE_ID/documents"
+          APP="https://systembuilder08.ai.studio"
+          STAMP=$(date +%s)
+          TASK_ID="smoke-task-$STAMP"
+          HABIT_ID="smoke-habit-$STAMP"
+          DATE_KEY=$(TZ=Asia/Kolkata date +%F)
+          results=()
+
+          record_result() {
+            echo "$2 :: $1 :: $3"
+            results+=("$2|$1|$3")
+          }
+
+          call() {
+            curl -sS --connect-timeout 15 --max-time 30 -w "\nHTTP_STATUS:%{http_code}" "$"
+          }
+
+          TASK_JSON=$(cat <<JSON
+          {"fields":{"id":{"stringValue":"$TASK_ID"},"taskKey":{"stringValue":"$DATE_KEY"},"taskOfTheDay":{"stringValue":"[SMOKE TEST] Temporary task"},"isCompleted":{"booleanValue":false},"priority":{"stringValue":"Normal"},"category":{"stringValue":"General"}}}
+          JSON
+          )
+          response=$(call -X PATCH "$BASE/tasks/$TASK_ID?key=$API_KEY" -H "Content-Type: application/json" --data "$TASK_JSON")
+          body=$(echo "$response" | sed '$d'); code=$(echo "$response" | tail -n1 | cut -d: -f2)
+          if [ "$code" = "200" ]; then record_result "Add Task" "PASS" "HTTP 200 write succeeded"; else record_result "Add Task" "FAIL" "HTTP $code $body"; fi
+
+          COMPLETE_JSON='{"fields":{"isCompleted":{"booleanValue":true}}}'
+          response=$(call -X PATCH "$BASE/tasks/$TASK_ID?updateMask.fieldPaths=isCompleted&key=$API_KEY" -H "Content-Type: application/json" --data "$COMPLETE_JSON")
+          body=$(echo "$response" | sed '$d'); code=$(echo "$response" | tail -n1 | cut -d: -f2)
+          if [ "$code" = "200" ]; then record_result "Task Completion" "PASS" "HTTP 200 update succeeded"; else record_result "Task Completion" "FAIL" "HTTP $code $body"; fi
+
+          HABIT_JSON=$(cat <<JSON
+          {"fields":{"id":{"stringValue":"$HABIT_ID"},"name":{"stringValue":"[SMOKE TEST] Temporary habit"},"emoji":{"stringValue":"✓"},"frequency":{"stringValue":"daily"},"color":{"stringValue":"blue"},"checkIns":{"arrayValue":{"values":[]}},"createdAt":{"stringValue":"smoke"}}}
+          JSON
+          )
+          response=$(call -X PATCH "$BASE/habits/$HABIT_ID?key=$API_KEY" -H "Content-Type: application/json" --data "$HABIT_JSON")
+          code=$(echo "$response" | tail -n1 | cut -d: -f2)
+          if [ "$code" = "200" ]; then
+            CHECKIN_JSON=$(printf '{"fields":{"checkIns":{"arrayValue":{"values":[{"stringValue":"%s"}]}}}}' "$DATE_KEY")
+            response2=$(call -X PATCH "$BASE/habits/$HABIT_ID?updateMask.fieldPaths=checkIns&key=$API_KEY" -H "Content-Type: application/json" --data "$CHECKIN_JSON")
+            code2=$(echo "$response2" | tail -n1 | cut -d: -f2)
+            if [ "$code2" = "200" ]; then record_result "Habit Updates" "PASS" "create and check-in update succeeded"; else record_result "Habit Updates" "FAIL" "check-in update HTTP $code2"; fi
+          else
+            body=$(echo "$response" | sed '$d'); record_result "Habit Updates" "FAIL" "create HTTP $code $body"
+          fi
+
+          get_response=$(call "$APP/api/notifications/settings")
+          get_body=$(echo "$get_response" | sed '$d'); get_code=$(echo "$get_response" | tail -n1 | cut -d: -f2)
+          if [ "$get_code" = "200" ]; then
+            settings_json=$(printf '%s' "$get_body" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)["settings"]))' 2>/dev/null)
+            post_response=$(call -X POST "$APP/api/notifications/settings" -H "Content-Type: application/json" --data "$settings_json")
+            post_code=$(echo "$post_response" | tail -n1 | cut -d: -f2)
+            if [ "$post_code" = "200" ]; then record_result "Notification Settings" "PASS" "GET and write-back both HTTP 200"; else record_result "Notification Settings" "FAIL" "POST HTTP $post_code"; fi
+          else
+            record_result "Notification Settings" "FAIL" "GET HTTP $get_code $get_body"
+          fi
+
+          EMAIL_JSON=$(printf '{"taskDate":"%s","tasks":[{"id":"%s","title":"[SMOKE TEST] Email flow verification","isCompleted":true}],"habits":[{"id":"%s","name":"[SMOKE TEST] Habit","emoji":"✓","isCheckedIn":true}]}' "$DATE_KEY" "$TASK_ID" "$HABIT_ID")
+          email_response=$(call -X POST "$APP/api/notifications/send-test" -H "Content-Type: application/json" --data "$EMAIL_JSON")
+          email_body=$(echo "$email_response" | sed '$d'); email_code=$(echo "$email_response" | tail -n1 | cut -d: -f2)
+          if [ "$email_code" = "200" ]; then record_result "Email Flow" "PASS" "HTTP 200 $email_body"; else record_result "Email Flow" "FAIL" "HTTP $email_code $email_body"; fi
+
+          for path in "tasks/$TASK_ID" "habits/$HABIT_ID"; do
+            cleanup=$(call -X DELETE "$BASE/$path?key=$API_KEY")
+            cleanup_code=$(echo "$cleanup" | tail -n1 | cut -d: -f2)
+            echo "CLEANUP :: $path :: HTTP $cleanup_code"
+          done
+
+          echo "----- FINAL RESULTS -----"
+          failed=0
+          for result in "${results[@]}"; do
+            echo "$result"
+            case "$result" in FAIL\|*) failed=$((failed+1));; esac
+          done
+          if [ "$failed" -gt 0 ]; then exit 1; fi

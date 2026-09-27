@@ -962,6 +962,8 @@ export default function App() {
         isOpen={isNotificationModalOpen}
         onClose={() => setIsNotificationModalOpen(false)}
         theme={theme}
+        tasks={tasks}
+        habits={habits}
       />
 
       {/* 5. Header-triggered current-day review */}

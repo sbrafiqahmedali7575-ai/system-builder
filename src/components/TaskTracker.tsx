@@ -34,7 +34,6 @@ type TaskDraft = {
 };
 
 const WEEKLY_TARGET_PERCENTAGE = 80;
-const FULL_WEEK_PERCENT_CAPACITY = 700;
 
 const QUADRANTS: Array<{
   value: MatrixQuadrant;
@@ -87,7 +86,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
 }) => {
   const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const compact = density === 'compact';
-  const [weekAnchor, setWeekAnchor] = useState(today);
+  const weekAnchor = today;
   const [formOpen, setFormOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [historyTaskId, setHistoryTaskId] = useState<string | null>(null);
@@ -126,14 +125,17 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
   const completedThisWeek = weekTasks.filter((task) => task.isCompleted).length;
 
   const weekScore = useMemo(() => {
-    const totalDailyPercentage = weekDates.reduce((sum, dateKey) => {
-      if (dateKey > today) return sum;
-      return sum + getDailyTaskRate(tasks, dateKey);
-    }, 0);
+    const elapsedDates = weekDates.filter((dateKey) => dateKey <= today);
+    if (elapsedDates.length === 0) return 0;
+
+    const totalDailyPercentage = elapsedDates.reduce(
+      (sum, dateKey) => sum + getDailyTaskRate(tasks, dateKey),
+      0
+    );
 
     return (
       Math.round(
-        (totalDailyPercentage / FULL_WEEK_PERCENT_CAPACITY) * 1000
+        (totalDailyPercentage / (elapsedDates.length * 100)) * 1000
       ) / 10
     );
   }, [tasks, weekDates, today]);
@@ -166,17 +168,13 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     let achieved = 0;
     let guard = 0;
 
-    while (weekStartKey <= currentWeekStart && guard < 5200) {
-      const dailyRates = Array.from({ length: 7 }, (_, index) => {
-        const dateKey = addHabitDays(weekStartKey, index);
-        if (dateKey > today) return 0;
-        return getDailyTaskRate(tasks, dateKey);
-      });
+    while (weekStartKey < currentWeekStart && guard < 5200) {
+      const dailyRates = Array.from({ length: 7 }, (_, index) =>
+        getDailyTaskRate(tasks, addHabitDays(weekStartKey, index))
+      );
 
       const weeklyScore =
-        (dailyRates.reduce((sum, rate) => sum + rate, 0) /
-          FULL_WEEK_PERCENT_CAPACITY) *
-        100;
+        dailyRates.reduce((sum, rate) => sum + rate, 0) / dailyRates.length;
 
       if (weeklyScore >= WEEKLY_TARGET_PERCENTAGE) achieved += 1;
       weekStartKey = addHabitDays(weekStartKey, 7);

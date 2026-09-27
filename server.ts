@@ -374,10 +374,9 @@ async function startServer() {
   });
 
   // 3. Send test confirmation email directly via Gmail SMTP (Admin test action)
-  app.post('/api/notifications/send-test', async (req, res) => {
+  app.post('/api/notifications/send-test', async (_req, res) => {
     try {
-      const recipientOverride = req.body?.recipientEmail || req.body?.recipient || undefined;
-      const result = await triggerDailyReminder({ force: true, recipientOverride });
+      const result = await triggerDailyReminder({ force: true });
 
       if (!result.success) {
         return res.status(500).json({

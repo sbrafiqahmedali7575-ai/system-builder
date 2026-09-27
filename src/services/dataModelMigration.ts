@@ -166,7 +166,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     getDocs(collection(db, 'tasks')),
     getDocs(collection(db, 'habits')),
     getDocs(collection(db, 'days')),
-    getDoc(doc(db, 'notification_settings', 'system_builder_countdown')),
+    getDoc(doc(db, 'countdowns', 'system_builder_countdown'))
   ]);
 
   const result: DataModelMigrationResult = {

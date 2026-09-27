@@ -20,7 +20,6 @@ export interface DataModelMigrationResult {
   habits: number;
   habitLogs: number;
   countdowns: number;
-  notificationSettingsPreserved: boolean;
 }
 
 type QueuedWrite = {
@@ -154,8 +153,6 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
  * - Idempotent: safe to run multiple times.
  * - Non-destructive: legacy fields and source collections remain untouched.
  * - Same-ID migration: existing task/habit document IDs are preserved.
- * - Notification settings remain in notification_settings because they are
- *   application configuration rather than one of the six analytical entities.
  */
 export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult> {
   const [
@@ -163,20 +160,14 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     tasksSnap,
     habitsSnap,
     existingDaysSnap,
-    notificationSettingsSnap,
     countdownSnap,
   ] = await Promise.all([
     getDocs(collection(db, 'records')),
     getDocs(collection(db, 'tasks')),
     getDocs(collection(db, 'habits')),
     getDocs(collection(db, 'days')),
-    getDoc(doc(db, 'notification_settings', 'daily-settings')),
     getDoc(doc(db, 'notification_settings', 'system_builder_countdown')),
   ]);
-
-  const notificationSettings = notificationSettingsSnap.exists()
-    ? notificationSettingsSnap.data()
-    : {};
 
   const result: DataModelMigrationResult = {
     users: 0,
@@ -185,22 +176,17 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     habits: 0,
     habitLogs: 0,
     countdowns: 0,
-    notificationSettingsPreserved: notificationSettingsSnap.exists(),
   };
 
   const writes: QueuedWrite[] = [];
 
-  // 1. Single user. Reuse the existing notification recipient identity when present.
+  // 1. Single-user profile.
   writes.push({
     ref: doc(db, 'users', 'default-user'),
     data: {
       userId: 'default-user',
-      name: String(notificationSettings.recipientName || 'Rafiq Ahmed').trim(),
-      email: String(
-        notificationSettings.recipientEmail || 'sbrafiqahmedali7575@gmail.com'
-      )
-        .trim()
-        .toLowerCase(),
+      name: 'Rafiq Ahmed',
+      email: 'sbrafiqahmedali7575@gmail.com',
     },
   });
   result.users = 1;

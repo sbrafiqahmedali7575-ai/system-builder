@@ -9,7 +9,8 @@
     "start": "node server-dist/server.cjs",
     "lint": "tsc --noEmit",
     "security:check": "node scripts/security-check.mjs",
-    "check": "bun run security:check && bun run lint && bun run build"
+    "check": "bun run security:check && bun run test && bun run lint && bun run build",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

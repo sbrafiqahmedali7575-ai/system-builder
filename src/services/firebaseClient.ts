@@ -1,5 +1,6 @@
-import { getApp, getApps, initializeApp } from 'firebase/app';
+import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import {
+  Auth,
   GoogleAuthProvider,
   User,
   getAuth,
@@ -8,25 +9,76 @@ import {
   signInWithRedirect,
   signOut,
 } from 'firebase/auth';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import {
+  Firestore,
+  doc,
+  getDoc,
+  getFirestore,
+} from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-const app = getApps().length > 0 ? getApp() : initializeApp({
-  apiKey: firebaseConfig.apiKey,
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId,
-  appId: firebaseConfig.appId,
-  messagingSenderId: firebaseConfig.messagingSenderId,
-});
+interface FirebaseRuntime {
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
+  googleProvider: GoogleAuthProvider;
+}
 
-export const firebaseAuth = getAuth(app);
-export const firestoreDb = getFirestore(
-  app,
-  firebaseConfig.firestoreDatabaseId
-);
+let runtime: FirebaseRuntime | null = null;
 
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+function requiredConfigValue(
+  key:
+    | 'apiKey'
+    | 'authDomain'
+    | 'projectId'
+    | 'appId'
+    | 'messagingSenderId'
+    | 'firestoreDatabaseId'
+): string {
+  const value = String(firebaseConfig[key] || '').trim();
+  if (!value) {
+    throw new Error(
+      `Firebase configuration is missing ${key}. Refresh the AI Studio project from the latest repository revision.`
+    );
+  }
+  return value;
+}
+
+export function getFirebaseRuntime(): FirebaseRuntime {
+  if (runtime) return runtime;
+
+  const app =
+    getApps().length > 0
+      ? getApp()
+      : initializeApp({
+          apiKey: requiredConfigValue('apiKey'),
+          authDomain: requiredConfigValue('authDomain'),
+          projectId: requiredConfigValue('projectId'),
+          appId: requiredConfigValue('appId'),
+          messagingSenderId: requiredConfigValue('messagingSenderId'),
+        });
+
+  const auth = getAuth(app);
+  const firestore = getFirestore(
+    app,
+    requiredConfigValue('firestoreDatabaseId')
+  );
+  const googleProvider = new GoogleAuthProvider();
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+  runtime = {
+    app,
+    auth,
+    firestore,
+    googleProvider,
+  };
+
+  return runtime;
+}
+
+export function getFirestoreDb(): Firestore {
+  return getFirebaseRuntime().firestore;
+}
 
 export interface FirebaseOwnerStatus {
   signedIn: boolean;
@@ -44,23 +96,58 @@ function isPermissionDenied(error: unknown): boolean {
 }
 
 export async function waitForFirebaseAuthReady(): Promise<void> {
-  if (typeof firebaseAuth.authStateReady === 'function') {
-    await firebaseAuth.authStateReady();
+  const { auth } = getFirebaseRuntime();
+
+  if (typeof auth.authStateReady === 'function') {
+    await Promise.race([
+      auth.authStateReady(),
+      new Promise<void>((_, reject) =>
+        window.setTimeout(
+          () =>
+            reject(
+              new Error(
+                'Firebase Authentication did not initialize in this preview.'
+              )
+            ),
+          8000
+        )
+      ),
+    ]);
     return;
   }
 
-  await new Promise<void>((resolve) => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, () => {
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
       unsubscribe();
-      resolve();
-    });
+      reject(
+        new Error(
+          'Firebase Authentication did not initialize in this preview.'
+        )
+      );
+    }, 8000);
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      () => {
+        window.clearTimeout(timeout);
+        unsubscribe();
+        resolve();
+      },
+      (error) => {
+        window.clearTimeout(timeout);
+        unsubscribe();
+        reject(error);
+      }
+    );
   });
 }
 
 export async function getFirebaseOwnerStatus(): Promise<FirebaseOwnerStatus> {
   await waitForFirebaseAuthReady();
 
-  const user = firebaseAuth.currentUser;
+  const { auth, firestore } = getFirebaseRuntime();
+  const user = auth.currentUser;
+
   if (!user) {
     return {
       signedIn: false,
@@ -71,10 +158,8 @@ export async function getFirebaseOwnerStatus(): Promise<FirebaseOwnerStatus> {
   }
 
   try {
-    // The Security Rules only allow this read when the signed-in Google
-    // account matches the existing owner email in the settings document.
     const settings = await getDoc(
-      doc(firestoreDb, 'notification_settings', 'daily-settings')
+      doc(firestore, 'notification_settings', 'daily-settings')
     );
 
     return {
@@ -97,8 +182,10 @@ export async function getFirebaseOwnerStatus(): Promise<FirebaseOwnerStatus> {
 }
 
 export async function signInFirebaseOwner(): Promise<void> {
+  const { auth, googleProvider } = getFirebaseRuntime();
+
   try {
-    await signInWithPopup(firebaseAuth, googleProvider);
+    await signInWithPopup(auth, googleProvider);
   } catch (error) {
     const code =
       error && typeof error === 'object' && 'code' in error
@@ -109,7 +196,7 @@ export async function signInFirebaseOwner(): Promise<void> {
       code === 'auth/popup-blocked' ||
       code === 'auth/operation-not-supported-in-this-environment'
     ) {
-      await signInWithRedirect(firebaseAuth, googleProvider);
+      await signInWithRedirect(auth, googleProvider);
       return;
     }
 
@@ -118,11 +205,18 @@ export async function signInFirebaseOwner(): Promise<void> {
 }
 
 export async function signOutFirebaseOwner(): Promise<void> {
-  await signOut(firebaseAuth);
+  const { auth } = getFirebaseRuntime();
+  await signOut(auth);
 }
 
 export function onFirebaseOwnerAuthChanged(
   callback: (user: User | null) => void
 ): () => void {
-  return onAuthStateChanged(firebaseAuth, callback);
+  try {
+    const { auth } = getFirebaseRuntime();
+    return onAuthStateChanged(auth, callback);
+  } catch (error) {
+    console.error('Firebase owner auth listener unavailable:', error);
+    return () => {};
+  }
 }

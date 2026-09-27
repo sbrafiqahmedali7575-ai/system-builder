@@ -1,0 +1,203 @@
+name: Live Firestore Retest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-firestore-retest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  retest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Retest live Firestore writes
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const cfg = JSON.parse(fs.readFileSync('firebase-applet-config.json', 'utf8'));
+          const projectId = cfg.projectId;
+          const databaseId = cfg.firestoreDatabaseId;
+          const apiKey = cfg.apiKey;
+          const base = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents`;
+          const appBase = 'https://systembuilder08.ai.studio';
+          const stamp = Date.now();
+          const taskId = `retest-task-${stamp}`;
+          const habitId = `retest-habit-${stamp}`;
+
+          const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).formatToParts(new Date());
+          const value = (type) => parts.find((p) => p.type === type)?.value;
+          const dateKey = `${value('year')}-${value('month')}-${value('day')}`;
+
+          const results = [];
+
+          async function request(url, options = {}) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 20000);
+            try {
+              const res = await fetch(url, { ...options, signal: controller.signal });
+              const text = await res.text();
+              let json = null;
+              try { json = text ? JSON.parse(text) : null; } catch {}
+              return { status: res.status, ok: res.ok, text, json };
+            } finally {
+              clearTimeout(timer);
+            }
+          }
+
+          function record(name, ok, detail) {
+            const status = ok ? 'PASS' : 'FAIL';
+            results.push({ name, status, detail });
+            console.log(`${status} :: ${name} :: ${detail}`);
+          }
+
+          function fsDoc(fields) {
+            const out = {};
+            for (const [key, val] of Object.entries(fields)) {
+              if (typeof val === 'boolean') out[key] = { booleanValue: val };
+              else if (Array.isArray(val)) {
+                out[key] = { arrayValue: { values: val.map((v) => ({ stringValue: String(v) })) } };
+              } else out[key] = { stringValue: String(val) };
+            }
+            return { fields: out };
+          }
+
+          try {
+            // Add Task
+            {
+              const r = await request(
+                `${base}/tasks/${taskId}?key=${encodeURIComponent(apiKey)}`,
+                {
+                  method: 'PATCH',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(fsDoc({
+                    id: taskId,
+                    taskKey: dateKey,
+                    taskOfTheDay: '[RETEST] Temporary task',
+                    isCompleted: false,
+                    priority: 'Normal',
+                    category: 'General',
+                    updatedAt: new Date().toISOString(),
+                  })),
+                }
+              );
+              const detail = r.ok
+                ? `HTTP ${r.status} write succeeded`
+                : `HTTP ${r.status} ${r.json?.error?.message || r.text.slice(0, 300)}`;
+              record('Add Task', r.ok, detail);
+            }
+
+            // Task Completion
+            {
+              const r = await request(
+                `${base}/tasks/${taskId}?updateMask.fieldPaths=isCompleted&updateMask.fieldPaths=completedAt&key=${encodeURIComponent(apiKey)}`,
+                {
+                  method: 'PATCH',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(fsDoc({
+                    isCompleted: true,
+                    completedAt: new Date().toISOString(),
+                  })),
+                }
+              );
+              const detail = r.ok
+                ? `HTTP ${r.status} completion update succeeded`
+                : `HTTP ${r.status} ${r.json?.error?.message || r.text.slice(0, 300)}`;
+              record('Task Completion', r.ok, detail);
+            }
+
+            // Habit Updates
+            {
+              const create = await request(
+                `${base}/habits/${habitId}?key=${encodeURIComponent(apiKey)}`,
+                {
+                  method: 'PATCH',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(fsDoc({
+                    id: habitId,
+                    name: '[RETEST] Temporary habit',
+                    emoji: '✓',
+                    frequency: 'daily',
+                    color: 'blue',
+                    checkIns: [],
+                    createdAt: new Date().toISOString(),
+                  })),
+                }
+              );
+
+              let ok = false;
+              let detail = '';
+
+              if (!create.ok) {
+                detail = `create HTTP ${create.status} ${create.json?.error?.message || create.text.slice(0, 300)}`;
+              } else {
+                const update = await request(
+                  `${base}/habits/${habitId}?updateMask.fieldPaths=checkIns&key=${encodeURIComponent(apiKey)}`,
+                  {
+                    method: 'PATCH',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify(fsDoc({ checkIns: [dateKey] })),
+                  }
+                );
+                ok = update.ok;
+                detail = update.ok
+                  ? `create HTTP ${create.status}; check-in update HTTP ${update.status}`
+                  : `create HTTP ${create.status}; update HTTP ${update.status} ${update.json?.error?.message || update.text.slice(0, 300)}`;
+              }
+
+              record('Habit Updates', ok, detail);
+            }
+
+            // Notification Settings
+            {
+              const getRes = await request(`${appBase}/api/notifications/settings`);
+              if (!getRes.ok || !getRes.json?.settings) {
+                record(
+                  'Notification Settings',
+                  false,
+                  `GET HTTP ${getRes.status} ${getRes.json?.error || getRes.text.slice(0, 300)}`
+                );
+              } else {
+                const original = getRes.json.settings;
+                const postRes = await request(`${appBase}/api/notifications/settings`, {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify(original),
+                });
+                record(
+                  'Notification Settings',
+                  postRes.ok,
+                  postRes.ok
+                    ? `GET HTTP ${getRes.status}; write-back HTTP ${postRes.status}`
+                    : `GET HTTP ${getRes.status}; POST HTTP ${postRes.status} ${postRes.json?.error || postRes.text.slice(0, 300)}`
+                );
+              }
+            }
+          } finally {
+            for (const [collection, id] of [['tasks', taskId], ['habits', habitId]]) {
+              try {
+                const r = await request(
+                  `${base}/${collection}/${id}?key=${encodeURIComponent(apiKey)}`,
+                  { method: 'DELETE' }
+                );
+                console.log(`CLEANUP :: ${collection}/${id} :: HTTP ${r.status}`);
+              } catch (error) {
+                console.log(`CLEANUP_FAIL :: ${collection}/${id} :: ${error instanceof Error ? error.message : String(error)}`);
+              }
+            }
+          }
+
+          console.log('RETEST_RESULTS=' + JSON.stringify(results));
+          if (results.some((item) => item.status === 'FAIL')) process.exitCode = 1;
+          NODE

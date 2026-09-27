@@ -426,11 +426,6 @@ export interface TriggerDailyReminderResult {
   messageId?: string;
   taskName?: string;
   status?: string;
-  previewLinks?: {
-    reviewUrl?: string;
-    completedUrl?: string;
-    notCompletedUrl?: string;
-  };
   error?: string;
   message?: string;
   sentAt?: string;
@@ -709,7 +704,6 @@ export async function triggerDailyReminder(options?: {
       messageId: sendResult.messageId || '',
       taskName: taskDetails.taskName,
       status: 'delivered',
-      previewLinks: sendResult.previewLinks,
       sentAt: nowIso,
     };
   })();

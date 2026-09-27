@@ -1,30 +1,15 @@
-import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
-import {
-  Auth,
-  GoogleAuthProvider,
-  User,
-  getAuth,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut,
-} from 'firebase/auth';
-import {
-  Firestore,
-  doc,
-  getDoc,
-  getFirestore,
-} from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-interface FirebaseRuntime {
-  app: FirebaseApp;
-  auth: Auth;
-  firestore: Firestore;
-  googleProvider: GoogleAuthProvider;
-}
+type FirebaseRuntime = {
+  app: any;
+  auth: any;
+  firestore: any;
+  googleProvider: any;
+  authSdk: any;
+  firestoreSdk: any;
+};
 
-let runtime: FirebaseRuntime | null = null;
+let runtimePromise: Promise<FirebaseRuntime> | null = null;
 
 function requiredConfigValue(
   key:
@@ -44,47 +29,56 @@ function requiredConfigValue(
   return value;
 }
 
-export function getFirebaseRuntime(): FirebaseRuntime {
-  if (runtime) return runtime;
+export async function getFirebaseRuntime(): Promise<FirebaseRuntime> {
+  if (!runtimePromise) {
+    runtimePromise = (async () => {
+      const [appSdk, authSdk, firestoreSdk] = await Promise.all([
+        import('firebase/app'),
+        import('firebase/auth'),
+        import('firebase/firestore'),
+      ]);
 
-  const app =
-    getApps().length > 0
-      ? getApp()
-      : initializeApp({
-          apiKey: requiredConfigValue('apiKey'),
-          authDomain: requiredConfigValue('authDomain'),
-          projectId: requiredConfigValue('projectId'),
-          appId: requiredConfigValue('appId'),
-          messagingSenderId: requiredConfigValue('messagingSenderId'),
-        });
+      const app =
+        appSdk.getApps().length > 0
+          ? appSdk.getApp()
+          : appSdk.initializeApp({
+              apiKey: requiredConfigValue('apiKey'),
+              authDomain: requiredConfigValue('authDomain'),
+              projectId: requiredConfigValue('projectId'),
+              appId: requiredConfigValue('appId'),
+              messagingSenderId: requiredConfigValue('messagingSenderId'),
+            });
 
-  const auth = getAuth(app);
-  const firestore = getFirestore(
-    app,
-    requiredConfigValue('firestoreDatabaseId')
-  );
-  const googleProvider = new GoogleAuthProvider();
-  googleProvider.setCustomParameters({ prompt: 'select_account' });
+      const auth = authSdk.getAuth(app);
+      const firestore = firestoreSdk.getFirestore(
+        app,
+        requiredConfigValue('firestoreDatabaseId')
+      );
+      const googleProvider = new authSdk.GoogleAuthProvider();
+      googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-  runtime = {
-    app,
-    auth,
-    firestore,
-    googleProvider,
-  };
+      return {
+        app,
+        auth,
+        firestore,
+        googleProvider,
+        authSdk,
+        firestoreSdk,
+      };
+    })().catch((error) => {
+      runtimePromise = null;
+      throw error;
+    });
+  }
 
-  return runtime;
-}
-
-export function getFirestoreDb(): Firestore {
-  return getFirebaseRuntime().firestore;
+  return runtimePromise;
 }
 
 export interface FirebaseOwnerStatus {
   signedIn: boolean;
   authorized: boolean;
   email?: string | null;
-  user?: User | null;
+  user?: any;
 }
 
 function isPermissionDenied(error: unknown): boolean {
@@ -96,7 +90,7 @@ function isPermissionDenied(error: unknown): boolean {
 }
 
 export async function waitForFirebaseAuthReady(): Promise<void> {
-  const { auth } = getFirebaseRuntime();
+  const { auth, authSdk } = await getFirebaseRuntime();
 
   if (typeof auth.authStateReady === 'function') {
     await Promise.race([
@@ -117,6 +111,7 @@ export async function waitForFirebaseAuthReady(): Promise<void> {
   }
 
   await new Promise<void>((resolve, reject) => {
+    let unsubscribe = () => {};
     const timeout = window.setTimeout(() => {
       unsubscribe();
       reject(
@@ -126,14 +121,14 @@ export async function waitForFirebaseAuthReady(): Promise<void> {
       );
     }, 8000);
 
-    const unsubscribe = onAuthStateChanged(
+    unsubscribe = authSdk.onAuthStateChanged(
       auth,
       () => {
         window.clearTimeout(timeout);
         unsubscribe();
         resolve();
       },
-      (error) => {
+      (error: unknown) => {
         window.clearTimeout(timeout);
         unsubscribe();
         reject(error);
@@ -145,7 +140,7 @@ export async function waitForFirebaseAuthReady(): Promise<void> {
 export async function getFirebaseOwnerStatus(): Promise<FirebaseOwnerStatus> {
   await waitForFirebaseAuthReady();
 
-  const { auth, firestore } = getFirebaseRuntime();
+  const { auth, firestore, firestoreSdk } = await getFirebaseRuntime();
   const user = auth.currentUser;
 
   if (!user) {
@@ -158,8 +153,12 @@ export async function getFirebaseOwnerStatus(): Promise<FirebaseOwnerStatus> {
   }
 
   try {
-    const settings = await getDoc(
-      doc(firestore, 'notification_settings', 'daily-settings')
+    const settings = await firestoreSdk.getDoc(
+      firestoreSdk.doc(
+        firestore,
+        'notification_settings',
+        'daily-settings'
+      )
     );
 
     return {
@@ -182,10 +181,10 @@ export async function getFirebaseOwnerStatus(): Promise<FirebaseOwnerStatus> {
 }
 
 export async function signInFirebaseOwner(): Promise<void> {
-  const { auth, googleProvider } = getFirebaseRuntime();
+  const { auth, googleProvider, authSdk } = await getFirebaseRuntime();
 
   try {
-    await signInWithPopup(auth, googleProvider);
+    await authSdk.signInWithPopup(auth, googleProvider);
   } catch (error) {
     const code =
       error && typeof error === 'object' && 'code' in error
@@ -196,7 +195,7 @@ export async function signInFirebaseOwner(): Promise<void> {
       code === 'auth/popup-blocked' ||
       code === 'auth/operation-not-supported-in-this-environment'
     ) {
-      await signInWithRedirect(auth, googleProvider);
+      await authSdk.signInWithRedirect(auth, googleProvider);
       return;
     }
 
@@ -205,18 +204,27 @@ export async function signInFirebaseOwner(): Promise<void> {
 }
 
 export async function signOutFirebaseOwner(): Promise<void> {
-  const { auth } = getFirebaseRuntime();
-  await signOut(auth);
+  const { auth, authSdk } = await getFirebaseRuntime();
+  await authSdk.signOut(auth);
 }
 
 export function onFirebaseOwnerAuthChanged(
-  callback: (user: User | null) => void
+  callback: (user: any | null) => void
 ): () => void {
-  try {
-    const { auth } = getFirebaseRuntime();
-    return onAuthStateChanged(auth, callback);
-  } catch (error) {
-    console.error('Firebase owner auth listener unavailable:', error);
-    return () => {};
-  }
+  let active = true;
+  let unsubscribe = () => {};
+
+  void getFirebaseRuntime()
+    .then(({ auth, authSdk }) => {
+      if (!active) return;
+      unsubscribe = authSdk.onAuthStateChanged(auth, callback);
+    })
+    .catch((error) => {
+      console.error('Firebase owner auth listener unavailable:', error);
+    });
+
+  return () => {
+    active = false;
+    unsubscribe();
+  };
 }

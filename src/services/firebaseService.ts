@@ -12,6 +12,26 @@ export interface CountdownSettings {
 
 const POLL_INTERVAL_MS = 15_000;
 
+export class ApiRequestError extends Error {
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+  }
+}
+
+function mutationHeaders(clientMutationAt?: number): Record<string, string> {
+  if (!Number.isFinite(clientMutationAt) || Number(clientMutationAt) <= 0) {
+    return {};
+  }
+
+  return {
+    'X-System-Builder-Mutation-At': String(Math.floor(Number(clientMutationAt))),
+  };
+}
+
 function notifyOwnerAuthRequired(): void {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
@@ -36,7 +56,7 @@ async function apiRequest<T>(
       },
     });
   } catch (error) {
-    throw new Error(
+    throw new ApiRequestError(
       error instanceof Error
         ? `Network request failed: ${error.message}`
         : 'Network request failed.'
@@ -55,13 +75,14 @@ async function apiRequest<T>(
 
   if (response.status === 401) {
     notifyOwnerAuthRequired();
-    throw new Error('Owner authentication required.');
+    throw new ApiRequestError('Owner authentication required.', 401);
   }
 
   if (!response.ok) {
-    throw new Error(
+    throw new ApiRequestError(
       body?.error ||
-        `Server data request failed with status ${response.status}.`
+        `Server data request failed with status ${response.status}.`,
+      response.status
     );
   }
 
@@ -185,35 +206,43 @@ export async function seedInitialData(
 }
 
 export async function addRecordToCloud(
-  record: DailyRecord
+  record: DailyRecord,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/records/${encodeURIComponent(record.id)}`,
     {
       method: 'PUT',
+      headers: mutationHeaders(clientMutationAt),
       body: JSON.stringify(record),
     }
   );
 }
 
 export async function updateRecordInCloud(
-  record: DailyRecord
+  record: DailyRecord,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/records/${encodeURIComponent(record.id)}`,
     {
       method: 'PUT',
+      headers: mutationHeaders(clientMutationAt),
       body: JSON.stringify(record),
     }
   );
 }
 
 export async function deleteRecordFromCloud(
-  recordId: string
+  recordId: string,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/records/${encodeURIComponent(recordId)}`,
-    { method: 'DELETE' }
+    {
+      method: 'DELETE',
+      headers: mutationHeaders(clientMutationAt),
+    }
   );
 }
 
@@ -277,35 +306,43 @@ export async function seedInitialTasks(
 }
 
 export async function addTaskToCloud(
-  task: TaskItem
+  task: TaskItem,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/tasks/${encodeURIComponent(task.id)}`,
     {
       method: 'PUT',
+      headers: mutationHeaders(clientMutationAt),
       body: JSON.stringify(task),
     }
   );
 }
 
 export async function updateTaskInCloud(
-  task: TaskItem
+  task: TaskItem,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/tasks/${encodeURIComponent(task.id)}`,
     {
       method: 'PUT',
+      headers: mutationHeaders(clientMutationAt),
       body: JSON.stringify(task),
     }
   );
 }
 
 export async function deleteTaskFromCloud(
-  taskId: string
+  taskId: string,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/tasks/${encodeURIComponent(taskId)}`,
-    { method: 'DELETE' }
+    {
+      method: 'DELETE',
+      headers: mutationHeaders(clientMutationAt),
+    }
   );
 }
 
@@ -367,35 +404,43 @@ export function subscribeToHabits(
 }
 
 export async function addHabitToCloud(
-  habit: HabitItem
+  habit: HabitItem,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/habits/${encodeURIComponent(habit.id)}`,
     {
       method: 'PUT',
+      headers: mutationHeaders(clientMutationAt),
       body: JSON.stringify(habit),
     }
   );
 }
 
 export async function updateHabitInCloud(
-  habit: HabitItem
+  habit: HabitItem,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/habits/${encodeURIComponent(habit.id)}`,
     {
       method: 'PUT',
+      headers: mutationHeaders(clientMutationAt),
       body: JSON.stringify(habit),
     }
   );
 }
 
 export async function deleteHabitFromCloud(
-  habitId: string
+  habitId: string,
+  clientMutationAt?: number
 ): Promise<void> {
   await apiRequest(
     `/api/data/habits/${encodeURIComponent(habitId)}`,
-    { method: 'DELETE' }
+    {
+      method: 'DELETE',
+      headers: mutationHeaders(clientMutationAt),
+    }
   );
 }
 

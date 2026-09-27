@@ -4,13 +4,15 @@ import {
   Grid2X2,
   ListChecks,
   Repeat2,
+  Database,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import { EisenhowerMatrix } from './EisenhowerMatrix';
 import { HabitTracker } from './HabitTracker';
 import { TaskTracker } from './TaskTracker';
+import { DataWorkspace } from './DataWorkspace';
 
-type MoreTab = 'eisenhower' | 'habits' | 'tasks';
+type MoreTab = 'eisenhower' | 'habits' | 'tasks' | 'data';
 
 interface MoreWorkspaceProps {
   theme: DashboardTheme;
@@ -36,6 +38,7 @@ const TABS: Array<{
   { id: 'eisenhower', label: 'Eisenhower Matrix', icon: Grid2X2 },
   { id: 'habits', label: 'Habit Tracker', icon: Repeat2 },
   { id: 'tasks', label: 'Task Tracker', icon: ListChecks },
+  { id: 'data', label: 'Data', icon: Database },
 ];
 
 const TOOL_TAB_BASE =
@@ -94,7 +97,9 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
                   ? 'Matrix'
                   : tab.id === 'habits'
                   ? 'Habits'
-                  : 'Tasks';
+                  : tab.id === 'tasks'
+                  ? 'Tasks'
+                  : 'Data';
 
               return (
                 <button
@@ -188,6 +193,17 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               onUpdateHabit={onUpdateHabit}
               density="compact"
             />
+            </div>
+          )}
+
+          {activeTab === 'data' && (
+            <div
+              id="tools-panel-data"
+              role="tabpanel"
+              className="h-full"
+              aria-labelledby="tools-tab-data"
+            >
+              <DataWorkspace />
             </div>
           )}
 

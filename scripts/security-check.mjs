@@ -85,6 +85,56 @@ for (const file of ['server.ts', 'server/emailService.ts']) {
 }
 
 const serverSource = read('server.ts');
+const schedulerSource = read('server/scheduler.ts');
+const tokenServiceSource = read('server/tokenService.ts');
+const offlineStorageSource = read('src/services/offlineStorage.ts');
+const emailServiceSource = read('server/emailService.ts');
+const deploymentConfig = JSON.parse(read('deployment-config.json'));
+const firebaseDeployWorkflow = read('.github/workflows/deploy-firestore-rules.yml');
+
+if (!/secret\.length\s*<\s*32/.test(tokenServiceSource)) {
+  failures.push('CONFIRMATION_SECRET must enforce a minimum length of 32 characters.');
+}
+
+if (!schedulerSource.includes('refusing to send without deduplication')) {
+  failures.push('Scheduler must fail closed when the distributed reminder lock is unavailable.');
+}
+
+if (!schedulerSource.includes('saveNotificationLastSentDate(dateKey)')) {
+  failures.push('Scheduler must persist lastSentDate after confirmed delivery.');
+}
+
+if (!offlineStorageSource.includes('isRetryableSyncError')) {
+  failures.push('Offline sync must preserve retryable authentication/network/server failures.');
+}
+
+if (!offlineStorageSource.includes('sync_conflicts_v1')) {
+  failures.push('Offline sync must retain conflict audit records.');
+}
+
+if (/localStorage\.setItem\s*\(/.test(offlineStorageSource)) {
+  failures.push('Offline cache must not mirror owner data into legacy localStorage.');
+}
+
+if (!emailServiceSource.includes('habitIds: habits.map')) {
+  failures.push('Daily email review tokens must bind the due habit scope.');
+}
+
+if (
+  !deploymentConfig.appBaseUrl ||
+  !deploymentConfig.oidcAudience ||
+  !String(deploymentConfig.appBaseUrl).startsWith('https://')
+) {
+  failures.push('deployment-config.json must define HTTPS appBaseUrl and oidcAudience.');
+}
+
+if (
+  !firebaseDeployWorkflow.includes('FIREBASE_SERVICE_ACCOUNT_JSON') ||
+  !firebaseDeployWorkflow.includes('firebase-tools@latest deploy')
+) {
+  failures.push('Firestore rules must have an authenticated deployment workflow.');
+}
+
 
 for (const protectedPath of [
   '/firebase-applet-config.json',

@@ -69,39 +69,18 @@ export function isNetworkOrOfflineError(error?: unknown): boolean {
 export async function getCachedRecords(): Promise<DailyRecord[] | null> {
   try {
     const cached = await offlineStore.getItem<DailyRecord[]>(KEY_RECORDS);
-    if (Array.isArray(cached) && cached.length > 0) {
-      return cached;
-    }
-
-    // Attempt migration from localStorage if IndexedDB has not been populated yet
-    if (typeof window !== 'undefined') {
-      if (legacy) {
-        try {
-          const parsed = JSON.parse(legacy);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            await setCachedRecords(parsed);
-            return parsed;
-          }
-        } catch {
-          // ignore parsing error
-        }
-      }
-    }
+    return Array.isArray(cached) && cached.length > 0 ? cached : null;
   } catch (err) {
     console.warn('Error reading records from IndexedDB:', err);
+    return null;
   }
-  return null;
 }
 
-export async function setCachedRecords(records: DailyRecord[]): Promise<void> {
+export async function setCachedRecords(
+  records: DailyRecord[]
+): Promise<void> {
   try {
     await offlineStore.setItem(KEY_RECORDS, records);
-    if (typeof window !== 'undefined') {
-      try {
-      } catch {
-        // LocalStorage may exceed quota with large datasets; IndexedDB is the source of truth
-      }
-    }
   } catch (err) {
     console.warn('Error writing records to IndexedDB:', err);
   }

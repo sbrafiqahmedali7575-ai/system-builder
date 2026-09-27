@@ -11,6 +11,7 @@ export interface CalendarDayCellProps {
   tasks: TaskItem[];
   habits: HabitItem[];
   onSelectDate: (dateKey: string) => void;
+  onShowMore: (dateKey: string) => void;
   onToggleTask: (taskId: string) => Promise<void>;
   onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
   maxVisibleItems?: number;
@@ -40,6 +41,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   tasks,
   habits,
   onSelectDate,
+  onShowMore,
   onToggleTask,
   onToggleHabit,
   maxVisibleItems = 4,
@@ -126,7 +128,10 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           {hiddenCount > 0 && (
             <button
               type="button"
-              onClick={() => onSelectDate(dateKey)}
+              onClick={() => {
+                onSelectDate(dateKey);
+                onShowMore(dateKey);
+              }}
               className="pointer-events-auto h-[18px] px-1 text-[9px] font-semibold text-slate-500 hover:text-blue-600"
               title={`${hiddenCount} more item${hiddenCount === 1 ? '' : 's'}`}
             >
@@ -136,20 +141,30 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         </div>
 
         <div className="sm:hidden mt-1 flex flex-wrap items-center gap-1">
-          {tasks.length > 0 && (
-            <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-blue-100 text-blue-700 items-center justify-center text-[8px] font-black">
-              {tasks.length}T
-            </span>
-          )}
+          {tasks.length > 0 || habits.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                onSelectDate(dateKey);
+                onShowMore(dateKey);
+              }}
+              className="pointer-events-auto inline-flex items-center gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label={`View items for ${longDate(dateKey)}`}
+            >
+              {tasks.length > 0 && (
+                <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-blue-100 text-blue-700 items-center justify-center text-[8px] font-black">
+                  {tasks.length}T
+                </span>
+              )}
 
-          {habits.length > 0 && (
-            <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-emerald-100 text-emerald-700 items-center justify-center text-[8px] font-black">
-              {habits.length}H
-            </span>
-          )}
-
-          {tasks.length === 0 && habits.length === 0 && isSelected && (
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              {habits.length > 0 && (
+                <span className="inline-flex min-w-5 h-4 px-1 rounded-full bg-emerald-100 text-emerald-700 items-center justify-center text-[8px] font-black">
+                  {habits.length}H
+                </span>
+              )}
+            </button>
+          ) : (
+            isSelected && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
           )}
         </div>
       </div>

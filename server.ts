@@ -975,11 +975,9 @@ async function startServer() {
         messageId: result.messageId,
         taskName: result.taskName,
         status: result.status,
-        previewLinks: result.previewLinks,
         result: {
           status: result.status,
           messageId: result.messageId,
-          previewLinks: result.previewLinks,
         },
       });
     } catch (err: any) {

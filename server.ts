@@ -38,6 +38,130 @@ function getSchedulerSecret(): string {
   return (process.env.SCHEDULER_SECRET || '').trim();
 }
 
+const OWNER_SESSION_COOKIE = 'system_builder_owner';
+const OWNER_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const OWNER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const OWNER_LOGIN_MAX_FAILURES = 5;
+
+type OwnerLoginAttempt = {
+  failures: number;
+  resetAt: number;
+};
+
+const ownerLoginAttempts = new Map<string, OwnerLoginAttempt>();
+
+function getOwnerAccessToken(): string {
+  return (process.env.OWNER_ACCESS_TOKEN || '').trim();
+}
+
+function ownerAuthConfigured(): boolean {
+  return getOwnerAccessToken().length >= 32;
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  return (
+    left.length === right.length &&
+    crypto.timingSafeEqual(left, right)
+  );
+}
+
+function getCookieValue(req: express.Request, name: string): string {
+  const cookieHeader = String(req.headers.cookie || '');
+  for (const part of cookieHeader.split(';')) {
+    const [rawName, ...rawValue] = part.trim().split('=');
+    if (rawName === name) {
+      return decodeURIComponent(rawValue.join('='));
+    }
+  }
+  return '';
+}
+
+function createOwnerSession(): string {
+  const secret = getOwnerAccessToken();
+  if (!ownerAuthConfigured()) {
+    throw new Error('OWNER_ACCESS_TOKEN must be configured with at least 32 characters.');
+  }
+
+  const payload = Buffer.from(
+    JSON.stringify({
+      exp: Date.now() + OWNER_SESSION_TTL_MS,
+      nonce: crypto.randomBytes(16).toString('hex'),
+    })
+  ).toString('base64url');
+
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('base64url');
+
+  return `${payload}.${signature}`;
+}
+
+function isValidOwnerSession(session: string): boolean {
+  if (!ownerAuthConfigured() || !session) return false;
+
+  const [payloadB64, signature, extra] = session.split('.');
+  if (!payloadB64 || !signature || extra) return false;
+
+  const expected = crypto
+    .createHmac('sha256', getOwnerAccessToken())
+    .update(payloadB64)
+    .digest('base64url');
+
+  if (!constantTimeEqual(signature, expected)) return false;
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(payloadB64, 'base64url').toString('utf8')
+    ) as { exp?: number };
+
+    return Number.isFinite(payload.exp) && Number(payload.exp) > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function isOwnerAuthenticated(req: express.Request): boolean {
+  if (!ownerAuthConfigured()) return false;
+
+  const bearer = getBearerToken(req.headers.authorization);
+  if (bearer && constantTimeEqual(bearer, getOwnerAccessToken())) {
+    return true;
+  }
+
+  return isValidOwnerSession(getCookieValue(req, OWNER_SESSION_COOKIE));
+}
+
+function ownerAttemptKey(req: express.Request): string {
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+function requireOwner(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): void {
+  res.setHeader('Cache-Control', 'no-store');
+
+  if (!ownerAuthConfigured()) {
+    res.status(503).json({
+      error:
+        'Owner authentication is not configured. Set OWNER_ACCESS_TOKEN to a random value of at least 32 characters.',
+    });
+    return;
+  }
+
+  if (!isOwnerAuthenticated(req)) {
+    res.status(401).json({ error: 'Owner authentication required.' });
+    return;
+  }
+
+  next();
+}
+
 const GITHUB_OIDC_ISSUER = 'https://token.actions.githubusercontent.com';
 const GITHUB_OIDC_AUDIENCE = 'systembuilder08.ai.studio';
 const GITHUB_REPOSITORY = 'sbrafiqahmedali7575-ai/system-builder';
@@ -334,22 +458,92 @@ async function startServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // 1. Health check & current time in Asia/Kolkata
-  app.get('/api/health', (req, res) => {
+  // 1. Minimal public health check. Do not expose SMTP/provider configuration.
+  app.get('/api/health', (_req, res) => {
     const kolkata = getKolkataTimeInfo();
-    const provider = getEmailProviderStatus();
+    res.setHeader('Cache-Control', 'no-store');
     res.json({
       status: 'ok',
       timezone: 'Asia/Kolkata',
       timeKolkata: kolkata.timeStr,
       dateKolkata: kolkata.formattedDate,
-      appBaseUrl: getAppBaseUrl(),
-      emailProvider: provider,
     });
   });
 
-  // 2. Notification settings API
-  app.get('/api/notifications/settings', async (req, res) => {
+  // Owner authentication bootstrap. These routes only create/read/clear the
+  // caller's HttpOnly owner session; they do not expose application data.
+  app.get('/api/owner/session', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      configured: ownerAuthConfigured(),
+      authenticated: isOwnerAuthenticated(req),
+    });
+  });
+
+  app.post('/api/owner/login', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+
+    if (!ownerAuthConfigured()) {
+      return res.status(503).json({
+        success: false,
+        error:
+          'Owner authentication is not configured. Set OWNER_ACCESS_TOKEN to a random value of at least 32 characters.',
+      });
+    }
+
+    const key = ownerAttemptKey(req);
+    const now = Date.now();
+    const currentAttempt = ownerLoginAttempts.get(key);
+
+    if (currentAttempt && currentAttempt.resetAt > now && currentAttempt.failures >= OWNER_LOGIN_MAX_FAILURES) {
+      return res.status(429).json({
+        success: false,
+        error: 'Too many failed owner login attempts. Try again later.',
+      });
+    }
+
+    const supplied = String(req.body?.token || '');
+    if (!constantTimeEqual(supplied, getOwnerAccessToken())) {
+      const active =
+        currentAttempt && currentAttempt.resetAt > now
+          ? currentAttempt
+          : { failures: 0, resetAt: now + OWNER_LOGIN_WINDOW_MS };
+      active.failures += 1;
+      ownerLoginAttempts.set(key, active);
+
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid owner access token.',
+      });
+    }
+
+    ownerLoginAttempts.delete(key);
+
+    const session = createOwnerSession();
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    const maxAgeSeconds = Math.floor(OWNER_SESSION_TTL_MS / 1000);
+    res.setHeader(
+      'Set-Cookie',
+      `${OWNER_SESSION_COOKIE}=${encodeURIComponent(
+        session
+      )}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAgeSeconds}${secure}`
+    );
+
+    return res.json({ success: true });
+  });
+
+  app.post('/api/owner/logout', (_req, res) => {
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader(
+      'Set-Cookie',
+      `${OWNER_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`
+    );
+    res.json({ success: true });
+  });
+
+  // 2. Owner-only notification settings API
+  app.get('/api/notifications/settings', requireOwner, async (req, res) => {
     try {
       const settings = await getNotificationSettings();
       const provider = getEmailProviderStatus();
@@ -364,7 +558,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/notifications/settings', async (req, res) => {
+  app.post('/api/notifications/settings', requireOwner, async (req, res) => {
     try {
       const updated = await saveNotificationSettings(req.body);
       res.json({ success: true, settings: updated });
@@ -374,7 +568,7 @@ async function startServer() {
   });
 
   // 3. Send test confirmation email directly via Gmail SMTP (Admin test action)
-  app.post('/api/notifications/send-test', async (_req, res) => {
+  app.post('/api/notifications/send-test', requireOwner, async (_req, res) => {
     try {
       const result = await triggerDailyReminder({ force: true });
 
@@ -506,7 +700,7 @@ async function startServer() {
   });
 
   // 4. Delivery logs audit history
-  app.get('/api/notifications/logs', async (req, res) => {
+  app.get('/api/notifications/logs', requireOwner, async (req, res) => {
     try {
       const snap = await getDocs(collection(db, 'delivery_logs'));
       const logs: any[] = [];
@@ -528,7 +722,7 @@ async function startServer() {
 
   // 5. One-Click Records CSV Backup & Export Endpoint (records.csv ONLY)
   // Cleaned columns: id, day, date, isCompleted, notes
-  app.get('/api/backup/export', async (req, res) => {
+  app.get('/api/backup/export', requireOwner, async (req, res) => {
     try {
       const format = String(req.query.format || 'csv').toLowerCase();
 
@@ -577,7 +771,7 @@ async function startServer() {
 
   // Windows batch sync script generator for automated replacement of records.csv
   // Hardcoded default target: D:\My Projects\SQL\DataSet\RafiqCommitDB\csv_files
-  app.get('/api/backup/sync-script', (req, res) => {
+  app.get('/api/backup/sync-script', requireOwner, (req, res) => {
     const baseUrl = getAppBaseUrl();
     const rootDir = 'D:\\My Projects\\SQL\\DataSet\\RafiqCommitDB';
     const targetDir = 'D:\\My Projects\\SQL\\DataSet\\RafiqCommitDB\\csv_files';
@@ -610,8 +804,14 @@ del /F /Q "%TARGET_DIR%\\*.csv" 2>nul
 echo       Previous records files deleted cleanly with zero folder prompt.
 
 echo.
+if "%SYSTEM_BUILDER_OWNER_TOKEN%"=="" (
+  echo [Error] SYSTEM_BUILDER_OWNER_TOKEN is not set.
+  echo         Set it to the same value as the server OWNER_ACCESS_TOKEN.
+  exit /b 1
+)
+
 echo [2/2] Downloading fresh records.csv directly into csv_files...
-curl -s "${baseUrl}/api/backup/export?table=records" -o "%TARGET_DIR%\\records.csv"
+curl -s -H "Authorization: Bearer %SYSTEM_BUILDER_OWNER_TOKEN%" "${baseUrl}/api/backup/export?table=records" -o "%TARGET_DIR%\\records.csv"
 
 echo.
 echo Verification:

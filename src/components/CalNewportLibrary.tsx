@@ -27,6 +27,7 @@ import {
   CAL_NEWPORT_LIBRARY_UPDATED,
   CalNewportBook,
 } from '../data/calNewportLibrary';
+import { CAL_NEWPORT_CHAPTER_GUIDES } from '../data/calNewportChapterGuides';
 
 type ReaderTone = 'paper' | 'sepia' | 'night';
 type ReaderFont = 'serif' | 'sans';
@@ -245,7 +246,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
         {!isFocusReader && (isTocOpen || isSearchOpen) && <div className="border-t border-slate-200/70 px-3 sm:px-5 py-3">
           {isSearchOpen && <div className="relative max-w-xl mb-3"><Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search themes and ideas…" className="w-full h-9 pl-9 pr-9 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-blue-500" /><button onClick={() => {setSearchQuery('');setIsSearchOpen(false)}} className="absolute right-2 top-2 h-5 w-5"><X className="w-4 h-4" /></button></div>}
-          {isTocOpen && <div className="flex gap-2 overflow-x-auto pb-1"><button onClick={() => jumpTo('overview')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Overview</button>{activeBook.themes.map((t,i)=><button key={t.title} onClick={() => jumpTo(`theme-${i}`)} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">{t.title}</button>)}<button onClick={() => jumpTo('summary')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Summary</button></div>}
+          {isTocOpen && <div className="flex gap-2 overflow-x-auto pb-1"><button onClick={() => jumpTo('overview')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Overview</button><button onClick={() => jumpTo('chapter-guides')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">Chapter Guide</button>{activeBook.themes.map((t,i)=><button key={t.title} onClick={() => jumpTo(`theme-${i}`)} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">{t.title}</button>)}<button onClick={() => jumpTo('summary')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Summary</button></div>}
         </div>}
 
         {!isFocusReader && <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
@@ -491,6 +492,20 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   readerTone === 'night' ? 'border-[#343a40]' : 'border-black/10'
                 }`}
               />
+
+
+              <div className={`${widthClass} mx-auto my-10 border-t ${readerTone === 'night' ? 'border-[#343a40]' : 'border-black/10'}`} />
+
+              <section id="chapter-guides" className="max-w-[920px] mx-auto scroll-mt-28">
+                <div className="flex items-center gap-2 mb-5"><BookMarked className="w-5 h-5 text-blue-600" /><h3 className="text-xl sm:text-2xl font-semibold" style={{fontFamily:'Inter, ui-sans-serif, system-ui, sans-serif'}}>Chapter-by-Chapter Study Guide</h3></div>
+                <div className="space-y-3">{CAL_NEWPORT_CHAPTER_GUIDES[activeBookId].map((chapter,index)=><details key={chapter.title} className={`rounded-xl border ${cardClasses}`} open={index===0}><summary className="cursor-pointer list-none px-4 py-3 font-semibold" style={{fontFamily:'Inter, ui-sans-serif, system-ui, sans-serif'}}>{chapter.title}</summary><div className="border-t border-black/10 px-4 py-4 space-y-5">
+                  <div><h4 className="text-sm font-semibold mb-2">Summary</h4><div className="space-y-3 text-sm leading-7">{chapter.summary.map((x,i)=><p key={i}>{x}</p>)}</div></div>
+                  <div><h4 className="text-sm font-semibold mb-2">Key ideas</h4><ul className="space-y-1 text-sm">{chapter.keyIdeas.map(x=><li key={x}>• {x}</li>)}</ul></div>
+                  <div><h4 className="text-sm font-semibold mb-2">Examples</h4><div className="grid md:grid-cols-2 gap-2">{chapter.examples.map(x=><div key={x.title} className="rounded-lg border border-black/10 p-3"><div className="text-sm font-semibold">{x.title}</div><p className={`mt-1 text-sm leading-6 ${mutedText}`}>{x.body}</p></div>)}</div></div>
+                  <div><h4 className="text-sm font-semibold mb-2">Action plan</h4><ol className="space-y-1 text-sm">{chapter.actionPlan.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></div>
+                  <div><h4 className="text-sm font-semibold mb-2">Review questions</h4><ol className="space-y-2 text-sm">{chapter.reviewQuestions.map((x,i)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{i+1}. {x}</li>)}</ol></div>
+                </div></details>)}</div>
+              </section>
 
               <section id="summary" className={`${widthClass} mx-auto scroll-mt-28`}>
                 <div className="flex items-center gap-2 mb-4">

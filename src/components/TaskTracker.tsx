@@ -327,58 +327,6 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <div className="rounded-xl border border-blue-200/80 bg-blue-50/60 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wider font-black text-blue-600">
-            Today
-          </div>
-          <div className="mt-1 text-lg font-black text-slate-900">
-            {completedToday}/{todayTasks.length}
-          </div>
-          <div className="text-[9px] font-bold text-slate-500">
-            tasks completed
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wider font-black text-emerald-600">
-            This week
-          </div>
-          <div className="mt-1 text-lg font-black text-slate-900">
-            {weekScore.toFixed(1)}%
-          </div>
-          <div className="text-[9px] font-bold text-slate-500">
-            {completedThisWeek}/{weekTasks.length} tasks • target {WEEKLY_TARGET_PERCENTAGE}%
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-orange-200/80 bg-orange-50/60 px-3 py-2">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-orange-600">
-            <Check className="w-3 h-3" />
-            Achieved Days
-          </div>
-          <div className="mt-1 text-lg font-black text-slate-900">
-            {achievedDays}
-          </div>
-          <div className="text-[9px] font-bold text-slate-500">
-            days at {WEEKLY_TARGET_PERCENTAGE}%+ target
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-violet-200/80 bg-violet-50/60 px-3 py-2">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-violet-600">
-            <Trophy className="w-3 h-3" />
-            Achieved Weeks
-          </div>
-          <div className="mt-1 text-lg font-black text-slate-900">
-            {achievedWeeks}
-          </div>
-          <div className="text-[9px] font-bold text-slate-500">
-            weeks at {WEEKLY_TARGET_PERCENTAGE}%+ target
-          </div>
-        </div>
-      </div>
-
       <div className="h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden bg-white">
         <CalendarWorkspace
           tasks={tasks}

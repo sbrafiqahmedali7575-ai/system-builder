@@ -44,6 +44,7 @@ interface ReportViewProps {
   ) => Promise<'COMPLETED' | 'NOT_COMPLETED'>;
   onOpenDayReview: () => void;
   isSyncing?: boolean;
+  focusMode?: boolean;
 }
 
 /**
@@ -92,6 +93,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   onSubmitTaskDay,
   onOpenDayReview,
   isSyncing = false,
+  focusMode = false,
 }) => {
   const isDark = theme === 'dark';
   const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
@@ -452,7 +454,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         aria-label="Today Command Center"
         className="space-y-2"
       >
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-3 items-stretch xl:h-[430px]">
+        <div className={`grid grid-cols-1 gap-3 items-stretch ${focusMode ? '' : 'xl:grid-cols-[minmax(0,1fr)_320px] xl:h-[430px]'}`}>
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -473,7 +475,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             />
           </motion.div>
 
-          <motion.div
+          {!focusMode && <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
@@ -493,10 +495,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
               currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
               onOpenCountdown={openCountdownEditor}
             />
-          </motion.div>
+          </motion.div>}
         </div>
 
-        <motion.div
+        {!focusMode && <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.34, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
@@ -506,7 +508,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             habits={habits}
             theme={theme}
           />
-        </motion.div>
+        </motion.div>}
       </section>
 
       {isCountdownEditorOpen && typeof document !== 'undefined'

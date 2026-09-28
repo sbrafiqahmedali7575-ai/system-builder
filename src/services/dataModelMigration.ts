@@ -107,7 +107,29 @@ function colorToHex(value: unknown): string {
 function isHabitDue(data: Record<string, unknown>, dateKey: string): boolean {
   const activeFrom = activeFromForHabit(data);
   if (dateKey < activeFrom) return false;
-  if (data.isActive === false) return false;
+
+  const inactivePeriods = Array.isArray(data.inactivePeriods)
+    ? data.inactivePeriods
+        .map((value) => {
+          if (!value || typeof value !== 'object') return null;
+          const row = value as Record<string, unknown>;
+          const from = toDateKey(row.from);
+          const to = row.to ? toDateKey(row.to) : null;
+          return from ? { from, to } : null;
+        })
+        .filter(
+          (value): value is { from: string; to: string | null } =>
+            Boolean(value)
+        )
+    : [];
+
+  const inactiveForDate = inactivePeriods.some((period) => {
+    if (dateKey < period.from) return false;
+    return !period.to || dateKey <= period.to;
+  });
+  if (inactiveForDate) return false;
+
+  if (data.isActive === false && inactivePeriods.length === 0) return false;
 
   const skipped = new Set(
     Array.isArray(data.skippedDates) ? data.skippedDates.map((value) => String(value)) : []
@@ -818,6 +840,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         repeatDays,
         activeFrom,
         isActive: normalized.isActive,
+        inactivePeriods: Array.isArray(data.inactivePeriods)
+          ? data.inactivePeriods
+          : [],
         color: colorToHex(data.color),
       },
     });

@@ -22,16 +22,15 @@ const TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
   users: ['userId', 'name', 'email'],
   days: [
     'dateKey',
-    'tasksDone',
-    'tasks',
     'tasksCompleted',
-    'habitsDone',
-    'Habits',
+    'taskTotal',
+    'taskCompletionRate',
     'habitsCompleted',
-    'dayCompleted',
+    'habitTotal',
+    'habitCompletionRate',
     'IsdayCompleted',
   ],
-  tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'notes', 'Iscompleted'],
+  tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'sortOrder', 'notes', 'Iscompleted'],
   habits: ['habitId', 'name', 'repeatDays', 'activeFrom', 'isActive', 'color'],
   habitLogs: ['habitLogId', 'habitId', 'dateKey', 'Iscompleted'],
   countdowns: ['countdownId', 'title', 'targetDate', 'isActive'],
@@ -54,7 +53,7 @@ const COLLECTIONS = [...FACT_COLLECTIONS, ...DIM_COLLECTIONS];
 function renderValue(value: unknown, column?: string): string {
   if (value === null || value === undefined) return '—';
   if ((column === 'IsdayCompleted' || column === 'Iscompleted') && typeof value === 'boolean') return value ? '1' : '0';
-  if ((column === 'tasksCompleted' || column === 'habitsCompleted' || column === 'dayCompleted') && typeof value === 'number') return `${value}%`;
+  if ((column === 'taskCompletionRate' || column === 'habitCompletionRate') && typeof value === 'number') return `${value}%`;
   if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
   if (Array.isArray(value)) return value.join(', ') || '—';
   if (typeof value === 'object') return JSON.stringify(value);

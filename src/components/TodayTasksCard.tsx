@@ -277,7 +277,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       await onAddTask({
         taskKey: panelTargetDateKey,
         taskOfTheDay: trimmedTitle,
-        notes: editNotes.trim(),
         isCompleted: false,
         priority: newTaskQuadrant
           ? priorityForQuadrant(newTaskQuadrant)

@@ -158,7 +158,7 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
   let count = 0;
 
   for (const write of writes) {
-    batch.set(write.ref, write.data);
+    batch.set(write.ref, write.data, { merge: true });
     count += 1;
 
     if (count >= MIGRATION_BATCH_LIMIT) {

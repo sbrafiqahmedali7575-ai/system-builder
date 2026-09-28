@@ -127,7 +127,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             : 'bg-slate-50/70 border-slate-200/80'
         }`}
       >
-        <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex flex-col xs:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <Target className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
             <span className="truncate text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
@@ -135,7 +135,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             </span>
           </div>
           <div
-            className="w-[150px] sm:w-[180px] shrink-0"
+            className="w-full sm:w-[180px] sm:shrink-0"
             title={`Weekly task score: ${weekTaskScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
@@ -228,7 +228,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             : 'bg-slate-50/70 border-slate-200/80'
         }`}
       >
-        <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex flex-col xs:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <Repeat2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
             <span className="truncate text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
@@ -236,7 +236,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             </span>
           </div>
           <div
-            className="w-[150px] sm:w-[180px] shrink-0"
+            className="w-full sm:w-[180px] sm:shrink-0"
             title={`Weekly habit score: ${weekHabitScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">

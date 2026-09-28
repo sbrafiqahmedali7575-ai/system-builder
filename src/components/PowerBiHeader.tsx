@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Database, Wrench } from 'lucide-react';
+import { BookOpen, Database, Focus, Plus, Search, Wrench } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 
@@ -20,6 +20,10 @@ interface PowerBiHeaderProps {
   onOpenAddModal?: () => void;
   onOpenLibrary?: () => void;
   onOpenTools?: () => void;
+  onOpenQuickAdd?: () => void;
+  onOpenSearch?: () => void;
+  onToggleFocus?: () => void;
+  focusMode?: boolean;
   theme?: DashboardTheme;
   onThemeChange?: (theme: DashboardTheme) => void;
   totalRecordsCount?: number;
@@ -32,6 +36,10 @@ interface PowerBiHeaderProps {
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenLibrary,
   onOpenTools,
+  onOpenQuickAdd,
+  onOpenSearch,
+  onToggleFocus,
+  focusMode = false,
   totalRecordsCount = 0,
   isSyncing = false,
 }) => {
@@ -116,6 +124,9 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
 
         {/* Right Desktop Controls */}
         <div className="hidden md:flex items-center space-x-1.5">
+          {onOpenSearch && <button type="button" onClick={onOpenSearch} className="h-8 px-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 inline-flex items-center gap-1.5 text-xs font-semibold" title="Search tasks (/)"><Search className="w-3.5 h-3.5" /><span>Search</span></button>}
+          {onToggleFocus && <button type="button" onClick={onToggleFocus} aria-pressed={focusMode} className={`h-8 px-2 rounded-xl border inline-flex items-center gap-1.5 text-xs font-semibold ${focusMode ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'}`} title="Toggle Focus mode"><Focus className="w-3.5 h-3.5" /><span>Focus</span></button>}
+          {onOpenQuickAdd && <button type="button" onClick={onOpenQuickAdd} className="h-8 px-2 rounded-xl bg-blue-600 text-white inline-flex items-center gap-1.5 text-xs font-bold hover:bg-blue-500" title="Quick add task (N)"><Plus className="w-3.5 h-3.5" /><span>Add</span></button>}
           {onOpenLibrary && (
             <motion.button
               whileHover={{ y: -2 }}

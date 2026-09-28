@@ -38,7 +38,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   return (
     <aside
       aria-label="Command Center"
-      className={`system-task-card ui-motion-section h-full min-h-0 overflow-hidden p-2 rounded-2xl border flex flex-col transition-all ${
+      className={`system-secondary-panel h-full min-h-0 overflow-hidden p-2.5 rounded-2xl border flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
@@ -84,12 +84,12 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           </div>
         </div>
 
-        <div className="rounded-xl border border-violet-200/80 dark:border-violet-900/50 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
           <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
-            <Trophy className="w-3 h-3 text-violet-500" />
+            <Trophy className="w-3 h-3 text-blue-500" />
             Achieved Weeks
           </div>
-          <div className="mt-1 text-2xl leading-none font-black font-mono text-violet-600 dark:text-violet-300">
+          <div className="mt-1 text-2xl leading-none font-black font-mono text-slate-800 dark:text-slate-100">
             {achievedWeeks}
           </div>
           <div className="mt-0.5 text-[8px] font-bold text-slate-400">
@@ -101,12 +101,12 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           type="button"
           onClick={onOpenCountdown}
           disabled={!onOpenCountdown}
-          className="rounded-xl border border-amber-200/80 dark:border-amber-900/50 bg-white/80 dark:bg-slate-950/50 p-2 text-left transition-colors enabled:hover:bg-amber-50/70 dark:enabled:hover:bg-amber-950/20 disabled:cursor-default"
+          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 text-left transition-colors enabled:hover:bg-slate-50 dark:enabled:hover:bg-slate-900 disabled:cursor-default"
           title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
           aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
         >
           <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
-            <Hourglass className="w-3 h-3 text-amber-500" />
+            <Hourglass className="w-3 h-3 text-blue-500" />
             Countdown
           </div>
           <div className="mt-1 text-2xl leading-none font-black font-mono text-blue-600 dark:text-blue-300">

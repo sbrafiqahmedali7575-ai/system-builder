@@ -680,6 +680,8 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     ).length;
     const habitTotal = dueHabits.length;
     const habitCompletionRate = roundedRate(habitsCompleted, habitTotal);
+    const weightedCompletionRate =
+      taskCompletionRate * 0.8 + habitCompletionRate * 0.2;
 
     writes.push({
       ref: doc(db, 'days', dateKey),
@@ -691,7 +693,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         habitsCompleted,
         habitTotal,
         habitCompletionRate,
-        IsdayCompleted: taskCompletionRate === 100,
+        IsdayCompleted: weightedCompletionRate >= 80,
       },
     });
     result.days += 1;

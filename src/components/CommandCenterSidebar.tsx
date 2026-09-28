@@ -58,9 +58,6 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
             {Math.round(overallCompletionPercentage)}%
           </div>
-          <div className="mt-0.5 text-xs font-normal text-slate-500 dark:text-slate-400">
-            {completedDays}/{totalDays} days
-          </div>
         </div>
 
         <div className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 flex flex-col justify-center">
@@ -70,9 +67,6 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           </div>
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
             {achievedWeeks}
-          </div>
-          <div className="mt-0.5 text-xs font-normal text-slate-500 dark:text-slate-400">
-            Target: 100 weeks
           </div>
         </div>
 
@@ -90,12 +84,6 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           </div>
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-blue-600 dark:text-blue-300">
             {countdownDaysRemaining}
-          </div>
-          <div className="mt-0.5 text-xs font-normal text-slate-500 dark:text-slate-400">
-            days left
-          </div>
-          <div className="mt-1 truncate text-xs font-normal text-slate-500 dark:text-slate-400">
-            {countdownTargetLabel}
           </div>
         </button>
       </div>

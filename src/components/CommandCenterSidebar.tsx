@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Hourglass } from 'lucide-react';
+import { Award, Hourglass, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -9,6 +9,7 @@ interface CommandCenterSidebarProps {
   currentDayFormatted: string;
   currentDayName: string;
   overallCompletionPercentage: number;
+  achievedWeeks: number;
   completedDays: number;
   totalDays: number;
   countdownDaysRemaining: number;
@@ -23,6 +24,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   currentDayFormatted,
   currentDayName,
   overallCompletionPercentage,
+  achievedWeeks,
   completedDays,
   totalDays,
   countdownDaysRemaining,
@@ -58,7 +60,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5 shrink-0">
+      <div className="grid grid-cols-3 gap-1.5 shrink-0">
         <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-white/80 dark:bg-slate-950/50 p-2 flex items-center gap-2">
           <AnimatedProgressRing
             value={overallCompletionPercentage}
@@ -79,6 +81,19 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
             <div className="text-[8px] font-bold text-slate-400">
               {completedDays}/{totalDays} days
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-violet-200/80 dark:border-violet-900/50 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
+          <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
+            <Trophy className="w-3 h-3 text-violet-500" />
+            Achieved Weeks
+          </div>
+          <div className="mt-1 text-2xl leading-none font-black font-mono text-violet-600 dark:text-violet-300">
+            {achievedWeeks}
+          </div>
+          <div className="mt-0.5 text-[8px] font-bold text-slate-400">
+            weeks at 80%+ target
           </div>
         </div>
 

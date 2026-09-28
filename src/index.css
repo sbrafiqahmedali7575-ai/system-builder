@@ -7,6 +7,17 @@
   --system-yellow: #fbbf24;
   --system-ink: #0f172a;
   --system-paper: #f8fafc;
+  --ui-background: #f6f8ff;
+  --ui-surface: #ffffff;
+  --ui-surface-muted: #f8fafc;
+  --ui-border: #e2e8f0;
+  --ui-text-primary: #0f172a;
+  --ui-text-secondary: #475569;
+  --ui-text-muted: #64748b;
+  --ui-accent: #2563eb;
+  --ui-success: #16a34a;
+  --ui-warning: #d97706;
+  --ui-danger: #dc2626;
 }
 
 html {
@@ -464,6 +475,16 @@ body {
 
 
 /* System Builder design tokens */
+.dark {
+  --ui-background: #020617;
+  --ui-surface: #0f172a;
+  --ui-surface-muted: #1e293b;
+  --ui-border: #334155;
+  --ui-text-primary: #f8fafc;
+  --ui-text-secondary: #cbd5e1;
+  --ui-text-muted: #94a3b8;
+}
+
 :root {
   --ui-space-1: .25rem;
   --ui-space-2: .5rem;
@@ -500,3 +521,16 @@ body {
 .command-item svg,.task-menu-item svg { width:16px; height:16px; }
 .command-item kbd { margin-left:auto; font-size:10px; color:rgb(148 163 184); }
 @media (max-width:47.999rem) { .system-app-shell main { padding-bottom:5.5rem; } }
+
+/* Production control hierarchy */
+.ui-btn { min-height:40px; border-radius:var(--ui-radius-control); padding:.5rem .75rem; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; font-size:.875rem; font-weight:600; transition:background-color var(--ui-duration-fast),border-color var(--ui-duration-fast),color var(--ui-duration-fast),transform var(--ui-duration-fast); }
+.ui-btn-primary { background:var(--ui-accent); color:white; }
+.ui-btn-secondary { background:var(--ui-surface); color:var(--ui-text-primary); border:1px solid var(--ui-border); }
+.ui-btn-ghost { color:var(--ui-text-secondary); background:transparent; }
+.ui-btn-danger { background:var(--ui-danger); color:white; }
+.ui-icon-btn { width:40px; min-width:40px; min-height:40px; padding:0; border-radius:var(--ui-radius-control); display:inline-flex; align-items:center; justify-content:center; }
+.ui-field { width:100%; min-height:44px; border:1px solid var(--ui-border); border-radius:var(--ui-radius-control); background:var(--ui-surface); color:var(--ui-text-primary); padding:.625rem .75rem; font-size:.875rem; }
+.ui-field::placeholder { color:var(--ui-text-muted); }
+.ui-field:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:none; }
+.ui-modal-surface { width:100%; max-width:32rem; max-height:min(88vh,760px); overflow:auto; border:1px solid var(--ui-border); border-radius:var(--ui-radius-surface); background:var(--ui-surface); box-shadow:var(--ui-shadow-float); }
+@media (max-width:39.999rem) { .ui-modal-surface { margin-top:auto; max-width:none; border-radius:20px 20px 0 0; max-height:88vh; } }

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Database, KeyRound, RefreshCw } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Database, Eye, KeyRound, RefreshCw } from 'lucide-react';
 import {
   subscribeToCanonicalData,
   type CanonicalCollectionName,
@@ -8,6 +8,26 @@ import {
 
 type SortDirection = 'asc' | 'desc';
 type SortState = { column: string; direction: SortDirection } | null;
+
+type RecoveryCandidate = {
+  habitId?: string;
+  dateKey?: string;
+  Iscompleted?: boolean;
+  evidence?: string;
+  confidence?: string;
+  status?: string;
+  existingHabitLogIds?: string[];
+};
+
+type RecoveryReport = {
+  generatedAt?: string;
+  readOnly?: boolean;
+  previewOnly?: boolean;
+  writesPerformed?: number;
+  canRestoreAutomatically?: number;
+  damagedRows?: Array<{ documentId?: string; habitLogId?: string; missingFields?: string[] }>;
+  restorable?: RecoveryCandidate[];
+};
 
 const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> = {
   users: { userId: 'PK' },
@@ -63,6 +83,9 @@ export const DataWorkspace: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortState>(null);
+  const [recoveryReport, setRecoveryReport] = useState<RecoveryReport | null>(null);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
 
@@ -104,6 +127,24 @@ export const DataWorkspace: React.FC = () => {
     setActive(collection);
     setSort(null);
   };
+  const previewHabitLogRecovery = async () => {
+    setRecoveryLoading(true);
+    setRecoveryError(null);
+    try {
+      const response = await fetch('/api/habitlogs/recovery-report', { method: 'GET' });
+      const report = await response.json();
+      if (!response.ok) throw new Error(report.error || 'Recovery preview failed');
+      if (report.readOnly !== true || report.previewOnly !== true || Number(report.writesPerformed || 0) !== 0) {
+        throw new Error('Server did not confirm a read-only recovery preview.');
+      }
+      setRecoveryReport(report);
+    } catch (err) {
+      setRecoveryError(err instanceof Error ? err.message : 'Recovery preview failed');
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
   const columns = TABLE_COLUMNS[active];
 
   return (
@@ -143,6 +184,63 @@ export const DataWorkspace: React.FC = () => {
       </div>
 
       {error && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">{error}</div>}
+
+      {active === 'habitLogs' && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 lg:shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="text-xs font-black text-amber-900">HabitLog recovery preview</div>
+              <div className="text-[10px] font-semibold text-amber-700">Read-only analysis. Previewing performs zero Firestore writes or deletes.</div>
+            </div>
+            <button
+              type="button"
+              onClick={previewHabitLogRecovery}
+              disabled={recoveryLoading}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-black text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              {recoveryLoading ? 'Analyzing…' : 'Preview recoverable values'}
+            </button>
+          </div>
+          {recoveryError && <div className="mt-2 text-xs font-bold text-rose-700">{recoveryError}</div>}
+          {recoveryReport && (
+            <div className="mt-3 space-y-2">
+              <div className="flex flex-wrap gap-2 text-[10px] font-bold">
+                <span className="rounded bg-white px-2 py-1 border border-amber-200">Damaged rows: {recoveryReport.damagedRows?.length || 0}</span>
+                <span className="rounded bg-white px-2 py-1 border border-amber-200">Evidence-backed candidates: {recoveryReport.restorable?.length || 0}</span>
+                <span className="rounded bg-emerald-50 px-2 py-1 border border-emerald-200 text-emerald-700">Writes: {recoveryReport.writesPerformed || 0}</span>
+              </div>
+              {(recoveryReport.restorable?.length || 0) > 0 ? (
+                <div className="overflow-auto max-h-56 rounded-lg border border-amber-200 bg-white">
+                  <table className="w-full min-w-max text-left text-xs">
+                    <thead className="sticky top-0 bg-slate-50">
+                      <tr>
+                        {['habitId', 'dateKey', 'Iscompleted', 'evidence', 'confidence', 'status'].map((column) => (
+                          <th key={column} className="border-b border-r border-slate-200 px-2 py-1.5 text-[9px] uppercase tracking-wide text-slate-500">{column}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recoveryReport.restorable?.map((candidate, index) => (
+                        <tr key={`${candidate.habitId}-${candidate.dateKey}-${index}`}>
+                          <td className="border-b border-r border-slate-100 px-2 py-1.5 font-bold">{candidate.habitId || '—'}</td>
+                          <td className="border-b border-r border-slate-100 px-2 py-1.5 font-bold">{candidate.dateKey || '—'}</td>
+                          <td className="border-b border-r border-slate-100 px-2 py-1.5">{candidate.Iscompleted ? '1' : '0'}</td>
+                          <td className="border-b border-r border-slate-100 px-2 py-1.5">{candidate.evidence || '—'}</td>
+                          <td className="border-b border-r border-slate-100 px-2 py-1.5">{candidate.confidence || '—'}</td>
+                          <td className="border-b border-slate-100 px-2 py-1.5">{candidate.status || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-xs font-semibold text-slate-600">No evidence-backed missing habit/date pairs were found.</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden lg:flex-1 lg:min-h-0">
         <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 flex items-center justify-between">

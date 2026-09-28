@@ -408,7 +408,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             {timerVisual}
           </div>
 
-          <div className="mt-1 text-center text-[11px] font-bold text-slate-400">
+          <div className="mt-1 text-center text-[11px] font-medium text-slate-400">
             {modeLabel}
           </div>
 
@@ -529,7 +529,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                       className="min-w-0 flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-sm font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
                       aria-label="Custom focus minutes"
                     />
-                    <span className="text-xs font-bold text-slate-400">
+                    <span className="text-xs font-medium text-slate-400">
                       minutes
                     </span>
                   </div>

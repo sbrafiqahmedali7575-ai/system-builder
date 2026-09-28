@@ -40,6 +40,7 @@ type HabitDraft = {
   frequency: HabitFrequency;
   repeatDays: number[];
   color: HabitItem['color'];
+  isActive: boolean;
 };
 
 const COLORS: HabitItem['color'][] = ['blue', 'emerald', 'amber', 'rose', 'violet'];
@@ -88,6 +89,7 @@ const EMPTY_DRAFT: HabitDraft = {
   frequency: 'daily',
   repeatDays: [],
   color: 'blue',
+  isActive: true,
 };
 
 function getMonday(dateKey: string): string {
@@ -209,6 +211,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       frequency: habit.frequency,
       repeatDays: habit.repeatDays || [],
       color: habit.color,
+      isActive: habit.isActive !== false,
     });
     setFormOpen(true);
   };
@@ -243,6 +246,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         frequency: draft.frequency,
         repeatDays: draft.frequency === 'custom' ? draft.repeatDays : undefined,
         color: draft.color,
+        isActive: draft.isActive,
         updatedAt: new Date().toISOString(),
       });
     } else {
@@ -252,6 +256,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         frequency: draft.frequency,
         repeatDays: draft.frequency === 'custom' ? draft.repeatDays : undefined,
         color: draft.color,
+        isActive: true,
+        inactivePeriods: [],
         checkIns: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -508,6 +514,40 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   Select at least one repeat day.
                 </div>
               )}
+            </div>
+          )}
+
+          {editingHabitId && (
+            <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-black text-slate-700">Habit status</div>
+                <div className="mt-0.5 text-[11px] font-semibold text-slate-500">
+                  {draft.isActive
+                    ? 'Active — daily HabitLogs will be created when this habit is due.'
+                    : 'Inactive — no new HabitLogs will be created until you enable it again.'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    isActive: !current.isActive,
+                  }))
+                }
+                role="switch"
+                aria-checked={draft.isActive}
+                className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                  draft.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                }`}
+                title={draft.isActive ? 'Disable habit' : 'Enable habit'}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    draft.isActive ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           )}
 

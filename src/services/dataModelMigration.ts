@@ -332,6 +332,25 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
     });
   }
 
+  // One-time authoritative correction supplied for 2026-09-28.
+  // This is intentionally written after the generic historical rebuild so the
+  // known counts are not replaced by stale legacy fields during migration.
+  if (today >= '2026-09-28') {
+    dayWrites.push({
+      ref: doc(db, 'days', '2026-09-28'),
+      data: {
+        dateKey: '2026-09-28',
+        tasksCompleted: 1,
+        taskTotal: 6,
+        taskCompletionRate: 17,
+        habitsCompleted: 1,
+        habitTotal: 3,
+        habitCompletionRate: 33,
+        IsdayCompleted: false,
+      },
+    });
+  }
+
   await commitQueuedWrites(dayWrites);
 }
 

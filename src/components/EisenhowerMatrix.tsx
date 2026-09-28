@@ -90,7 +90,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-rose-700',
     border: 'border-rose-200',
     dot: 'bg-rose-500',
-    surface: 'bg-rose-50/55',
+    surface: 'bg-rose-50/35',
     iconSurface: 'bg-rose-100',
     iconText: 'text-rose-700',
     accentBorder: 'border-rose-200',
@@ -100,7 +100,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-amber-700',
     border: 'border-amber-200',
     dot: 'bg-amber-500',
-    surface: 'bg-amber-50/55',
+    surface: 'bg-amber-50/35',
     iconSurface: 'bg-amber-100',
     iconText: 'text-amber-700',
     accentBorder: 'border-amber-200',
@@ -110,7 +110,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-indigo-700',
     border: 'border-indigo-200',
     dot: 'bg-indigo-500',
-    surface: 'bg-indigo-50/55',
+    surface: 'bg-indigo-50/35',
     iconSurface: 'bg-indigo-100',
     iconText: 'text-indigo-700',
     accentBorder: 'border-indigo-200',
@@ -120,7 +120,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-emerald-700',
     border: 'border-emerald-200',
     dot: 'bg-emerald-500',
-    surface: 'bg-emerald-50/55',
+    surface: 'bg-emerald-50/35',
     iconSurface: 'bg-emerald-100',
     iconText: 'text-emerald-700',
     accentBorder: 'border-emerald-200',
@@ -130,7 +130,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-blue-700',
     border: 'border-blue-200',
     dot: 'bg-blue-500',
-    surface: 'bg-blue-50/55',
+    surface: 'bg-blue-50/35',
     iconSurface: 'bg-blue-100',
     iconText: 'text-blue-700',
     accentBorder: 'border-blue-200',
@@ -140,7 +140,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-violet-700',
     border: 'border-violet-200',
     dot: 'bg-violet-500',
-    surface: 'bg-violet-50/55',
+    surface: 'bg-violet-50/35',
     iconSurface: 'bg-violet-100',
     iconText: 'text-violet-700',
     accentBorder: 'border-violet-200',
@@ -150,7 +150,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-cyan-700',
     border: 'border-cyan-200',
     dot: 'bg-cyan-500',
-    surface: 'bg-cyan-50/55',
+    surface: 'bg-cyan-50/35',
     iconSurface: 'bg-cyan-100',
     iconText: 'text-cyan-700',
     accentBorder: 'border-cyan-200',
@@ -160,7 +160,7 @@ const QUADRANT_THEMES: Record<
     header: 'text-slate-700',
     border: 'border-slate-300',
     dot: 'bg-slate-500',
-    surface: 'bg-slate-50/70',
+    surface: 'bg-slate-50/45',
     iconSurface: 'bg-slate-200',
     iconText: 'text-slate-700',
     accentBorder: 'border-slate-300',
@@ -576,7 +576,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0 lg:grid-rows-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0 lg:grid-rows-2">
         {quadrants.map((quadrant) => {
           const theme = QUADRANT_THEMES[quadrant.color];
           const QuadrantIconComponent =
@@ -613,7 +613,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[300px] lg:min-h-0 ${compact ? 'rounded-xl' : 'rounded-2xl'} border transition-all overflow-hidden flex flex-col ${theme.border} ${theme.surface} ${
+              className={`relative min-h-[300px] lg:min-h-0 ${compact ? 'rounded-2xl' : 'rounded-2xl'} border transition-all overflow-hidden flex flex-col shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'
@@ -641,11 +641,11 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               )}
 
-              <div className={`${compact ? 'px-3 py-2' : 'px-4 py-3'} border-b border-slate-200/80 flex items-start justify-between gap-2 shrink-0`}>
+              <div className={`${compact ? 'px-4 py-3' : 'px-4 py-3'} border-b border-slate-200/60 bg-white/65 flex items-start justify-between gap-2 shrink-0`}>
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                   <div className="relative shrink-0 mt-0.5">
                     <span
-                      className={`w-9 h-8 rounded-lg border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center`}
+                      className={`w-8 h-8 rounded-lg border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center`}
                       title={QUADRANT_ICONS[quadrant.icon].label}
                     >
                       <QuadrantIconComponent className="w-4 h-4" />
@@ -789,10 +789,10 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     </div>
                   ) : (
                     <div className="min-w-0">
-                      <div className={`text-sm font-black ${theme.header}`}>
+                      <div className={`text-[13px] font-bold ${theme.header}`}>
                         {quadrant.title}
                       </div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      <div className="text-[10px] font-medium text-slate-500">
                         {quadrant.action}
                       </div>
                     </div>
@@ -812,7 +812,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     </button>
                   )}
                   <span
-                    className={`min-w-7 h-7 px-2 rounded-lg border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center text-xs font-black`}
+                    className={`min-w-6 h-6 px-1.5 rounded-full border ${theme.iconSurface} ${theme.iconText} ${theme.accentBorder} flex items-center justify-center text-xs font-black`}
                   >
                     {grouped[quadrant.id].length}
                   </span>
@@ -820,7 +820,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
               </div>
 
               <div
-                className={`${compact ? 'p-2 space-y-1.5' : 'p-3 space-y-2.5'} flex-1 min-h-0 overflow-y-auto`}
+                className={`${compact ? 'p-3 space-y-2' : 'p-3 space-y-2.5'} flex-1 min-h-0 overflow-y-auto`}
               >
                 <div className="flex gap-2">
                   <input
@@ -835,13 +835,13 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       if (event.key === 'Enter') void addTask(quadrant.id);
                     }}
                     placeholder="Add task..."
-                    className="min-w-0 flex-1 h-8 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
+                    className="min-w-0 flex-1 h-8 rounded-lg border border-slate-200/80 bg-white/90 px-3 text-[13px] font-medium outline-none focus:border-blue-400"
                   />
                   <button
                     type="button"
                     onClick={() => void addTask(quadrant.id)}
                     disabled={!drafts[quadrant.id].trim() || isSyncing}
-                    className="w-9 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
+                    className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
                     title="Add task"
                     aria-label={`Add task to ${quadrant.title}`}
                   >
@@ -861,7 +861,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     {draggedTaskId ? 'Drop task here' : 'No tasks'}
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {grouped[quadrant.id].map((task) => {
                       const priority = task.priority || 'Normal';
                       const priorityConfig =
@@ -872,7 +872,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       return (
                         <div
                           key={task.id}
-                          className={`rounded-xl border ${theme.accentBorder} bg-white px-2 py-2 shadow-sm transition-all ${
+                          className={`rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 transition-all hover:border-slate-300 hover:shadow-sm ${
                             busyTaskId === task.id ? 'opacity-60' : ''
                           } ${dragging ? 'opacity-40 scale-[0.99] border-blue-300' : ''}`}
                         >
@@ -891,7 +891,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               }}
                               onDragEnd={endDrag}
                               disabled={task.isCompleted}
-                              className={`mt-0.5 w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center shrink-0 ${
+                              className={`mt-0.5 w-5 h-5 rounded-md border border-transparent flex items-center justify-center shrink-0 ${
                                 task.isCompleted
                                   ? 'text-slate-300 cursor-not-allowed'
                                   : 'text-slate-500 cursor-grab active:cursor-grabbing hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50'
@@ -929,7 +929,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
 
                             <div className="min-w-0 flex-1">
                               <div
-                                className={`text-sm font-bold break-words ${
+                                className={`text-[13px] font-medium leading-5 break-words ${
                                   task.isCompleted
                                     ? 'line-through text-slate-500'
                                     : 'text-slate-900'
@@ -938,7 +938,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                 {task.taskOfTheDay}
                               </div>
 
-                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                              <div className="mt-1 flex flex-wrap items-center gap-1">
                                 <select
                                   value={priority}
                                   onChange={(event) =>

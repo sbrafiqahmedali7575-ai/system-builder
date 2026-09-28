@@ -115,11 +115,22 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
     ) / 10;
   }, [weekHabitTrend]);
 
+  const elapsedTaskDays = weekTaskTrend.filter((day) => !day.future);
+  const strongestTaskDay = [...elapsedTaskDays].sort((a, b) => b.rate - a.rate)[0];
+  const weakestTaskDay = [...elapsedTaskDays].sort((a, b) => a.rate - b.rate)[0];
+
   return (
     <section
       aria-label="Weekly progress"
       className="grid grid-cols-1 md:grid-cols-2 gap-2"
     >
+      <div className="md:col-span-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+        <span className="font-bold text-slate-700 dark:text-slate-200">Weekly Review</span>
+        <span>Tasks {weekTaskScore.toFixed(1)}%</span>
+        <span>Habits {weekHabitScore.toFixed(1)}%</span>
+        {strongestTaskDay && <span>Strongest: {strongestTaskDay.label} {strongestTaskDay.rate}%</span>}
+        {weakestTaskDay && <span>Needs attention: {weakestTaskDay.label} {weakestTaskDay.rate}%</span>}
+      </div>
       <div
         className={`rounded-2xl border p-2.5 ${
           isDark

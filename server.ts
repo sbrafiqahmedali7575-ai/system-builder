@@ -62,15 +62,24 @@ async function startServer() {
 
       daysSnap.forEach((d) => {
         const x = d.data();
-        const required = ['dateKey','tasksCompleted','taskTotal','taskCompletionRate','habitsCompleted','habitTotal','habitCompletionRate','IsdayCompleted'];
+        const required = ['dateKey','tasksCompleted','taskTotal','taskCompletionRate','habitsCompleted','habitTotal','habitCompletionRate','dayCompleted','IsdayCompleted'];
         const missing = required.filter((k) => x[k] === undefined);
         if (missing.length) issues.push(`Days/${d.id}: missing ${missing.join(', ')}.`);
-        const weightedCompletionRate =
-          Number(x.taskCompletionRate || 0) * 0.8 +
-          Number(x.habitCompletionRate || 0) * 0.2;
-        if (x.IsdayCompleted !== (weightedCompletionRate >= 80)) {
+        const expectedDayCompleted =
+          Math.round(
+            (
+              Number(x.taskCompletionRate || 0) * 0.8 +
+              Number(x.habitCompletionRate || 0) * 0.2
+            ) * 100
+          ) / 100;
+        if (Math.abs(Number(x.dayCompleted || 0) - expectedDayCompleted) > 0.001) {
           issues.push(
-            `Days/${d.id}: IsdayCompleted does not match the 80% task + 20% habit weighted threshold.`
+            `Days/${d.id}: dayCompleted does not match the 80% task + 20% habit weighted percentage.`
+          );
+        }
+        if (x.IsdayCompleted !== (expectedDayCompleted >= 80)) {
+          issues.push(
+            `Days/${d.id}: IsdayCompleted does not match dayCompleted >= 80.`
           );
         }
       });

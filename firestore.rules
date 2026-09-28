@@ -9,6 +9,9 @@ service cloud.firestore {
     match /tasks/{taskId} {
       allow read, write: if true;
     }
+    match /taskUniqueKeys/{keyId} {
+      allow read, write: if true;
+    }
     match /habits/{habitId} {
       allow read, write: if true;
     }

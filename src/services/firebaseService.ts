@@ -727,6 +727,29 @@ export async function saveCountdownSettings(
 export type CanonicalCollectionName = 'users' | 'days' | 'tasks' | 'habits' | 'habitLogs' | 'countdowns';
 export type CanonicalDataRow = { id: string; [key: string]: unknown };
 
+export async function updateCanonicalDataRow(
+  collectionName: 'tasks' | 'habitLogs',
+  documentId: string,
+  values: Record<string, unknown>
+): Promise<void> {
+  if (!documentId) throw new Error('Missing Firestore document ID.');
+  const allowed = collectionName === 'tasks'
+    ? ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'notes', 'Iscompleted']
+    : ['habitLogId', 'habitId', 'dateKey', 'Iscompleted'];
+  const payload = Object.fromEntries(
+    Object.entries(values).filter(([key]) => allowed.includes(key))
+  );
+  await setDoc(doc(db, collectionName, documentId), payload, { merge: true });
+
+  if (collectionName === 'tasks') {
+    const dateKey = normalizeModelDateKey(payload.scheduledDate);
+    if (dateKey) await rebuildDaySummary(dateKey);
+  } else {
+    const dateKey = normalizeModelDateKey(payload.dateKey);
+    if (dateKey) await rebuildDaySummary(dateKey);
+  }
+}
+
 export function subscribeToCanonicalData(
   onUpdate: (data: Record<CanonicalCollectionName, CanonicalDataRow[]>) => void,
   onError?: (error: Error) => void

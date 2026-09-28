@@ -328,9 +328,9 @@ async function resetHabitLogsToRequestedNineRows(): Promise<void> {
     { habitLogId: 'HL4', habitId: '1', dateKey: '2026-09-27', Iscompleted: true },
     { habitLogId: 'HL5', habitId: '2', dateKey: '2026-09-27', Iscompleted: false },
     { habitLogId: 'HL6', habitId: '3', dateKey: '2026-09-27', Iscompleted: true },
-    { habitLogId: 'HL7', habitId: '1', dateKey: '2026-09-28', Iscompleted: true },
-    { habitLogId: 'HL8', habitId: '2', dateKey: '2026-09-28', Iscompleted: true },
-    { habitLogId: 'HL9', habitId: '3', dateKey: '2026-09-28', Iscompleted: true },
+    { habitLogId: 'HL7', habitId: '1', dateKey: '2026-09-28', Iscompleted: false },
+    { habitLogId: 'HL8', habitId: '2', dateKey: '2026-09-28', Iscompleted: false },
+    { habitLogId: 'HL9', habitId: '3', dateKey: '2026-09-28', Iscompleted: false },
   ];
 
   rows.forEach((row) => {

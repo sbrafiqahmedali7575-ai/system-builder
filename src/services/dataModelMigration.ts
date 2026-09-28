@@ -321,14 +321,13 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
       ref: doc(db, 'days', dateKey),
       data: {
         dateKey,
-        tasksDone,
-        tasks,
-        tasksCompleted,
-        habitsDone,
-        Habits,
-        habitsCompleted,
-        dayCompleted,
-        IsdayCompleted: dayCompleted >= 80,
+        tasksCompleted: tasksDone,
+        taskTotal: tasks,
+        taskCompletionRate: tasksCompleted,
+        habitsCompleted: habitsDone,
+        habitTotal: Habits,
+        habitCompletionRate: habitsCompleted,
+        IsdayCompleted: tasks > 0 && tasksCompleted === 100,
       },
     });
   }
@@ -702,14 +701,13 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
       ref: doc(db, 'days', dateKey),
       data: {
         dateKey,
-        tasksDone,
-        tasks,
-        tasksCompleted,
-        habitsDone,
-        Habits,
-        habitsCompleted,
-        dayCompleted,
-        IsdayCompleted: dayCompleted >= 80,
+        tasksCompleted: tasksDone,
+        taskTotal: tasks,
+        taskCompletionRate: tasksCompleted,
+        habitsCompleted: habitsDone,
+        habitTotal: Habits,
+        habitCompletionRate: habitsCompleted,
+        IsdayCompleted: tasks > 0 && tasksCompleted === 100,
       },
     });
     result.days += 1;

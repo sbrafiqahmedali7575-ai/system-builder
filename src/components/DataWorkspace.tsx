@@ -120,7 +120,7 @@ export const DataWorkspace: React.FC = () => {
 
   return (
     <div className="tools-workspace-view lg:flex lg:flex-col">
-      <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle">Browse canonical System Builder collections.</p></div></div>
+      <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle"></p></div></div>
 
       <div className="space-y-2 p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
         <div>

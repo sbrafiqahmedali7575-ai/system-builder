@@ -110,6 +110,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
               kind="task"
               task={task}
               disabled={isFuture}
+              dateState={isToday ? 'today' : !task.isCompleted && !isFuture ? 'overdue' : 'normal'}
               onClick={() => void onToggleTask(task.id)}
             />
           ))}

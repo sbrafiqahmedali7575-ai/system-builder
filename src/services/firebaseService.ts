@@ -1200,7 +1200,9 @@ export function subscribeToHabits(
   let habitLogsSnapshot: QuerySnapshot<DocumentData> | null = null;
 
   const emit = () => {
-    if (!habitsSnapshot) return;
+    // Do not emit until both streams have delivered their initial snapshot.
+    // Otherwise habits briefly render with empty checkIns before HabitLogs load.
+    if (!habitsSnapshot || !habitLogsSnapshot) return;
 
     const completedDatesByHabit = new Map<string, Set<string>>();
 

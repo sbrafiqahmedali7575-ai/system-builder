@@ -332,25 +332,6 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
     });
   }
 
-  // One-time authoritative correction supplied for 2026-09-28.
-  // This is intentionally written after the generic historical rebuild so the
-  // known counts are not replaced by stale legacy fields during migration.
-  if (today >= '2026-09-28') {
-    dayWrites.push({
-      ref: doc(db, 'days', '2026-09-28'),
-      data: {
-        dateKey: '2026-09-28',
-        tasksCompleted: 1,
-        taskTotal: 6,
-        taskCompletionRate: 17,
-        habitsCompleted: 1,
-        habitTotal: 3,
-        habitCompletionRate: 33,
-        IsdayCompleted: false,
-      },
-    });
-  }
-
   await commitQueuedWrites(dayWrites);
 }
 
@@ -485,10 +466,10 @@ async function backfillTaskOrder(): Promise<void> {
     });
     tasks.forEach((taskDoc, index) => {
       const data = taskDoc.data() as Record<string, unknown>;
-      const { sortOrder: _legacySortOrder, ...withoutLegacySortOrder } = data;
+      const { taskOrder: _legacyTaskOrder, ...withoutLegacyTaskOrder } = data;
       writes.push({
         ref: taskDoc.ref,
-        data: { ...withoutLegacySortOrder, taskOrder: index + 1 },
+        data: { ...withoutLegacyTaskOrder, sortOrder: index + 1 },
       });
     });
   }
@@ -551,9 +532,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         scheduledDate,
         title,
         quadrant: matrixQuadrantToRoman(data.quadrant || data.matrixQuadrant),
-        taskOrder:
-          Number.isInteger(Number(data.taskOrder || data.sortOrder)) && Number(data.taskOrder || data.sortOrder) >= 0
-            ? Number(data.taskOrder || data.sortOrder)
+        sortOrder:
+          Number.isInteger(Number(data.sortOrder || data.taskOrder)) && Number(data.sortOrder || data.taskOrder) >= 0
+            ? Number(data.sortOrder || data.taskOrder)
             : index + 1,
         notes: String(data.notes || ''),
         Iscompleted: isCompleted,
@@ -566,7 +547,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
           title: normalized.title,
           quadrant: normalized.quadrant,
           scheduledDate: normalized.scheduledDate,
-          taskOrder: normalized.taskOrder,
+          sortOrder: normalized.sortOrder,
           notes: normalized.notes,
           Iscompleted: normalized.Iscompleted,
         },

@@ -1356,11 +1356,23 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
     const previousHabit = previousHabitSnapshot.exists()
       ? (previousHabitSnapshot.data() as Record<string, unknown>)
       : null;
-    const habitForStorage = applyHabitActivationTransition(previousHabit, habit);
+    const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+    const requestedCheckIns = new Set(
+      (habit.checkIns || []).map((value) => normalizeModelDateKey(value)).filter(Boolean)
+    );
+    const todayChecked = requestedCheckIns.has(today);
+    const protectedCheckIns = [...previousCompletedDates].filter((dateKey) => dateKey !== today);
+    if (todayChecked) protectedCheckIns.push(today);
+
+    // Habit Tracker completion is mutable only for the current date.
+    // Historical/future check-in state from the UI cannot be added or removed here.
+    const currentDayOnlyHabit = { ...habit, checkIns: protectedCheckIns.sort() };
+    const habitForStorage = applyHabitActivationTransition(previousHabit, currentDayOnlyHabit);
     const scheduleChanged = habitScheduleChanged(previousHabit, habitForStorage);
 
     await setDoc(habitRef, habitStoragePayload(habitForStorage), { merge: true });
     await syncHabitLogsFromHabit(habitForStorage);
+    await rebuildDaySummary(today);
 
     if (scheduleChanged) {
       // Repeat-day/active-date changes can affect many historical Day rows.

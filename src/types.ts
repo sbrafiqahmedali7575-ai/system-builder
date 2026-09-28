@@ -15,6 +15,11 @@ export type MatrixQuadrant = 'urgent-important' | 'important' | 'urgent' | 'neit
 
 export type HabitFrequency = 'daily' | 'weekdays' | 'custom';
 
+export interface HabitInactivePeriod {
+  from: string; // YYYY-MM-DD, inclusive
+  to?: string | null; // YYYY-MM-DD, inclusive; null while currently inactive
+}
+
 export interface HabitItem {
   id: string;
   name: string;
@@ -29,6 +34,7 @@ export interface HabitItem {
   updatedAt?: string;
   activeFrom?: string; // YYYY-MM-DD canonical habit start date
   isActive?: boolean; // Canonical active flag in the single-user model
+  inactivePeriods?: HabitInactivePeriod[]; // Pause history; no HabitLogs are created inside these ranges
 }
 
 export interface TaskItem {

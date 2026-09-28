@@ -410,6 +410,61 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   }
 }
 
+async function ensureCurrentDayHabitLogs(): Promise<void> {
+  const [habitsSnapshot, logsSnapshot] = await Promise.all([
+    getDocs(collection(db, HABITS_COLLECTION)),
+    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
+  ]);
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const existingToday = new Set<string>();
+  const usedNumbers = new Set<number>();
+
+  logsSnapshot.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const storedId = String(data.habitLogId || logDoc.id);
+    const match = /^HL(\d+)$/i.exec(storedId);
+    if (match) usedNumbers.add(Number(match[1]));
+
+    if (normalizeModelDateKey(data.dateKey) === today) {
+      const habitId = String(data.habitId || '').trim();
+      if (habitId) existingToday.add(habitId);
+    }
+  });
+
+  let nextNumber = 1;
+  const writes: Array<{
+    ref: DocumentReference<DocumentData>;
+    data?: Record<string, unknown>;
+  }> = [];
+
+  habitsSnapshot.docs.forEach((habitDoc) => {
+    const data = habitDoc.data() as Record<string, unknown>;
+    const habitId = String(data.habitId || habitDoc.id).trim();
+    if (!habitId || existingToday.has(habitId)) return;
+    if (data.isActive === false) return;
+    if (!storedHabitIsDue(data, today)) return;
+
+    while (usedNumbers.has(nextNumber)) nextNumber += 1;
+    const habitLogId = `HL${nextNumber}`;
+    usedNumbers.add(nextNumber);
+    nextNumber += 1;
+
+    writes.push({
+      ref: doc(db, HABIT_LOGS_COLLECTION, habitLogId),
+      data: {
+        habitLogId,
+        habitId,
+        dateKey: today,
+        Iscompleted: false,
+      },
+    });
+  });
+
+  if (writes.length > 0) {
+    await commitBatchedMutations(writes);
+  }
+}
+
 async function getCompletedHabitDates(habitId: string): Promise<Set<string>> {
   const snapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
   const dates = new Set<string>();
@@ -1249,6 +1304,9 @@ export function subscribeToHabits(
     (snapshot) => {
       habitsSnapshot = snapshot;
       emit();
+      void ensureCurrentDayHabitLogs().catch((error) => {
+        console.error('Failed to ensure current-day HabitLogs:', error);
+      });
     },
     (err) => {
       console.error('Firestore habits real-time subscription error:', err);

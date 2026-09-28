@@ -16,11 +16,16 @@ import {
   Unsubscribe,
   type QuerySnapshot,
   type DocumentData,
+  type DocumentReference,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS, INITIAL_TASKS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
+import {
+  CONFIGURED_TIMEZONE,
+  getIsoDateKeyInTimezone,
+} from '../utils/taskDateUtils';
 
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -279,7 +284,7 @@ function habitLogDocumentId(habitId: string, dateKey: string): string {
 
 async function commitBatchedMutations(
   writes: Array<{
-    ref: ReturnType<typeof doc>;
+    ref: DocumentReference<DocumentData>;
     data?: Record<string, unknown>;
     delete?: boolean;
   }>
@@ -344,13 +349,16 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   });
 
   const writes: Array<{
-    ref: ReturnType<typeof doc>;
+    ref: DocumentReference<DocumentData>;
     data?: Record<string, unknown>;
     delete?: boolean;
   }> = [];
 
   for (const dateKey of [...candidateDates].sort()) {
-    const due = isHabitDue(habit, dateKey);
+    const due = storedHabitIsDue(
+      habitStoragePayload(habit),
+      dateKey
+    );
     const existing = existingByDate.get(dateKey) || [];
 
     if (!due && existing.length === 0 && !checkedDates.has(dateKey)) {
@@ -531,7 +539,7 @@ export async function ensureHabitLogsForDate(dateKey: string): Promise<void> {
   });
 
   const writes: Array<{
-    ref: ReturnType<typeof doc>;
+    ref: DocumentReference<DocumentData>;
     data?: Record<string, unknown>;
     delete?: boolean;
   }> = [];

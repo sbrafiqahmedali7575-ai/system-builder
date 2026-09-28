@@ -496,13 +496,13 @@ async function ensureCurrentDayHabitLogs(): Promise<void> {
   ]);
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
   const existingToday = new Set<string>();
-  const usedNumbers = new Set<number>();
+  let highestNumber = 0;
 
   logsSnapshot.docs.forEach((logDoc) => {
     const data = logDoc.data();
     const storedId = String(data.habitLogId || logDoc.id);
     const match = /^HL(\d+)$/i.exec(storedId);
-    if (match) usedNumbers.add(Number(match[1]));
+    if (match) highestNumber = Math.max(highestNumber, Number(match[1]));
 
     if (normalizeModelDateKey(data.dateKey) === today) {
       const habitId = String(data.habitId || '').trim();
@@ -510,38 +510,48 @@ async function ensureCurrentDayHabitLogs(): Promise<void> {
     }
   });
 
-  let nextNumber = 1;
-  const writes: Array<{
-    ref: DocumentReference<DocumentData>;
-    data?: Record<string, unknown>;
-  }> = [];
+  const dueHabitIds = habitsSnapshot.docs
+    .map((habitDoc) => {
+      const data = habitDoc.data() as Record<string, unknown>;
+      return {
+        data,
+        habitId: String(data.habitId || habitDoc.id).trim(),
+      };
+    })
+    .filter(({ data, habitId }) =>
+      Boolean(habitId) &&
+      !existingToday.has(habitId) &&
+      data.isActive !== false &&
+      storedHabitIsDue(data, today)
+    )
+    .map(({ habitId }) => habitId);
 
-  habitsSnapshot.docs.forEach((habitDoc) => {
-    const data = habitDoc.data() as Record<string, unknown>;
-    const habitId = String(data.habitId || habitDoc.id).trim();
-    if (!habitId || existingToday.has(habitId)) return;
-    if (data.isActive === false) return;
-    if (!storedHabitIsDue(data, today)) return;
+  let candidateNumber = highestNumber + 1;
+  for (const habitId of dueHabitIds) {
+    let created = false;
+    while (!created) {
+      const habitLogId = `HL${candidateNumber++}`;
+      const logRef = doc(db, HABIT_LOGS_COLLECTION, habitLogId);
 
-    while (usedNumbers.has(nextNumber)) nextNumber += 1;
-    const habitLogId = `HL${nextNumber}`;
-    usedNumbers.add(nextNumber);
-    nextNumber += 1;
+      created = await runTransaction(db, async (transaction) => {
+        const candidate = await transaction.get(logRef);
+        if (candidate.exists()) return false;
 
-    writes.push({
-      ref: doc(db, HABIT_LOGS_COLLECTION, habitLogId),
-      data: {
-        habitLogId,
-        habitId,
-        dateKey: today,
-        Iscompleted: false,
-      },
-    });
-  });
-
-  if (writes.length > 0) {
-    await commitBatchedMutations(writes);
+        transaction.set(logRef, {
+          habitLogId,
+          habitId,
+          dateKey: today,
+          Iscompleted: false,
+        });
+        return true;
+      });
+    }
   }
+
+  // A second client can legitimately reserve a different HL ID for the same
+  // habit/date at the same instant. Merge only that proven duplicate pair;
+  // surviving IDs are never renumbered.
+  if (dueHabitIds.length > 0) await deduplicateHabitLogsForAllDates();
 }
 
 async function getCompletedHabitDates(habitId: string): Promise<Set<string>> {

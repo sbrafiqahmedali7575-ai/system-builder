@@ -120,14 +120,10 @@ export const DataWorkspace: React.FC = () => {
   const columns = TABLE_COLUMNS[active];
 
   return (
-    <div className="space-y-3 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 lg:shrink-0">
-        <div>
-          <p className="text-[11px] font-medium text-slate-500">Firestore workspace</p>
-        </div>
-      </div>
+    <div className="tools-workspace-view lg:flex lg:flex-col">
+      <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle">Browse canonical System Builder collections.</p></div></div>
 
-      <div className="space-y-2 lg:shrink-0">
+      <div className="space-y-2 p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
         <div>
           <div className="mb-1 text-[10px] font-medium text-slate-500">Fact</div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -230,7 +226,7 @@ export const DataWorkspace: React.FC = () => {
 
       {error && <div className="tools-feedback-error">{error}</div>}
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden lg:flex-1 lg:min-h-0">
+      <div className="bg-white dark:bg-slate-900 overflow-hidden lg:flex-1 lg:min-h-0">
         <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="font-semibold text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
           <div className="text-[10px] font-medium text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>

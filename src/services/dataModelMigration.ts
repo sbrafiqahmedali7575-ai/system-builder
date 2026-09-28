@@ -289,6 +289,116 @@ async function migrateCanonicalIds(): Promise<void> {
   }
 }
 
+function normalizedTaskTitleKey(value: unknown): string {
+  return String(value ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase();
+}
+
+/**
+ * Removes duplicate task documents that represent the same logical task:
+ * same scheduled date + same normalized title.
+ *
+ * The canonical T# document is preferred as the survivor. When duplicate
+ * copies differ, the most recently updated copy supplies the descriptive
+ * fields, while completion is preserved if any copy is completed.
+ */
+async function deduplicateTasksByLogicalKey(): Promise<void> {
+  const snapshot = await getDocs(collection(db, 'tasks'));
+  if (snapshot.empty) return;
+
+  const groups = new Map<string, typeof snapshot.docs>();
+
+  snapshot.docs.forEach((taskDoc) => {
+    const data = taskDoc.data() as Record<string, unknown>;
+    const dateKey = toDateKey(data.scheduledDate || data.taskKey);
+    const titleKey = normalizedTaskTitleKey(data.title || data.taskOfTheDay);
+    if (!dateKey || !titleKey) return;
+
+    const logicalKey = `${dateKey}::${titleKey}`;
+    const group = groups.get(logicalKey) || [];
+    group.push(taskDoc);
+    groups.set(logicalKey, group);
+  });
+
+  const duplicateGroups = [...groups.values()].filter((group) => group.length > 1);
+  if (!duplicateGroups.length) return;
+
+  for (const group of duplicateGroups) {
+    const ordered = [...group].sort((a, b) => {
+      const aId = String(a.data().taskId || a.id);
+      const bId = String(b.data().taskId || b.id);
+      const aCanonical = isSimpleTaskId(aId) && a.id === aId ? 0 : 1;
+      const bCanonical = isSimpleTaskId(bId) && b.id === bId ? 0 : 1;
+      if (aCanonical !== bCanonical) return aCanonical - bCanonical;
+
+      const aUpdated = String(a.data().updatedAt || '');
+      const bUpdated = String(b.data().updatedAt || '');
+      if (aUpdated !== bUpdated) return bUpdated.localeCompare(aUpdated);
+
+      return a.id.localeCompare(b.id, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
+    });
+
+    const keeper = ordered[0];
+    const latest = [...group].sort((a, b) =>
+      String(b.data().updatedAt || '').localeCompare(String(a.data().updatedAt || ''))
+    )[0];
+
+    const keeperData = keeper.data() as Record<string, unknown>;
+    const latestData = latest.data() as Record<string, unknown>;
+    const keeperTaskId = String(keeperData.taskId || keeper.id);
+    const scheduledDate = toDateKey(
+      latestData.scheduledDate ||
+        latestData.taskKey ||
+        keeperData.scheduledDate ||
+        keeperData.taskKey
+    );
+    const title = String(
+      latestData.title ||
+        latestData.taskOfTheDay ||
+        keeperData.title ||
+        keeperData.taskOfTheDay ||
+        ''
+    ).trim();
+
+    const anyCompleted = group.some((taskDoc) => {
+      const data = taskDoc.data();
+      return data.Iscompleted === true || data.isCompleted === true;
+    });
+
+    const completedAtCandidates = group
+      .map((taskDoc) => String(taskDoc.data().completedAt || ''))
+      .filter(Boolean)
+      .sort();
+
+    const merged: Record<string, unknown> = {
+      ...keeperData,
+      ...latestData,
+      taskId: keeperTaskId,
+      title,
+      scheduledDate,
+      Iscompleted: anyCompleted,
+    };
+
+    if (completedAtCandidates.length > 0) {
+      merged.completedAt = completedAtCandidates[completedAtCandidates.length - 1];
+    }
+
+    const batch = writeBatch(db);
+    batch.set(keeper.ref, merged);
+
+    ordered.slice(1).forEach((duplicate) => {
+      batch.delete(duplicate.ref);
+    });
+
+    await batch.commit();
+  }
+}
+
 async function backfillTaskOrder(): Promise<void> {
   const snapshot = await getDocs(collection(db, 'tasks'));
   const byDate = new Map<string, typeof snapshot.docs>();
@@ -529,7 +639,11 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   }
 
   await commitQueuedWrites(writes);
+  await deduplicateTasksByLogicalKey();
   await migrateCanonicalIds();
+  // Re-run after re-keying so an interrupted older migration cannot leave a
+  // legacy-key copy beside its canonical T# copy.
+  await deduplicateTasksByLogicalKey();
   await backfillTaskOrder();
   return result;
 }

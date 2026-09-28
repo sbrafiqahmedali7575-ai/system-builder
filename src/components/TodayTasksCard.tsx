@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Sparkles,
   ArrowRight,
+  MoreHorizontal,
 } from 'lucide-react';
 import { DashboardTheme, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
@@ -213,6 +214,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [copyForwardFeedback, setCopyForwardFeedback] = useState<string | null>(null);
   const copyForwardLocksRef = useRef<Set<string>>(new Set());
   const [copyingTaskIds, setCopyingTaskIds] = useState<Set<string>>(() => new Set());
+  const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     setCopyForwardFeedback(null);
@@ -773,43 +775,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </div>
                       </div>
 
-                      {/* Existing task actions are preserved. */}
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleStartEdit(task)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                          title="Edit Task"
-                          aria-label={`Edit task ${task.taskOfTheDay}`}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
+                      <div className="relative shrink-0">
+                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
+                          <MoreHorizontal className="w-4 h-4" />
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleCopyToNextDay(task)}
-                          disabled={copyingTaskIds.has(task.id)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={`Add to next day (${formatCalendarDate(
-                            getNextTaskDateKey(task.taskKey)
-                          )})`}
-                          aria-label={`Add task ${task.taskOfTheDay} to next day`}
-                        >
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDeletingTask(task);
-                            setDeleteError(null);
-                          }}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                          title="Delete Task"
-                          aria-label={`Delete task ${task.taskOfTheDay}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {openTaskMenuId === task.id && (
+                          <div className="absolute right-0 top-9 z-30 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
+                            <button type="button" onClick={() => { setOpenTaskMenuId(null); handleStartEdit(task); }} className="task-menu-item"><Pencil />Edit</button>
+                            <button type="button" disabled={copyingTaskIds.has(task.id)} onClick={() => { setOpenTaskMenuId(null); handleCopyToNextDay(task); }} className="task-menu-item"><ArrowRight />Move/copy to next day</button>
+                            <button type="button" onClick={() => { setOpenTaskMenuId(null); setDeletingTask(task); setDeleteError(null); }} className="task-menu-item text-rose-600 dark:text-rose-400"><Trash2 />Delete</button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>

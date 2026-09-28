@@ -23,6 +23,7 @@ import {
   subscribeToHabits,
   addHabitToCloud,
   updateHabitInCloud,
+  setTodayHabitCheckIn,
   deleteHabitFromCloud,
   initializeDayHabitStatus,
 } from './services/firebaseService';
@@ -784,6 +785,15 @@ export default function App() {
     }
   };
 
+  const handleHabitCheckIn = async (habit: HabitItem, isCompleted: boolean) => {
+    try {
+      setIsSyncing(true);
+      await setTodayHabitCheckIn(habit, isCompleted);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleDeleteHabit = async (habitId: string) => {
     const previousHabit = habits.find((item) => item.id === habitId);
     setHabits((current) => current.filter((item) => item.id !== habitId));
@@ -985,6 +995,7 @@ export default function App() {
         onToggleTaskStatus={handleToggleTaskStatus}
         onAddHabit={handleAddHabit}
         onUpdateHabit={handleUpdateHabit}
+        onCheckIn={handleHabitCheckIn}
         onDeleteHabit={handleDeleteHabit}
         isSyncing={isSyncing}
       />

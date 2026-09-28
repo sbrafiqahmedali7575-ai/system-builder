@@ -473,6 +473,29 @@ export const ReportView: React.FC<ReportViewProps> = ({
               isSyncing={isSyncing}
             />
           </motion.div>
+
+          {!focusMode && <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="min-w-0 min-h-0 xl:h-full"
+          >
+            <CommandCenterSidebar
+              theme={theme}
+              currentDayFormatted={currentCadenceDay.formattedDate}
+              currentDayName={currentCadenceDay.fullDayName}
+              overallCompletionPercentage={commandCenterOverall.completionRate}
+              achievedWeeks={achievedWeeks}
+              completedDays={commandCenterOverall.completedDays}
+              totalDays={commandCenterOverall.totalDays}
+              countdownDaysRemaining={longTermCountdown.daysRemaining}
+              countdownReason={longTermCountdown.reason}
+              countdownTargetLabel={longTermCountdown.targetDateLabel}
+              currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
+              onOpenCountdown={openCountdownEditor}
+            />
+          </motion.div>}
+        </div>
       </section>
 
       {isCountdownEditorOpen && typeof document !== 'undefined'

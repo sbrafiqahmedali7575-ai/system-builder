@@ -1049,7 +1049,7 @@ export default function App() {
   return (
 <ToastProvider>
     <div
-      className={`system-edition system-app-shell ui-density-standard min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased ${
+      className={`system-edition system-app-shell ui-compact min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased ${
         isDark
           ? 'bg-slate-950 text-slate-100 selection:bg-blue-500 selection:text-white'
           : 'bg-[#f6f8ff] text-slate-900 selection:bg-blue-100 selection:text-blue-900'

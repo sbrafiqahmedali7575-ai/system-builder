@@ -124,7 +124,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
       aria-label="Weekly progress"
       className="grid grid-cols-1 md:grid-cols-2 gap-2"
     >
-      <div className="md:col-span-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-xs text-slate-500 dark:text-slate-400">
+      <div className="md:col-span-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
         <span className="font-bold text-slate-700 dark:text-slate-200">Weekly Review</span>
         <span>Tasks {weekTaskScore.toFixed(1)}%</span>
         <span>Habits {weekHabitScore.toFixed(1)}%</span>
@@ -141,7 +141,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
         <div className="flex flex-col xs:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <Target className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="truncate text-xs uppercase tracking-wider font-semibold text-slate-600 dark:text-slate-300">
+            <span className="truncate text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
               This week · tasks
             </span>
           </div>
@@ -150,7 +150,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             title={`Weekly task score: ${weekTaskScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+              <span className="text-xs font-black text-blue-600 dark:text-blue-400">
                 {weekTaskScore.toFixed(1)}%
               </span>
               <span className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
@@ -207,7 +207,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                   />
                 )}
                 <span
-                  className={`absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums ${
+                  className={`absolute inset-0 flex items-center justify-center text-[9px] font-black tabular-nums ${
                     day.future
                       ? 'text-slate-300 dark:text-slate-600'
                       : day.rate >= 45 && day.total > 0
@@ -219,7 +219,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                 </span>
               </div>
               <div
-                className={`mt-1 text-[11px] font-semibold ${
+                className={`mt-1 text-[9px] font-black ${
                   day.dateKey === today
                     ? 'text-blue-600 dark:text-blue-300'
                     : 'text-slate-400'
@@ -242,7 +242,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
         <div className="flex flex-col xs:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <Repeat2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="truncate text-xs uppercase tracking-wider font-semibold text-slate-600 dark:text-slate-300">
+            <span className="truncate text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
               This week · habits
             </span>
           </div>
@@ -251,7 +251,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             title={`Weekly habit score: ${weekHabitScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+              <span className="text-xs font-black text-blue-600 dark:text-blue-400">
                 {weekHabitScore.toFixed(1)}%
               </span>
               <span className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
@@ -308,7 +308,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                   />
                 )}
                 <span
-                  className={`absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums ${
+                  className={`absolute inset-0 flex items-center justify-center text-[9px] font-black tabular-nums ${
                     day.future
                       ? 'text-slate-300 dark:text-slate-600'
                       : day.rate >= 45 && day.due > 0
@@ -320,7 +320,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                 </span>
               </div>
               <div
-                className={`mt-1 text-[11px] font-semibold ${
+                className={`mt-1 text-[9px] font-black ${
                   day.dateKey === today
                     ? 'text-emerald-600 dark:text-blue-300'
                     : 'text-slate-400'

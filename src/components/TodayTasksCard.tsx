@@ -468,7 +468,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       initial={{ opacity: 0, y: 14, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className={`system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-2.5 sm:p-3 rounded-2xl border flex-1 flex flex-col ui-density-card transition-all ${
+      className={`system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-2.5 sm:p-3 rounded-2xl border flex-1 flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
@@ -495,27 +495,27 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <div>
             <div className="flex items-center gap-1">
               <div>
-                <p className="text-[11px] sm:text-xs uppercase tracking-[0.16em] font-semibold text-blue-600 dark:text-blue-400">
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.16em] font-black text-blue-600 dark:text-blue-400">
                   {activeDateTab === 'TODAY' ? "Today's Focus" : "Next Day Plan"}
                 </p>
-                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                   {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
                 </h2>
               </div>
               {isSyncing && (
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-mono flex items-center gap-0.5">
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono flex items-center gap-0.5">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Syncing</span>
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-400">
+            <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
               <span>Current day</span>
-              <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">
+              <span className="font-mono font-black text-slate-600 dark:text-slate-300">
                 {currentDayFormatted}
               </span>
               <span>•</span>
-              <span className="font-semibold text-slate-600 dark:text-slate-300">
+              <span className="font-black text-slate-600 dark:text-slate-300">
                 {currentDayName}
               </span>
             </div>
@@ -528,7 +528,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => setActiveDateTab('TODAY')}
-            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer min-h-10 ${
+            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
               activeDateTab === 'TODAY'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : isDark
@@ -542,7 +542,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => setActiveDateTab('TOMORROW')}
-            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer min-h-10 ${
+            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
               activeDateTab === 'TOMORROW'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : isDark
@@ -559,7 +559,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             onClick={() => handleOpenEnterPanel()}
             title="Add Task"
             aria-label="Add Task"
-            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl transition cursor-pointer min-h-10 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -577,7 +577,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 : 'Review today tasks before marking the day'
             }
             aria-label="Review today's tasks"
-            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer min-h-10 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -629,7 +629,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => handleOpenEnterPanel()}
-            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition cursor-pointer min-h-10"
+            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first task</span>
@@ -718,7 +718,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                                   else next.add(task.id);
                                   return next;
                                 })}
-                                className="mt-0.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                                className="mt-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
                               >
                                 {expandedNotes.has(task.id) ? 'Collapse' : 'Expand'}
                               </button>
@@ -728,14 +728,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                         <div className="mt-1.5 flex flex-wrap items-center gap-1">
                           <span
-                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-xs font-semibold ${quadrantMeta.classes}`}
+                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-black ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
                           >
                             {quadrantMeta.roman}
                           </span>
 
                           <span
-                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black ${
                               priorityLabel === 'High'
                                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
                                 : priorityLabel === 'Medium'
@@ -748,7 +748,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
                               isTaskCompleted
                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
@@ -768,7 +768,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}
@@ -821,7 +821,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     <Plus className="w-4 h-4 stroke-[3]" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                       Enter Tasks
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -833,7 +833,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsEnterPanelOpen(false)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer min-h-10"
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -849,7 +849,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setPanelDateTab('TODAY')}
-                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer min-h-10 ${
+                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer ${
                       panelDateTab === 'TODAY'
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : isDark
@@ -858,14 +858,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     }`}
                   >
                     <span className="text-xs font-bold">Today</span>
-                    <span className="text-xs font-mono opacity-80">{todayOption.formattedDate}</span>
+                    <span className="text-[10px] font-mono opacity-80">{todayOption.formattedDate}</span>
                   </button>
 
                   {/* Tomorrow */}
                   <button
                     type="button"
                     onClick={() => setPanelDateTab('TOMORROW')}
-                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer min-h-10 ${
+                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer ${
                       panelDateTab === 'TOMORROW'
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : isDark
@@ -874,7 +874,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     }`}
                   >
                     <span className="text-xs font-bold">Tomorrow</span>
-                    <span className="text-xs font-mono opacity-80">{tomorrowOption.formattedDate}</span>
+                    <span className="text-[10px] font-mono opacity-80">{tomorrowOption.formattedDate}</span>
                   </button>
 
                 </div>
@@ -1036,7 +1036,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               }`}
             >
               <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                   Edit Task
                 </h3>
                 <button
@@ -1069,7 +1069,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         const quadrantMeta = getTaskQuadrantMeta(editingTask.matrixQuadrant);
                         return (
                           <span
-                            className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 font-semibold ${quadrantMeta.classes}`}
+                            className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 font-black ${quadrantMeta.classes}`}
                           >
                             <span>{quadrantMeta.roman}</span>
                             <span className="font-semibold">{quadrantMeta.label}</span>
@@ -1078,7 +1078,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       })()}
                     </div>
                   </div>
-                  <span className="text-xs text-slate-400 block mt-1">
+                  <span className="text-[10px] text-slate-400 block mt-1">
                     Task date and ID {editingTask.id.slice(0, 10)}... are preserved.
                   </span>
                 </div>
@@ -1119,7 +1119,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setEditCompleted(!editCompleted)}
-                    className={`flex items-center space-x-1 w-full p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer min-h-10 ${
+                    className={`flex items-center space-x-1 w-full p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                       editCompleted
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
@@ -1153,7 +1153,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="submit"
                     disabled={isSavingEdit || !editTitle.trim()}
-                    className={`px-2 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer min-h-10 ${
+                    className={`px-2 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer ${
                       isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   >
@@ -1184,7 +1184,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <Trash2 className="w-5 h-5" />
               </div>
 
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-0.5">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 mb-0.5">
                 Delete Task?
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -1210,7 +1210,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   type="button"
                   disabled={isDeleting}
                   onClick={handleConfirmDelete}
-                  className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-semibold transition cursor-pointer min-h-10 shadow-xs"
+                  className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-semibold transition cursor-pointer shadow-xs"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete Task'}
                 </button>

@@ -7,17 +7,6 @@
   --system-yellow: #fbbf24;
   --system-ink: #0f172a;
   --system-paper: #f8fafc;
-  --ui-background: #f6f8ff;
-  --ui-surface: #ffffff;
-  --ui-surface-muted: #f8fafc;
-  --ui-border: #e2e8f0;
-  --ui-text-primary: #0f172a;
-  --ui-text-secondary: #475569;
-  --ui-text-muted: #64748b;
-  --ui-accent: #2563eb;
-  --ui-success: #16a34a;
-  --ui-warning: #d97706;
-  --ui-danger: #dc2626;
 }
 
 html {
@@ -191,7 +180,7 @@ body {
 
 .system-edition button:hover:not(:disabled),
 .system-edition [role="button"]:hover {
-  transform: none;
+  transform: translateY(-1px);
 }
 
 .system-edition button:active:not(:disabled) {
@@ -208,7 +197,7 @@ body {
 }
 
 .system-edition ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.48);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.65), rgba(239, 68, 68, 0.55));
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -421,31 +410,82 @@ body {
   animation: none !important;
 }
 
-/* Intentional density system: never reinterpret Tailwind spacing globally. */
-.ui-density-comfortable {
-  --ui-control-height: 44px;
-  --ui-row-y: 0.75rem;
-  --ui-card-padding: 1rem;
-  --ui-section-gap: 1.5rem;
+/* Global compact spacing: reduce UI padding by ~30% without shrinking typography or icons. */
+.ui-compact .p-0\.5 { padding: 0.0875rem; }
+.ui-compact .p-1 { padding: 0.175rem; }
+.ui-compact .p-1\.5 { padding: 0.2625rem; }
+.ui-compact .p-2 { padding: 0.35rem; }
+.ui-compact .p-2\.5 { padding: 0.4375rem; }
+.ui-compact .p-3 { padding: 0.525rem; }
+.ui-compact .p-3\.5 { padding: 0.6125rem; }
+.ui-compact .p-4 { padding: 0.7rem; }
+.ui-compact .p-5 { padding: 0.875rem; }
+.ui-compact .p-6 { padding: 1.05rem; }
+.ui-compact .p-8 { padding: 1.4rem; }
+
+.ui-compact .px-0\.5 { padding-left: 0.0875rem; padding-right: 0.0875rem; }
+.ui-compact .px-1 { padding-left: 0.175rem; padding-right: 0.175rem; }
+.ui-compact .px-1\.5 { padding-left: 0.2625rem; padding-right: 0.2625rem; }
+.ui-compact .px-2 { padding-left: 0.35rem; padding-right: 0.35rem; }
+.ui-compact .px-2\.5 { padding-left: 0.4375rem; padding-right: 0.4375rem; }
+.ui-compact .px-3 { padding-left: 0.525rem; padding-right: 0.525rem; }
+.ui-compact .px-4 { padding-left: 0.7rem; padding-right: 0.7rem; }
+.ui-compact .px-5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+.ui-compact .px-6 { padding-left: 1.05rem; padding-right: 1.05rem; }
+.ui-compact .px-8 { padding-left: 1.4rem; padding-right: 1.4rem; }
+
+.ui-compact .py-0\.5 { padding-top: 0.0875rem; padding-bottom: 0.0875rem; }
+.ui-compact .py-1 { padding-top: 0.175rem; padding-bottom: 0.175rem; }
+.ui-compact .py-1\.5 { padding-top: 0.2625rem; padding-bottom: 0.2625rem; }
+.ui-compact .py-2 { padding-top: 0.35rem; padding-bottom: 0.35rem; }
+.ui-compact .py-2\.5 { padding-top: 0.4375rem; padding-bottom: 0.4375rem; }
+.ui-compact .py-3 { padding-top: 0.525rem; padding-bottom: 0.525rem; }
+.ui-compact .py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+.ui-compact .py-5 { padding-top: 0.875rem; padding-bottom: 0.875rem; }
+.ui-compact .py-6 { padding-top: 1.05rem; padding-bottom: 1.05rem; }
+.ui-compact .py-8 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
+
+.ui-compact .pt-3 { padding-top: 0.525rem; }
+.ui-compact .pt-5 { padding-top: 0.875rem; }
+.ui-compact .pt-7 { padding-top: 1.225rem; }
+.ui-compact .pt-9 { padding-top: 1.575rem; }
+
+.ui-compact .pb-1 { padding-bottom: 0.175rem; }
+.ui-compact .pb-1\.5 { padding-bottom: 0.2625rem; }
+.ui-compact .pb-2 { padding-bottom: 0.35rem; }
+.ui-compact .pb-3 { padding-bottom: 0.525rem; }
+.ui-compact .pb-5 { padding-bottom: 0.875rem; }
+.ui-compact .pb-7 { padding-bottom: 1.225rem; }
+
+.ui-compact .pl-1 { padding-left: 0.175rem; }
+.ui-compact .pl-2 { padding-left: 0.35rem; }
+.ui-compact .pr-1 { padding-right: 0.175rem; }
+.ui-compact .pr-2 { padding-right: 0.35rem; }
+
+@media (min-width: 40rem) {
+  .ui-compact .sm\:p-2 { padding: 0.35rem; }
+  .ui-compact .sm\:p-2\.5 { padding: 0.4375rem; }
+  .ui-compact .sm\:p-3 { padding: 0.525rem; }
+  .ui-compact .sm\:p-3\.5 { padding: 0.6125rem; }
+  .ui-compact .sm\:p-4 { padding: 0.7rem; }
+  .ui-compact .sm\:px-3 { padding-left: 0.525rem; padding-right: 0.525rem; }
+  .ui-compact .sm\:px-4 { padding-left: 0.7rem; padding-right: 0.7rem; }
+  .ui-compact .sm\:px-5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+  .ui-compact .sm\:px-8 { padding-left: 1.4rem; padding-right: 1.4rem; }
+  .ui-compact .sm\:py-3 { padding-top: 0.525rem; padding-bottom: 0.525rem; }
+  .ui-compact .sm\:py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+  .ui-compact .sm\:pt-9 { padding-top: 1.575rem; }
+  .ui-compact .sm\:pb-7 { padding-bottom: 1.225rem; }
 }
 
-.ui-density-standard {
-  --ui-control-height: 40px;
-  --ui-row-y: 0.625rem;
-  --ui-card-padding: 0.875rem;
-  --ui-section-gap: 1.25rem;
+@media (min-width: 64rem) {
+  .ui-compact .lg\:p-3 { padding: 0.525rem; }
+  .ui-compact .lg\:p-4 { padding: 0.7rem; }
+  .ui-compact .lg\:px-4 { padding-left: 0.7rem; padding-right: 0.7rem; }
+  .ui-compact .lg\:px-6 { padding-left: 1.05rem; padding-right: 1.05rem; }
+  .ui-compact .lg\:py-4 { padding-top: 0.7rem; padding-bottom: 0.7rem; }
 }
 
-.ui-density-compact {
-  --ui-control-height: 36px;
-  --ui-row-y: 0.5rem;
-  --ui-card-padding: 0.75rem;
-  --ui-section-gap: 1rem;
-}
-
-.ui-density-comfortable .ui-density-card { padding: var(--ui-card-padding); }
-.ui-density-standard .ui-density-card { padding: var(--ui-card-padding); }
-.ui-density-compact .ui-density-card { padding: var(--ui-card-padding); }
 
 /* Accessibility and mobile interaction baseline. */
 .system-edition :focus-visible {
@@ -475,16 +515,6 @@ body {
 
 
 /* System Builder design tokens */
-.dark {
-  --ui-background: #020617;
-  --ui-surface: #0f172a;
-  --ui-surface-muted: #1e293b;
-  --ui-border: #334155;
-  --ui-text-primary: #f8fafc;
-  --ui-text-secondary: #cbd5e1;
-  --ui-text-muted: #94a3b8;
-}
-
 :root {
   --ui-space-1: .25rem;
   --ui-space-2: .5rem;
@@ -521,24 +551,3 @@ body {
 .command-item svg,.task-menu-item svg { width:16px; height:16px; }
 .command-item kbd { margin-left:auto; font-size:10px; color:rgb(148 163 184); }
 @media (max-width:47.999rem) { .system-app-shell main { padding-bottom:5.5rem; } }
-
-/* Production control hierarchy */
-.ui-btn { min-height:40px; border-radius:var(--ui-radius-control); padding:.5rem .75rem; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; font-size:.875rem; font-weight:600; transition:background-color var(--ui-duration-fast),border-color var(--ui-duration-fast),color var(--ui-duration-fast),transform var(--ui-duration-fast); }
-.ui-btn-primary { background:var(--ui-accent); color:white; }
-.ui-btn-secondary { background:var(--ui-surface); color:var(--ui-text-primary); border:1px solid var(--ui-border); }
-.ui-btn-ghost { color:var(--ui-text-secondary); background:transparent; }
-.ui-btn-danger { background:var(--ui-danger); color:white; }
-.ui-icon-btn { width:40px; min-width:40px; min-height:40px; padding:0; border-radius:var(--ui-radius-control); display:inline-flex; align-items:center; justify-content:center; }
-.ui-field { width:100%; min-height:44px; border:1px solid var(--ui-border); border-radius:var(--ui-radius-control); background:var(--ui-surface); color:var(--ui-text-primary); padding:.625rem .75rem; font-size:.875rem; }
-.ui-field::placeholder { color:var(--ui-text-muted); }
-.ui-field:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:none; }
-.ui-modal-surface { width:100%; max-width:32rem; max-height:min(88vh,760px); overflow:auto; border:1px solid var(--ui-border); border-radius:var(--ui-radius-surface); background:var(--ui-surface); box-shadow:var(--ui-shadow-float); }
-@media (max-width:39.999rem) { .ui-modal-surface { margin-top:auto; max-width:none; border-radius:20px 20px 0 0; max-height:88vh; } }
-
-/* Keep motion functional rather than decorative. */
-.ui-motion-section:hover,
-.ui-motion-shell:hover,
-.ui-motion-card:hover { transform:none; }
-@media (hover:hover) {
-  .command-item:hover,.task-menu-item:hover { background:var(--ui-surface-muted); }
-}

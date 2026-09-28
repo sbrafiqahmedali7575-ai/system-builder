@@ -63,7 +63,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   onAddHabit,
   onUpdateHabit,
   onCheckIn,
-  onDeleteHabit:
+  onDeleteHabit,
   isSyncing = false,
 }) => {
   const [activeTab, setActiveTab] = useState<MoreTab>('eisenhower');

@@ -344,6 +344,30 @@ function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
   };
 }
 
+function habitLogDocumentId(habitId: string, dateKey: string): string {
+  return `${habitId}_${dateKey}`;
+}
+
+async function commitBatchedMutations(
+  writes: Array<{
+    ref: DocumentReference<DocumentData>;
+    data?: Record<string, unknown>;
+    delete?: boolean;
+  }>
+): Promise<void> {
+  for (let index = 0; index < writes.length; index += 400) {
+    const batch = writeBatch(db);
+    writes.slice(index, index + 400).forEach((write) => {
+      if (write.delete) {
+        batch.delete(write.ref);
+      } else {
+        batch.set(write.ref, write.data || {}, { merge: true });
+      }
+    });
+    await batch.commit();
+  }
+}
+
 async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   const logsSnapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);

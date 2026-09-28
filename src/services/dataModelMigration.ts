@@ -315,10 +315,6 @@ async function migrateCanonicalIds(): Promise<void> {
   }
 }
 
-function canonicalHabitLogId(habitId: string, dateKey: string): string {
-  return `${habitId}_${dateKey}`;
-}
-
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   const [
     recordsSnap,
@@ -351,87 +347,8 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   );
   logsSnap.forEach((logDoc) => addHistoricalDate(logDoc.data().dateKey));
 
-  habitsSnap.forEach((habitDoc) => {
-    const data = habitDoc.data();
-    if (Array.isArray(data.checkIns)) {
-      data.checkIns.forEach((value: unknown) => addHistoricalDate(value));
-    }
-  });
-
-  // Today's due habits must also have explicit false rows when not checked.
-  dateKeys.add(today);
-
-  const completedByLogicalKey = new Map<string, boolean>();
-  logsSnap.docs.forEach((logDoc) => {
-    const data = logDoc.data();
-    const habitId = String(data.habitId || '');
-    const dateKey = toDateKey(data.dateKey);
-    if (!habitId || !dateKey || dateKey > today) return;
-
-    const key = `${habitId}::${dateKey}`;
-    if (data.Iscompleted === true) {
-      completedByLogicalKey.set(key, true);
-    }
-  });
-
-  const writes: QueuedWrite[] = [];
-
-  for (const habitDoc of habitsSnap.docs) {
-    const data = habitDoc.data() as Record<string, unknown>;
-    const habitId = String(data.habitId || habitDoc.id);
-    const legacyCompletedDates = new Set(
-      Array.isArray(data.checkIns)
-        ? data.checkIns.map((value) => toDateKey(value)).filter(Boolean)
-        : []
-    );
-
-    for (const dateKey of [...dateKeys].sort()) {
-      if (!isHabitDue(data, dateKey)) continue;
-
-      const logicalKey = `${habitId}::${dateKey}`;
-      const habitLogId = canonicalHabitLogId(habitId, dateKey);
-      const isCompleted =
-        completedByLogicalKey.get(logicalKey) === true ||
-        legacyCompletedDates.has(dateKey);
-
-      writes.push({
-        ref: doc(db, 'habitLogs', habitLogId),
-        data: {
-          habitLogId,
-          habitId,
-          dateKey,
-          Iscompleted: isCompleted,
-        },
-      });
-    }
-  }
-
-  await commitQueuedWrites(writes);
-
-  // Remove every legacy/duplicate HabitLog that is not the canonical
-  // {habitId}_{dateKey} document. Canonical rows created above preserve true
-  // if any duplicate copy was completed.
-  const deletes: DocumentReference[] = [];
-  logsSnap.docs.forEach((logDoc) => {
-    const data = logDoc.data();
-    const habitId = String(data.habitId || '');
-    const dateKey = toDateKey(data.dateKey);
-    if (!habitId || !dateKey || dateKey > today) return;
-
-    const canonicalId = canonicalHabitLogId(habitId, dateKey);
-    if (logDoc.id !== canonicalId) {
-      deletes.push(logDoc.ref);
-    }
-  });
-
-  for (let index = 0; index < deletes.length; index += MIGRATION_BATCH_LIMIT) {
-    const batch = writeBatch(db);
-    deletes
-      .slice(index, index + MIGRATION_BATCH_LIMIT)
-      .forEach((ref) => batch.delete(ref));
-    await batch.commit();
-  }
-
+  // Never manufacture HabitLogs for missing/future dates here. Existing
+  // HabitLogs are canonicalized to HL1, HL2... by migrateCanonicalIds().
   // Re-read canonical logs after deduplication and rebuild every historical
   // Day that has system history.
   const canonicalLogsSnap = await getDocs(collection(db, 'habitLogs'));

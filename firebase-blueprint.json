@@ -50,7 +50,7 @@
         },
         "IsdayCompleted": {
           "type": "boolean",
-          "description": "True only when taskCompletionRate is 100."
+          "description": "True when (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20) is at least 80."
         }
       },
       "required": [

@@ -186,6 +186,12 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             </div>
           </div>
 
+          <div className="flex items-center gap-1 shrink-0">
+            <button type="button" onClick={() => setIsTocOpen(v => !v)} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Table of contents"><List className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setIsSearchOpen(v => !v)} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Search this guide"><Search className="w-4 h-4" /></button>
+            <button type="button" onClick={toggleFavorite} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Favorite"><Star className={`w-4 h-4 ${favoriteBooks.includes(activeBookId) ? 'fill-current text-amber-500' : ''}`} /></button>
+            <button type="button" onClick={toggleComplete} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Mark complete"><Check className={`w-4 h-4 ${completedBooks.includes(activeBookId) ? 'text-emerald-600' : ''}`} /></button>
+            <button type="button" onClick={() => setIsFocusReader(v => !v)} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Distraction-free reading">{isFocusReader ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
           <div className="flex items-center gap-1.5 shrink-0">
             <div
               className={`hidden sm:flex items-center rounded-xl border p-1 ${
@@ -218,7 +224,12 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
           </div>
         </div>
 
-        <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
+        {!isFocusReader && (isTocOpen || isSearchOpen) && <div className="border-t border-slate-200/70 px-3 sm:px-5 py-3">
+          {isSearchOpen && <div className="relative max-w-xl mb-3"><Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search themes and ideas…" className="w-full h-9 pl-9 pr-9 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-blue-500" /><button onClick={() => {setSearchQuery('');setIsSearchOpen(false)}} className="absolute right-2 top-2 h-5 w-5"><X className="w-4 h-4" /></button></div>}
+          {isTocOpen && <div className="flex gap-2 overflow-x-auto pb-1"><button onClick={() => jumpTo('overview')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Overview</button>{activeBook.themes.map((t,i)=><button key={t.title} onClick={() => jumpTo(`theme-${i}`)} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">{t.title}</button>)}<button onClick={() => jumpTo('summary')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Summary</button></div>}
+        </div>}
+
+        {!isFocusReader &&         <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">}
           <div className="flex items-center gap-1.5 min-w-max">
             {CAL_NEWPORT_BOOKS.map((book, index) => (
               <button
@@ -237,10 +248,10 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               </button>
             ))}
           </div>
-        </div>
+        </div>}
       </header>
 
-      <div className="w-full px-3 sm:px-5 lg:px-7 py-4 lg:py-5">
+      <div className={`w-full ${isFocusReader ? 'px-0 py-0' : 'px-3 sm:px-5 lg:px-7 py-4 lg:py-5'}`}>
         <main className="min-w-0">
           <article
             className={`rounded-xl border overflow-hidden ${cardClasses}`}
@@ -274,12 +285,10 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
             <div
               className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10"
-              style={{
-                fontSize: `${fontScale}rem`,
-                fontFamily: 'Georgia, "Times New Roman", serif',
-              }}
+              onMouseUp={addHighlight}
+              style={{ fontSize: `${fontScale}rem`, fontFamily, lineHeight }}
             >
-              <section className="max-w-[820px] mx-auto">
+              <section id="overview" className={`${widthClass} mx-auto scroll-mt-28`}>
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="w-5 h-5 text-blue-600" />
                   <h3
@@ -316,6 +325,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <div className="space-y-5">
                   {activeBook.themes.map((themeItem, themeIndex) => (
                     <details
+                      id={`theme-${themeIndex}`}
                       key={themeItem.title}
                       open={themeIndex === 0}
                       className={`group rounded-xl border overflow-hidden ${
@@ -427,7 +437,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 }`}
               />
 
-              <section className="max-w-[820px] mx-auto">
+              <section id="summary" className={`${widthClass} mx-auto scroll-mt-28`}>
                 <div className="flex items-center gap-2 mb-4">
                   <BookMarked className="w-5 h-5 text-violet-600" />
                   <h3

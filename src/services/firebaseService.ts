@@ -171,7 +171,7 @@ function taskStoragePayload(task: TaskItem): Record<string, unknown> {
     title: task.taskOfTheDay.trim(),
     quadrant: matrixQuadrantToRoman(task.matrixQuadrant),
     scheduledDate: normalizeModelDateKey(task.taskKey) || task.taskKey,
-    taskOrder: Number.isInteger(task.taskOrder) && Number(task.taskOrder) > 0
+    sortOrder: Number.isInteger(task.taskOrder) && Number(task.taskOrder) > 0
       ? Number(task.taskOrder)
       : 1,
     notes: task.notes || '',
@@ -717,19 +717,25 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     tasks > 0 ? Math.round((tasksDone / tasks) * 100) : 0;
   const habitsCompleted =
     Habits > 0 ? Math.round((habitsDone / Habits) * 100) : 0;
-  const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
+  const taskCompletionRate = tasksCompleted;
+  const habitCompletionRate = habitsCompleted;
 
   await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
     dateKey,
-    tasksDone,
-    tasks,
-    tasksCompleted,
-    habitsDone,
-    Habits,
-    habitsCompleted,
-    dayCompleted,
-    IsdayCompleted: dayCompleted >= 80,
-  });
+    tasksCompleted: tasksDone,
+    taskTotal: tasks,
+    taskCompletionRate,
+    habitsCompleted: habitsDone,
+    habitTotal: Habits,
+    habitCompletionRate,
+    IsdayCompleted: tasks > 0 && taskCompletionRate === 100,
+    // Remove obsolete summary fields as the canonical model is rewritten.
+    tasksDone: deleteField(),
+    tasks: deleteField(),
+    habitsDone: deleteField(),
+    Habits: deleteField(),
+    dayCompleted: deleteField(),
+  }, { merge: true });
 
   // Keep dateKey as the single canonical Days document ID. Remove any
   // duplicate document whose stored dateKey represents today's same date.
@@ -873,7 +879,7 @@ export function subscribeToRecords(
         result: data.IsdayCompleted === true ? 'TRUE' : 'FALSE',
         change: 0,
         skill: 'Daily Review',
-        summary: `${Number(data.tasksDone || 0)}/${Number(data.tasks || 0)} tasks • ${Number(data.habitsDone || 0)}/${Number(data.Habits || 0)} habits`,
+        summary: `${Number(data.tasksCompleted ?? data.tasksDone ?? 0)}/${Number(data.taskTotal ?? data.tasks ?? 0)} tasks • ${Number(data.habitsCompleted ?? data.habitsDone ?? 0)}/${Number(data.habitTotal ?? data.Habits ?? 0)} habits`,
         notes: '',
       }));
       onUpdate(records);
@@ -951,8 +957,8 @@ export function subscribeToTasks(
           completedAt: data.completedAt ? String(data.completedAt) : undefined,
           matrixQuadrant: storedQuadrantToMatrix(data.quadrant),
           taskOrder:
-            Number.isInteger(Number(data.taskOrder)) && Number(data.taskOrder) > 0
-              ? Number(data.taskOrder)
+            Number.isInteger(Number(data.sortOrder ?? data.taskOrder)) && Number(data.sortOrder ?? data.taskOrder) > 0
+              ? Number(data.sortOrder ?? data.taskOrder)
               : 1,
         });
       });
@@ -998,10 +1004,10 @@ export function subscribeToTasks(
           const loadedTask = taskById.get(taskId);
           if (loadedTask) loadedTask.taskOrder = expectedOrder;
 
-          if (Number(taskDoc.data().taskOrder) !== expectedOrder || taskDoc.data().sortOrder !== undefined) {
+          if (Number(taskDoc.data().sortOrder ?? taskDoc.data().taskOrder) !== expectedOrder || taskDoc.data().taskOrder !== undefined) {
             repairBatch.set(
               taskDoc.ref,
-              { taskOrder: expectedOrder, sortOrder: deleteField() },
+              { sortOrder: expectedOrder, taskOrder: deleteField() },
               { merge: true }
             );
             needsRepair = true;
@@ -1053,9 +1059,18 @@ async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
   if (!matching.length) return;
   const batch = writeBatch(db);
   matching.forEach((d, index) => {
-    batch.set(d.ref, { taskOrder: index + 1, sortOrder: deleteField() }, { merge: true });
+    const data = d.data();
+    const expectedOrder = index + 1;
+    if (Number(data.sortOrder ?? data.taskOrder) !== expectedOrder || data.taskOrder !== undefined) {
+      batch.set(d.ref, { sortOrder: expectedOrder, taskOrder: deleteField() }, { merge: true });
+    }
   });
-  await batch.commit();
+  // Commit only when at least one document actually needs repair.
+  const needsWrite = matching.some((d, index) => {
+    const data = d.data();
+    return Number(data.sortOrder ?? data.taskOrder) !== index + 1 || data.taskOrder !== undefined;
+  });
+  if (needsWrite) await batch.commit();
 }
 
 /**
@@ -1090,7 +1105,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
     }
     transaction.set(taskRef, {
       ...taskStoragePayload(task),
-      taskOrder: sameDateCount + 1,
+      sortOrder: sameDateCount + 1,
     });
   });
 

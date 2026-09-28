@@ -297,7 +297,7 @@ function canonicalHabitLogId(habitId: string, dateKey: string): string {
   return `${habitId}_${dateKey}`;
 }
 
-async function repairCanonicalHabitLogsAndDays(): Promise<void> {
+export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   const [
     recordsSnap,
     tasksSnap,

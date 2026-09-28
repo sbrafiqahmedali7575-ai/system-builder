@@ -121,6 +121,37 @@ function storedQuadrantToMatrix(value: unknown): TaskItem['matrixQuadrant'] | un
   return undefined;
 }
 
+function normalizedTaskLogicalKey(task: TaskItem): string {
+  const dateKey = normalizeModelDateKey(task.taskKey);
+  const titleKey = task.taskOfTheDay
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase();
+  return `${dateKey}::${titleKey}`;
+}
+
+function preferTaskCopy(current: TaskItem, candidate: TaskItem): TaskItem {
+  const currentCanonical = /^T[1-9]\d*$/i.test(current.id);
+  const candidateCanonical = /^T[1-9]\d*$/i.test(candidate.id);
+
+  if (candidateCanonical !== currentCanonical) {
+    return candidateCanonical ? candidate : current;
+  }
+
+  if ((candidate.updatedAt || '') !== (current.updatedAt || '')) {
+    return (candidate.updatedAt || '') > (current.updatedAt || '')
+      ? candidate
+      : current;
+  }
+
+  return candidate.id.localeCompare(current.id, undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  }) < 0
+    ? candidate
+    : current;
+}
+
 function taskStoragePayload(task: TaskItem): Record<string, unknown> {
   return {
     taskId: task.id,
@@ -589,9 +620,23 @@ export function subscribeToTasks(
         });
       });
 
+      // Collapse stale duplicate documents by logical identity (date + title)
+      // before anything reaches the UI. The V7 migration removes the extra
+      // documents from Firestore; this keeps the dashboard clean immediately.
+      const dedupedByLogicalKey = new Map<string, TaskItem>();
+      fetchedTasks.forEach((task) => {
+        const key = normalizedTaskLogicalKey(task);
+        const existing = dedupedByLogicalKey.get(key);
+        dedupedByLogicalKey.set(
+          key,
+          existing ? preferTaskCopy(existing, task) : task
+        );
+      });
+      const visibleTasks = Array.from(dedupedByLogicalKey.values());
+
       // Normalize taskOrder in memory first so the UI never renders gaps.
       // Persist any differences to Firestore in parallel.
-      const taskById = new Map(fetchedTasks.map((task) => [task.id, task]));
+      const taskById = new Map(visibleTasks.map((task) => [task.id, task]));
       const byDate = new Map<string, typeof snapshot.docs>();
       snapshot.docs.forEach((taskDoc) => {
         const dateKey = normalizeModelDateKey(taskDoc.data().scheduledDate);
@@ -628,12 +673,12 @@ export function subscribeToTasks(
       });
 
       // Newest scheduledDate first; taskId DESC inside the same date.
-      fetchedTasks.sort((a, b) => {
+      visibleTasks.sort((a, b) => {
         const dateComparison = (b.taskKey || '').localeCompare(a.taskKey || '');
         if (dateComparison !== 0) return dateComparison;
         return b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' });
       });
-      onUpdate(fetchedTasks);
+      onUpdate(visibleTasks);
 
       if (needsRepair) {
         await repairBatch.commit();

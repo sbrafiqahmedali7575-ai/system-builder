@@ -369,6 +369,9 @@ async function commitBatchedMutations(
 }
 
 async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
+  // Enforce one row per (habitId, dateKey) before applying today's state.
+  // This also repairs duplicate historical rows left by older clients.
+  await deduplicateHabitLogsForAllDates();
   const logsSnapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
   const checkedToday = (habit.checkIns || [])
@@ -664,61 +667,12 @@ function storedHabitIsDue(data: Record<string, unknown>, dateKey: string): boole
 
 export async function ensureHabitLogsForDate(dateKey: string): Promise<void> {
   const normalizedDateKey = normalizeModelDateKey(dateKey);
-  if (!normalizedDateKey) return;
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  if (!normalizedDateKey || normalizedDateKey !== today) return;
 
-  const [habitsSnap, logsSnap] = await Promise.all([
-    getDocs(collection(db, HABITS_COLLECTION)),
-    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
-  ]);
-
-  const logsByHabit = new Map<string, Array<typeof logsSnap.docs[number]>>();
-  logsSnap.docs.forEach((logDoc) => {
-    const data = logDoc.data();
-    if (normalizeModelDateKey(data.dateKey) !== normalizedDateKey) return;
-
-    const habitId = String(data.habitId || '');
-    if (!habitId) return;
-
-    const rows = logsByHabit.get(habitId) || [];
-    rows.push(logDoc);
-    logsByHabit.set(habitId, rows);
-  });
-
-  const writes: Array<{
-    ref: DocumentReference<DocumentData>;
-    data?: Record<string, unknown>;
-    delete?: boolean;
-  }> = [];
-
-  habitsSnap.docs.forEach((habitDoc) => {
-    const data = habitDoc.data() as Record<string, unknown>;
-    if (!storedHabitIsDue(data, normalizedDateKey)) return;
-
-    const habitId = String(data.habitId || habitDoc.id);
-    const existing = logsByHabit.get(habitId) || [];
-    const canonicalId = habitLogDocumentId(habitId, normalizedDateKey);
-    const anyCompleted = existing.some(
-      (logDoc) => logDoc.data().Iscompleted === true
-    );
-
-    writes.push({
-      ref: doc(db, HABIT_LOGS_COLLECTION, canonicalId),
-      data: {
-        habitLogId: canonicalId,
-        habitId,
-        dateKey: normalizedDateKey,
-        Iscompleted: anyCompleted,
-      },
-    });
-
-    existing.forEach((logDoc) => {
-      if (logDoc.id !== canonicalId) {
-        writes.push({ ref: logDoc.ref, delete: true });
-      }
-    });
-  });
-
-  await commitBatchedMutations(writes);
+  // Current-day creation uses sequential HL IDs and the same uniqueness repair
+  // as check-in writes. Never create a second row for an existing habit/day.
+  await ensureCurrentDayHabitLogs();
 }
 
 export async function rebuildDaySummary(dateKey: string): Promise<void> {

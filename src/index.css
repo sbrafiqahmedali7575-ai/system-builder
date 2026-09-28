@@ -191,7 +191,7 @@ body {
 
 .system-edition button:hover:not(:disabled),
 .system-edition [role="button"]:hover {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .system-edition button:active:not(:disabled) {
@@ -208,7 +208,7 @@ body {
 }
 
 .system-edition ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(37, 99, 235, 0.65), rgba(239, 68, 68, 0.55));
+  background: rgba(100, 116, 139, 0.48);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -534,3 +534,11 @@ body {
 .ui-field:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:none; }
 .ui-modal-surface { width:100%; max-width:32rem; max-height:min(88vh,760px); overflow:auto; border:1px solid var(--ui-border); border-radius:var(--ui-radius-surface); background:var(--ui-surface); box-shadow:var(--ui-shadow-float); }
 @media (max-width:39.999rem) { .ui-modal-surface { margin-top:auto; max-width:none; border-radius:20px 20px 0 0; max-height:88vh; } }
+
+/* Keep motion functional rather than decorative. */
+.ui-motion-section:hover,
+.ui-motion-shell:hover,
+.ui-motion-card:hover { transform:none; }
+@media (hover:hover) {
+  .command-item:hover,.task-menu-item:hover { background:var(--ui-surface-muted); }
+}

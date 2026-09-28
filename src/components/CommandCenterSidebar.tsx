@@ -93,7 +93,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
             {achievedWeeks}
           </div>
           <div className="mt-0.5 text-[8px] font-bold text-slate-400">
-            weeks at 80%+ target
+            Target: 100 weeks
           </div>
         </div>
 

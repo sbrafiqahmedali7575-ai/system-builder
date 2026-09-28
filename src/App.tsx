@@ -24,6 +24,7 @@ import {
   addHabitToCloud,
   updateHabitInCloud,
   deleteHabitFromCloud,
+  initializeDayHabitStatus,
 } from './services/firebaseService';
 import {
   getCachedRecords,
@@ -37,6 +38,7 @@ import {
   isNetworkOrOfflineError,
 } from './services/offlineStorage';
 import { migrateLegacyDataModel } from './services/dataModelMigration';
+import { useCurrentDateKey } from './hooks/useCurrentDateKey';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
@@ -118,6 +120,7 @@ export default function App() {
     new Map()
   );
   const pendingTaskCreateKeysRef = useRef<Set<string>>(new Set());
+  const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -222,6 +225,29 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  // Materialize one HabitLog row for every habit due today, including
+  // Iscompleted=false for habits that have not been checked. The hook updates
+  // at midnight, so a new day's rows are created without requiring a refresh.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initializeTodayHabitRows() {
+      try {
+        await initializeDayHabitStatus(currentDateKey);
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('Unable to initialize today habit status rows:', error);
+        }
+      }
+    }
+
+    initializeTodayHabitRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentDateKey]);
 
   // Background sync for queued offline mutations when online
   useEffect(() => {

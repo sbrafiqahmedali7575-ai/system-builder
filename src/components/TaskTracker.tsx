@@ -282,8 +282,8 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     <div
       className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:overflow-y-auto lg:pr-1`}
     >
-      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col">
-        <div className="px-3 sm:px-4 pt-3 pb-2 border-b border-slate-100 bg-slate-50/60">
+      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden rounded-xl border border-slate-200 bg-white  flex flex-col">
+        <div className="px-3 sm:px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
           <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-slate-400">Plan ahead</p>
           <h2 className="text-sm font-medium text-slate-800">Task Planner</h2>
         </div>
@@ -303,7 +303,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
       {formOpen && (
         <div
           className={`${
-            compact ? 'rounded-xl p-3' : 'rounded-2xl p-4'
+            compact ? 'rounded-xl p-3' : 'rounded-xl p-4'
           } border border-slate-200 bg-slate-50`}
         >
           <div className="flex items-center justify-between gap-3 mb-3">

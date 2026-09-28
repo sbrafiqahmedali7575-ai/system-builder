@@ -18,6 +18,7 @@ export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
 const COUNTDOWN_TARGET_DATE_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_DATE';
 const COUNTDOWN_TARGET_REASON_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_REASON';
+const SYSTEM_BUILDER_START_DATE_KEY = '2026-08-01';
 
 interface ReportViewProps {
   records: DailyRecord[];
@@ -210,27 +211,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
     const todayUtc = toUtcDay(currentDateKey);
     const yesterdayUtc = todayUtc ? todayUtc - DAY_MS : 0;
 
-    const trackedDateCandidates = [
-      ...records.map((record) => toUtcDay(record.date)),
-      ...tasks.map((task) => toUtcDay(task.taskKey)),
-      ...habits.map((habit) =>
-        toUtcDay(habit.activeFrom || habit.createdAt)
-      ),
-    ].filter(
-      (timestamp) =>
-        timestamp > 0 &&
-        (!yesterdayUtc || timestamp <= yesterdayUtc)
-    );
+    const firstTrackedUtc = toUtcDay(SYSTEM_BUILDER_START_DATE_KEY);
 
-    if (!yesterdayUtc || trackedDateCandidates.length === 0) {
+    if (!yesterdayUtc || !firstTrackedUtc || yesterdayUtc < firstTrackedUtc) {
       return {
         completedDays: 0,
         totalDays: 0,
         completionRate: 0,
       };
     }
-
-    const firstTrackedUtc = Math.min(...trackedDateCandidates);
     const totalDays =
       Math.floor((yesterdayUtc - firstTrackedUtc) / DAY_MS) + 1;
 
@@ -257,7 +246,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       totalDays,
       completionRate,
     };
-  }, [records, tasks, habits, currentDateKey]);
+  }, [records, currentDateKey]);
 
   const currentFocusTask = useMemo(
     () =>

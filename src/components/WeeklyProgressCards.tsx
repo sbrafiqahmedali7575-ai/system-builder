@@ -157,26 +157,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                 Target {WEEKLY_TARGET_PERCENTAGE}%
               </span>
             </div>
-            <div
-              className="relative h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-visible"
-              role="progressbar"
-              aria-label="Weekly task progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={weekTaskScore}
-              aria-valuetext={`${weekTaskScore.toFixed(1)}%, target ${WEEKLY_TARGET_PERCENTAGE}%`}
-            >
-              <div
-                className="h-full rounded-full bg-blue-500 transition-all"
-                style={{ width: `${Math.min(100, Math.max(0, weekTaskScore))}%` }}
-              />
-              <span
-                className="absolute -top-1 h-4 w-0.5 rounded-full bg-slate-700 dark:bg-slate-200"
-                style={{ left: `${WEEKLY_TARGET_PERCENTAGE}%` }}
-                aria-hidden="true"
-              />
             </div>
-          </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1">
@@ -258,26 +239,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                 Target {WEEKLY_TARGET_PERCENTAGE}%
               </span>
             </div>
-            <div
-              className="relative h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-visible"
-              role="progressbar"
-              aria-label="Weekly habit progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={weekHabitScore}
-              aria-valuetext={`${weekHabitScore.toFixed(1)}%, target ${WEEKLY_TARGET_PERCENTAGE}%`}
-            >
-              <div
-                className="h-full rounded-full bg-blue-500 transition-all"
-                style={{ width: `${Math.min(100, Math.max(0, weekHabitScore))}%` }}
-              />
-              <span
-                className="absolute -top-1 h-4 w-0.5 rounded-full bg-slate-700 dark:bg-slate-200"
-                style={{ left: `${WEEKLY_TARGET_PERCENTAGE}%` }}
-                aria-hidden="true"
-              />
             </div>
-          </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1">

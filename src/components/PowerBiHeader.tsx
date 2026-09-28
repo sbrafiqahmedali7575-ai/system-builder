@@ -50,7 +50,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
       className="system-header w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs select-none sticky top-0 z-40 transition-colors"
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 sm:px-3 lg:px-4 h-16 max-w-7xl mx-auto">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-2 px-2 sm:px-3 lg:px-4 h-14 sm:h-16 max-w-7xl mx-auto">
         {/* Brand Zone */}
         <div className="flex items-center space-x-1.5 min-w-0">
           <a
@@ -88,7 +88,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
         </div>
 
         {/* Dynamic Quotes */}
-        <div className="min-w-0 flex justify-center px-1 sm:px-3">
+        <div className="min-w-0 hidden sm:flex justify-center px-1 sm:px-3">
           <motion.button
             type="button"
             onClick={showNextQuote}
@@ -104,7 +104,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.18 }}
-                className="hidden sm:block text-[11px] lg:text-xs font-semibold text-slate-500 dark:text-slate-400 leading-snug line-clamp-1 tracking-normal"
+                className="text-[11px] lg:text-xs font-semibold text-slate-500 dark:text-slate-400 leading-snug line-clamp-1 tracking-normal"
               >
                 <span className="text-blue-500/80 dark:text-blue-300/80">“</span>
                 {HEADER_QUOTES[quoteIndex]}

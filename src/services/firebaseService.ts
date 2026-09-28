@@ -688,13 +688,10 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
   });
 
   const tasksCompleted =
-    tasks > 0 ? Math.round((tasksDone / tasks) * 10000) / 100 : 0;
+    tasks > 0 ? Math.round((tasksDone / tasks) * 100) : 0;
   const habitsCompleted =
-    Habits > 0 ? Math.round((habitsDone / Habits) * 10000) / 100 : 0;
-  const dayCompleted =
-    Math.round(
-      (tasksCompleted * 0.8 + habitsCompleted * 0.2) * 100
-    ) / 100;
+    Habits > 0 ? Math.round((habitsDone / Habits) * 100) : 0;
+  const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
 
   await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
     dateKey,

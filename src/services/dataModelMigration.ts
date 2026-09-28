@@ -314,65 +314,6 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   await commitQueuedWrites(dayWrites);
 }
 
-function taskUniqueKeyDocumentId(logicalKey: string): string {
-  let hash = 0xcbf29ce484222325n;
-  for (const character of logicalKey) {
-    hash ^= BigInt(character.codePointAt(0) || 0);
-    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
-  }
-  return hash.toString(16).padStart(16, '0');
-}
-
-async function rebuildTaskUniqueKeys(): Promise<void> {
-  const [tasksSnap, uniqueKeysSnap] = await Promise.all([
-    getDocs(collection(db, 'tasks')),
-    getDocs(collection(db, 'taskUniqueKeys')),
-  ]);
-
-  // Remove stale reservations first. The task collection is canonical after
-  // deduplication, so rebuilding from scratch is safer than trying to repair
-  // old reservations individually.
-  for (let i = 0; i < uniqueKeysSnap.docs.length; i += MIGRATION_BATCH_LIMIT) {
-    const batch = writeBatch(db);
-    uniqueKeysSnap.docs
-      .slice(i, i + MIGRATION_BATCH_LIMIT)
-      .forEach((keyDoc) => batch.delete(keyDoc.ref));
-    await batch.commit();
-  }
-
-  const writes: QueuedWrite[] = [];
-  const seenDocumentIds = new Map<string, string>();
-
-  tasksSnap.docs.forEach((taskDoc) => {
-    const data = taskDoc.data() as Record<string, unknown>;
-    const scheduledDate = toDateKey(data.scheduledDate || data.taskKey);
-    const normalizedTitle = normalizedTaskTitleKey(data.title || data.taskOfTheDay);
-    if (!scheduledDate || !normalizedTitle) return;
-
-    const logicalKey = `${scheduledDate}::${normalizedTitle}`;
-    const documentId = taskUniqueKeyDocumentId(logicalKey);
-    const existingLogicalKey = seenDocumentIds.get(documentId);
-
-    if (existingLogicalKey && existingLogicalKey !== logicalKey) {
-      throw new Error('Task uniqueness hash collision detected.');
-    }
-    seenDocumentIds.set(documentId, logicalKey);
-
-    writes.push({
-      ref: doc(db, 'taskUniqueKeys', documentId),
-      data: {
-        logicalKey,
-        taskId: String(data.taskId || taskDoc.id),
-        scheduledDate,
-        normalizedTitle,
-        updatedAt: new Date().toISOString(),
-      },
-    });
-  });
-
-  await commitQueuedWrites(writes);
-}
-
 function normalizedTaskTitleKey(value: unknown): string {
   return String(value ?? '')
     .trim()
@@ -757,13 +698,10 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   // Safety: normal startup migration never re-keys canonical documents.
   // Existing Firestore document IDs are immutable here; field normalization
   // happens in place. This avoids copy/delete data-loss windows on reload.
-  await Promise.all(['T51', 'T52', 'T53'].map((taskId) => deleteDoc(doc(db, 'tasks', taskId))));
-  await deleteDoc(doc(db, 'days', '2026-09-29'));
   // Never reset HabitLogs during normal startup migration. Check-ins are live
   // user data and must survive reloads. The old nine-row reset was a one-time
   // historical repair and would overwrite today's Iscompleted values.
   await repairCanonicalHabitLogsAndDays();
-  await rebuildTaskUniqueKeys();
   await backfillTaskOrder();
   return result;
 }

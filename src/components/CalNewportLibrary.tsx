@@ -284,6 +284,28 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
         </div>}
       </header>
 
+      {pendingSelection && <div className="absolute z-[100] w-[200px] rounded-xl border border-slate-200 bg-white shadow-lg p-2" style={{ left: pendingSelection.x, top: pendingSelection.y }}>
+        <div className="text-[11px] text-slate-500 px-1 pb-2 truncate">{pendingSelection.text}</div>
+        <div className="flex items-center justify-between">
+          {(['yellow','blue','pink','green'] as HighlightColor[]).map(color => <button key={color} onClick={() => createHighlight(color)} aria-label={`Highlight ${color}`} className={`w-7 h-7 rounded-full border border-black/10 ${color==='yellow'?'bg-yellow-300':color==='blue'?'bg-blue-300':color==='pink'?'bg-pink-300':'bg-green-300'}`} />)}
+          <button onClick={() => setPendingSelection(null)} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100"><X className="w-4 h-4" /></button>
+        </div>
+      </div>}
+
+      {isHighlightsOpen && <aside className="fixed right-0 top-0 z-[90] h-screen w-full sm:w-[380px] border-l border-slate-200 bg-white shadow-xl flex flex-col">
+        <div className="h-14 px-4 border-b border-slate-200 flex items-center justify-between"><div><div className="font-semibold text-sm">Highlights & Notes</div><div className="text-[11px] text-slate-500">{activeBook.shortTitle} · {(highlights[activeBookId]||[]).length} highlights</div></div><button onClick={() => setIsHighlightsOpen(false)} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><X className="w-4 h-4" /></button></div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {(highlights[activeBookId]||[]).length === 0 ? <div className="py-16 text-center text-sm text-slate-500">Select text in the reader to create your first highlight.</div> : (highlights[activeBookId]||[]).slice().reverse().map(item => <div key={item.id} className="rounded-lg border border-slate-200 p-3">
+            <button onClick={() => { jumpTo(item.sectionId); setIsHighlightsOpen(false); }} className="w-full text-left">
+              <div className={`border-l-4 pl-2 text-sm leading-6 ${item.color==='yellow'?'border-yellow-400':item.color==='blue'?'border-blue-400':item.color==='pink'?'border-pink-400':'border-green-400'}`}>{item.text}</div>
+              <div className="mt-2 text-[10px] text-slate-400">{new Date(item.createdAt).toLocaleString()}</div>
+            </button>
+            <textarea value={item.note} onChange={e => updateHighlightNote(item.id,e.target.value)} placeholder="Add note…" rows={2} className="mt-2 w-full resize-none rounded-md border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-500" />
+            <div className="mt-2 flex justify-end"><button onClick={() => deleteHighlight(item.id)} className="text-[11px] text-red-500 hover:text-red-600">Delete</button></div>
+          </div>)}
+        </div>
+      </aside>}
+
       <div className={`w-full ${isFocusReader ? 'px-0 py-0' : 'px-3 sm:px-5 lg:px-7 py-4 lg:py-5'}`}>
         <main className="min-w-0">
           <article

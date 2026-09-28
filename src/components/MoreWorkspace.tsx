@@ -25,6 +25,7 @@ interface MoreWorkspaceProps {
   onToggleTaskStatus: (taskId: string) => Promise<void>;
   onAddHabit: (habit: Omit<HabitItem, 'id'>) => Promise<void>;
   onUpdateHabit: (habit: HabitItem) => Promise<void>;
+  onCheckIn: (habit: HabitItem, isCompleted: boolean) => Promise<void>;
   onDeleteHabit: (habitId: string) => Promise<void>;
   isSyncing?: boolean;
 }
@@ -61,7 +62,8 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   onToggleTaskStatus,
   onAddHabit,
   onUpdateHabit,
-  onDeleteHabit,
+  onCheckIn,
+  onDeleteHabit:
   isSyncing = false,
 }) => {
   const [activeTab, setActiveTab] = useState<MoreTab>('eisenhower');
@@ -170,6 +172,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               habits={habits}
               onAddHabit={onAddHabit}
               onUpdateHabit={onUpdateHabit}
+              onCheckIn={onCheckIn}
               onDeleteHabit={onDeleteHabit}
               density="compact"
             />

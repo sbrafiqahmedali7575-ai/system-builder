@@ -164,7 +164,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={onOpenLibrary}
-              className="p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition cursor-pointer"
+              className="hidden sm:inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-300 transition cursor-pointer"
               title="Open Cal Newport books"
               aria-label="Open Cal Newport books"
             >
@@ -174,14 +174,14 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
 
           {onOpenTools && (
             <motion.button
-              whileHover={{ y: -2, scale: 1.03 }}
+              whileHover={{ y: -1 }}
               whileTap={{ scale: 0.95 }}
               onClick={onOpenTools}
               aria-current={isToolsPage ? 'page' : undefined}
               className={`group relative p-1.5 rounded-xl border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 isToolsPage
                   ? 'bg-blue-600 border-blue-600 text-white shadow-sm ring-1 ring-blue-300'
-                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-700 dark:hover:text-blue-300'
+                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-300'
               }`}
               title={isToolsPage ? 'Tools — current page' : 'Open System Builder tools'}
               aria-label={isToolsPage ? 'Tools, current page' : 'Open System Builder tools'}

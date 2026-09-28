@@ -42,7 +42,7 @@ const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
-const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V6_HABIT_LOG_IDS_MIGRATED';
+const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V7_TASK_DEDUPLICATION_MIGRATED';
 type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }
   | { kind: 'delete' };
@@ -117,6 +117,7 @@ export default function App() {
   const pendingTaskMutationsRef = useRef<Map<string, PendingTaskMutation>>(
     new Map()
   );
+  const pendingTaskCreateKeysRef = useRef<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -470,6 +471,24 @@ export default function App() {
 
   // Add a new task
   const handleAddTask = async (taskData: Omit<TaskItem, 'id'>) => {
+    const normalizedTitle = taskData.taskOfTheDay.trim().replace(/\s+/g, ' ').toLowerCase();
+    const normalizedDate = standardizeDate(taskData.taskKey) || taskData.taskKey;
+    const logicalCreateKey = `${normalizedDate}::${normalizedTitle}`;
+
+    const duplicateInState = tasks.some(
+      (task) =>
+        (standardizeDate(task.taskKey) || task.taskKey) === normalizedDate &&
+        task.taskOfTheDay.trim().replace(/\s+/g, ' ').toLowerCase() === normalizedTitle
+    );
+
+    if (duplicateInState || pendingTaskCreateKeysRef.current.has(logicalCreateKey)) {
+      throw new Error(
+        `Duplicate task rejected: A task named "${taskData.taskOfTheDay.trim()}" already exists for this date.`
+      );
+    }
+
+    pendingTaskCreateKeysRef.current.add(logicalCreateKey);
+
     const highestExistingTaskNumber = tasks.reduce((highest, task) => {
       const match = /^T(\d+)$/i.exec(task.id);
       return match ? Math.max(highest, Number(match[1])) : highest;
@@ -509,6 +528,7 @@ export default function App() {
         throw err;
       }
     } finally {
+      pendingTaskCreateKeysRef.current.delete(logicalCreateKey);
       setIsSyncing(false);
     }
   };

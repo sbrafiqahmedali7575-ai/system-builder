@@ -315,6 +315,31 @@ async function migrateCanonicalIds(): Promise<void> {
   }
 }
 
+async function resetHabitLogsToRequestedNineRows(): Promise<void> {
+  const snapshot = await getDocs(collection(db, 'habitLogs'));
+  const batch = writeBatch(db);
+
+  snapshot.docs.forEach((logDoc) => batch.delete(logDoc.ref));
+
+  const rows = [
+    { habitLogId: 'HL1', habitId: '1', dateKey: '2026-09-26', Iscompleted: true },
+    { habitLogId: 'HL2', habitId: '2', dateKey: '2026-09-26', Iscompleted: false },
+    { habitLogId: 'HL3', habitId: '3', dateKey: '2026-09-26', Iscompleted: true },
+    { habitLogId: 'HL4', habitId: '1', dateKey: '2026-09-27', Iscompleted: true },
+    { habitLogId: 'HL5', habitId: '2', dateKey: '2026-09-27', Iscompleted: false },
+    { habitLogId: 'HL6', habitId: '3', dateKey: '2026-09-27', Iscompleted: true },
+    { habitLogId: 'HL7', habitId: '1', dateKey: '2026-09-28', Iscompleted: true },
+    { habitLogId: 'HL8', habitId: '2', dateKey: '2026-09-28', Iscompleted: true },
+    { habitLogId: 'HL9', habitId: '3', dateKey: '2026-09-28', Iscompleted: true },
+  ];
+
+  rows.forEach((row) => {
+    batch.set(doc(db, 'habitLogs', row.habitLogId), row);
+  });
+
+  await batch.commit();
+}
+
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   const [
     recordsSnap,
@@ -868,6 +893,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   // Re-run after re-keying so an interrupted older migration cannot leave a
   // legacy-key copy beside its canonical T# copy.
   await deduplicateTasksByLogicalKey();
+  await resetHabitLogsToRequestedNineRows();
   await repairCanonicalHabitLogsAndDays();
   await rebuildTaskUniqueKeys();
   await backfillTaskOrder();

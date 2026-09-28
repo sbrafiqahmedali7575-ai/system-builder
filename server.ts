@@ -62,14 +62,14 @@ async function startServer() {
 
       daysSnap.forEach((d) => {
         const x = d.data();
-        const required = ['dateKey','tasksCompleted','taskTotal','taskCompletionRate','habitsCompleted','habitTotal','habitCompletionRate','dayCompleted','IsdayCompleted'];
+        const required = ['dateKey','tasksDone','tasks','tasksCompleted','habitsDone','Habits','habitsCompleted','dayCompleted','IsdayCompleted'];
         const missing = required.filter((k) => x[k] === undefined);
         if (missing.length) issues.push(`Days/${d.id}: missing ${missing.join(', ')}.`);
         const expectedDayCompleted =
           Math.round(
             (
-              Number(x.taskCompletionRate || 0) * 0.8 +
-              Number(x.habitCompletionRate || 0) * 0.2
+              Number(x.tasksCompleted || 0) * 0.8 +
+              Number(x.habitsCompleted || 0) * 0.2
             ) * 100
           ) / 100;
         if (Math.abs(Number(x.dayCompleted || 0) - expectedDayCompleted) > 0.001) {

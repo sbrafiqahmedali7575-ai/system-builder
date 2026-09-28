@@ -282,51 +282,6 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     <div
       className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:overflow-y-auto lg:pr-1`}
     >
-      <div
-        className={`flex flex-col lg:flex-row lg:items-center justify-between ${
-          compact ? 'gap-2' : 'gap-3'
-        }`}
-      >
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
-            Consistency workspace
-          </p>
-          <h2
-            className={`${
-              compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'
-            } font-black tracking-tight`}
-          >
-            Task Tracker
-          </h2>
-          <p
-            className={`${
-              compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'
-            } font-semibold text-slate-600 hidden md:block`}
-          >
-            Daily tasks, weekly completion, streaks, and achievement history.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={formOpen && !editingTaskId ? closeForm : openAdd}
-            className={`${
-              compact
-                ? 'h-8 px-2.5 rounded-lg text-xs gap-1.5'
-                : 'h-10 px-3 rounded-xl text-sm gap-2'
-            } bg-blue-600 text-white font-black inline-flex items-center`}
-          >
-            {formOpen && !editingTaskId ? (
-              <X className="w-4 h-4" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-            {formOpen && !editingTaskId ? 'Cancel' : 'Add Task'}
-          </button>
-        </div>
-      </div>
-
       <div className="h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden bg-white">
         <CalendarWorkspace
           tasks={tasks}

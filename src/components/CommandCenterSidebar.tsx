@@ -38,23 +38,23 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   return (
     <aside
       aria-label="Command Center"
-      className={`system-secondary-panel h-full min-h-0 overflow-hidden p-2.5 rounded-2xl border flex flex-col transition-all ${
+      className={`system-secondary-panel h-full min-h-0 overflow-hidden p-3 rounded-xl border flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
       <div className="shrink-0 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
-        <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Command Center
         </h2>
-        <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
+        <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-400">
           <span>Current day</span>
-          <span className="font-mono font-black text-slate-600 dark:text-slate-300">
+          <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">
             {currentDayFormatted}
           </span>
           <span>•</span>
-          <span className="font-black text-slate-600 dark:text-slate-300">
+          <span className="font-semibold text-slate-600 dark:text-slate-300">
             {currentDayName}
           </span>
         </div>
@@ -71,28 +71,28 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
             progressClassName="text-blue-500"
           />
           <div className="min-w-0">
-            <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
+            <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide font-semibold text-slate-400">
               <Award className="w-3 h-3 text-blue-500" />
               Overall
             </div>
-            <div className="mt-0.5 text-[10px] font-black text-slate-700 dark:text-slate-200">
+            <div className="mt-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
               {overallCompletionPercentage.toFixed(1)}%
             </div>
-            <div className="text-[8px] font-bold text-slate-400">
+            <div className="text-[11px] font-bold text-slate-400">
               {completedDays}/{totalDays} days
             </div>
           </div>
         </div>
 
         <div className="min-w-0 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
-          <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
+          <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide font-semibold text-slate-400">
             <Trophy className="w-3 h-3 text-blue-500" />
             Achieved Weeks
           </div>
-          <div className="mt-1 text-2xl leading-none font-black font-mono text-slate-800 dark:text-slate-100">
+          <div className="mt-1 text-2xl leading-none font-semibold font-mono text-slate-800 dark:text-slate-100">
             {achievedWeeks}
           </div>
-          <div className="mt-0.5 text-[8px] font-bold text-slate-400">
+          <div className="mt-0.5 text-[11px] font-bold text-slate-400">
             Target: 100 weeks
           </div>
         </div>
@@ -105,17 +105,17 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
           aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
         >
-          <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
+          <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide font-semibold text-slate-400">
             <Hourglass className="w-3 h-3 text-blue-500" />
             Countdown
           </div>
-          <div className="mt-1 text-2xl leading-none font-black font-mono text-blue-600 dark:text-blue-300">
+          <div className="mt-1 text-2xl leading-none font-semibold font-mono text-blue-600 dark:text-blue-300">
             {countdownDaysRemaining}
           </div>
-          <div className="mt-0.5 text-[8px] font-bold text-slate-400">
+          <div className="mt-0.5 text-[11px] font-bold text-slate-400">
             days left
           </div>
-          <div className="mt-1 truncate text-[8px] font-semibold text-slate-500 dark:text-slate-400">
+          <div className="mt-1 truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             {countdownTargetLabel}
           </div>
         </button>

@@ -1,0 +1,75 @@
+name: Day Completed Live Backfill
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/day-completed-live-backfill.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+
+      - name: Backfill and verify dayCompleted
+        run: |
+          cat > day-completed-backfill.ts <<'TS'
+          import { collection, getDocs } from 'firebase/firestore';
+          import { db } from './src/services/firebaseService.ts';
+          import { repairCanonicalHabitLogsAndDays } from './src/services/dataModelMigration.ts';
+
+          await repairCanonicalHabitLogsAndDays();
+
+          const daysSnap = await getDocs(collection(db, 'days'));
+          let missing = 0;
+          let formulaMismatch = 0;
+          let statusMismatch = 0;
+          const samples:any[] = [];
+
+          daysSnap.forEach((d) => {
+            const x = d.data();
+            const expected =
+              Math.round(
+                (
+                  Number(x.taskCompletionRate || 0) * 0.8 +
+                  Number(x.habitCompletionRate || 0) * 0.2
+                ) * 100
+              ) / 100;
+
+            if (typeof x.dayCompleted !== 'number') missing += 1;
+            if (Math.abs(Number(x.dayCompleted || 0) - expected) > 0.001) formulaMismatch += 1;
+            if ((x.IsdayCompleted === true) !== (expected >= 80)) statusMismatch += 1;
+
+            if (samples.length < 8) {
+              samples.push({
+                dateKey: String(x.dateKey || d.id),
+                taskCompletionRate: Number(x.taskCompletionRate || 0),
+                habitCompletionRate: Number(x.habitCompletionRate || 0),
+                dayCompleted: Number(x.dayCompleted || 0),
+                IsdayCompleted: x.IsdayCompleted === true,
+              });
+            }
+          });
+
+          console.log('AUDIT=' + JSON.stringify({
+            dayCount: daysSnap.size,
+            missingDayCompleted: missing,
+            formulaMismatch,
+            statusMismatch,
+            samples,
+          }));
+
+          if (missing || formulaMismatch || statusMismatch) process.exitCode = 1;
+          TS
+
+          bun day-completed-backfill.ts
+          rm -f day-completed-backfill.ts

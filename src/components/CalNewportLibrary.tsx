@@ -249,6 +249,20 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             ))}
           </div>
         </div>}
+        {!isFocusReader && <div className="border-t border-slate-200/70 px-3 sm:px-5 py-2 flex items-center gap-2 overflow-x-auto">
+          <span className="text-[11px] text-slate-500 whitespace-nowrap">{Math.round(readingProgress)}% · ~{remainingMinutes} min left</span>
+          <span className="h-4 w-px bg-slate-200" />
+          <button onClick={() => setReaderTone('paper')} data-active={readerTone==='paper'} className="px-2 h-7 rounded-md text-xs bg-slate-100">Light</button>
+          <button onClick={() => setReaderTone('sepia')} data-active={readerTone==='sepia'} className="px-2 h-7 rounded-md text-xs bg-amber-50">Sepia</button>
+          <button onClick={() => setReaderTone('night')} data-active={readerTone==='night'} className="px-2 h-7 rounded-md text-xs bg-slate-800 text-white">Dark</button>
+          <span className="h-4 w-px bg-slate-200" />
+          <button onClick={() => setReaderFont(v => v==='serif'?'sans':'serif')} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Type className="inline w-3.5 h-3.5 mr-1" />{readerFont}</button>
+          <button onClick={() => setLineHeight(v => v >= 2.1 ? 1.6 : Number((v+.1).toFixed(1)))} className="px-2 h-7 rounded-md text-xs bg-slate-100"><AlignJustify className="inline w-3.5 h-3.5 mr-1" />Spacing</button>
+          <button onClick={() => setReaderWidth(v => v==='narrow'?'medium':v==='medium'?'wide':'narrow')} className="px-2 h-7 rounded-md text-xs bg-slate-100">Width: {readerWidth}</button>
+          <button onClick={() => toggleBookmark(currentSections[Math.min(currentSections.length-1, Math.floor(readingProgress/100*currentSections.length))])} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Bookmark className="inline w-3.5 h-3.5 mr-1" />Bookmark</button>
+          <button onClick={() => { const note=window.prompt('Add a note for this book', notes[activeBookId] || ''); if(note!==null)setNotes(p=>({...p,[activeBookId]:note})); }} className="px-2 h-7 rounded-md text-xs bg-slate-100"><StickyNote className="inline w-3.5 h-3.5 mr-1" />Note</button>
+          <span className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100"><Highlighter className="w-3.5 h-3.5 mr-1" />{(highlights[activeBookId]||[]).length}</span>
+        </div>}
       </header>
 
       <div className={`w-full ${isFocusReader ? 'px-0 py-0' : 'px-3 sm:px-5 lg:px-7 py-4 lg:py-5'}`}>
@@ -301,7 +315,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <div className="space-y-5 leading-[1.9]">
                   {activeBook.overview.map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>
-                  ))}
+                  )})}
                 </div>
               </section>
 
@@ -323,7 +337,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 </div>
 
                 <div className="space-y-5">
-                  {activeBook.themes.map((themeItem, themeIndex) => (
+                  {activeBook.themes.filter((themeItem) => !searchQuery || [themeItem.title, themeItem.shortIdea, ...themeItem.explanation].join(' ').toLowerCase().includes(searchQuery.toLowerCase())).map((themeItem) => { const themeIndex = activeBook.themes.indexOf(themeItem); return (
                     <details
                       id={`theme-${themeIndex}`}
                       key={themeItem.title}

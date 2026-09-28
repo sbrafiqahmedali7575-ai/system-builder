@@ -180,24 +180,8 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
  * - Non-destructive: legacy fields and source collections remain untouched.
  * - Same-ID migration: existing task/habit document IDs are preserved.
  */
-function simpleTaskId(index: number): string {
-  return `T${index + 1}`;
-}
-
-function simpleHabitLogId(index: number): string {
-  return `HL${index + 1}`;
-}
-
-function isSimpleHabitId(value: string): boolean {
-  return /^[1-9]\d*$/.test(value);
-}
-
 function isSimpleTaskId(value: string): boolean {
   return /^T[1-9]\d*$/.test(value);
-}
-
-function isSimpleHabitLogId(value: string): boolean {
-  return /^HL[1-9]\d*$/.test(value);
 }
 
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {

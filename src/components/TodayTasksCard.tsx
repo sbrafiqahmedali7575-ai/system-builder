@@ -468,7 +468,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       initial={{ opacity: 0, y: 14, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className={`system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-2.5 sm:p-3 rounded-2xl border flex-1 flex flex-col transition-all ${
+      className={`system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-2.5 sm:p-3 rounded-2xl border flex-1 flex flex-col ui-density-card transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
@@ -528,7 +528,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => setActiveDateTab('TODAY')}
-            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer min-h-10 ${
               activeDateTab === 'TODAY'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : isDark
@@ -542,7 +542,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => setActiveDateTab('TOMORROW')}
-            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer min-h-10 ${
               activeDateTab === 'TOMORROW'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : isDark
@@ -559,7 +559,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             onClick={() => handleOpenEnterPanel()}
             title="Add Task"
             aria-label="Add Task"
-            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl transition cursor-pointer min-h-10 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -577,7 +577,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 : 'Review today tasks before marking the day'
             }
             aria-label="Review today's tasks"
-            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer min-h-10 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -629,7 +629,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => handleOpenEnterPanel()}
-            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition cursor-pointer min-h-10"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first task</span>
@@ -833,7 +833,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsEnterPanelOpen(false)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer min-h-10"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -849,7 +849,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setPanelDateTab('TODAY')}
-                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer ${
+                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer min-h-10 ${
                       panelDateTab === 'TODAY'
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : isDark
@@ -865,7 +865,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setPanelDateTab('TOMORROW')}
-                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer ${
+                    className={`flex flex-col items-start p-1.5 rounded-xl border text-left transition cursor-pointer min-h-10 ${
                       panelDateTab === 'TOMORROW'
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : isDark
@@ -1119,7 +1119,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setEditCompleted(!editCompleted)}
-                    className={`flex items-center space-x-1 w-full p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                    className={`flex items-center space-x-1 w-full p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer min-h-10 ${
                       editCompleted
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
@@ -1153,7 +1153,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="submit"
                     disabled={isSavingEdit || !editTitle.trim()}
-                    className={`px-2 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer ${
+                    className={`px-2 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer min-h-10 ${
                       isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   >
@@ -1210,7 +1210,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   type="button"
                   disabled={isDeleting}
                   onClick={handleConfirmDelete}
-                  className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-semibold transition cursor-pointer shadow-xs"
+                  className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-semibold transition cursor-pointer min-h-10 shadow-xs"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete Task'}
                 </button>

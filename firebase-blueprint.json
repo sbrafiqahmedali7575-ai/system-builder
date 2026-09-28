@@ -143,6 +143,27 @@
         "color": {
           "type": "string",
           "description": "Hex color"
+        },
+        "inactivePeriods": {
+          "type": "array",
+          "description": "Internal pause history. Each item has inclusive from/to YYYY-MM-DD dates; to is null while currently inactive.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from"
+            ]
+          }
         }
       },
       "required": [

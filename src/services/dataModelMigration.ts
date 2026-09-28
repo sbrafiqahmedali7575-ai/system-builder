@@ -473,34 +473,34 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
     const dayTasks = normalizedTasks.filter(
       (task) => task.scheduledDate === dateKey
     );
-    const taskTotal = dayTasks.length;
-    const tasksCompleted = dayTasks.filter((task) => task.Iscompleted).length;
-    const taskCompletionRate = roundedRate(tasksCompleted, taskTotal);
+    const tasks = dayTasks.length;
+    const tasksDone = dayTasks.filter((task) => task.Iscompleted).length;
+    const tasksCompleted = roundedRate(tasksDone, tasks);
 
     const dueHabits = normalizedHabits.filter((habit) =>
       isHabitDue(habit.data, dateKey)
     );
-    const habitTotal = dueHabits.length;
+    const Habits = dueHabits.length;
     const completedHabitIds = completedByDate.get(dateKey) || new Set<string>();
-    const habitsCompleted = dueHabits.filter((habit) =>
+    const habitsDone = dueHabits.filter((habit) =>
       completedHabitIds.has(habit.id)
     ).length;
-    const habitCompletionRate = roundedRate(habitsCompleted, habitTotal);
+    const habitsCompleted = roundedRate(habitsDone, Habits);
     const dayCompleted =
       Math.round(
-        (taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 100
+        (tasksCompleted * 0.8 + habitsCompleted * 0.2) * 100
       ) / 100;
 
     dayWrites.push({
       ref: doc(db, 'days', dateKey),
       data: {
         dateKey,
+        tasksDone,
+        tasks,
         tasksCompleted,
-        taskTotal,
-        taskCompletionRate,
+        habitsDone,
+        Habits,
         habitsCompleted,
-        habitTotal,
-        habitCompletionRate,
         dayCompleted,
         IsdayCompleted: dayCompleted >= 80,
       },
@@ -908,9 +908,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
 
   for (const dateKey of [...dateKeys].sort()) {
     const dayTasks = normalizedTasks.filter((task) => task.scheduledDate === dateKey);
-    const tasksCompleted = dayTasks.filter((task) => task.Iscompleted).length;
-    const taskTotal = dayTasks.length;
-    const taskCompletionRate = roundedRate(tasksCompleted, taskTotal);
+    const tasksDone = dayTasks.filter((task) => task.Iscompleted).length;
+    const tasks = dayTasks.length;
+    const tasksCompleted = roundedRate(tasksDone, tasks);
 
     const dueHabits = normalizedHabits.filter((habit) =>
       isHabitDue(
@@ -924,26 +924,26 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
       )
     );
 
-    const habitsCompleted = dueHabits.filter((habit) =>
+    const habitsDone = dueHabits.filter((habit) =>
       habit.checkIns.includes(dateKey)
     ).length;
-    const habitTotal = dueHabits.length;
-    const habitCompletionRate = roundedRate(habitsCompleted, habitTotal);
+    const Habits = dueHabits.length;
+    const habitsCompleted = roundedRate(habitsDone, Habits);
     const dayCompleted =
       Math.round(
-        (taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 100
+        (tasksCompleted * 0.8 + habitsCompleted * 0.2) * 100
       ) / 100;
 
     writes.push({
       ref: doc(db, 'days', dateKey),
       data: {
         dateKey,
+        tasksDone,
+        tasks,
         tasksCompleted,
-        taskTotal,
-        taskCompletionRate,
+        habitsDone,
+        Habits,
         habitsCompleted,
-        habitTotal,
-        habitCompletionRate,
         dayCompleted,
         IsdayCompleted: dayCompleted >= 80,
       },

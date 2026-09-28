@@ -507,7 +507,10 @@ export function subscribeToCanonicalData(
   const unsubs = names.map((name) => onSnapshot(
     collection(db, name),
     (snapshot) => {
-      const rows = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const rows: CanonicalDataRow[] = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Record<string, unknown>),
+      }));
       if (name === 'tasks') {
         const byDate = new Map<string, CanonicalDataRow[]>();
         rows.forEach((row) => {

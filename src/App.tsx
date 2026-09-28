@@ -1069,6 +1069,10 @@ export default function App() {
         totalRecordsCount={records.length}
         currentBadge={currentBadge}
         isSyncing={isSyncing}
+        onOpenQuickAdd={() => setIsAddModalOpen(true)}
+        onOpenSearch={() => setIsTaskSearchOpen(true)}
+        onToggleFocus={() => setFocusMode((value) => !value)}
+        focusMode={focusMode}
       />
 
       {/* 2. Main Daily Commitment Dashboard Container */}

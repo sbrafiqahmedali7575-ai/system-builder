@@ -200,6 +200,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [editCompleted, setEditCompleted] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(() => new Set());
 
   // UI state for Deleting a Task confirmation
   const [deletingTask, setDeletingTask] = useState<TaskItem | null>(null);
@@ -684,6 +685,28 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         >
                           {task.taskOfTheDay}
                         </button>
+
+                        {task.notes?.trim() && (
+                          <div className="mt-1">
+                            <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
+                              {task.notes}
+                            </p>
+                            {(task.notes.length > 90 || task.notes.includes('\n')) && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedNotes((current) => {
+                                  const next = new Set(current);
+                                  if (next.has(task.id)) next.delete(task.id);
+                                  else next.add(task.id);
+                                  return next;
+                                })}
+                                className="mt-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {expandedNotes.has(task.id) ? 'Collapse' : 'Expand'}
+                              </button>
+                            )}
+                          </div>
+                        )}
 
                         <div className="mt-1.5 flex flex-wrap items-center gap-1">
                           <span

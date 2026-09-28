@@ -282,11 +282,12 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     <div
       className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:overflow-y-auto lg:pr-1`}
     >
-      <section aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+      <section aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col">
         <div className="px-3 sm:px-4 pt-3 pb-2 border-b border-slate-100 bg-slate-50/60">
           <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-slate-400">Plan ahead</p>
           <h2 className="text-sm font-bold text-slate-800">Task Planner</h2>
         </div>
+        <div className="min-h-0 flex-1">
         <CalendarWorkspace
           tasks={tasks}
           habits={habits}
@@ -296,6 +297,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
           onUpdateHabit={onUpdateHabit}
           density="compact"
         />
+        </div>
       </section>
 
       {formOpen && (

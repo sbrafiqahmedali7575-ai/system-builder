@@ -202,8 +202,10 @@ function isSimpleHabitLogId(value: string): boolean {
 }
 
 /**
- * Re-keys the canonical collections to compact stable IDs while preserving
- * HabitLogs.habitId -> Habits.habitId. Existing simple IDs are retained.
+ * Legacy/manual canonical-ID repair helper.
+ * IMPORTANT: this is intentionally not called by normal startup migration.
+ * Runtime/startup must preserve existing document IDs to avoid copy/delete
+ * data-loss windows.
  */
 async function migrateCanonicalIds(): Promise<void> {
   const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
@@ -941,10 +943,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
 
   await commitQueuedWrites(writes);
   await deduplicateTasksByLogicalKey();
-  await migrateCanonicalIds();
-  // Re-run after re-keying so an interrupted older migration cannot leave a
-  // legacy-key copy beside its canonical T# copy.
-  await deduplicateTasksByLogicalKey();
+  // Safety: normal startup migration never re-keys canonical documents.
+  // Existing Firestore document IDs are immutable here; field normalization
+  // happens in place. This avoids copy/delete data-loss windows on reload.
   await Promise.all(['T51', 'T52', 'T53'].map((taskId) => deleteDoc(doc(db, 'tasks', taskId))));
   await deleteDoc(doc(db, 'days', '2026-09-29'));
   // Never reset HabitLogs during normal startup migration. Check-ins are live

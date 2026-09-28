@@ -820,3 +820,7 @@ export const FAVORITE_CAL_NEWPORT_BOOKS = CAL_NEWPORT_BOOKS.filter(
 );
 
 export const CAL_NEWPORT_LIBRARY_UPDATED = '26-Sep-2026';
+
+
+// Chapter-level study guides are maintained separately to keep the core library readable.
+export { CAL_NEWPORT_CHAPTER_GUIDES } from './calNewportChapterGuides';

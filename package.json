@@ -27,7 +27,8 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "recharts": "^3.10.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "nodemailer": "^10.0.1"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",
@@ -39,6 +40,7 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "@types/nodemailer": "^8.0.1"
   }
 }

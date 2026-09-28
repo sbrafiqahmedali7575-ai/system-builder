@@ -434,7 +434,53 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   }
 }
 
+async function deduplicateHabitLogsForAllDates(): Promise<void> {
+  const snapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
+  const groups = new Map<string, Array<typeof snapshot.docs[number]>>();
+
+  snapshot.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const habitId = String(data.habitId || '').trim();
+    const dateKey = normalizeModelDateKey(data.dateKey);
+    if (!habitId || !dateKey) return;
+    const key = `${habitId}::${dateKey}`;
+    groups.set(key, [...(groups.get(key) || []), logDoc]);
+  });
+
+  const writes: Array<{
+    ref: DocumentReference<DocumentData>;
+    data?: Record<string, unknown>;
+    delete?: boolean;
+  }> = [];
+
+  groups.forEach((logs) => {
+    if (logs.length <= 1) return;
+    const sorted = [...logs].sort((a, b) => {
+      const aId = String(a.data().habitLogId || a.id);
+      const bId = String(b.data().habitLogId || b.id);
+      return aId.localeCompare(bId, undefined, { numeric: true });
+    });
+    const primary = sorted[0];
+    const primaryData = primary.data();
+    writes.push({
+      ref: primary.ref,
+      data: {
+        habitLogId: String(primaryData.habitLogId || primary.id),
+        habitId: String(primaryData.habitId || '').trim(),
+        dateKey: normalizeModelDateKey(primaryData.dateKey),
+        Iscompleted: sorted.some((logDoc) => logDoc.data().Iscompleted === true),
+      },
+    });
+    sorted.slice(1).forEach((duplicate) =>
+      writes.push({ ref: duplicate.ref, delete: true })
+    );
+  });
+
+  if (writes.length > 0) await commitBatchedMutations(writes);
+}
+
 async function ensureCurrentDayHabitLogs(): Promise<void> {
+  await deduplicateHabitLogsForAllDates();
   const [habitsSnapshot, logsSnapshot] = await Promise.all([
     getDocs(collection(db, HABITS_COLLECTION)),
     getDocs(collection(db, HABIT_LOGS_COLLECTION)),

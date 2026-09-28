@@ -151,7 +151,7 @@
     },
     "HabitLog": {
       "title": "HabitLog",
-      "description": "One habit completion state for one date.",
+      "description": "Exactly one daily status row per due habit/date. Iscompleted is true when checked and false when unchecked or not checked.",
       "type": "object",
       "properties": {
         "habitLogId": {

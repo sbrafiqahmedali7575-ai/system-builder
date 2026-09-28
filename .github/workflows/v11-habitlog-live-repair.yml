@@ -20,12 +20,12 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
 
-      - name: Run V11 migration and verify
+      - name: Run focused V11 repair and verify
         run: |
           cat > v11-live-repair.ts <<'TS'
           import { collection, getDocs } from 'firebase/firestore';
           import { db } from './src/services/firebaseService.ts';
-          import { migrateLegacyDataModel } from './src/services/dataModelMigration.ts';
+          import { repairCanonicalHabitLogsAndDays } from './src/services/dataModelMigration.ts';
 
           const normalize = (value: unknown): string => {
             const raw = String(value ?? '').trim();
@@ -33,8 +33,7 @@ jobs:
             return m ? `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` : '';
           };
 
-          const result = await migrateLegacyDataModel();
-          console.log('MIGRATION_RESULT=' + JSON.stringify(result));
+          await repairCanonicalHabitLogsAndDays();
 
           const [habitsSnap, logsSnap, daysSnap] = await Promise.all([
             getDocs(collection(db,'habits')),
@@ -97,6 +96,7 @@ jobs:
             dayCount: daysSnap.size,
             weightedDayMismatchCount: weightedMismatches,
           }));
+
           if (duplicatePairs.length) console.log('DUPLICATES='+JSON.stringify(duplicatePairs));
           if (badIds.length) console.log('BAD_IDS='+JSON.stringify(badIds.slice(0,50)));
           if (mismatches.length) console.log('DAY_MISMATCHES='+JSON.stringify(mismatches.slice(0,50)));

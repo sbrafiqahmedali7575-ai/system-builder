@@ -48,6 +48,10 @@
         "habitCompletionRate": {
           "type": "number"
         },
+        "dayCompleted": {
+          "type": "number",
+          "description": "Overall day progress percentage: (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20), rounded to 2 decimals."
+        },
         "IsdayCompleted": {
           "type": "boolean",
           "description": "True when (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20) is at least 80."
@@ -61,6 +65,7 @@
         "habitsCompleted",
         "habitTotal",
         "habitCompletionRate",
+        "dayCompleted",
         "IsdayCompleted"
       ]
     },

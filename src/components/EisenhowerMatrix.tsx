@@ -545,21 +545,11 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     <div
       className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:flex lg:flex-col lg:overflow-hidden`}
     >
-      <div className={`flex flex-col lg:flex-row lg:items-center justify-between ${
-          compact ? 'gap-2' : 'gap-3'
-        } lg:shrink-0`}>
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
-            Priority workspace
-          </p>
-          <div className="mt-0.5">
-            <h2 className={`${compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-black tracking-tight`}>
-              Today's Eisenhower Matrix
-            </h2>
-          </div>
-        </div>
-
-        <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 shrink-0">
+      <div className="flex items-center justify-between gap-3 lg:shrink-0">
+        <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">
+          Priority workspace
+        </p>
+        <label className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 shrink-0">
           <input
             type="checkbox"
             checked={showCompleted}

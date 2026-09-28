@@ -11,6 +11,10 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebaseService';
 import { MONTH_MAP } from '../utils/dateUtils';
+import {
+  CONFIGURED_TIMEZONE,
+  getIsoDateKeyInTimezone,
+} from '../utils/taskDateUtils';
 
 const MIGRATION_BATCH_LIMIT = 400;
 
@@ -287,6 +291,209 @@ async function migrateCanonicalIds(): Promise<void> {
     deletes.slice(i, i + MIGRATION_BATCH_LIMIT).forEach((ref) => batch.delete(ref));
     await batch.commit();
   }
+}
+
+function canonicalHabitLogId(habitId: string, dateKey: string): string {
+  return `${habitId}_${dateKey}`;
+}
+
+async function repairCanonicalHabitLogsAndDays(): Promise<void> {
+  const [
+    recordsSnap,
+    tasksSnap,
+    habitsSnap,
+    logsSnap,
+    daysSnap,
+  ] = await Promise.all([
+    getDocs(collection(db, 'records')),
+    getDocs(collection(db, 'tasks')),
+    getDocs(collection(db, 'habits')),
+    getDocs(collection(db, 'habitLogs')),
+    getDocs(collection(db, 'days')),
+  ]);
+
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const dateKeys = new Set<string>();
+
+  const addHistoricalDate = (value: unknown) => {
+    const dateKey = toDateKey(value);
+    if (dateKey && dateKey <= today) dateKeys.add(dateKey);
+  };
+
+  recordsSnap.forEach((recordDoc) => addHistoricalDate(recordDoc.data().date));
+  tasksSnap.forEach((taskDoc) =>
+    addHistoricalDate(taskDoc.data().scheduledDate || taskDoc.data().taskKey)
+  );
+  daysSnap.forEach((dayDoc) =>
+    addHistoricalDate(dayDoc.data().dateKey || dayDoc.id)
+  );
+  logsSnap.forEach((logDoc) => addHistoricalDate(logDoc.data().dateKey));
+
+  habitsSnap.forEach((habitDoc) => {
+    const data = habitDoc.data();
+    if (Array.isArray(data.checkIns)) {
+      data.checkIns.forEach((value: unknown) => addHistoricalDate(value));
+    }
+  });
+
+  // Today's due habits must also have explicit false rows when not checked.
+  dateKeys.add(today);
+
+  const completedByLogicalKey = new Map<string, boolean>();
+  const existingDocsByLogicalKey = new Map<
+    string,
+    Array<typeof logsSnap.docs[number]>
+  >();
+
+  logsSnap.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const habitId = String(data.habitId || '');
+    const dateKey = toDateKey(data.dateKey);
+    if (!habitId || !dateKey || dateKey > today) return;
+
+    const key = `${habitId}::${dateKey}`;
+    const rows = existingDocsByLogicalKey.get(key) || [];
+    rows.push(logDoc);
+    existingDocsByLogicalKey.set(key, rows);
+
+    if (data.Iscompleted === true) {
+      completedByLogicalKey.set(key, true);
+    }
+  });
+
+  const writes: QueuedWrite[] = [];
+  const canonicalIds = new Set<string>();
+
+  for (const habitDoc of habitsSnap.docs) {
+    const data = habitDoc.data() as Record<string, unknown>;
+    const habitId = String(data.habitId || habitDoc.id);
+    const legacyCompletedDates = new Set(
+      Array.isArray(data.checkIns)
+        ? data.checkIns.map((value) => toDateKey(value)).filter(Boolean)
+        : []
+    );
+
+    for (const dateKey of [...dateKeys].sort()) {
+      if (!isHabitDue(data, dateKey)) continue;
+
+      const logicalKey = `${habitId}::${dateKey}`;
+      const habitLogId = canonicalHabitLogId(habitId, dateKey);
+      const isCompleted =
+        completedByLogicalKey.get(logicalKey) === true ||
+        legacyCompletedDates.has(dateKey);
+
+      canonicalIds.add(habitLogId);
+      writes.push({
+        ref: doc(db, 'habitLogs', habitLogId),
+        data: {
+          habitLogId,
+          habitId,
+          dateKey,
+          Iscompleted: isCompleted,
+        },
+      });
+    }
+  }
+
+  await commitQueuedWrites(writes);
+
+  // Remove every legacy/duplicate HabitLog that is not the canonical
+  // {habitId}_{dateKey} document. Canonical rows created above preserve true
+  // if any duplicate copy was completed.
+  const deletes: DocumentReference[] = [];
+  logsSnap.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const habitId = String(data.habitId || '');
+    const dateKey = toDateKey(data.dateKey);
+    if (!habitId || !dateKey || dateKey > today) return;
+
+    const canonicalId = canonicalHabitLogId(habitId, dateKey);
+    if (logDoc.id !== canonicalId) {
+      deletes.push(logDoc.ref);
+    }
+  });
+
+  for (let index = 0; index < deletes.length; index += MIGRATION_BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    deletes
+      .slice(index, index + MIGRATION_BATCH_LIMIT)
+      .forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+
+  // Re-read canonical logs after deduplication and rebuild every historical
+  // Day that has system history.
+  const canonicalLogsSnap = await getDocs(collection(db, 'habitLogs'));
+  const completedByDate = new Map<string, Set<string>>();
+
+  canonicalLogsSnap.forEach((logDoc) => {
+    const data = logDoc.data();
+    if (data.Iscompleted !== true) return;
+
+    const dateKey = toDateKey(data.dateKey);
+    const habitId = String(data.habitId || '');
+    if (!dateKey || !habitId || dateKey > today) return;
+
+    if (!completedByDate.has(dateKey)) {
+      completedByDate.set(dateKey, new Set());
+    }
+    completedByDate.get(dateKey)!.add(habitId);
+  });
+
+  const normalizedTasks = tasksSnap.docs.map((taskDoc) => {
+    const data = taskDoc.data();
+    return {
+      scheduledDate: toDateKey(data.scheduledDate || data.taskKey),
+      Iscompleted:
+        typeof data.Iscompleted === 'boolean'
+          ? data.Iscompleted
+          : Boolean(data.isCompleted),
+    };
+  });
+
+  const normalizedHabits = habitsSnap.docs.map((habitDoc) => ({
+    id: String(habitDoc.data().habitId || habitDoc.id),
+    data: habitDoc.data() as Record<string, unknown>,
+  }));
+
+  const dayWrites: QueuedWrite[] = [];
+
+  for (const dateKey of [...dateKeys].sort()) {
+    const dayTasks = normalizedTasks.filter(
+      (task) => task.scheduledDate === dateKey
+    );
+    const taskTotal = dayTasks.length;
+    const tasksCompleted = dayTasks.filter((task) => task.Iscompleted).length;
+    const taskCompletionRate = roundedRate(tasksCompleted, taskTotal);
+
+    const dueHabits = normalizedHabits.filter((habit) =>
+      isHabitDue(habit.data, dateKey)
+    );
+    const habitTotal = dueHabits.length;
+    const completedHabitIds = completedByDate.get(dateKey) || new Set<string>();
+    const habitsCompleted = dueHabits.filter((habit) =>
+      completedHabitIds.has(habit.id)
+    ).length;
+    const habitCompletionRate = roundedRate(habitsCompleted, habitTotal);
+    const weightedCompletionRate =
+      taskCompletionRate * 0.8 + habitCompletionRate * 0.2;
+
+    dayWrites.push({
+      ref: doc(db, 'days', dateKey),
+      data: {
+        dateKey,
+        tasksCompleted,
+        taskTotal,
+        taskCompletionRate,
+        habitsCompleted,
+        habitTotal,
+        habitCompletionRate,
+        IsdayCompleted: weightedCompletionRate >= 80,
+      },
+    });
+  }
+
+  await commitQueuedWrites(dayWrites);
 }
 
 function taskUniqueKeyDocumentId(logicalKey: string): string {
@@ -730,6 +937,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   // Re-run after re-keying so an interrupted older migration cannot leave a
   // legacy-key copy beside its canonical T# copy.
   await deduplicateTasksByLogicalKey();
+  await repairCanonicalHabitLogsAndDays();
   await rebuildTaskUniqueKeys();
   await backfillTaskOrder();
   return result;

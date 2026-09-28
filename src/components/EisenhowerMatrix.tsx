@@ -852,154 +852,18 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {grouped[quadrant.id].map((task) => {
-                      const priority = task.priority || 'Normal';
-                      const priorityConfig =
-                        PRIORITY_OPTIONS.find((option) => option.value === priority) ||
-                        PRIORITY_OPTIONS[2];
-                      const dragging = draggedTaskId === task.id;
-
-                      return (
-                        <div
-                          key={task.id}
-                          className={`group relative rounded-lg border border-transparent bg-white/95 px-2 py-1.5 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm ${
-                            busyTaskId === task.id ? 'opacity-60' : ''
-                          } ${dragging ? 'opacity-40 scale-[0.99] border-blue-300' : ''}`}
-                        >
-                          <div className="flex items-start gap-1.5">
-                            <button
-                              type="button"
-                              draggable={!task.isCompleted}
-                              onDragStart={(event) => {
-                                if (task.isCompleted) {
-                                  event.preventDefault();
-                                  return;
-                                }
-                                event.dataTransfer.setData('text/task-id', task.id);
-                                event.dataTransfer.effectAllowed = 'move';
-                                setDraggedTaskId(task.id);
-                              }}
-                              onDragEnd={endDrag}
-                              disabled={task.isCompleted}
-                              className={`mt-0.5 w-4 h-5 rounded flex items-center justify-center shrink-0 opacity-25 group-hover:opacity-100 transition-opacity ${
-                                task.isCompleted
-                                  ? 'text-slate-300 cursor-not-allowed'
-                                  : 'text-slate-400 cursor-grab active:cursor-grabbing hover:text-slate-700'
-                              }`}
-                              title={
-                                task.isCompleted
-                                  ? 'Completed tasks cannot be dragged'
-                                  : 'Drag task to another quadrant'
-                              }
-                              aria-label={`Drag ${task.taskOfTheDay}`}
-                            >
-                              <GripVertical className="w-4 h-4" />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => void onToggleTaskStatus(task.id)}
-                              className={`mt-0.5 w-[18px] h-[18px] rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                                task.isCompleted
-                                  ? 'bg-blue-600 border-blue-600 text-white'
-                                  : 'border-slate-300 text-transparent hover:border-blue-500'
-                              }`}
-                              aria-label={
-                                task.isCompleted
-                                  ? 'Mark task incomplete'
-                                  : 'Mark task complete'
-                              }
-                            >
-                              {task.isCompleted ? (
-                                <Check className="w-2.5 h-2.5" />
-                              ) : (
-                                <Circle className="w-2 h-2" />
-                              )}
-                            </button>
-
-                            <div className="min-w-0 flex-1">
-                              <div
-                                className={`text-[13px] font-medium leading-[18px] break-words ${
-                                  task.isCompleted
-                                    ? 'line-through text-slate-500'
-                                    : 'text-slate-900'
-                                }`}
-                              >
-                                {task.taskOfTheDay}
-                              </div>
-
-                              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
-                                <select
-                                  value={priority}
-                                  onChange={(event) =>
-                                    void updatePriority(
-                                      task,
-                                      event.target.value as NonNullable<
-                                        TaskItem['priority']
-                                      >
-                                    )
-                                  }
-                                  disabled={busyTaskId === task.id}
-                                  className={`h-5 rounded border px-1.5 text-[9px] font-semibold outline-none cursor-pointer ${priorityConfig.classes}`}
-                                  title="Task priority"
-                                  aria-label={`Priority for ${task.taskOfTheDay}`}
-                                >
-                                  {PRIORITY_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                      {option.label} priority
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <select
-                                  value={inferQuadrant(task)}
-                                  onChange={(event) =>
-                                    void moveTask(
-                                      task.id,
-                                      event.target.value as MatrixQuadrant
-                                    )
-                                  }
-                                  disabled={
-                                    task.isCompleted || busyTaskId === task.id
-                                  }
-                                  className="h-5 rounded border border-transparent bg-transparent px-1 text-[9px] font-medium text-slate-400 outline-none cursor-pointer hover:border-slate-200 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-50"
-                                  title="Move task to another quadrant"
-                                  aria-label={`Move ${task.taskOfTheDay}`}
-                                >
-                                  {quadrants.map((target) => (
-                                    <option key={target.id} value={target.id}>
-                                      {target.roman}. {target.title}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <span className="inline-flex items-center gap-1 text-[9px] font-medium text-slate-400">
-                                  <CalendarDays className="w-2.5 h-2.5" />
-                                  {task.taskKey}
-                                </span>
-
-                                {task.timeEstimate && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                                    <Clock3 className="w-2.5 h-2.5" />
-                                    {task.timeEstimate}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => void onDeleteTask(task.id)}
-                              className="w-6 h-6 rounded-md flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-600 hover:bg-rose-50 shrink-0 transition-all"
-                              title="Delete task"
-                              aria-label="Delete task"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {grouped[quadrant.id].map((task) => (
+                      <div
+                        key={task.id}
+                        className={`rounded-md bg-white/80 px-2.5 py-1.5 text-[13px] font-medium leading-5 ${
+                          task.isCompleted
+                            ? 'line-through text-slate-400'
+                            : 'text-slate-800'
+                        }`}
+                      >
+                        {task.taskOfTheDay}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

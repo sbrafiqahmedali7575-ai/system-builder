@@ -371,6 +371,45 @@ body {
 }
 
 
+
+/* P2/P3: a quieter, consistent surface hierarchy. */
+.system-secondary-panel,
+.system-planning-surface {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.035);
+}
+
+.system-secondary-panel {
+  border-left-width: 1px !important;
+  border-left-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+.dark .system-secondary-panel {
+  border-left-color: rgba(51, 65, 85, 0.9) !important;
+}
+
+.system-planning-surface {
+  position: relative;
+}
+
+/* Desktop should breathe; compact density remains useful on small screens/tools. */
+@media (min-width: 64rem) {
+  .ui-compact .system-primary-focus.p-2\.5,
+  .ui-compact .system-primary-focus.sm\:p-3 {
+    padding: 0.9rem;
+  }
+
+  .ui-compact .system-secondary-panel.p-2\.5 {
+    padding: 0.75rem;
+  }
+}
+
+/* Keep routine surfaces steady. Motion is reserved for meaningful feedback. */
+.system-primary-focus,
+.system-secondary-panel,
+.system-planning-surface {
+  animation: none !important;
+}
+
 /* Global compact spacing: reduce UI padding by ~30% without shrinking typography or icons. */
 .ui-compact .p-0\.5 { padding: 0.0875rem; }
 .ui-compact .p-1 { padding: 0.175rem; }

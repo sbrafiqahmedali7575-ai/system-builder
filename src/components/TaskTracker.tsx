@@ -284,8 +284,8 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     >
       <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col">
         <div className="px-3 sm:px-4 pt-3 pb-2 border-b border-slate-100 bg-slate-50/60">
-          <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-slate-400">Plan ahead</p>
-          <h2 className="text-sm font-bold text-slate-800">Task Planner</h2>
+          <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-slate-400">Plan ahead</p>
+          <h2 className="text-sm font-medium text-slate-800">Task Planner</h2>
         </div>
         <div className="min-h-0 flex-1">
         <CalendarWorkspace
@@ -351,7 +351,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
                   dateKey: event.target.value,
                 }))
               }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-blue-400"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none focus:border-blue-400"
             />
             <select
               value={draft.quadrant}
@@ -361,7 +361,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
                   quadrant: event.target.value as MatrixQuadrant | '',
                 }))
               }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none"
             >
               <option value="">Select quadrant</option>
               {QUADRANTS.map((item) => (

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Database, KeyRound, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Database, KeyRound, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   subscribeToCanonicalData,
   type CanonicalCollectionName,
@@ -124,9 +124,6 @@ export const DataWorkspace: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 lg:shrink-0">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">Firestore workspace</p>
-        </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500">
-          <RefreshCw className="w-3.5 h-3.5" /> Live sync
         </div>
       </div>
 

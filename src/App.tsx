@@ -7,6 +7,7 @@ import { AddRecordModal } from './components/AddRecordModal';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
 import { MoreWorkspace } from './components/MoreWorkspace';
+import { TaskSearchDialog } from './components/TaskSearchDialog';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
@@ -129,6 +130,8 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [isTaskSearchOpen, setIsTaskSearchOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('review') === '1';
@@ -148,6 +151,34 @@ export default function App() {
     searchQuery: '',
     dateRange: 'ALL',
   });
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT' || target?.isContentEditable;
+      if (event.key === 'Escape') {
+        setIsTaskSearchOpen(false);
+        setIsAddModalOpen(false);
+        return;
+      }
+      if (typing) return;
+      if (event.key === '/') {
+        event.preventDefault();
+        setIsTaskSearchOpen(true);
+      } else if (event.key.toLowerCase() === 'n') {
+        event.preventDefault();
+        setIsAddModalOpen(true);
+      } else if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        setFocusMode((value) => !value);
+      } else if (event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   // Listen to popstate in case of browser navigation
   useEffect(() => {
@@ -998,6 +1029,10 @@ export default function App() {
         onCheckIn={handleHabitCheckIn}
         onDeleteHabit={handleDeleteHabit}
         isSyncing={isSyncing}
+        onOpenQuickAdd={() => setIsAddModalOpen(true)}
+        onOpenSearch={() => setIsTaskSearchOpen(true)}
+        onToggleFocus={() => setFocusMode((value) => !value)}
+        focusMode={focusMode}
       />
     );
   }
@@ -1027,7 +1062,7 @@ export default function App() {
       />
 
       {/* 2. Main Daily Commitment Dashboard Container */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-3 lg:px-4 py-3 sm:py-4">
+      <main className={`flex-1 w-full mx-auto px-2 sm:px-3 lg:px-4 py-3 sm:py-4 ${focusMode ? 'max-w-4xl' : 'max-w-7xl'}`}>
         <ReportView
           records={records}
           tasks={tasks}
@@ -1047,8 +1082,11 @@ export default function App() {
           onSubmitTaskDay={handleSubmitTaskDay}
           onOpenDayReview={() => setIsDayReviewOpen(true)}
           isSyncing={isSyncing}
+          focusMode={focusMode}
         />
       </main>
+
+      {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
       {/* 3. Add Record Modal */}
       <AddRecordModal

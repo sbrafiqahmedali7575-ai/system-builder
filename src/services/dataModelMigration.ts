@@ -315,6 +315,54 @@ async function migrateCanonicalIds(): Promise<void> {
   }
 }
 
+async function cleanupHabitLogsByDateAndHabit(): Promise<void> {
+  const snapshot = await getDocs(collection(db, 'habitLogs'));
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const groups = new Map<string, typeof snapshot.docs>();
+
+  snapshot.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const dateKey = toDateKey(data.dateKey);
+    const habitId = String(data.habitId || '').trim();
+    if (!dateKey || !habitId) return;
+    const key = `${dateKey}::${habitId}`;
+    const rows = groups.get(key) || [];
+    rows.push(logDoc);
+    groups.set(key, rows);
+  });
+
+  const deletes: DocumentReference[] = [];
+  const updates: QueuedWrite[] = [];
+
+  for (const [key, rows] of groups) {
+    const [dateKey] = key.split('::');
+    if (dateKey > today) {
+      rows.forEach((row) => deletes.push(row.ref));
+      continue;
+    }
+
+    if (rows.length <= 1) continue;
+    const survivor = rows.find((row) =>
+      /^HL\d+$/i.test(String(row.data().habitLogId || row.id))
+    ) || rows[0];
+    const completed = rows.some((row) => row.data().Iscompleted === true);
+    updates.push({
+      ref: survivor.ref,
+      data: { Iscompleted: completed },
+    });
+    rows
+      .filter((row) => row.id !== survivor.id)
+      .forEach((row) => deletes.push(row.ref));
+  }
+
+  await commitQueuedWrites(updates);
+  for (let index = 0; index < deletes.length; index += MIGRATION_BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    deletes.slice(index, index + MIGRATION_BATCH_LIMIT).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+}
+
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   const [
     recordsSnap,
@@ -762,20 +810,6 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     });
     result.habits += 1;
 
-    for (const dateKey of checkIns) {
-      const habitLogId = `${habitDoc.id}_${dateKey}`;
-      writes.push({
-        ref: doc(db, 'habitLogs', habitLogId),
-        data: {
-          habitLogId,
-          habitId: habitDoc.id,
-          dateKey,
-          Iscompleted: true,
-        },
-      });
-      result.habitLogs += 1;
-    }
-
     return normalized;
   });
 
@@ -865,6 +899,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   await commitQueuedWrites(writes);
   await deduplicateTasksByLogicalKey();
   await migrateCanonicalIds();
+  await cleanupHabitLogsByDateAndHabit();
   // Re-run after re-keying so an interrupted older migration cannot leave a
   // legacy-key copy beside its canonical T# copy.
   await deduplicateTasksByLogicalKey();

@@ -902,7 +902,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       onChange={(e) => setNewTaskNotes(e.target.value)}
                       placeholder="Notes"
                       rows={2}
-                      className={`mt-1 w-full resize-none px-2 py-1.5 rounded-lg border text-xs focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
+                      className={`mt-1 w-full min-h-[48px] max-h-20 resize-y px-2 py-1 rounded-lg border text-xs leading-4 focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
                     />
                   </div>
 
@@ -1090,9 +1090,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <textarea
                     value={editNotes}
                     onChange={(e) => setEditNotes(e.target.value)}
-                    rows={3}
+                    rows={2}
                     placeholder="Add notes"
-                    className={`w-full resize-none px-2 py-1.5 rounded-lg border text-xs focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
+                    className={`w-full min-h-[48px] max-h-20 resize-y px-2 py-1 rounded-lg border text-xs leading-4 focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
                   />
                 </div>
 

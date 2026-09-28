@@ -9,6 +9,7 @@ import {
   deleteField,
   onSnapshot,
   getDocs,
+  getDoc,
   getDocFromServer,
   writeBatch,
   runTransaction,
@@ -320,6 +321,73 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   }
 
   await batch.commit();
+}
+
+async function getCompletedHabitDates(habitId: string): Promise<Set<string>> {
+  const snapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
+  const dates = new Set<string>();
+
+  snapshot.forEach((logDoc) => {
+    const data = logDoc.data();
+    if (
+      String(data.habitId || '') === habitId &&
+      data.Iscompleted === true
+    ) {
+      const dateKey = normalizeModelDateKey(data.dateKey);
+      if (dateKey) dates.add(dateKey);
+    }
+  });
+
+  return dates;
+}
+
+function sameNumberSet(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false;
+  const aa = [...a].sort((x, y) => x - y);
+  const bb = [...b].sort((x, y) => x - y);
+  return aa.every((value, index) => value === bb[index]);
+}
+
+function habitScheduleChanged(
+  previous: Record<string, unknown> | null,
+  nextHabit: HabitItem
+): boolean {
+  if (!previous) return true;
+
+  const previousDays = Array.isArray(previous.repeatDays)
+    ? previous.repeatDays
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
+    : [];
+
+  const nextDays = habitRepeatDays(nextHabit);
+  const previousActiveFrom =
+    normalizeModelDateKey(previous.activeFrom) || '1970-01-01';
+  const nextActiveFrom = habitActiveFrom(nextHabit);
+  const previousIsActive = previous.isActive !== false;
+  const nextIsActive = nextHabit.isActive !== false;
+
+  return (
+    !sameNumberSet(previousDays, nextDays) ||
+    previousActiveFrom !== nextActiveFrom ||
+    previousIsActive !== nextIsActive
+  );
+}
+
+function symmetricDifferenceDates(
+  previousDates: Set<string>,
+  nextDates: Set<string>
+): string[] {
+  const changed = new Set<string>();
+
+  previousDates.forEach((dateKey) => {
+    if (!nextDates.has(dateKey)) changed.add(dateKey);
+  });
+  nextDates.forEach((dateKey) => {
+    if (!previousDates.has(dateKey)) changed.add(dateKey);
+  });
+
+  return [...changed].sort();
 }
 
 function normalizeModelDateKey(value: unknown): string {
@@ -1058,13 +1126,42 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
 
 export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
   try {
-    await setDoc(
-      doc(db, HABITS_COLLECTION, habit.id),
-      habitStoragePayload(habit),
-      { merge: true }
-    );
+    const habitRef = doc(db, HABITS_COLLECTION, habit.id);
+    const [previousHabitSnapshot, previousCompletedDates] = await Promise.all([
+      getDoc(habitRef),
+      getCompletedHabitDates(habit.id),
+    ]);
+
+    const previousHabit = previousHabitSnapshot.exists()
+      ? (previousHabitSnapshot.data() as Record<string, unknown>)
+      : null;
+    const scheduleChanged = habitScheduleChanged(previousHabit, habit);
+
+    await setDoc(habitRef, habitStoragePayload(habit), { merge: true });
     await syncHabitLogsFromHabit(habit);
-    await rebuildAllDaySummaries();
+
+    if (scheduleChanged) {
+      // Repeat-day/active-date changes can affect many historical Day rows.
+      await rebuildAllDaySummaries();
+      return;
+    }
+
+    // Normal Habit Tracker check/uncheck: recalculate only the dates whose
+    // completion state changed. This keeps Days.habitsCompleted and
+    // Days.habitCompletionRate in sync immediately.
+    const nextCompletedDates = new Set(
+      (habit.checkIns || [])
+        .map((value) => normalizeModelDateKey(value))
+        .filter(Boolean)
+    );
+    const changedDates = symmetricDifferenceDates(
+      previousCompletedDates,
+      nextCompletedDates
+    );
+
+    for (const dateKey of changedDates) {
+      await rebuildDaySummary(dateKey);
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, `${HABITS_COLLECTION}/${habit.id}`);
   }

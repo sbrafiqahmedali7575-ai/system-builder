@@ -8,6 +8,9 @@ import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
 import { MoreWorkspace } from './components/MoreWorkspace';
 import { TaskSearchDialog } from './components/TaskSearchDialog';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { CommandPalette } from './components/CommandPalette';
+import { ToastProvider } from './components/ui/ToastProvider';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
@@ -132,6 +135,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isTaskSearchOpen, setIsTaskSearchOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('review') === '1';
@@ -156,6 +160,11 @@ export default function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT' || target?.isContentEditable;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setIsCommandPaletteOpen(true);
+        return;
+      }
       if (event.key === 'Escape') {
         setIsTaskSearchOpen(false);
         setIsAddModalOpen(false);
@@ -1042,6 +1051,7 @@ export default function App() {
   const currentBadge = getBadgeProgress(completedDaysForBadge).current;
 
   return (
+<ToastProvider>
     <div
       className={`system-edition system-app-shell ui-compact min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased ${
         isDark
@@ -1088,6 +1098,9 @@ export default function App() {
 
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
+      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={handleOpenTools} />}
+      <MobileBottomNav onAdd={() => setIsAddModalOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={handleOpenTools} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
+
       {/* 3. Add Record Modal */}
       <AddRecordModal
         isOpen={isAddModalOpen}
@@ -1110,5 +1123,6 @@ export default function App() {
         onSubmitTaskDay={handleSubmitTaskDay}
       />
     </div>
+    </ToastProvider>
   );
 }

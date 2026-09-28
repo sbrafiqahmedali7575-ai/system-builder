@@ -6,6 +6,7 @@ type TaskChipProps = {
   kind: 'task';
   task: TaskItem;
   disabled?: boolean;
+  dateState?: 'today' | 'overdue' | 'normal';
   onClick: () => void;
 };
 
@@ -19,10 +20,10 @@ type HabitChipProps = {
 
 export type CalendarEventChipProps = TaskChipProps | HabitChipProps;
 
-function taskChipClass(task: TaskItem): string {
-  if (task.isCompleted) {
-    return 'bg-slate-100 text-slate-500 line-through';
-  }
+function taskChipClass(task: TaskItem, dateState: 'today' | 'overdue' | 'normal' = 'normal'): string {
+  if (task.isCompleted) return 'bg-slate-100 text-slate-500 line-through';
+  if (dateState === 'today') return 'bg-blue-100 text-blue-800 hover:bg-blue-200/80';
+  if (dateState === 'overdue') return 'bg-orange-100 text-orange-800 hover:bg-orange-200/80';
 
   switch (task.matrixQuadrant) {
     case 'urgent-important':
@@ -40,7 +41,7 @@ function taskChipClass(task: TaskItem): string {
 
 export const CalendarEventChip: React.FC<CalendarEventChipProps> = (props) => {
   if (props.kind === 'task') {
-    const { task, disabled = false, onClick } = props;
+    const { task, disabled = false, dateState = 'normal', onClick } = props;
 
     return (
       <button
@@ -58,7 +59,8 @@ export const CalendarEventChip: React.FC<CalendarEventChipProps> = (props) => {
             : 'To do'
         }.`}
         className={`pointer-events-auto w-full min-w-0 h-[20px] px-1.5 rounded-[3px] flex items-center gap-1 text-left text-[9px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-55 disabled:cursor-default ${taskChipClass(
-          task
+          task,
+          dateState
         )}`}
       >
         <span

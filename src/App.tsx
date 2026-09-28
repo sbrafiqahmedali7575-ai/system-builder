@@ -37,14 +37,18 @@ import {
   processPendingSync,
   isNetworkOrOfflineError,
 } from './services/offlineStorage';
-import { migrateLegacyDataModel } from './services/dataModelMigration';
+import {
+  migrateLegacyDataModel,
+  repairCanonicalHabitLogsAndDays,
+} from './services/dataModelMigration';
 import { useCurrentDateKey } from './hooks/useCurrentDateKey';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
-const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V11_CANONICAL_HABIT_LOGS_MIGRATED';
+const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V10_HABIT_DAY_SYNC_MIGRATED';
+const HABIT_LOG_REPAIR_KEY = 'SYSTEM_BUILDER_V11_CANONICAL_HABIT_LOGS_REPAIRED';
 type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }
   | { kind: 'delete' };
@@ -220,6 +224,35 @@ export default function App() {
     }
 
     runDataModelMigration();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // V11 focused repair: canonicalize historical HabitLogs independently
+  // of the broader legacy migration so unrelated collection permissions cannot
+  // block habit/day repair.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem(HABIT_LOG_REPAIR_KEY) === '1') return;
+
+    let cancelled = false;
+
+    async function repairHabitHistory() {
+      try {
+        await repairCanonicalHabitLogsAndDays();
+        if (!cancelled) {
+          localStorage.setItem(HABIT_LOG_REPAIR_KEY, '1');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('Historical HabitLog repair is pending:', error);
+        }
+      }
+    }
+
+    repairHabitHistory();
 
     return () => {
       cancelled = true;

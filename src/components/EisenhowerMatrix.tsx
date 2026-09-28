@@ -546,7 +546,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:flex lg:flex-col lg:overflow-hidden`}
     >
       <div className="flex items-center justify-between gap-3 lg:shrink-0">
-        <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-blue-600">
+        <p className="text-[11px] font-medium text-slate-500">
           Priority workspace
         </p>
         <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 shrink-0">
@@ -603,7 +603,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[300px] lg:min-h-0 ${compact ? 'rounded-xl' : 'rounded-xl'} border transition-all overflow-hidden flex flex-col  ${theme.border} ${theme.surface} ${
+              className={`relative min-h-[300px] lg:min-h-0 ${compact ? 'rounded-xl' : 'rounded-xl'} border transition-colors overflow-hidden flex flex-col  ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'
@@ -618,7 +618,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                   }`}
                 >
                   <div
-                    className={`rounded-xl border px-4 py-2 text-sm font-semibold shadow-sm ${
+                    className={`rounded-xl border px-4 py-2 text-sm font-semibold  ${
                       sameQuadrant
                         ? 'bg-white border-slate-200 text-slate-600'
                         : 'bg-white border-blue-200 text-blue-700'
@@ -631,7 +631,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 </div>
               )}
 
-              <div className={`${compact ? 'px-4 py-3' : 'px-4 py-3'} border-b border-slate-200/60 bg-white/65 flex items-start justify-between gap-2 shrink-0`}>
+              <div className={`${compact ? 'px-4 py-3' : 'px-4 py-3'} border-b border-slate-100 bg-white/65 flex items-start justify-between gap-2 shrink-0`}>
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                   <div className="relative shrink-0 mt-0.5">
                     <span
@@ -641,7 +641,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                       <QuadrantIconComponent className="w-4 h-4" />
                     </span>
                     <span
-                      className={`absolute -right-1.5 -bottom-1.5 min-w-4 h-4 px-1 rounded-full ${theme.dot} text-white flex items-center justify-center text-[11px] font-semibold shadow-sm`}
+                      className={`absolute -right-1.5 -bottom-1.5 min-w-4 h-4 px-1 rounded-full ${theme.dot} text-white flex items-center justify-center text-[11px] font-semibold `}
                     >
                       {quadrant.roman}
                     </span>
@@ -694,7 +694,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                         : current
                                     )
                                   }
-                                  className={`w-7 h-7 rounded-full ${optionTheme.dot} transition-all ${
+                                  className={`w-7 h-7 rounded-full ${optionTheme.dot} transition-colors ${
                                     selected
                                       ? 'ring-2 ring-offset-2 ring-[#0f172a] scale-105'
                                       : 'hover:scale-105'
@@ -731,7 +731,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                                         : current
                                     )
                                   }
-                                  className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${
+                                  className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors ${
                                     selected
                                       ? `${selectedTheme.iconSurface} ${selectedTheme.iconText} ${selectedTheme.accentBorder} ring-1 ring-current`
                                       : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'

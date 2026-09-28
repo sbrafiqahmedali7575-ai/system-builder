@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Database, Eye, KeyRound, RefreshCw } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Database, Eye, KeyRound, Pencil, RefreshCw, X } from 'lucide-react';
 import {
   subscribeToCanonicalData,
+  updateCanonicalDataRow,
   type CanonicalCollectionName,
   type CanonicalDataRow,
 } from '../services/firebaseService';
@@ -86,6 +87,9 @@ export const DataWorkspace: React.FC = () => {
   const [recoveryReport, setRecoveryReport] = useState<RecoveryReport | null>(null);
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [editingRow, setEditingRow] = useState<CanonicalDataRow | null>(null);
+  const [editDraft, setEditDraft] = useState<Record<string, string | boolean>>({});
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
 
@@ -142,6 +146,32 @@ export const DataWorkspace: React.FC = () => {
       setRecoveryError(err instanceof Error ? err.message : 'Recovery preview failed');
     } finally {
       setRecoveryLoading(false);
+    }
+  };
+
+  const openRowEditor = (row: CanonicalDataRow) => {
+    const draft: Record<string, string | boolean> = {};
+    TABLE_COLUMNS[active].forEach((column) => {
+      const value = row[column];
+      draft[column] = typeof value === 'boolean' ? value : String(value ?? '');
+    });
+    setEditDraft(draft);
+    setEditingRow(row);
+  };
+
+  const saveRowEdit = async () => {
+    if (!editingRow || (active !== 'tasks' && active !== 'habitLogs')) return;
+    setSavingEdit(true);
+    setError(null);
+    try {
+      const payload: Record<string, unknown> = { ...editDraft };
+      if (active === 'tasks') payload.taskOrder = Number(editDraft.taskOrder || 1);
+      await updateCanonicalDataRow(active, editingRow.id, payload);
+      setEditingRow(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to save changes');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -254,6 +284,7 @@ export const DataWorkspace: React.FC = () => {
             <table className="w-full min-w-max border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-white shadow-sm">
                 <tr>
+                  {(active === 'tasks' || active === 'habitLogs') && <th className="border-b border-r border-slate-200 px-2.5 py-2 text-[10px] uppercase tracking-wide font-black text-slate-500">Edit</th>}
                   {columns.map((column) => {
                     const keyType = KEY_COLUMNS[active][column];
                     const isSorted = sort?.column === column;
@@ -288,6 +319,13 @@ export const DataWorkspace: React.FC = () => {
               <tbody>
                 {sortedRows.map((row) => (
                   <tr key={row.id} className="hover:bg-blue-50/40">
+                    {(active === 'tasks' || active === 'habitLogs') && (
+                      <td className="border-b border-r border-slate-100 px-2 py-1.5">
+                        <button type="button" onClick={() => openRowEditor(row)} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-black text-slate-700 hover:bg-slate-50">
+                          <Pencil className="w-3 h-3" /> Edit
+                        </button>
+                      </td>
+                    )}
                     {columns.map((column) => (
                       <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {renderValue(row[column], column)}
@@ -300,6 +338,42 @@ export const DataWorkspace: React.FC = () => {
           )}
         </div>
       </div>
+      {editingRow && (active === 'tasks' || active === 'habitLogs') && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" onClick={() => setEditingRow(null)}>
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+              <div>
+                <div className="text-sm font-black">Edit {active === 'tasks' ? 'Task' : 'HabitLog'}</div>
+                <div className="text-[10px] font-semibold text-slate-500">Document: {editingRow.id}</div>
+              </div>
+              <button type="button" onClick={() => setEditingRow(null)} className="rounded-lg p-1.5 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="grid gap-3 p-4 sm:grid-cols-2">
+              {TABLE_COLUMNS[active].map((column) => {
+                const isBoolean = column === 'Iscompleted';
+                return (
+                  <label key={column} className={column === 'notes' ? 'sm:col-span-2' : ''}>
+                    <span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-slate-500">{column}</span>
+                    {isBoolean ? (
+                      <select value={String(editDraft[column] ?? false)} onChange={(event) => setEditDraft((current) => ({ ...current, [column]: event.target.value === 'true' }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                        <option value="false">FALSE</option><option value="true">TRUE</option>
+                      </select>
+                    ) : column === 'notes' ? (
+                      <textarea value={String(editDraft[column] ?? '')} onChange={(event) => setEditDraft((current) => ({ ...current, [column]: event.target.value }))} rows={3} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                    ) : (
+                      <input value={String(editDraft[column] ?? '')} onChange={(event) => setEditDraft((current) => ({ ...current, [column]: event.target.value }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-slate-200 px-4 py-3">
+              <button type="button" onClick={() => setEditingRow(null)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black">Cancel</button>
+              <button type="button" onClick={saveRowEdit} disabled={savingEdit} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-black text-white disabled:opacity-50">{savingEdit ? 'Saving…' : 'Save changes'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

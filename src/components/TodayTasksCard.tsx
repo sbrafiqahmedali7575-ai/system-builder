@@ -466,8 +466,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       initial={{ opacity: 0, y: 14, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -2 }}
-      className={`system-task-card ui-motion-section h-full min-h-0 overflow-hidden p-2 rounded-2xl border flex-1 flex flex-col transition-all ${
+      className={`system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-2.5 sm:p-3 rounded-2xl border flex-1 flex flex-col transition-all ${
         isDark
           ? 'bg-slate-900/80 border-slate-800'
           : 'bg-slate-50/70 border-slate-200/80'
@@ -493,9 +492,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1">
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
-              </h2>
+              <div>
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.16em] font-black text-blue-600 dark:text-blue-400">
+                  {activeDateTab === 'TODAY' ? "Today's Focus" : "Next Day Plan"}
+                </p>
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+                  {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
+                </h2>
+              </div>
               {isSyncing && (
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono flex items-center gap-0.5">
                   <Loader2 className="w-3 h-3 animate-spin" />

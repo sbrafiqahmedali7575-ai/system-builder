@@ -1345,6 +1345,20 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
   }
 }
 
+export async function setTodayHabitCheckIn(habit: HabitItem, isCompleted: boolean): Promise<void> {
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const checkIns = new Set(
+    (habit.checkIns || []).map((value) => normalizeModelDateKey(value)).filter(Boolean)
+  );
+  if (isCompleted) checkIns.add(today);
+  else checkIns.delete(today);
+
+  await updateHabitInCloud({ ...habit, checkIns: [...checkIns].sort() });
+  // updateHabitInCloud writes today's HabitLog first; rebuild once more here
+  // so the explicit check-in API guarantees Days is synchronized on return.
+  await rebuildDaySummary(today);
+}
+
 export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
   try {
     const habitRef = doc(db, HABITS_COLLECTION, habit.id);

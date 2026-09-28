@@ -28,6 +28,7 @@ const TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
     'habitsCompleted',
     'habitTotal',
     'habitCompletionRate',
+    'dayCompleted',
     'IsdayCompleted',
   ],
   tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'notes', 'Iscompleted'],
@@ -48,6 +49,7 @@ const COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
 function renderValue(value: unknown, column?: string): string {
   if (value === null || value === undefined) return '—';
   if ((column === 'IsdayCompleted' || column === 'Iscompleted') && typeof value === 'boolean') return value ? '1' : '0';
+  if (column === 'dayCompleted' && typeof value === 'number') return `${value}%`;
   if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
   if (Array.isArray(value)) return value.join(', ') || '—';
   if (typeof value === 'object') return JSON.stringify(value);

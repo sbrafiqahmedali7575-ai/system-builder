@@ -389,3 +389,25 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .ui-motion-section,.ui-motion-shell,.ui-motion-card,.ui-motion-icon { animation:none!important;will-change:auto; }
 .ui-motion-section:hover,.ui-motion-shell:hover,.ui-motion-card:hover { transform:none!important;box-shadow:none; }
 @media(max-width:39.999rem){.system-app-shell{background:#fff}.dark .system-app-shell{background:#0f172a}}
+
+/* Tools interaction system — TickTick-inspired */
+[data-tools-density] button:not([role="tab"]) { border-radius:7px; }
+[data-tools-density] input,[data-tools-density] textarea,[data-tools-density] select {
+  border:1px solid #e5e7eb; border-radius:7px; background:#fff; color:#252525;
+  transition:border-color 140ms ease,box-shadow 140ms ease,background-color 140ms ease;
+}
+.dark [data-tools-density] input,.dark [data-tools-density] textarea,.dark [data-tools-density] select { border-color:#334155;background:#0f172a;color:#f8fafc; }
+[data-tools-density] input:focus,[data-tools-density] textarea:focus,[data-tools-density] select:focus { outline:none;border-color:#4772fa;box-shadow:0 0 0 2px rgba(71,114,250,.12); }
+[data-tools-density] button:disabled { opacity:.48;cursor:not-allowed; }
+.tools-panel { background:#fff;border:1px solid #e8e8e8;border-radius:10px; }
+.dark .tools-panel { background:#0f172a;border-color:#334155; }
+.tools-feedback-error { border:1px solid #fecaca;background:#fff7f7;color:#b91c1c;border-radius:8px;padding:.625rem .75rem;font-size:.8125rem;font-weight:500; }
+.tools-feedback-success { border:1px solid #bbf7d0;background:#f7fff9;color:#15803d;border-radius:8px;padding:.625rem .75rem;font-size:.8125rem;font-weight:500; }
+.tools-empty { border:1px dashed #d8dce3;background:#fafafa;border-radius:10px;padding:1.5rem;text-align:center;color:#7c828d;font-size:.8125rem; }
+.dark .tools-empty { border-color:#334155;background:#111827;color:#94a3b8; }
+.tools-loading { border-radius:7px;background:linear-gradient(90deg,#f1f3f5 25%,#f8f9fa 37%,#f1f3f5 63%);background-size:400% 100%;animation:tools-shimmer 1.3s ease infinite; }
+@keyframes tools-shimmer { 0%{background-position:100% 0}100%{background-position:0 0} }
+.tools-modal { background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.16); }
+.dark .tools-modal { background:#0f172a;border-color:#334155; }
+.tools-primary-action { background:#4772fa!important;color:#fff!important;border-color:#4772fa!important; }
+.tools-danger-action { color:#dc2626!important; }

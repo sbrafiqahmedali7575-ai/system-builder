@@ -267,6 +267,71 @@ function storedHabitFrequency(data: Record<string, unknown>): HabitItem['frequen
   return 'custom';
 }
 
+function normalizeInactivePeriods(value: unknown): Array<{ from: string; to?: string | null }> {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const row = item as Record<string, unknown>;
+      const from = normalizeModelDateKey(row.from);
+      const to = row.to ? normalizeModelDateKey(row.to) : null;
+      if (!from) return null;
+      return { from, to: to || null };
+    })
+    .filter((item): item is { from: string; to: string | null } => Boolean(item))
+    .sort((a, b) => a.from.localeCompare(b.from));
+}
+
+function shiftModelDateKey(dateKey: string, amount: number): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + amount));
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, '0'),
+    String(date.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function applyHabitActivationTransition(
+  previous: Record<string, unknown> | null,
+  habit: HabitItem
+): HabitItem {
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  const previousIsActive = previous ? previous.isActive !== false : true;
+  const nextIsActive = habit.isActive !== false;
+  const periods = normalizeInactivePeriods(
+    habit.inactivePeriods ?? previous?.inactivePeriods
+  );
+
+  if (previousIsActive && !nextIsActive) {
+    const hasOpenPeriod = periods.some((period) => !period.to);
+    if (!hasOpenPeriod) {
+      periods.push({ from: today, to: null });
+    }
+  } else if (!previousIsActive && nextIsActive) {
+    const openIndex = periods.findIndex((period) => !period.to);
+    if (openIndex >= 0) {
+      const open = periods[openIndex];
+      if (open.from === today) {
+        // Disabled and re-enabled on the same date: no full inactive day elapsed.
+        periods.splice(openIndex, 1);
+      } else {
+        periods[openIndex] = {
+          ...open,
+          to: shiftModelDateKey(today, -1),
+        };
+      }
+    }
+  }
+
+  return {
+    ...habit,
+    isActive: nextIsActive,
+    inactivePeriods: periods,
+  };
+}
+
 function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
   return {
     habitId: habit.id,
@@ -274,6 +339,7 @@ function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
     repeatDays: habitRepeatDays(habit),
     activeFrom: habitActiveFrom(habit),
     isActive: habit.isActive !== false,
+    inactivePeriods: normalizeInactivePeriods(habit.inactivePeriods),
     color: habitColorToHex(habit.color),
   };
 }
@@ -497,11 +563,19 @@ function normalizeModelDateKey(value: unknown): string {
 }
 
 function storedHabitIsDue(data: Record<string, unknown>, dateKey: string): boolean {
-  if (data.isActive === false) return false;
-
   const activeFrom = normalizeModelDateKey(data.activeFrom) || '1970-01-01';
-
   if (dateKey < activeFrom) return false;
+
+  const inactivePeriods = normalizeInactivePeriods(data.inactivePeriods);
+  const inactiveForDate = inactivePeriods.some((period) => {
+    if (dateKey < period.from) return false;
+    return !period.to || dateKey <= period.to;
+  });
+  if (inactiveForDate) return false;
+
+  // Backward compatibility for an old inactive document created before pause
+  // periods were tracked.
+  if (data.isActive === false && inactivePeriods.length === 0) return false;
 
   const repeatDays = Array.isArray(data.repeatDays)
     ? data.repeatDays
@@ -1218,6 +1292,7 @@ export function subscribeToHabits(
         updatedAt: data.updatedAt ? String(data.updatedAt) : undefined,
         activeFrom,
         isActive: data.isActive !== false,
+        inactivePeriods: normalizeInactivePeriods(data.inactivePeriods),
       });
     });
 
@@ -1280,10 +1355,11 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
     const previousHabit = previousHabitSnapshot.exists()
       ? (previousHabitSnapshot.data() as Record<string, unknown>)
       : null;
-    const scheduleChanged = habitScheduleChanged(previousHabit, habit);
+    const habitForStorage = applyHabitActivationTransition(previousHabit, habit);
+    const scheduleChanged = habitScheduleChanged(previousHabit, habitForStorage);
 
-    await setDoc(habitRef, habitStoragePayload(habit), { merge: true });
-    await syncHabitLogsFromHabit(habit);
+    await setDoc(habitRef, habitStoragePayload(habitForStorage), { merge: true });
+    await syncHabitLogsFromHabit(habitForStorage);
 
     if (scheduleChanged) {
       // Repeat-day/active-date changes can affect many historical Day rows.
@@ -1295,7 +1371,7 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
     // completion state changed. This keeps Days.habitsCompleted and
     // Days.habitCompletionRate in sync immediately.
     const nextCompletedDates = new Set(
-      (habit.checkIns || [])
+      (habitForStorage.checkIns || [])
         .map((value) => normalizeModelDateKey(value))
         .filter(Boolean)
     );

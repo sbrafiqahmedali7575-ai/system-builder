@@ -340,11 +340,6 @@ async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   dateKeys.add(today);
 
   const completedByLogicalKey = new Map<string, boolean>();
-  const existingDocsByLogicalKey = new Map<
-    string,
-    Array<typeof logsSnap.docs[number]>
-  >();
-
   logsSnap.docs.forEach((logDoc) => {
     const data = logDoc.data();
     const habitId = String(data.habitId || '');
@@ -352,17 +347,12 @@ async function repairCanonicalHabitLogsAndDays(): Promise<void> {
     if (!habitId || !dateKey || dateKey > today) return;
 
     const key = `${habitId}::${dateKey}`;
-    const rows = existingDocsByLogicalKey.get(key) || [];
-    rows.push(logDoc);
-    existingDocsByLogicalKey.set(key, rows);
-
     if (data.Iscompleted === true) {
       completedByLogicalKey.set(key, true);
     }
   });
 
   const writes: QueuedWrite[] = [];
-  const canonicalIds = new Set<string>();
 
   for (const habitDoc of habitsSnap.docs) {
     const data = habitDoc.data() as Record<string, unknown>;
@@ -382,7 +372,6 @@ async function repairCanonicalHabitLogsAndDays(): Promise<void> {
         completedByLogicalKey.get(logicalKey) === true ||
         legacyCompletedDates.has(dateKey);
 
-      canonicalIds.add(habitLogId);
       writes.push({
         ref: doc(db, 'habitLogs', habitLogId),
         data: {

@@ -481,44 +481,11 @@ async function deduplicateHabitLogsForAllDates(): Promise<void> {
 
   if (writes.length > 0) await commitBatchedMutations(writes);
 
-  // Compact surviving rows to a continuous HL1..HLN sequence. Use temporary
-  // document IDs first so renumbering can never overwrite another live HL row.
-  const repaired = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
-  const ordered = [...repaired.docs].sort((a, b) => {
-    const ad = normalizeModelDateKey(a.data().dateKey);
-    const bd = normalizeModelDateKey(b.data().dateKey);
-    if (ad !== bd) return ad.localeCompare(bd);
-    const ah = String(a.data().habitId || '');
-    const bh = String(b.data().habitId || '');
-    if (ah !== bh) return ah.localeCompare(bh, undefined, { numeric: true });
-    return a.id.localeCompare(b.id, undefined, { numeric: true });
-  });
+  // Safety rule: never renumber surviving HabitLogs during normal runtime.
+  // IDs are immutable once created. Deduplication may merge completion state
+  // into the retained row and delete only true duplicates for the same
+  // (habitId, dateKey). This avoids copy/delete/recreate data-loss windows.
 
-  const needsCompaction = ordered.some((logDoc, index) => {
-    const expected = `HL${index + 1}`;
-    return logDoc.id !== expected || String(logDoc.data().habitLogId || '') !== expected;
-  });
-
-  if (needsCompaction) {
-    const tempWrites = ordered.map((logDoc, index) => ({
-      ref: doc(db, HABIT_LOGS_COLLECTION, `__HL_RENUMBER_${index + 1}`),
-      data: { ...logDoc.data(), habitLogId: `HL${index + 1}` },
-    }));
-    await commitBatchedMutations(tempWrites);
-    await commitBatchedMutations(ordered.map((logDoc) => ({ ref: logDoc.ref, delete: true })));
-
-    const tempSnapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
-    const temps = tempSnapshot.docs
-      .filter((logDoc) => logDoc.id.startsWith('__HL_RENUMBER_'))
-      .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
-    await commitBatchedMutations(
-      temps.map((logDoc, index) => ({
-        ref: doc(db, HABIT_LOGS_COLLECTION, `HL${index + 1}`),
-        data: { ...logDoc.data(), habitLogId: `HL${index + 1}` },
-      }))
-    );
-    await commitBatchedMutations(temps.map((logDoc) => ({ ref: logDoc.ref, delete: true })));
-  }
 }
 
 async function ensureCurrentDayHabitLogs(): Promise<void> {

@@ -158,7 +158,7 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
   let count = 0;
 
   for (const write of writes) {
-    batch.set(write.ref, write.data, { merge: true });
+    batch.set(write.ref, write.data);
     count += 1;
 
     if (count >= MIGRATION_BATCH_LIMIT) {
@@ -761,6 +761,20 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
       },
     });
     result.habits += 1;
+
+    for (const dateKey of checkIns) {
+      const habitLogId = `${habitDoc.id}_${dateKey}`;
+      writes.push({
+        ref: doc(db, 'habitLogs', habitLogId),
+        data: {
+          habitLogId,
+          habitId: habitDoc.id,
+          dateKey,
+          Iscompleted: true,
+        },
+      });
+      result.habitLogs += 1;
+    }
 
     return normalized;
   });

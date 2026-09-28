@@ -401,11 +401,11 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   }, [weeklyTrend]);
 
   return (
-    <div className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:overflow-y-auto lg:pr-1`}>
+    <div className="tools-workspace-view lg:overflow-y-auto">
       <div className={`flex flex-col lg:flex-row lg:items-center justify-between ${compact ? 'gap-2' : 'gap-3'}`}>
         <div>
           <p className="text-[11px] font-medium text-slate-500">
-            Consistency workspace
+            Habits
           </p>
           <h2 className={`${compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'} font-semibold tracking-tight`}>
             Habit Tracker

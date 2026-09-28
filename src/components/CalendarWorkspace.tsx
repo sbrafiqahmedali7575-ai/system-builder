@@ -651,7 +651,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
 
           {tasks.length > 0 && (
             <section>
-              <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Tasks</div>
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Tasks</div>
               <div className="space-y-1.5">
                 {tasks.map((task) => (
                   <button
@@ -666,7 +666,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
                       {task.taskOfTheDay}
                     </span>
                     {task.timeEstimate && (
-                      <span className="shrink-0 text-[9px] font-medium text-slate-400">{task.timeEstimate}</span>
+                      <span className="shrink-0 text-[11px] font-medium text-slate-400">{task.timeEstimate}</span>
                     )}
                   </button>
                 ))}
@@ -676,7 +676,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
 
           {habits.length > 0 && (
             <section>
-              <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Habits</div>
+              <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Habits</div>
               <div className="space-y-1.5">
                 {habits.map((habit) => {
                   const checked = habit.checkIns.includes(dateKey);

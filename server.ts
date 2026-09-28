@@ -150,6 +150,26 @@ async function startServer() {
         existing.set(key, rows);
       });
 
+      const damagedRows = logsSnap.docs
+        .map((logDoc) => {
+          const data = logDoc.data();
+          const habitId = String(data.habitId || '').trim();
+          const dateKey = normalizeDate(data.dateKey);
+          const missingFields = [
+            !habitId ? 'habitId' : '',
+            !dateKey ? 'dateKey' : '',
+          ].filter(Boolean);
+          return {
+            habitLogId: String(data.habitLogId || logDoc.id),
+            documentId: logDoc.id,
+            currentHabitId: habitId || null,
+            currentDateKey: dateKey || null,
+            Iscompleted: data.Iscompleted === true,
+            missingFields,
+          };
+        })
+        .filter((row) => row.missingFields.length > 0);
+
       const restorable: Array<Record<string, unknown>> = [];
       habitsSnap.docs.forEach((habitDoc) => {
         const data = habitDoc.data();
@@ -194,7 +214,10 @@ async function startServer() {
         generatedAt: new Date().toISOString(),
         readOnly: true,
         today,
+        previewOnly: true,
+        writesPerformed: 0,
         canRestoreAutomatically: restorable.length,
+        damagedRows,
         restorable,
         diagnostics: {
           habits: habitsSnap.size,

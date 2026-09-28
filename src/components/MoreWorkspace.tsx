@@ -36,10 +36,10 @@ const TABS: Array<{
   icon: React.ComponentType<{ className?: string }>;
   disabled?: boolean;
 }> = [
+  { id: 'data', label: 'Data', icon: Database },
+  { id: 'tasks', label: 'Task Tracker', icon: ListChecks },
   { id: 'eisenhower', label: 'Eisenhower Matrix', icon: Grid2X2 },
   { id: 'habits', label: 'Habit Tracker', icon: Repeat2 },
-  { id: 'tasks', label: 'Task Tracker', icon: ListChecks },
-  { id: 'data', label: 'Data', icon: Database },
 ];
 
 const TOOL_TAB_BASE =
@@ -66,7 +66,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   onDeleteHabit,
   isSyncing = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<MoreTab>('eisenhower');
+  const [activeTab, setActiveTab] = useState<MoreTab>('data');
 
   return (
     <div

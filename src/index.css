@@ -411,3 +411,25 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .dark .tools-modal { background:#0f172a;border-color:#334155; }
 .tools-primary-action { background:#4772fa!important;color:#fff!important;border-color:#4772fa!important; }
 .tools-danger-action { color:#dc2626!important; }
+
+/* Full Tools workspace redesign */
+.tools-workspace-view { height:100%; min-height:0; background:#fff; border:1px solid #e8e8e8; border-radius:10px; overflow:hidden; }
+.dark .tools-workspace-view { background:#0f172a; border-color:#273449; }
+.tools-view-header { min-height:52px; padding:10px 14px; border-bottom:1px solid #eeeeee; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; }
+.dark .tools-view-header { background:#0f172a; border-color:#273449; }
+.tools-view-title { font-size:16px; line-height:22px; font-weight:600; color:#252525; letter-spacing:-.01em; }
+.dark .tools-view-title { color:#f8fafc; }
+.tools-view-subtitle { margin-top:1px; font-size:12px; line-height:16px; color:#8a8f98; }
+.tools-list-row { min-height:44px; padding:7px 10px; border-bottom:1px solid #f0f0f0; background:#fff; }
+.tools-list-row:hover { background:#fafafa; }
+.dark .tools-list-row { background:#0f172a; border-color:#1e293b; }
+.dark .tools-list-row:hover { background:#111c2f; }
+.tools-inline-add { min-height:38px; border:0!important; border-top:1px solid #f0f0f0!important; border-radius:0!important; background:transparent!important; }
+.tools-quiet-panel { border:1px solid #ececec!important; background:#fff!important; box-shadow:none!important; }
+.dark .tools-quiet-panel { border-color:#273449!important; background:#0f172a!important; }
+.tools-segment { display:flex;align-items:center;gap:2px;padding:2px;background:#f3f4f6;border-radius:8px; }
+.dark .tools-segment { background:#1e293b; }
+.tools-segment > button { min-height:30px;border:0!important;background:transparent;padding:0 9px;font-size:12px;color:#6b7280; }
+.tools-segment > button[aria-selected="true"],.tools-segment > button[data-active="true"] { background:#fff!important;color:#252525!important;box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.dark .tools-segment > button[aria-selected="true"],.dark .tools-segment > button[data-active="true"] { background:#334155!important;color:#fff!important; }
+@media(max-width:639px){.tools-workspace-view{border-left:0;border-right:0;border-radius:0}.tools-view-header{padding:9px 12px}.tools-view-title{font-size:15px}}

@@ -893,6 +893,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   // Re-run after re-keying so an interrupted older migration cannot leave a
   // legacy-key copy beside its canonical T# copy.
   await deduplicateTasksByLogicalKey();
+  await Promise.all(['T51', 'T52', 'T53'].map((taskId) => deleteDoc(doc(db, 'tasks', taskId))));
   await resetHabitLogsToRequestedNineRows();
   await repairCanonicalHabitLogsAndDays();
   await rebuildTaskUniqueKeys();

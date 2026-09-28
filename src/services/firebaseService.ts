@@ -767,7 +767,7 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
 export async function initializeDayHabitStatus(dateKey: string): Promise<void> {
   const normalizedDateKey = normalizeModelDateKey(dateKey);
   if (!normalizedDateKey) return;
-  await ensureHabitLogsForDate(normalizedDateKey);
+  // rebuildDaySummary already ensures today's HabitLogs.
   await rebuildDaySummary(normalizedDateKey);
 }
 
@@ -1318,10 +1318,8 @@ export async function setTodayHabitCheckIn(habit: HabitItem, isCompleted: boolea
   if (isCompleted) checkIns.add(today);
   else checkIns.delete(today);
 
+  // updateHabitInCloud writes the HabitLog and synchronizes today's Day summary.
   await updateHabitInCloud({ ...habit, checkIns: [...checkIns].sort() });
-  // updateHabitInCloud writes today's HabitLog first; rebuild once more here
-  // so the explicit check-in API guarantees Days is synchronized on return.
-  await rebuildDaySummary(today);
 }
 
 export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
@@ -1351,11 +1349,10 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
 
     await setDoc(habitRef, habitStoragePayload(habitForStorage), { merge: true });
     await syncHabitLogsFromHabit(habitForStorage);
-    await rebuildDaySummary(today);
 
     if (scheduleChanged) {
-      // Repeat-day/active-date changes can affect many historical Day rows.
-      await rebuildAllDaySummaries();
+      // Current model maintains only today's derived Day summary.
+      await rebuildDaySummary(today);
       return;
     }
 
@@ -1372,8 +1369,10 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
       nextCompletedDates
     );
 
-    for (const dateKey of changedDates) {
-      await rebuildDaySummary(dateKey);
+    // rebuildDaySummary is current-day only; avoid repeated no-op calls for
+    // protected historical dates.
+    if (changedDates.includes(today)) {
+      await rebuildDaySummary(today);
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, `${HABITS_COLLECTION}/${habit.id}`);

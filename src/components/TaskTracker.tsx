@@ -308,7 +308,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
         >
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
-              <div className="text-sm font-black">
+              <div className="text-sm font-semibold">
                 {editingTaskId ? 'Edit Task' : 'New Task'}
               </div>
               <div className="text-[11px] font-semibold text-slate-500">
@@ -374,7 +374,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
               type="button"
               onClick={() => void saveTask()}
               disabled={isSavingTask || !draft.title.trim() || !draft.dateKey || !draft.quadrant}
-              className="h-10 rounded-xl bg-blue-600 text-white px-4 font-black text-sm disabled:opacity-40"
+              className="h-10 rounded-xl bg-blue-600 text-white px-4 font-semibold text-sm disabled:opacity-40"
             >
               {isSavingTask ? 'Saving…' : editingTaskId ? 'Update' : 'Save'}
             </button>

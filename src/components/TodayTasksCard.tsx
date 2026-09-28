@@ -890,9 +890,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'
                       }`}
                     />
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Press <kbd className="font-mono bg-slate-200 dark:bg-slate-800 px-0.5 py-0.5 rounded text-[10px]">Enter</kbd> to add. Panel remains open so you can add multiple tasks.
-                    </p>
                   </div>
 
                   <div>
@@ -923,9 +920,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </option>
                       ))}
                     </select>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Optional · I = do first · II = schedule · III = delegate · IV = eliminate
-                    </p>
                   </div>
 
                   <button

@@ -63,7 +63,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         <div className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 flex flex-col justify-center">
           <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
             <Trophy className="w-3 h-3 text-blue-500" />
-            Achieved Weeks
+            Weeks
           </div>
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
             {achievedWeeks}

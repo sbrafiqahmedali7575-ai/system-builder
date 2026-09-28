@@ -812,33 +812,6 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
               <div
                 className={`${compact ? 'p-3 space-y-2' : 'p-3 space-y-2.5'} flex-1 min-h-0 overflow-y-auto`}
               >
-                <div className="flex gap-2">
-                  <input
-                    value={drafts[quadrant.id]}
-                    onChange={(event) =>
-                      setDrafts((current) => ({
-                        ...current,
-                        [quadrant.id]: event.target.value,
-                      }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') void addTask(quadrant.id);
-                    }}
-                    placeholder="Add task..."
-                    className="min-w-0 flex-1 h-8 rounded-lg border border-slate-200/80 bg-white/90 px-3 text-[13px] font-medium outline-none focus:border-blue-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void addTask(quadrant.id)}
-                    disabled={!drafts[quadrant.id].trim() || isSyncing}
-                    className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center disabled:opacity-40"
-                    title="Add task"
-                    aria-label={`Add task to ${quadrant.title}`}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-
                 {grouped[quadrant.id].length === 0 ? (
                   <div
                     className={`min-h-[96px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-sm font-semibold transition ${

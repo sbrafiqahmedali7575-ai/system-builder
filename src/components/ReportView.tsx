@@ -452,12 +452,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
         aria-label="Today Command Center"
         className="space-y-2"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-2 items-stretch lg:h-[430px]">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-3 items-stretch xl:h-[430px]">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="min-w-0 min-h-0 h-full flex flex-col"
+            className="min-w-0 min-h-0 xl:h-full flex flex-col"
           >
             <TodayTasksCard
               tasks={tasks}
@@ -477,7 +477,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="min-w-0 min-h-0 h-full"
+            className="min-w-0 min-h-0 xl:h-full"
           >
             <CommandCenterSidebar
               theme={theme}

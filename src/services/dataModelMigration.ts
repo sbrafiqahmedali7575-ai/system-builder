@@ -895,7 +895,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   await deduplicateTasksByLogicalKey();
   await Promise.all(['T51', 'T52', 'T53'].map((taskId) => deleteDoc(doc(db, 'tasks', taskId))));
   await deleteDoc(doc(db, 'days', '2026-09-29'));
-  await resetHabitLogsToRequestedNineRows();
+  // Never reset HabitLogs during normal startup migration. Check-ins are live
+  // user data and must survive reloads. The old nine-row reset was a one-time
+  // historical repair and would overwrite today's Iscompleted values.
   await repairCanonicalHabitLogsAndDays();
   await rebuildTaskUniqueKeys();
   await backfillTaskOrder();

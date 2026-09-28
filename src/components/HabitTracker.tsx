@@ -147,10 +147,43 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   const weekCompletionRate = dueThisWeek
     ? Math.round((completedThisWeek / dueThisWeek) * 100)
     : 0;
-  const bestCurrentStreak = habits.reduce(
-    (best, habit) => Math.max(best, getHabitStats(habit, today).currentStreak),
-    0
-  );
+  const { currentAllHabitsStreak, bestAllHabitsStreak } = useMemo(() => {
+    if (habits.length === 0) return { currentAllHabitsStreak: 0, bestAllHabitsStreak: 0 };
+
+    const activityDates = habits.flatMap((habit) => [
+      habit.activeFrom || habit.createdAt?.slice(0, 10) || today,
+      ...(habit.checkIns || []),
+    ]).filter(Boolean).sort((a, b) => a.localeCompare(b));
+    const firstDate = activityDates[0] || today;
+
+    let dateKey = firstDate;
+    let running = 0;
+    let best = 0;
+    let todayRunning = 0;
+    let guard = 0;
+
+    while (dateKey <= today && guard < 5200) {
+      const due = habits.filter((habit) => isHabitDue(habit, dateKey));
+      const allDone =
+        due.length > 0 && due.every((habit) => habit.checkIns.includes(dateKey));
+
+      if (allDone) {
+        running += 1;
+        best = Math.max(best, running);
+      } else {
+        running = 0;
+      }
+
+      if (dateKey === today) todayRunning = running;
+      dateKey = addHabitDays(dateKey, 1);
+      guard += 1;
+    }
+
+    return {
+      currentAllHabitsStreak: todayRunning,
+      bestAllHabitsStreak: best,
+    };
+  }, [habits, today]);
 
 
   const achievedWeeks = useMemo(() => {
@@ -387,13 +420,13 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         <div className="rounded-xl border border-orange-200/80 bg-orange-50/60 px-3 py-2">
           <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider font-black text-orange-600">
             <Flame className="w-3 h-3" />
-            Best streak
+            Streak
           </div>
           <div className="mt-1 text-lg font-black text-slate-900">
-            {bestCurrentStreak}
+            {currentAllHabitsStreak}
           </div>
           <div className="text-[9px] font-bold text-slate-500">
-            current days
+            Best streak: {bestAllHabitsStreak}
           </div>
         </div>
 

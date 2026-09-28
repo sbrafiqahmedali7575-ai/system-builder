@@ -674,10 +674,11 @@ export async function ensureHabitLogsForDate(dateKey: string): Promise<void> {
 
 export async function rebuildDaySummary(dateKey: string): Promise<void> {
   const normalizedDateKey = normalizeModelDateKey(dateKey);
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-  if (!normalizedDateKey || normalizedDateKey !== today) return;
+  if (!normalizedDateKey) return;
 
   dateKey = normalizedDateKey;
+  // HabitLog creation remains current-day only, but Days summaries must be
+  // rebuildable for every historical date affected by task edits/moves/deletes.
   await ensureHabitLogsForDate(dateKey);
 
   const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
@@ -760,7 +761,16 @@ export async function initializeDayHabitStatus(dateKey: string): Promise<void> {
 
 async function rebuildAllDaySummaries(): Promise<void> {
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-  await rebuildDaySummary(today);
+  const [tasksSnap, daysSnap, logsSnap] = await Promise.all([
+    getDocs(collection(db, TASKS_COLLECTION)),
+    getDocs(collection(db, DAYS_COLLECTION)),
+    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
+  ]);
+  const dates = new Set<string>([today]);
+  tasksSnap.forEach(d => { const key=normalizeModelDateKey(d.data().scheduledDate); if(key && key<=today) dates.add(key); });
+  daysSnap.forEach(d => { const key=normalizeModelDateKey(d.data().dateKey || d.id); if(key && key<=today) dates.add(key); });
+  logsSnap.forEach(d => { const key=normalizeModelDateKey(d.data().dateKey); if(key && key<=today) dates.add(key); });
+  for (const dateKey of [...dates].sort()) await rebuildDaySummary(dateKey);
 }
 
 export interface CountdownSettings {
@@ -1110,8 +1120,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   });
 
   await normalizeTaskOrderForDate(targetDateKey);
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-  if (targetDateKey === today) await rebuildDaySummary(today);
+  if (targetDateKey) await rebuildDaySummary(targetDateKey);
 }
 
 /**
@@ -1140,12 +1149,11 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   await setDoc(existingTaskDoc.ref, taskStoragePayload(task), { merge: true });
   await normalizeTaskOrderForDate(nextDateKey);
 
-  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-  if (nextDateKey === today) await rebuildDaySummary(today);
+  if (nextDateKey) await rebuildDaySummary(nextDateKey);
 
   if (previousDateKey && previousDateKey !== nextDateKey) {
     await normalizeTaskOrderForDate(previousDateKey);
-    if (previousDateKey === today) await rebuildDaySummary(today);
+    await rebuildDaySummary(previousDateKey);
   }
 }
 
@@ -1164,8 +1172,7 @@ export async function deleteTaskFromCloud(taskId: string): Promise<void> {
 
   if (dateKey) {
     await normalizeTaskOrderForDate(dateKey);
-    const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-    if (dateKey === today) await rebuildDaySummary(today);
+    await rebuildDaySummary(dateKey);
   }
 }
 

@@ -354,7 +354,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
   return (
     <div
-      className={`relative h-full min-h-[640px] lg:min-h-0 bg-white text-slate-900 flex flex-col overflow-hidden ${
+      className={`relative h-full min-h-[640px] lg:min-h-0 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 dark:text-slate-100 flex flex-col overflow-hidden ${
         compact ? 'text-sm' : ''
       }`}
     >
@@ -368,7 +368,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         onAdd={() => setAddTaskOpen(true)}
       />
 
-      <div className="shrink-0 min-h-9 px-3 sm:px-5 flex items-center justify-end gap-3 border-b border-slate-100 bg-white">
+      <div className="shrink-0 min-h-9 px-3 sm:px-5 flex items-center justify-end gap-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
         <label className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
           <input
             type="checkbox"
@@ -388,7 +388,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         </label>
       </div>
 
-      <div className="relative flex-1 min-h-0 overflow-auto pb-20">
+      <div className="relative flex-1 min-h-0 overflow-auto pb-10 sm:pb-20">
         {view === 'year' && (
           <CalendarYearView
             year={cursor.getUTCFullYear()}
@@ -469,12 +469,12 @@ const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
   onToday,
   onAdd,
 }) => (
-  <header className="relative z-30 shrink-0 border-b border-slate-100 bg-white">
+  <header className="relative z-30 shrink-0 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
     <div className="px-2.5 sm:px-5 py-2 sm:py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex items-center justify-between gap-2">
         <div className="min-w-0 flex items-center gap-2">
           <CalendarDays className="w-5 h-5 shrink-0 text-slate-500" />
-          <h2 className="min-w-0 truncate text-base sm:text-xl font-bold text-slate-900">
+          <h2 className="min-w-0 truncate text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100">
             {periodLabel}
           </h2>
         </div>
@@ -492,13 +492,13 @@ const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
           onChange={onViewChange}
         />
 
-        <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-0.5 shrink-0">
+        <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-0.5 shrink-0">
           <button
             type="button"
             onClick={onPrevious}
             title={view === 'year' ? 'Previous year' : 'Previous month'}
             aria-label={view === 'year' ? 'Previous year' : 'Previous month'}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-white hover:text-slate-900 transition-colors"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:text-slate-100 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -506,7 +506,7 @@ const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
           <button
             type="button"
             onClick={onToday}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-700 hover:bg-white transition-colors"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors"
           >
             Today
           </button>
@@ -516,7 +516,7 @@ const CalendarTopBar: React.FC<CalendarTopBarProps> = ({
             onClick={onNext}
             title={view === 'year' ? 'Next year' : 'Next month'}
             aria-label={view === 'year' ? 'Next year' : 'Next month'}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-white hover:text-slate-900 transition-colors"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:text-slate-100 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -543,7 +543,7 @@ const CalendarViewSegmentedControl: React.FC<
   <div
     role="group"
     aria-label="Calendar view"
-    className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 p-0.5 shrink-0"
+    className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-0.5 shrink-0"
   >
     {CALENDAR_VIEWS.map((option) => {
       const active = value === option.id;
@@ -557,7 +557,7 @@ const CalendarViewSegmentedControl: React.FC<
           className={`h-8 sm:h-9 min-w-[58px] sm:min-w-[64px] px-2.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all ${
             active
               ? 'bg-white text-blue-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-900'
+              : 'text-slate-500 hover:text-slate-900 dark:text-slate-100'
           }`}
         >
           {option.label}
@@ -583,7 +583,7 @@ const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     title={title}
     aria-label={title}
     onClick={onClick}
-    className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+    className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-100 transition-colors"
   >
     {children}
   </button>
@@ -624,7 +624,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
       <div className="w-full max-w-md max-h-[80vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <div>
-            <div className="text-sm font-bold text-slate-900">
+            <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
               {longDate(dateKey)}
             </div>
             <div className="mt-0.5 text-[10px] font-semibold text-slate-500">
@@ -636,7 +636,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close day details"
-            className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-100"
           >
             <X className="w-4 h-4" />
           </button>

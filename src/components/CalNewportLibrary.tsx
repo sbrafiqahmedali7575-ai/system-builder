@@ -8,6 +8,18 @@ import {
   Minus,
   Plus,
   Target,
+  Bookmark,
+  Search,
+  Maximize2,
+  Minimize2,
+  List,
+  Type,
+  AlignJustify,
+  Star,
+  Check,
+  Highlighter,
+  StickyNote,
+  X,
 } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import {
@@ -17,6 +29,8 @@ import {
 } from '../data/calNewportLibrary';
 
 type ReaderTone = 'paper' | 'sepia' | 'night';
+type ReaderFont = 'serif' | 'sans';
+type ReaderWidth = 'narrow' | 'medium' | 'wide';
 
 interface CalNewportLibraryProps {
   theme: DashboardTheme;
@@ -25,6 +39,8 @@ interface CalNewportLibraryProps {
 
 const ACTIVE_BOOK_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_ACTIVE_BOOK';
 const FONT_SCALE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_FONT_SCALE';
+const READER_SETTINGS_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_READER_SETTINGS';
+const READER_STATE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_READER_STATE';
 
 export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   theme: _theme,
@@ -42,8 +58,20 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     const parsed = Number(window.localStorage.getItem(FONT_SCALE_KEY) || '1');
     return Number.isFinite(parsed) ? Math.min(1.25, Math.max(0.9, parsed)) : 1;
   });
-  const readerTone = 'paper' as ReaderTone;
+  const [readerTone, setReaderTone] = useState<ReaderTone>('paper');
+  const [readerFont, setReaderFont] = useState<ReaderFont>('serif');
+  const [readerWidth, setReaderWidth] = useState<ReaderWidth>('medium');
+  const [lineHeight, setLineHeight] = useState(1.9);
   const [readingProgress, setReadingProgress] = useState(0);
+  const [isFocusReader, setIsFocusReader] = useState(false);
+  const [isTocOpen, setIsTocOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [bookmarks, setBookmarks] = useState<Record<string, string[]>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [highlights, setHighlights] = useState<Record<string, string[]>>({});
+  const [completedBooks, setCompletedBooks] = useState<string[]>([]);
+  const [favoriteBooks, setFavoriteBooks] = useState<string[]>(() => CAL_NEWPORT_BOOKS.filter((book) => book.favorite).map((book) => book.id));
 
   const activeBook = useMemo(
     () => CAL_NEWPORT_BOOKS.find((book) => book.id === activeBookId) || CAL_NEWPORT_BOOKS[0],
@@ -58,6 +86,33 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   useEffect(() => {
     window.localStorage.setItem(FONT_SCALE_KEY, String(fontScale));
   }, [fontScale]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(READER_SETTINGS_KEY) || '{}');
+      if (saved.readerTone) setReaderTone(saved.readerTone);
+      if (saved.readerFont) setReaderFont(saved.readerFont);
+      if (saved.readerWidth) setReaderWidth(saved.readerWidth);
+      if (saved.lineHeight) setLineHeight(saved.lineHeight);
+      const state = JSON.parse(window.localStorage.getItem(READER_STATE_KEY) || '{}');
+      setBookmarks(state.bookmarks || {}); setNotes(state.notes || {}); setHighlights(state.highlights || {});
+      setCompletedBooks(state.completedBooks || []); if (state.favoriteBooks) setFavoriteBooks(state.favoriteBooks);
+      const y = Number(state.positions?.[activeBookId] || 0); if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
+    } catch { /* keep defaults */ }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(READER_SETTINGS_KEY, JSON.stringify({ readerTone, readerFont, readerWidth, lineHeight }));
+  }, [readerTone, readerFont, readerWidth, lineHeight]);
+
+  useEffect(() => {
+    const save = () => {
+      let previous: any = {}; try { previous = JSON.parse(window.localStorage.getItem(READER_STATE_KEY) || '{}'); } catch {}
+      window.localStorage.setItem(READER_STATE_KEY, JSON.stringify({ ...previous, bookmarks, notes, highlights, completedBooks, favoriteBooks, positions: { ...(previous.positions || {}), [activeBookId]: window.scrollY } }));
+    };
+    const onScroll = () => save(); window.addEventListener('scroll', onScroll, { passive: true }); save();
+    return () => { window.removeEventListener('scroll', onScroll); save(); };
+  }, [activeBookId, bookmarks, notes, highlights, completedBooks, favoriteBooks]);
 
   useEffect(() => {
     const updateProgress = () => {
@@ -76,9 +131,18 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     };
   }, [activeBookId]);
 
-  const toneClasses = 'bg-[#f7f7f7] text-slate-900 dark:bg-slate-950 dark:text-slate-100';
-  const cardClasses = 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800';
-  const mutedText = 'text-slate-500 dark:text-slate-400';
+  const toneClasses = readerTone === 'night' ? 'bg-[#111315] text-[#ece8df]' : readerTone === 'sepia' ? 'bg-[#f4ecd8] text-[#3f3426]' : 'bg-[#f7f7f7] text-slate-900';
+  const cardClasses = readerTone === 'night' ? 'bg-[#191c1f] border-[#2b3035]' : readerTone === 'sepia' ? 'bg-[#fbf4e3] border-[#ded0b4]' : 'bg-white border-slate-200';
+  const mutedText = readerTone === 'night' ? 'text-slate-400' : readerTone === 'sepia' ? 'text-[#766653]' : 'text-slate-500';
+  const widthClass = readerWidth === 'narrow' ? 'max-w-[680px]' : readerWidth === 'wide' ? 'max-w-[1080px]' : 'max-w-[820px]';
+  const fontFamily = readerFont === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, ui-sans-serif, system-ui, sans-serif';
+  const currentSections = ['overview', ...activeBook.themes.map((_, i) => `theme-${i}`), 'summary'];
+  const jumpTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const toggleBookmark = (id: string) => setBookmarks((prev) => ({ ...prev, [activeBookId]: (prev[activeBookId] || []).includes(id) ? (prev[activeBookId] || []).filter((x) => x !== id) : [...(prev[activeBookId] || []), id] }));
+  const toggleFavorite = () => setFavoriteBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
+  const toggleComplete = () => setCompletedBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
+  const addHighlight = () => { const selected = window.getSelection()?.toString().trim(); if (!selected) return; setHighlights((prev) => ({ ...prev, [activeBookId]: [...(prev[activeBookId] || []), selected] })); window.getSelection()?.removeAllRanges(); };
+  const remainingMinutes = Math.max(0, Math.ceil((100 - readingProgress) / 100 * Number(activeBook.readingTime.match(/\d+/)?.[0] || 20)));
 
   const selectBook = (book: CalNewportBook) => {
     setActiveBookId(book.id);

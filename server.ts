@@ -65,8 +65,13 @@ async function startServer() {
         const required = ['dateKey','tasksCompleted','taskTotal','taskCompletionRate','habitsCompleted','habitTotal','habitCompletionRate','IsdayCompleted'];
         const missing = required.filter((k) => x[k] === undefined);
         if (missing.length) issues.push(`Days/${d.id}: missing ${missing.join(', ')}.`);
-        if (x.IsdayCompleted !== (Number(x.taskCompletionRate) === 100)) {
-          issues.push(`Days/${d.id}: IsdayCompleted does not match taskCompletionRate.`);
+        const weightedCompletionRate =
+          Number(x.taskCompletionRate || 0) * 0.8 +
+          Number(x.habitCompletionRate || 0) * 0.2;
+        if (x.IsdayCompleted !== (weightedCompletionRate >= 80)) {
+          issues.push(
+            `Days/${d.id}: IsdayCompleted does not match the 80% task + 20% habit weighted threshold.`
+          );
         }
       });
 

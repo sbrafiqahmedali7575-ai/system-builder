@@ -495,12 +495,14 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     recordsSnap,
     tasksSnap,
     habitsSnap,
+    habitLogsSnap,
     existingDaysSnap,
     countdownSnap,
   ] = await Promise.all([
     getDocs(collection(db, 'records')),
     getDocs(collection(db, 'tasks')),
     getDocs(collection(db, 'habits')),
+    getDocs(collection(db, 'habitLogs')),
     getDocs(collection(db, 'days')),
     getDoc(doc(db, 'countdowns', 'system_builder_countdown'))
   ]);
@@ -568,14 +570,37 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     })
     .filter((task) => Boolean(task.scheduledDate));
 
-  // Normalize habits and split legacy checkIns into HabitLogs.
+  // Canonical HabitLogs are the source of truth for check-in completion.
+  // Keep legacy habits.checkIns only as a compatibility fallback.
+  const completedLogDatesByHabit = new Map<string, Set<string>>();
+  habitLogsSnap.forEach((logDoc) => {
+    const data = logDoc.data();
+    if (data.Iscompleted !== true) return;
+
+    const habitId = String(data.habitId || '');
+    const dateKey = toDateKey(data.dateKey);
+    if (!habitId || !dateKey) return;
+
+    if (!completedLogDatesByHabit.has(habitId)) {
+      completedLogDatesByHabit.set(habitId, new Set());
+    }
+    completedLogDatesByHabit.get(habitId)!.add(dateKey);
+  });
+
+  // Normalize habits and split any remaining legacy checkIns into HabitLogs.
   const normalizedHabits = habitsSnap.docs.map((habitDoc) => {
     const data = habitDoc.data() as Record<string, unknown>;
     const repeatDays = repeatDaysForHabit(data);
     const activeFrom = activeFromForHabit(data);
-    const checkIns = Array.isArray(data.checkIns)
-      ? [...new Set(data.checkIns.map((value) => toDateKey(value)).filter(Boolean))]
+    const legacyCheckIns = Array.isArray(data.checkIns)
+      ? data.checkIns.map((value) => toDateKey(value)).filter(Boolean)
       : [];
+    const canonicalHabitId = String(data.habitId || habitDoc.id);
+    const canonicalCheckIns = [
+      ...(completedLogDatesByHabit.get(canonicalHabitId) || new Set<string>()),
+      ...(completedLogDatesByHabit.get(habitDoc.id) || new Set<string>()),
+    ];
+    const checkIns = [...new Set([...legacyCheckIns, ...canonicalCheckIns])].sort();
 
     const normalized = {
       id: habitDoc.id,

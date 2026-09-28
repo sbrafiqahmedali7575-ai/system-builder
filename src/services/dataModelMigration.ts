@@ -464,8 +464,10 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
       completedHabitIds.has(habit.id)
     ).length;
     const habitCompletionRate = roundedRate(habitsCompleted, habitTotal);
-    const weightedCompletionRate =
-      taskCompletionRate * 0.8 + habitCompletionRate * 0.2;
+    const dayCompleted =
+      Math.round(
+        (taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 100
+      ) / 100;
 
     dayWrites.push({
       ref: doc(db, 'days', dateKey),
@@ -477,7 +479,8 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
         habitsCompleted,
         habitTotal,
         habitCompletionRate,
-        IsdayCompleted: weightedCompletionRate >= 80,
+        dayCompleted,
+        IsdayCompleted: dayCompleted >= 80,
       },
     });
   }
@@ -901,8 +904,10 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     ).length;
     const habitTotal = dueHabits.length;
     const habitCompletionRate = roundedRate(habitsCompleted, habitTotal);
-    const weightedCompletionRate =
-      taskCompletionRate * 0.8 + habitCompletionRate * 0.2;
+    const dayCompleted =
+      Math.round(
+        (taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 100
+      ) / 100;
 
     writes.push({
       ref: doc(db, 'days', dateKey),
@@ -914,7 +919,8 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         habitsCompleted,
         habitTotal,
         habitCompletionRate,
-        IsdayCompleted: weightedCompletionRate >= 80,
+        dayCompleted,
+        IsdayCompleted: dayCompleted >= 80,
       },
     });
     result.days += 1;

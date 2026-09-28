@@ -184,6 +184,45 @@ function isSimpleTaskId(value: string): boolean {
   return /^T[1-9]\d*$/.test(value);
 }
 
+async function deduplicateHabitLogs(): Promise<void> {
+  const snapshot = await getDocs(collection(db, 'habitLogs'));
+  const groups = new Map<string, typeof snapshot.docs>();
+
+  snapshot.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const habitId = String(data.habitId || '').trim();
+    const dateKey = toDateKey(data.dateKey);
+    if (!habitId || !dateKey) return;
+    const key = `${habitId}::${dateKey}`;
+    const group = groups.get(key) || [];
+    group.push(logDoc);
+    groups.set(key, group);
+  });
+
+  for (const group of groups.values()) {
+    if (group.length <= 1) continue;
+    const ordered = [...group].sort((a, b) =>
+      String(a.data().habitLogId || a.id).localeCompare(
+        String(b.data().habitLogId || b.id),
+        undefined,
+        { numeric: true }
+      )
+    );
+    const keeper = ordered[0];
+    const keeperData = keeper.data();
+    const batch = writeBatch(db);
+    batch.set(keeper.ref, {
+      ...keeperData,
+      habitLogId: String(keeperData.habitLogId || keeper.id),
+      habitId: String(keeperData.habitId || '').trim(),
+      dateKey: toDateKey(keeperData.dateKey),
+      Iscompleted: ordered.some((logDoc) => logDoc.data().Iscompleted === true),
+    });
+    ordered.slice(1).forEach((duplicate) => batch.delete(duplicate.ref));
+    await batch.commit();
+  }
+}
+
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   // Enforce the HabitLogs uniqueness rule for all historical and current data:
   // one row per (habitId, dateKey). Completion is preserved if any duplicate was completed.

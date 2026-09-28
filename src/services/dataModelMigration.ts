@@ -289,6 +289,65 @@ async function migrateCanonicalIds(): Promise<void> {
   }
 }
 
+function taskUniqueKeyDocumentId(logicalKey: string): string {
+  let hash = 0xcbf29ce484222325n;
+  for (const character of logicalKey) {
+    hash ^= BigInt(character.codePointAt(0) || 0);
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
+  }
+  return hash.toString(16).padStart(16, '0');
+}
+
+async function rebuildTaskUniqueKeys(): Promise<void> {
+  const [tasksSnap, uniqueKeysSnap] = await Promise.all([
+    getDocs(collection(db, 'tasks')),
+    getDocs(collection(db, 'taskUniqueKeys')),
+  ]);
+
+  // Remove stale reservations first. The task collection is canonical after
+  // deduplication, so rebuilding from scratch is safer than trying to repair
+  // old reservations individually.
+  for (let i = 0; i < uniqueKeysSnap.docs.length; i += MIGRATION_BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    uniqueKeysSnap.docs
+      .slice(i, i + MIGRATION_BATCH_LIMIT)
+      .forEach((keyDoc) => batch.delete(keyDoc.ref));
+    await batch.commit();
+  }
+
+  const writes: QueuedWrite[] = [];
+  const seenDocumentIds = new Map<string, string>();
+
+  tasksSnap.docs.forEach((taskDoc) => {
+    const data = taskDoc.data() as Record<string, unknown>;
+    const scheduledDate = toDateKey(data.scheduledDate || data.taskKey);
+    const normalizedTitle = normalizedTaskTitleKey(data.title || data.taskOfTheDay);
+    if (!scheduledDate || !normalizedTitle) return;
+
+    const logicalKey = `${scheduledDate}::${normalizedTitle}`;
+    const documentId = taskUniqueKeyDocumentId(logicalKey);
+    const existingLogicalKey = seenDocumentIds.get(documentId);
+
+    if (existingLogicalKey && existingLogicalKey !== logicalKey) {
+      throw new Error('Task uniqueness hash collision detected.');
+    }
+    seenDocumentIds.set(documentId, logicalKey);
+
+    writes.push({
+      ref: doc(db, 'taskUniqueKeys', documentId),
+      data: {
+        logicalKey,
+        taskId: String(data.taskId || taskDoc.id),
+        scheduledDate,
+        normalizedTitle,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  });
+
+  await commitQueuedWrites(writes);
+}
+
 function normalizedTaskTitleKey(value: unknown): string {
   return String(value ?? '')
     .trim()
@@ -644,6 +703,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   // Re-run after re-keying so an interrupted older migration cannot leave a
   // legacy-key copy beside its canonical T# copy.
   await deduplicateTasksByLogicalKey();
+  await rebuildTaskUniqueKeys();
   await backfillTaskOrder();
   return result;
 }

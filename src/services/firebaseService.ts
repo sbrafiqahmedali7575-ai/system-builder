@@ -356,8 +356,6 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
 
   logsSnapshot.docs.forEach((logDoc) => {
     const data = logDoc.data();
-    const logDateKey = normalizeModelDateKey(data.dateKey);
-    if (logDateKey && logDateKey > today) return;
     const storedId = String(data.habitLogId || logDoc.id);
     const match = /^HL(\d+)$/i.exec(storedId);
     if (match) usedNumbers.add(Number(match[1]));
@@ -403,7 +401,13 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
     { merge: true }
   );
 
-  // Never auto-delete duplicate HabitLogs here; cleanup must be non-destructive.
+  // Remove duplicate rows for the same habit/today.
+  const duplicates = todayLogs.filter((logDoc) => logDoc.id !== primary.id);
+  if (duplicates.length > 0) {
+    const batch = writeBatch(db);
+    duplicates.forEach((logDoc) => batch.delete(logDoc.ref));
+    await batch.commit();
+  }
 }
 
 async function getCompletedHabitDates(habitId: string): Promise<Set<string>> {
@@ -726,29 +730,6 @@ export async function saveCountdownSettings(
 
 export type CanonicalCollectionName = 'users' | 'days' | 'tasks' | 'habits' | 'habitLogs' | 'countdowns';
 export type CanonicalDataRow = { id: string; [key: string]: unknown };
-
-export async function updateCanonicalDataRow(
-  collectionName: 'tasks' | 'habitLogs',
-  documentId: string,
-  values: Record<string, unknown>
-): Promise<void> {
-  if (!documentId) throw new Error('Missing Firestore document ID.');
-  const allowed = collectionName === 'tasks'
-    ? ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'notes', 'Iscompleted']
-    : ['habitLogId', 'habitId', 'dateKey', 'Iscompleted'];
-  const payload = Object.fromEntries(
-    Object.entries(values).filter(([key]) => allowed.includes(key))
-  );
-  await setDoc(doc(db, collectionName, documentId), payload, { merge: true });
-
-  if (collectionName === 'tasks') {
-    const dateKey = normalizeModelDateKey(payload.scheduledDate);
-    if (dateKey) await rebuildDaySummary(dateKey);
-  } else {
-    const dateKey = normalizeModelDateKey(payload.dateKey);
-    if (dateKey) await rebuildDaySummary(dateKey);
-  }
-}
 
 export function subscribeToCanonicalData(
   onUpdate: (data: Record<CanonicalCollectionName, CanonicalDataRow[]>) => void,

@@ -283,8 +283,23 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
       className="tools-workspace-view lg:overflow-y-auto"
     >
       <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden border-0 bg-white flex flex-col">
-        <div className="tools-view-header"><div><h2 className="tools-view-title">Tasks</h2><p className="tools-view-subtitle">Plan and manage your schedule.</p></div></div>
-        <div className="min-h-0 flex-1">
+        <div className="tools-view-header">
+          <div className="min-w-0"><h2 className="tools-view-title">Task Planner</h2><p className="tools-view-subtitle">{todayTasks.length} today · {completedToday} completed · {weekTasks.length} this week</p></div>
+          <button type="button" onClick={openAdd} className="tools-primary-action h-9 px-3 inline-flex items-center gap-1.5 text-sm font-medium"><Plus className="w-4 h-4" />New task</button>
+        </div>
+        {formOpen && (
+          <div className="border-b border-slate-200 bg-slate-50/70 px-3 sm:px-4 py-3">
+            <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold">{editingTaskId ? 'Edit task' : 'Add task'}</div><button type="button" onClick={closeForm} className="w-7 h-7 rounded-md hover:bg-slate-200 flex items-center justify-center" aria-label="Close task editor"><X className="w-4 h-4" /></button></div>
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_160px_220px_auto] gap-2">
+              <input autoFocus value={draft.title} onChange={e=>setDraft(v=>({...v,title:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&draft.quadrant)void saveTask()}} placeholder="What needs to be done?" className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"/>
+              <input type="date" value={draft.dateKey} onChange={e=>setDraft(v=>({...v,dateKey:e.target.value}))} className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none focus:border-blue-500"/>
+              <select value={draft.quadrant} onChange={e=>setDraft(v=>({...v,quadrant:e.target.value as MatrixQuadrant|''}))} className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none focus:border-blue-500"><option value="">Priority / quadrant</option>{QUADRANTS.map(item=><option key={item.value} value={item.value}>{item.roman} · {item.label}</option>)}</select>
+              <button type="button" onClick={()=>void saveTask()} disabled={isSavingTask||!draft.title.trim()||!draft.dateKey||!draft.quadrant} className="tools-primary-action h-9 px-4 text-sm font-medium disabled:opacity-40">{isSavingTask?'Saving…':editingTaskId?'Update':'Add task'}</button>
+            </div>
+            <textarea value={draft.notes} onChange={e=>setDraft(v=>({...v,notes:e.target.value}))} placeholder="Add notes (optional)" rows={2} className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"/>
+          </div>
+        )}
+        <div className="min-h-0 flex-1 bg-white">
         <CalendarWorkspace
           tasks={tasks}
           habits={habits}
@@ -297,99 +312,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
         </div>
       </section>
 
-      {formOpen && (
-        <div
-          className={`${
-            compact ? 'rounded-xl p-3' : 'rounded-xl p-4'
-          } border border-slate-200 bg-slate-50`}
-        >
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div>
-              <div className="text-sm font-semibold">
-                {editingTaskId ? 'Edit Task' : 'New Task'}
-              </div>
-              <div className="text-[11px] font-semibold text-slate-500">
-                Title, scheduled date, and Eisenhower quadrant.
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={closeForm}
-              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
-              aria-label="Close task editor"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_180px_230px_auto] gap-2">
-            <input
-              value={draft.title}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  title: event.target.value,
-                }))
-              }
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && draft.quadrant) {
-                  void saveTask();
-                }
-              }}
-              placeholder="Task title"
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
-            />
-            <input
-              type="date"
-              value={draft.dateKey}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  dateKey: event.target.value,
-                }))
-              }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none focus:border-blue-400"
-            />
-            <select
-              value={draft.quadrant}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  quadrant: event.target.value as MatrixQuadrant | '',
-                }))
-              }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none"
-            >
-              <option value="">Select quadrant</option>
-              {QUADRANTS.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.roman} · {item.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => void saveTask()}
-              disabled={isSavingTask || !draft.title.trim() || !draft.dateKey || !draft.quadrant}
-              className="h-10 rounded-xl bg-blue-600 text-white px-4 font-semibold text-sm disabled:opacity-40"
-            >
-              {isSavingTask ? 'Saving…' : editingTaskId ? 'Update' : 'Save'}
-            </button>
-          <textarea
-            value={draft.notes}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                notes: event.target.value,
-              }))
-            }
-            placeholder="Notes"
-            rows={3}
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none resize-y focus:border-blue-400"
-          />
-          </div>
-        </div>
-      )}
 
     </div>
   );

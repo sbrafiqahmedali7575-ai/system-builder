@@ -280,13 +280,10 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
 
   return (
     <div
-      className={`${compact ? 'space-y-2' : 'space-y-4'} lg:h-full lg:overflow-y-auto lg:pr-1`}
+      className="tools-workspace-view lg:overflow-y-auto"
     >
-      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden rounded-xl border border-slate-200 bg-white  flex flex-col">
-        <div className="px-3 sm:px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
-          <p className="text-[10px] uppercase tracking-[0.14em] font-medium text-slate-400">Plan ahead</p>
-          <h2 className="text-sm font-medium text-slate-800">Task Planner</h2>
-        </div>
+      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden border-0 bg-white flex flex-col">
+        <div className="tools-view-header"><div><h2 className="tools-view-title">Tasks</h2><p className="tools-view-subtitle">Plan and manage your schedule.</p></div></div>
         <div className="min-h-0 flex-1">
         <CalendarWorkspace
           tasks={tasks}

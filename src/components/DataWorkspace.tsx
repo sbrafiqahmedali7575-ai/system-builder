@@ -161,7 +161,7 @@ export const DataWorkspace: React.FC = () => {
                   <div className="mt-1 text-lg font-semibold text-slate-900">
                     {data[collection.id].length}
                   </div>
-                  <div className="text-[11px] uppercase tracking-wide font-bold text-slate-400">
+                  <div className="text-[11px] uppercase tracking-wide font-medium text-slate-400">
                     rows
                   </div>
                 </button>
@@ -217,7 +217,7 @@ export const DataWorkspace: React.FC = () => {
                     <div className="mt-1 text-lg font-semibold text-slate-900">
                       {data[collection.id].length}
                     </div>
-                    <div className="text-[11px] uppercase tracking-wide font-bold text-slate-400">
+                    <div className="text-[11px] uppercase tracking-wide font-medium text-slate-400">
                       rows
                     </div>
                   </button>
@@ -228,16 +228,16 @@ export const DataWorkspace: React.FC = () => {
         </div>
       </div>
 
-      {error && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">{error}</div>}
+      {error && <div className="tools-feedback-error">{error}</div>}
 
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden lg:flex-1 lg:min-h-0">
         <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="font-semibold text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
-          <div className="text-[10px] font-bold text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>
+          <div className="text-[10px] font-medium text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>
         </div>
         <div className="overflow-auto lg:h-[calc(100%-41px)]">
           {rows.length === 0 ? (
-            <div className="min-h-40 flex items-center justify-center text-sm font-bold text-slate-400">No documents</div>
+            <div className="min-h-40 flex items-center justify-center text-sm font-medium text-slate-400">No documents</div>
           ) : (
             <table className="w-full min-w-max border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-white shadow-sm">

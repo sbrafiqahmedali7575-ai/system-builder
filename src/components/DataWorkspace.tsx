@@ -123,13 +123,13 @@ export const DataWorkspace: React.FC = () => {
     <div className="space-y-3 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 lg:shrink-0">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.16em] font-black text-blue-600">Firestore workspace</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-blue-600">Firestore workspace</p>
         </div>
       </div>
 
       <div className="space-y-2 lg:shrink-0">
         <div>
-          <div className="mb-1 text-[10px] uppercase tracking-[0.14em] font-black text-slate-500">Fact</div>
+          <div className="mb-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-500">Fact</div>
           <div className="grid grid-cols-3 gap-1.5">
             {FACT_COLLECTIONS.map((collection) => {
               const selected = active === collection.id;
@@ -151,17 +151,17 @@ export const DataWorkspace: React.FC = () => {
                       }`}
                     />
                     <span
-                      className={`text-[11px] font-black truncate ${
+                      className={`text-[11px] font-semibold truncate ${
                         selected ? 'text-blue-800' : 'text-slate-700'
                       }`}
                     >
                       {collection.label}
                     </span>
                   </div>
-                  <div className="mt-1 text-lg font-black text-slate-900">
+                  <div className="mt-1 text-lg font-semibold text-slate-900">
                     {data[collection.id].length}
                   </div>
-                  <div className="text-[9px] uppercase tracking-wide font-bold text-slate-400">
+                  <div className="text-[11px] uppercase tracking-wide font-bold text-slate-400">
                     rows
                   </div>
                 </button>
@@ -174,7 +174,7 @@ export const DataWorkspace: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowDimensions((value) => !value)}
-            className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] font-black text-slate-400 hover:text-slate-600"
+            className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-400 hover:text-slate-600"
             aria-expanded={showDimensions}
             title="Show dimension tables"
           >
@@ -207,17 +207,17 @@ export const DataWorkspace: React.FC = () => {
                         }`}
                       />
                       <span
-                        className={`text-[11px] font-black truncate ${
+                        className={`text-[11px] font-semibold truncate ${
                           selected ? 'text-blue-800' : 'text-slate-700'
                         }`}
                       >
                         {collection.label}
                       </span>
                     </div>
-                    <div className="mt-1 text-lg font-black text-slate-900">
+                    <div className="mt-1 text-lg font-semibold text-slate-900">
                       {data[collection.id].length}
                     </div>
-                    <div className="text-[9px] uppercase tracking-wide font-bold text-slate-400">
+                    <div className="text-[11px] uppercase tracking-wide font-bold text-slate-400">
                       rows
                     </div>
                   </button>
@@ -232,7 +232,7 @@ export const DataWorkspace: React.FC = () => {
 
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden lg:flex-1 lg:min-h-0">
         <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div className="font-black text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
+          <div className="font-semibold text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
           <div className="text-[10px] font-bold text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>
         </div>
         <div className="overflow-auto lg:h-[calc(100%-41px)]">
@@ -246,7 +246,7 @@ export const DataWorkspace: React.FC = () => {
                     const keyType = KEY_COLUMNS[active][column];
                     const isSorted = sort?.column === column;
                     return (
-                      <th key={column} className="border-b border-r border-slate-200 p-0 text-[10px] uppercase tracking-wide font-black text-slate-500 whitespace-nowrap">
+                      <th key={column} className="border-b border-r border-slate-200 p-0 text-[10px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap">
                         {keyType ? (
                           <button
                             type="button"
@@ -256,7 +256,7 @@ export const DataWorkspace: React.FC = () => {
                           >
                             <KeyRound className="w-3 h-3 text-amber-500 shrink-0" />
                             <span>{column}</span>
-                            <span className="rounded bg-slate-100 px-1 py-0.5 text-[8px] text-slate-500">{keyType}</span>
+                            <span className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-500">{keyType}</span>
                             {isSorted ? (
                               sort?.direction === 'asc'
                                 ? <ArrowUp className="w-3 h-3 text-blue-600 ml-auto" />

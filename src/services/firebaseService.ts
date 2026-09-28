@@ -709,6 +709,19 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     dayCompleted,
     IsdayCompleted: dayCompleted >= 80,
   });
+
+  // Keep dateKey as the single canonical Days document ID. Remove any
+  // duplicate document whose stored dateKey represents today's same date.
+  const daysSnapshot = await getDocs(collection(db, DAYS_COLLECTION));
+  const duplicateDeletes: Array<{ ref: DocumentReference<DocumentData>; delete: true }> = [];
+  daysSnapshot.docs.forEach((dayDoc) => {
+    if (dayDoc.id === dateKey) return;
+    const storedDateKey = normalizeModelDateKey(dayDoc.data().dateKey || dayDoc.id);
+    if (storedDateKey === dateKey) {
+      duplicateDeletes.push({ ref: dayDoc.ref, delete: true });
+    }
+  });
+  if (duplicateDeletes.length > 0) await commitBatchedMutations(duplicateDeletes);
 }
 
 export async function initializeDayHabitStatus(dateKey: string): Promise<void> {

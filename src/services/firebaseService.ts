@@ -841,7 +841,11 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   const taskRef = existingTaskDoc.ref;
 
   await runTransaction(db, async (transaction) => {
-    const nextUniqueSnapshot = await transaction.get(nextUnique.ref);
+    const keysChanged = previousUnique.ref.path !== nextUnique.ref.path;
+    const [nextUniqueSnapshot, previousUniqueSnapshot] = await Promise.all([
+      transaction.get(nextUnique.ref),
+      keysChanged ? transaction.get(previousUnique.ref) : Promise.resolve(null),
+    ]);
 
     if (nextUniqueSnapshot.exists()) {
       const ownerTaskId = String(nextUniqueSnapshot.data().taskId || '');
@@ -861,14 +865,12 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
       updatedAt: new Date().toISOString(),
     });
 
-    if (previousUnique.ref.path !== nextUnique.ref.path) {
-      const previousUniqueSnapshot = await transaction.get(previousUnique.ref);
-      if (
-        previousUniqueSnapshot.exists() &&
-        String(previousUniqueSnapshot.data().taskId || '') === task.id
-      ) {
-        transaction.delete(previousUnique.ref);
-      }
+    if (
+      keysChanged &&
+      previousUniqueSnapshot?.exists() &&
+      String(previousUniqueSnapshot.data().taskId || '') === task.id
+    ) {
+      transaction.delete(previousUnique.ref);
     }
   });
 

@@ -1,0 +1,69 @@
+name: Habit Day Sync Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/habit-day-sync-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Test habit check-in day sync
+        run: |
+          cat > habit-sync-test.ts <<'TS'
+          import { addHabitToCloud, updateHabitInCloud, deleteHabitFromCloud, db } from './src/services/firebaseService.ts';
+          import { doc, getDoc } from 'firebase/firestore';
+
+          const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).formatToParts(new Date());
+          const v = (t: string) => parts.find(p => p.type === t)?.value || '';
+          const dateKey = `${v('year')}-${v('month')}-${v('day')}`;
+          const id = `smoke-${Date.now()}`;
+          const weekday = new Date(Date.UTC(Number(v('year')), Number(v('month')) - 1, Number(v('day')))).getUTCDay();
+
+          const habit:any = {
+            id,
+            name: '[SMOKE] Habit day sync',
+            emoji: '✓',
+            frequency: 'custom',
+            repeatDays: [weekday],
+            skippedDates: [],
+            extraDates: [],
+            color: 'blue',
+            checkIns: [],
+            createdAt: new Date().toISOString(),
+            activeFrom: dateKey,
+            isActive: true,
+          };
+
+          try {
+            await addHabitToCloud(habit);
+            await updateHabitInCloud({...habit, checkIns:[dateKey], updatedAt:new Date().toISOString()});
+            const day = await getDoc(doc(db,'days',dateKey));
+            const data = day.data() || {};
+            console.log('DAY_AFTER_CHECKIN', JSON.stringify(data));
+            if (!day.exists()) throw new Error('Day document missing');
+            if (Number(data.habitsCompleted || 0) < 1) throw new Error('habitsCompleted did not increase');
+            if (Number(data.habitCompletionRate || 0) <= 0) throw new Error('habitCompletionRate did not increase');
+            console.log('PASS :: habit check-in updates Days');
+          } finally {
+            try { await deleteHabitFromCloud(id); } catch (e) { console.warn('cleanup failed', e); }
+          }
+          TS
+          bun habit-sync-test.ts
+          rm -f habit-sync-test.ts

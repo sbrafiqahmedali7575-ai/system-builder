@@ -134,46 +134,98 @@ export const DataWorkspace: React.FC = () => {
         <div>
           <div className="mb-1 text-[10px] uppercase tracking-[0.14em] font-black text-slate-500">Fact</div>
           <div className="grid grid-cols-3 gap-1.5">
-            {(() => { const collections = FACT_COLLECTIONS; return ({collections.map((collection) => {
-            const selected = active === collection.id;
-            return (
-              <button key={collection.id} type="button" onClick={() => selectCollection(collection.id)}
-                className={`relative rounded-xl border px-2 py-2 text-left transition-all ${selected ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                <div className="flex items-center gap-1.5">
-                  <Database className={`w-3.5 h-3.5 ${selected ? 'text-blue-600' : 'text-slate-400'}`} />
-                  <span className={`text-[11px] font-black truncate ${selected ? 'text-blue-800' : 'text-slate-700'}`}>{collection.label}</span>
-                </div>
-                <div className="mt-1 text-lg font-black text-slate-900">{data[collection.id].length}</div>
-                <div className="text-[9px] uppercase tracking-wide font-bold text-slate-400">rows</div>
-              </button>
-            );
-          })}); })()}
+            {FACT_COLLECTIONS.map((collection) => {
+              const selected = active === collection.id;
+              return (
+                <button
+                  key={collection.id}
+                  type="button"
+                  onClick={() => selectCollection(collection.id)}
+                  className={`relative rounded-xl border px-2 py-2 text-left transition-all ${
+                    selected
+                      ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Database
+                      className={`w-3.5 h-3.5 ${
+                        selected ? 'text-blue-600' : 'text-slate-400'
+                      }`}
+                    />
+                    <span
+                      className={`text-[11px] font-black truncate ${
+                        selected ? 'text-blue-800' : 'text-slate-700'
+                      }`}
+                    >
+                      {collection.label}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-lg font-black text-slate-900">
+                    {data[collection.id].length}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-wide font-bold text-slate-400">
+                    rows
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div>
-          <button type="button" onClick={() => setShowDimensions((value) => !value)}
+          <button
+            type="button"
+            onClick={() => setShowDimensions((value) => !value)}
             className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] font-black text-slate-400 hover:text-slate-600"
-            aria-expanded={showDimensions} title="Show dimension tables">
-            {showDimensions ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            aria-expanded={showDimensions}
+            title="Show dimension tables"
+          >
+            {showDimensions ? (
+              <ChevronDown className="w-3 h-3" />
+            ) : (
+              <ChevronRight className="w-3 h-3" />
+            )}
             Dim
           </button>
           {showDimensions && (
             <div className="mt-1 grid grid-cols-3 gap-1.5">
-              {(() => { const collections = DIM_COLLECTIONS; return ({collections.map((collection) => {
-            const selected = active === collection.id;
-            return (
-              <button key={collection.id} type="button" onClick={() => selectCollection(collection.id)}
-                className={`relative rounded-xl border px-2 py-2 text-left transition-all ${selected ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                <div className="flex items-center gap-1.5">
-                  <Database className={`w-3.5 h-3.5 ${selected ? 'text-blue-600' : 'text-slate-400'}`} />
-                  <span className={`text-[11px] font-black truncate ${selected ? 'text-blue-800' : 'text-slate-700'}`}>{collection.label}</span>
-                </div>
-                <div className="mt-1 text-lg font-black text-slate-900">{data[collection.id].length}</div>
-                <div className="text-[9px] uppercase tracking-wide font-bold text-slate-400">rows</div>
-              </button>
-            );
-          })}); })()}
+              {DIM_COLLECTIONS.map((collection) => {
+                const selected = active === collection.id;
+                return (
+                  <button
+                    key={collection.id}
+                    type="button"
+                    onClick={() => selectCollection(collection.id)}
+                    className={`relative rounded-xl border px-2 py-2 text-left transition-all ${
+                      selected
+                        ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Database
+                        className={`w-3.5 h-3.5 ${
+                          selected ? 'text-blue-600' : 'text-slate-400'
+                        }`}
+                      />
+                      <span
+                        className={`text-[11px] font-black truncate ${
+                          selected ? 'text-blue-800' : 'text-slate-700'
+                        }`}
+                      >
+                        {collection.label}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-lg font-black text-slate-900">
+                      {data[collection.id].length}
+                    </div>
+                    <div className="text-[9px] uppercase tracking-wide font-bold text-slate-400">
+                      rows
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

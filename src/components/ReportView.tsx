@@ -181,17 +181,21 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const achievedWeeks = useMemo(() => {
     if (tasks.length === 0) return 0;
 
-    const getMonday = (dateKey: string) => {
-      const date = new Date(`${dateKey}T12:00:00`);
-      const day = date.getDay();
-      const diff = day === 0 ? -6 : 1 - day;
-      date.setDate(date.getDate() + diff);
-      return formatCalendarDate(date);
-    };
     const addDays = (dateKey: string, days: number) => {
-      const date = new Date(`${dateKey}T12:00:00`);
-      date.setDate(date.getDate() + days);
-      return formatCalendarDate(date);
+      const [year, month, day] = dateKey.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day + days));
+      return [
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, '0'),
+        String(date.getUTCDate()).padStart(2, '0'),
+      ].join('-');
+    };
+    const getMonday = (dateKey: string) => {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      const weekday = date.getUTCDay();
+      const diff = weekday === 0 ? -6 : 1 - weekday;
+      return addDays(dateKey, diff);
     };
     const dailyRate = (dateKey: string) => {
       const dayTasks = tasks.filter((task) => task.taskKey === dateKey);

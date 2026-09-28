@@ -87,6 +87,13 @@ export const DataWorkspace: React.FC = () => {
         const rightTaskId = renderValue(b.taskId).toLocaleLowerCase();
         return -leftTaskId.localeCompare(rightTaskId, undefined, { numeric: true, sensitivity: 'base' });
       }
+
+      // Default HabitLogs tie-breaker: same dateKey -> habitLogId DESC.
+      if (!sort && active === 'habitLogs' && effectiveSort.column === 'dateKey') {
+        const leftHabitLogId = renderValue(a.habitLogId).toLocaleLowerCase();
+        const rightHabitLogId = renderValue(b.habitLogId).toLocaleLowerCase();
+        return -leftHabitLogId.localeCompare(rightHabitLogId, undefined, { numeric: true, sensitivity: 'base' });
+      }
       return 0;
     });
   }, [rows, sort, active]);

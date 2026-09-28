@@ -56,9 +56,9 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className="system-header w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs select-none sticky top-0 z-40 transition-colors"
+      className="system-header w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 select-none sticky top-0 z-40 transition-colors"
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 sm:gap-2 px-2 sm:px-3 lg:px-4 h-14 sm:h-16 max-w-7xl mx-auto">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 lg:px-5 h-14 w-full">
         {/* Brand Zone */}
         <div className="flex items-center space-x-1.5 min-w-0">
           <a
@@ -70,13 +70,13 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             <motion.div
               whileHover={{ y: -2, rotate: -2, scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className="system-mark ui-motion-icon w-9 h-9 rounded-xl text-white flex items-center justify-center font-black shadow-md relative overflow-hidden"
+              className="system-mark w-8 h-8 rounded-lg text-white flex items-center justify-center font-semibold relative overflow-hidden"
             >
               <Database className="relative z-10 w-5 h-5 stroke-[2.4]" aria-hidden="true" />
             </motion.div>
             <div className="hidden sm:block">
               <div className="flex items-center space-x-1">
-                <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
+                <span className="text-sm sm:text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   System Builder
                 </span>
               </div>
@@ -96,7 +96,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
         </div>
 
         {/* Dynamic Quotes */}
-        <div className="min-w-0 hidden sm:flex justify-center px-1 sm:px-3">
+        <div className="min-w-0 hidden lg:flex justify-center px-3">
           <motion.button
             type="button"
             onClick={showNextQuote}

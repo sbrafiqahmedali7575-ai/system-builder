@@ -103,7 +103,6 @@ export function handleFirestoreError(
 }
 
 const TASKS_COLLECTION = 'tasks';
-const TASK_UNIQUE_KEYS_COLLECTION = 'taskUniqueKeys';
 const HABITS_COLLECTION = 'habits';
 const HABIT_LOGS_COLLECTION = 'habitLogs';
 const DAYS_COLLECTION = 'days';
@@ -142,24 +141,6 @@ function taskLogicalKey(dateValue: unknown, titleValue: unknown): string {
 
 function normalizedTaskLogicalKey(task: TaskItem): string {
   return taskLogicalKey(task.taskKey, task.taskOfTheDay);
-}
-
-function taskUniqueKeyDocumentId(logicalKey: string): string {
-  // 64-bit FNV-1a keeps the Firestore document ID short even for long/Unicode titles.
-  let hash = 0xcbf29ce484222325n;
-  for (const character of logicalKey) {
-    hash ^= BigInt(character.codePointAt(0) || 0);
-    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
-  }
-  return hash.toString(16).padStart(16, '0');
-}
-
-function taskUniqueKeyRef(dateValue: unknown, titleValue: unknown) {
-  const logicalKey = taskLogicalKey(dateValue, titleValue);
-  return {
-    logicalKey,
-    ref: doc(db, TASK_UNIQUE_KEYS_COLLECTION, taskUniqueKeyDocumentId(logicalKey)),
-  };
 }
 
 function preferTaskCopy(current: TaskItem, candidate: TaskItem): TaskItem {

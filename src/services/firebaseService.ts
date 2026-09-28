@@ -660,13 +660,13 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     getDocs(collection(db, HABIT_LOGS_COLLECTION)),
   ]);
 
-  let taskTotal = 0;
-  let tasksCompleted = 0;
+  let tasks = 0;
+  let tasksDone = 0;
   tasksSnap.forEach((taskDoc) => {
     const data = taskDoc.data();
     if (normalizeModelDateKey(data.scheduledDate) !== dateKey) return;
-    taskTotal += 1;
-    if (data.Iscompleted === true) tasksCompleted += 1;
+    tasks += 1;
+    if (data.Iscompleted === true) tasksDone += 1;
   });
 
   const completedHabitIds = new Set<string>();
@@ -677,33 +677,33 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     }
   });
 
-  let habitTotal = 0;
-  let habitsCompleted = 0;
+  let Habits = 0;
+  let habitsDone = 0;
   habitsSnap.forEach((habitDoc) => {
     const data = habitDoc.data() as Record<string, unknown>;
     if (!storedHabitIsDue(data, dateKey)) return;
-    habitTotal += 1;
+    Habits += 1;
     const habitId = String(data.habitId || habitDoc.id);
-    if (completedHabitIds.has(habitId)) habitsCompleted += 1;
+    if (completedHabitIds.has(habitId)) habitsDone += 1;
   });
 
-  const taskCompletionRate =
-    taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 10000) / 100 : 0;
-  const habitCompletionRate =
-    habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 10000) / 100 : 0;
+  const tasksCompleted =
+    tasks > 0 ? Math.round((tasksDone / tasks) * 10000) / 100 : 0;
+  const habitsCompleted =
+    Habits > 0 ? Math.round((habitsDone / Habits) * 10000) / 100 : 0;
   const dayCompleted =
     Math.round(
-      (taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 100
+      (tasksCompleted * 0.8 + habitsCompleted * 0.2) * 100
     ) / 100;
 
   await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
     dateKey,
+    tasksDone,
+    tasks,
     tasksCompleted,
-    taskTotal,
-    taskCompletionRate,
+    habitsDone,
+    Habits,
     habitsCompleted,
-    habitTotal,
-    habitCompletionRate,
     dayCompleted,
     IsdayCompleted: dayCompleted >= 80,
   });
@@ -854,7 +854,7 @@ export function subscribeToRecords(
         result: data.IsdayCompleted === true ? 'TRUE' : 'FALSE',
         change: 0,
         skill: 'Daily Review',
-        summary: `${Number(data.tasksCompleted || 0)}/${Number(data.taskTotal || 0)} tasks • ${Number(data.habitsCompleted || 0)}/${Number(data.habitTotal || 0)} habits`,
+        summary: `${Number(data.tasksDone || 0)}/${Number(data.tasks || 0)} tasks • ${Number(data.habitsDone || 0)}/${Number(data.Habits || 0)} habits`,
         notes: '',
       }));
       onUpdate(records);
@@ -1368,8 +1368,8 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
     }
 
     // Normal Habit Tracker check/uncheck: recalculate only the dates whose
-    // completion state changed. This keeps Days.habitsCompleted and
-    // Days.habitCompletionRate in sync immediately.
+    // completion state changed. This keeps Days.habitsDone and
+    // Days.habitsCompleted in sync immediately.
     const nextCompletedDates = new Set(
       (habitForStorage.checkIns || [])
         .map((value) => normalizeModelDateKey(value))

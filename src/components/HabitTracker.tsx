@@ -435,7 +435,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <div className="mt-1 text-lg font-semibold text-slate-900">
             {completedToday}/{dueToday.length}
           </div>
-          <div className="text-[11px] font-bold text-slate-500">
+          <div className="text-[11px] font-medium text-slate-500">
             due habits done
           </div>
         </div>
@@ -447,7 +447,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <div className="mt-1 text-lg font-semibold text-slate-900">
             {weekCompletionRate}%
           </div>
-          <div className="text-[11px] font-bold text-slate-500">
+          <div className="text-[11px] font-medium text-slate-500">
             Best Week: {bestWeekCompletionRate}%
           </div>
         </div>
@@ -460,7 +460,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <div className="mt-1 text-lg font-semibold text-slate-900">
             {currentAllHabitsStreak}
           </div>
-          <div className="text-[11px] font-bold text-slate-500">
+          <div className="text-[11px] font-medium text-slate-500">
             Best streak: {bestAllHabitsStreak}
           </div>
         </div>
@@ -473,7 +473,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <div className="mt-1 text-lg font-semibold text-slate-900">
             {achievedWeeks}
           </div>
-          <div className="text-[11px] font-bold text-slate-500">
+          <div className="text-[11px] font-medium text-slate-500">
             weeks at {WEEKLY_TARGET_PERCENTAGE}%+ target
           </div>
         </div>
@@ -535,7 +535,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     event.target.value === 'custom' ? current.repeatDays : [],
                 }))
               }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none"
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none"
             >
               <option value="daily">Every day</option>
               <option value="weekdays">Weekdays</option>
@@ -556,7 +556,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
           {draft.frequency === 'custom' && (
             <div className="mt-3">
-              <div className="text-xs font-bold text-slate-500 mb-2">Repeat on</div>
+              <div className="text-xs font-medium text-slate-500 mb-2">Repeat on</div>
               <div className="flex flex-wrap gap-2">
                 {HABIT_WEEKDAYS.map((day) => {
                   const selected = draft.repeatDays.includes(day.value);
@@ -619,7 +619,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           )}
 
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">Color</span>
+            <span className="text-xs font-medium text-slate-500">Color</span>
             {COLORS.map((item) => (
               <button
                 key={item}
@@ -958,7 +958,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   ))}
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-bold text-slate-500">
+                <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-medium text-slate-500">
                   <span>80–100% strong</span>
                   <span>50–79% moderate</span>
                   <span>&lt;50% needs attention</span>
@@ -1014,7 +1014,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     Past 12 months • one square per calendar day.
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-slate-500">
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-medium text-slate-500">
                   <span className="inline-flex items-center gap-1">
                     <span className={`w-3 h-3 rounded-sm ${colorClasses[historyHabit.color].dot}`} />
                     Done
@@ -1048,7 +1048,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
               <div className="overflow-x-auto pb-1">
                 <div className="flex gap-1 min-w-max">
-                  <div className="grid grid-rows-7 gap-1 pr-1 text-[11px] font-bold text-slate-500">
+                  <div className="grid grid-rows-7 gap-1 pr-1 text-[11px] font-medium text-slate-500">
                     {['Sun', '', 'Tue', '', 'Thu', '', 'Sat'].map((label, index) => (
                       <div key={index} className="w-7 h-[14px] leading-[14px]">
                         {label}
@@ -1106,7 +1106,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     {historyStats.allTime.completed} of {historyStats.allTime.due} scheduled check-ins completed.
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-slate-500">
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-medium text-slate-500">
                   <span className="inline-flex items-center gap-1">
                     <span className={`w-3 h-3 rounded-sm ${colorClasses[historyHabit.color].dot}`} />
                     Done

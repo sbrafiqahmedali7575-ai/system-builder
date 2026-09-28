@@ -1038,10 +1038,6 @@ export default function App() {
         onCheckIn={handleHabitCheckIn}
         onDeleteHabit={handleDeleteHabit}
         isSyncing={isSyncing}
-        onOpenQuickAdd={() => setIsAddModalOpen(true)}
-        onOpenSearch={() => setIsTaskSearchOpen(true)}
-        onToggleFocus={() => setFocusMode((value) => !value)}
-        focusMode={focusMode}
       />
     );
   }

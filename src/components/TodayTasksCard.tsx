@@ -211,6 +211,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [savingStatusMsg, setSavingStatusMsg] = useState<string | null>(null);
   const [cardError, setCardError] = useState<string | null>(null);
   const [copyForwardFeedback, setCopyForwardFeedback] = useState<string | null>(null);
+  const copyForwardLocksRef = useRef<Set<string>>(new Set());
+  const [copyingTaskIds, setCopyingTaskIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     setCopyForwardFeedback(null);
@@ -345,11 +347,16 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
   // Copy a task forward one calendar day without changing the original task.
   const handleCopyToNextDay = async (task: TaskItem) => {
+    const nextDateKey = getNextTaskDateKey(task.taskKey);
+    const lockKey = `${task.id}::${nextDateKey}`;
+    if (copyForwardLocksRef.current.has(lockKey)) return;
+    copyForwardLocksRef.current.add(lockKey);
+    setCopyingTaskIds((current) => new Set(current).add(task.id));
+
     try {
       setCardError(null);
       setCopyForwardFeedback(null);
 
-      const nextDateKey = getNextTaskDateKey(task.taskKey);
       const duplicate = tasks.find(
         (candidate) =>
           areDatesEqual(candidate.taskKey, nextDateKey) &&
@@ -385,6 +392,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       setCardError(err?.message || 'Failed to add the task to the next day.');
     } finally {
       setSavingStatusMsg(null);
+      copyForwardLocksRef.current.delete(lockKey);
+      setCopyingTaskIds((current) => {
+        const next = new Set(current);
+        next.delete(task.id);
+        return next;
+      });
     }
   };
 
@@ -772,7 +785,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         <button
                           type="button"
                           onClick={() => handleCopyToNextDay(task)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
+                          disabled={copyingTaskIds.has(task.id)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                           title={`Add to next day (${formatCalendarDate(
                             getNextTaskDateKey(task.taskKey)
                           )})`}

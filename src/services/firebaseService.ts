@@ -11,6 +11,7 @@ import {
   getDocs,
   getDocFromServer,
   writeBatch,
+  runTransaction,
   Unsubscribe,
   type QuerySnapshot,
   type DocumentData,
@@ -96,6 +97,7 @@ export function handleFirestoreError(
 }
 
 const TASKS_COLLECTION = 'tasks';
+const TASK_UNIQUE_KEYS_COLLECTION = 'taskUniqueKeys';
 const HABITS_COLLECTION = 'habits';
 const HABIT_LOGS_COLLECTION = 'habitLogs';
 const DAYS_COLLECTION = 'days';
@@ -121,13 +123,37 @@ function storedQuadrantToMatrix(value: unknown): TaskItem['matrixQuadrant'] | un
   return undefined;
 }
 
-function normalizedTaskLogicalKey(task: TaskItem): string {
-  const dateKey = normalizeModelDateKey(task.taskKey);
-  const titleKey = task.taskOfTheDay
+function normalizedTaskTitleKey(value: unknown): string {
+  return String(value ?? '')
     .trim()
     .replace(/\s+/g, ' ')
     .toLocaleLowerCase();
-  return `${dateKey}::${titleKey}`;
+}
+
+function taskLogicalKey(dateValue: unknown, titleValue: unknown): string {
+  return `${normalizeModelDateKey(dateValue)}::${normalizedTaskTitleKey(titleValue)}`;
+}
+
+function normalizedTaskLogicalKey(task: TaskItem): string {
+  return taskLogicalKey(task.taskKey, task.taskOfTheDay);
+}
+
+function taskUniqueKeyDocumentId(logicalKey: string): string {
+  // 64-bit FNV-1a keeps the Firestore document ID short even for long/Unicode titles.
+  let hash = 0xcbf29ce484222325n;
+  for (const character of logicalKey) {
+    hash ^= BigInt(character.codePointAt(0) || 0);
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
+  }
+  return hash.toString(16).padStart(16, '0');
+}
+
+function taskUniqueKeyRef(dateValue: unknown, titleValue: unknown) {
+  const logicalKey = taskLogicalKey(dateValue, titleValue);
+  return {
+    logicalKey,
+    ref: doc(db, TASK_UNIQUE_KEYS_COLLECTION, taskUniqueKeyDocumentId(logicalKey)),
+  };
 }
 
 function preferTaskCopy(current: TaskItem, candidate: TaskItem): TaskItem {
@@ -727,72 +753,128 @@ async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
 export async function addTaskToCloud(task: TaskItem): Promise<void> {
   const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
   const existingTasks = tasksSnap.docs.map((d) => d.data());
+  const targetDateKey = normalizeModelDateKey(task.taskKey);
+  const { logicalKey, ref: uniqueKeyRef } = taskUniqueKeyRef(
+    task.taskKey,
+    task.taskOfTheDay
+  );
+  const taskRef = doc(db, TASKS_COLLECTION, task.id);
 
-  const normKey = standardizeDate(task.taskKey) || task.taskKey;
-
-  // Prevent duplicate task ID
-  const duplicateId = existingTasks.find((t) => String(t.taskId || '') === task.id);
-  if (duplicateId) {
-    throw new Error(`Duplicate task rejected: A task with ID ${task.id} already exists.`);
-  }
-
-  // Prevent duplicate task with identical title on the same date
+  // Keep the friendly validation before the transaction, but the transaction
+  // below is the actual uniqueness guarantee across tabs/devices.
   const duplicateName = existingTasks.find(
-    (t) =>
-      String(t.taskId || '') !== task.id &&
-      (standardizeDate(String(t.scheduledDate || '')) === normKey ||
-        String(t.scheduledDate || '') === task.taskKey) &&
-      t.title &&
-      task.taskOfTheDay &&
-      String(t.title).trim().toLowerCase() ===
-        String(task.taskOfTheDay).trim().toLowerCase()
+    (stored) =>
+      String(stored.taskId || '') !== task.id &&
+      taskLogicalKey(stored.scheduledDate, stored.title) === logicalKey
   );
   if (duplicateName) {
-    throw new Error(`Duplicate task rejected: A task named "${task.taskOfTheDay}" already exists for this date.`);
+    throw new Error(
+      `Duplicate task rejected: A task named "${task.taskOfTheDay}" already exists for this date.`
+    );
   }
 
-  const docRef = doc(db, TASKS_COLLECTION, task.id);
-  const sameDateCount = existingTasks.filter((t) => normalizeModelDateKey(t.scheduledDate) === normalizeModelDateKey(task.taskKey)).length;
-  await setDoc(docRef, { ...taskStoragePayload(task), taskOrder: sameDateCount + 1 });
-  await normalizeTaskOrderForDate(normalizeModelDateKey(task.taskKey));
-  await rebuildDaySummary(normalizeModelDateKey(task.taskKey));
+  const sameDateCount = existingTasks.filter(
+    (stored) => normalizeModelDateKey(stored.scheduledDate) === targetDateKey
+  ).length;
+
+  await runTransaction(db, async (transaction) => {
+    const [uniqueSnapshot, taskSnapshot] = await Promise.all([
+      transaction.get(uniqueKeyRef),
+      transaction.get(taskRef),
+    ]);
+
+    if (taskSnapshot.exists()) {
+      throw new Error(
+        `Duplicate task rejected: A task with ID ${task.id} already exists.`
+      );
+    }
+
+    if (uniqueSnapshot.exists()) {
+      const ownerTaskId = String(uniqueSnapshot.data().taskId || '');
+      if (ownerTaskId !== task.id) {
+        throw new Error(
+          `Duplicate task rejected: A task named "${task.taskOfTheDay}" already exists for this date.`
+        );
+      }
+    }
+
+    transaction.set(taskRef, {
+      ...taskStoragePayload(task),
+      taskOrder: sameDateCount + 1,
+    });
+    transaction.set(uniqueKeyRef, {
+      logicalKey,
+      taskId: task.id,
+      scheduledDate: targetDateKey,
+      normalizedTitle: normalizedTaskTitleKey(task.taskOfTheDay),
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  await normalizeTaskOrderForDate(targetDateKey);
+  await rebuildDaySummary(targetDateKey);
 }
 
 /**
- * Update an existing task with duplicate prevention
+ * Update an existing task with duplicate prevention.
+ * A transaction moves the uniqueness reservation when date/title changes.
  */
 export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
-  const existingTasks = tasksSnap.docs.map((d) => d.data());
-  const previousTask = existingTasks.find(
-    (stored) => String(stored.taskId || '') === task.id
-  );
-  const previousDateKey = normalizeModelDateKey(
-    previousTask?.scheduledDate
+  const existingTaskDoc = tasksSnap.docs.find(
+    (stored) => String(stored.data().taskId || stored.id) === task.id
   );
 
-  const normKey = standardizeDate(task.taskKey) || task.taskKey;
-
-  // Prevent duplicate task with identical title on the same date (excluding self)
-  const duplicateName = existingTasks.find(
-    (t) =>
-      String(t.taskId || '') !== task.id &&
-      (standardizeDate(String(t.scheduledDate || '')) === normKey ||
-        String(t.scheduledDate || '') === task.taskKey) &&
-      t.title &&
-      task.taskOfTheDay &&
-      String(t.title).trim().toLowerCase() === String(task.taskOfTheDay).trim().toLowerCase()
-  );
-  if (duplicateName) {
-    throw new Error(`Another task named "${task.taskOfTheDay}" already exists for this date.`);
+  if (!existingTaskDoc) {
+    throw new Error(`Task ${task.id} no longer exists.`);
   }
 
-  const docRef = doc(db, TASKS_COLLECTION, task.id);
-  await setDoc(docRef, taskStoragePayload(task), { merge: true });
-
+  const previousData = existingTaskDoc.data();
+  const previousDateKey = normalizeModelDateKey(previousData.scheduledDate);
   const nextDateKey = normalizeModelDateKey(task.taskKey);
+
+  const previousUnique = taskUniqueKeyRef(
+    previousData.scheduledDate,
+    previousData.title
+  );
+  const nextUnique = taskUniqueKeyRef(task.taskKey, task.taskOfTheDay);
+  const taskRef = existingTaskDoc.ref;
+
+  await runTransaction(db, async (transaction) => {
+    const nextUniqueSnapshot = await transaction.get(nextUnique.ref);
+
+    if (nextUniqueSnapshot.exists()) {
+      const ownerTaskId = String(nextUniqueSnapshot.data().taskId || '');
+      if (ownerTaskId && ownerTaskId !== task.id) {
+        throw new Error(
+          `Another task named "${task.taskOfTheDay}" already exists for this date.`
+        );
+      }
+    }
+
+    transaction.set(taskRef, taskStoragePayload(task), { merge: true });
+    transaction.set(nextUnique.ref, {
+      logicalKey: nextUnique.logicalKey,
+      taskId: task.id,
+      scheduledDate: nextDateKey,
+      normalizedTitle: normalizedTaskTitleKey(task.taskOfTheDay),
+      updatedAt: new Date().toISOString(),
+    });
+
+    if (previousUnique.ref.path !== nextUnique.ref.path) {
+      const previousUniqueSnapshot = await transaction.get(previousUnique.ref);
+      if (
+        previousUniqueSnapshot.exists() &&
+        String(previousUniqueSnapshot.data().taskId || '') === task.id
+      ) {
+        transaction.delete(previousUnique.ref);
+      }
+    }
+  });
+
   await normalizeTaskOrderForDate(nextDateKey);
   await rebuildDaySummary(nextDateKey);
+
   if (previousDateKey && previousDateKey !== nextDateKey) {
     await normalizeTaskOrderForDate(previousDateKey);
     await rebuildDaySummary(previousDateKey);
@@ -805,47 +887,31 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
 export async function deleteTaskFromCloud(taskId: string): Promise<void> {
   const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
   const existing = snapshot.docs.find(
-    (taskDoc) => String(taskDoc.data().taskId || taskDoc.data().id || taskDoc.id) === taskId
+    (taskDoc) => String(taskDoc.data().taskId || taskDoc.id) === taskId
   );
-  const dateKey = existing
-    ? normalizeModelDateKey(existing.data().scheduledDate)
-    : '';
 
   if (!existing) {
-    // Idempotent delete: nothing remains to delete or renumber.
     return;
   }
 
-  // Delete and renumber the affected date atomically so subscribers never
-  // observe a post-delete gap in taskOrder.
-  const batch = writeBatch(db);
-  batch.delete(existing.ref);
+  const data = existing.data();
+  const dateKey = normalizeModelDateKey(data.scheduledDate);
+  const unique = taskUniqueKeyRef(data.scheduledDate, data.title);
+
+  await runTransaction(db, async (transaction) => {
+    const uniqueSnapshot = await transaction.get(unique.ref);
+    transaction.delete(existing.ref);
+
+    if (
+      uniqueSnapshot.exists() &&
+      String(uniqueSnapshot.data().taskId || '') === taskId
+    ) {
+      transaction.delete(unique.ref);
+    }
+  });
 
   if (dateKey) {
-    const remainingForDate = snapshot.docs
-      .filter(
-        (taskDoc) =>
-          taskDoc.ref.path !== existing.ref.path &&
-          normalizeModelDateKey(taskDoc.data().scheduledDate) === dateKey
-      )
-      .sort((a, b) => {
-        const aTaskId = String(a.data().taskId || a.id);
-        const bTaskId = String(b.data().taskId || b.id);
-        return aTaskId.localeCompare(bTaskId, undefined, { numeric: true, sensitivity: 'base' });
-      });
-
-    remainingForDate.forEach((taskDoc, index) => {
-      batch.set(
-        taskDoc.ref,
-        { taskOrder: index + 1, sortOrder: deleteField() },
-        { merge: true }
-      );
-    });
-  }
-
-  await batch.commit();
-
-  if (dateKey) {
+    await normalizeTaskOrderForDate(dateKey);
     await rebuildDaySummary(dateKey);
   }
 }

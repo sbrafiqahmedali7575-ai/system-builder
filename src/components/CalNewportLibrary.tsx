@@ -4,7 +4,6 @@ import {
   BookMarked,
   BookOpen,
   CheckCircle2,
-  Coffee,
   Lightbulb,
   Minus,
   Plus,
@@ -43,7 +42,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     const parsed = Number(window.localStorage.getItem(FONT_SCALE_KEY) || '1');
     return Number.isFinite(parsed) ? Math.min(1.25, Math.max(0.9, parsed)) : 1;
   });
-  const readerTone = 'sepia' as ReaderTone;
+  const readerTone = 'paper' as ReaderTone;
   const [readingProgress, setReadingProgress] = useState(0);
 
   const activeBook = useMemo(
@@ -77,26 +76,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     };
   }, [activeBookId]);
 
-  const toneClasses =
-    readerTone === 'night'
-      ? 'bg-[#111315] text-[#ece8df]'
-      : readerTone === 'sepia'
-      ? 'bg-[#f4ecd8] text-[#3f3426]'
-      : 'bg-[#f7f5ef] text-[#202124]';
-
-  const cardClasses =
-    readerTone === 'night'
-      ? 'bg-[#191c1f] border-[#2b3035]'
-      : readerTone === 'sepia'
-      ? 'bg-[#fbf4e3] border-[#ded0b4]'
-      : 'bg-[#fffefb] border-[#dedbd2]';
-
-  const mutedText =
-    readerTone === 'night'
-      ? 'text-slate-400'
-      : readerTone === 'sepia'
-      ? 'text-[#766653]'
-      : 'text-slate-500';
+  const toneClasses = 'bg-[#f7f7f7] text-slate-900 dark:bg-slate-950 dark:text-slate-100';
+  const cardClasses = 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800';
+  const mutedText = 'text-slate-500 dark:text-slate-400';
 
   const selectBook = (book: CalNewportBook) => {
     setActiveBookId(book.id);
@@ -111,16 +93,8 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
         />
       </div>
 
-      <header
-        className={`sticky top-0 z-[60] border-b backdrop-blur-xl ${
-          readerTone === 'night'
-            ? 'bg-[#111315]/95 border-[#2b3035]'
-            : readerTone === 'sepia'
-            ? 'bg-[#f4ecd8]/95 border-[#ded0b4]'
-            : 'bg-[#f7f5ef]/95 border-[#dedbd2]'
-        }`}
-      >
-        <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-3 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="w-full px-3 sm:px-5 lg:px-7 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
@@ -138,7 +112,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📚</span>
-                <h1 className="text-lg sm:text-xl font-black tracking-tight truncate">
+                <h1 className="text-base font-semibold tracking-tight truncate">
                   By Cal Newport
                 </h1>
               </div>
@@ -177,26 +151,17 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               </button>
             </div>
 
-            <div
-              className="flex items-center rounded-xl border border-[#ded0b4] p-1"
-              title="Sepia reading theme"
-              aria-label="Sepia reading theme"
-            >
-              <span className="h-8 w-8 rounded-lg flex items-center justify-center bg-amber-700 text-white">
-                <Coffee className="w-3.5 h-3.5" />
-              </span>
-            </div>
           </div>
         </div>
 
-        <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
+        <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
           <div className="flex items-center gap-1.5 min-w-max">
             {CAL_NEWPORT_BOOKS.map((book, index) => (
               <button
                 key={book.id}
                 type="button"
                 onClick={() => selectBook(book)}
-                className={`px-3 py-2 rounded-xl text-xs font-black border transition-all ${
+                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
                   activeBookId === book.id
                     ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                     : readerTone === 'night'
@@ -211,10 +176,10 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
         </div>
       </header>
 
-      <div className="max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-7 py-5 lg:py-7">
+      <div className="w-full px-3 sm:px-5 lg:px-7 py-4 lg:py-5">
         <main className="min-w-0">
           <article
-            className={`rounded-[24px] border shadow-[0_20px_55px_rgba(15,23,42,0.08)] overflow-hidden ${cardClasses}`}
+            className={`rounded-xl border overflow-hidden ${cardClasses}`}
           >
             <div
               className={`px-5 sm:px-8 lg:px-12 py-8 sm:py-10 border-b ${
@@ -222,7 +187,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               }`}
             >
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span className="rounded-full bg-blue-500/10 text-blue-600 px-2.5 py-1 text-[11px] font-black">
+                <span className="rounded-full bg-blue-500/10 text-blue-600 px-2.5 py-1 text-[11px] font-semibold">
                   {activeBook.year}
                 </span>
                 <span className={`text-[11px] font-bold ${mutedText}`}>
@@ -230,10 +195,10 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 </span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.04]">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.04]">
                 {activeBook.title}
               </h2>
-              <p className="mt-3 text-base sm:text-lg font-black text-blue-600">
+              <p className="mt-3 text-base sm:text-lg font-semibold text-blue-600">
                 {activeBook.focus}
               </p>
               <p
@@ -254,7 +219,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="w-5 h-5 text-blue-600" />
                   <h3
-                    className="text-xl sm:text-2xl font-black"
+                    className="text-xl sm:text-2xl font-semibold"
                     style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                   >
                     Overview
@@ -277,7 +242,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <div className="flex items-center gap-2 mb-5">
                   <Lightbulb className="w-5 h-5 text-amber-500" />
                   <h3
-                    className="text-xl sm:text-2xl font-black"
+                    className="text-xl sm:text-2xl font-semibold"
                     style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                   >
                     Key Themes
@@ -289,7 +254,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                     <details
                       key={themeItem.title}
                       open={themeIndex === 0}
-                      className={`group rounded-2xl border overflow-hidden ${
+                      className={`group rounded-xl border overflow-hidden ${
                         readerTone === 'night'
                           ? 'border-[#343a40] bg-[#15181a]'
                           : readerTone === 'sepia'
@@ -300,7 +265,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                       <summary className="cursor-pointer list-none px-4 sm:px-5 py-4 flex items-start justify-between gap-3">
                         <div>
                           <h4
-                            className="text-base sm:text-lg font-black leading-snug"
+                            className="text-base sm:text-lg font-semibold leading-snug"
                             style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                           >
                             {themeItem.title}
@@ -310,7 +275,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                           </p>
                         </div>
                         <span
-                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-black ${
+                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold ${
                             readerTone === 'night' ? 'bg-white/5' : 'bg-black/5'
                           }`}
                         >
@@ -340,13 +305,13 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                               }`}
                             >
                               <div
-                                className="text-[11px] uppercase tracking-[0.14em] font-black text-blue-600"
+                                className="text-[11px] uppercase tracking-[0.14em] font-semibold text-blue-600"
                                 style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                               >
                                 Real-world example {index + 1}
                               </div>
                               <h5
-                                className="mt-1 text-sm font-black"
+                                className="mt-1 text-sm font-semibold"
                                 style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                               >
                                 {example.title}
@@ -366,7 +331,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                           }`}
                         >
                           <div
-                            className="flex items-center gap-2 text-sm font-black text-emerald-700 dark:text-emerald-300"
+                            className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300"
                             style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                           >
                             <Target className="w-4 h-4" />
@@ -376,7 +341,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                             {themeItem.actionPlan.map((step, index) => (
                               <div key={step} className="flex items-start gap-2.5">
                                 <span
-                                  className="w-5 h-5 mt-0.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black shrink-0"
+                                  className="w-5 h-5 mt-0.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-semibold shrink-0"
                                   style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                                 >
                                   {index + 1}
@@ -402,7 +367,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <div className="flex items-center gap-2 mb-4">
                   <BookMarked className="w-5 h-5 text-violet-600" />
                   <h3
-                    className="text-xl sm:text-2xl font-black"
+                    className="text-xl sm:text-2xl font-semibold"
                     style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                   >
                     Summary
@@ -415,14 +380,14 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 </div>
 
                 <div
-                  className={`mt-7 rounded-2xl border p-5 ${
+                  className={`mt-7 rounded-xl border p-5 ${
                     readerTone === 'night'
                       ? 'border-blue-900/50 bg-blue-950/20'
                       : 'border-blue-200 bg-blue-50/80'
                   }`}
                 >
                   <div
-                    className="flex items-center gap-2 text-sm font-black text-blue-700 dark:text-blue-300"
+                    className="flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-300"
                     style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                   >
                     <CheckCircle2 className="w-4 h-4" />
@@ -439,7 +404,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                         }`}
                       >
                         <span
-                          className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black shrink-0"
+                          className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-semibold shrink-0"
                           style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
                         >
                           {index + 1}

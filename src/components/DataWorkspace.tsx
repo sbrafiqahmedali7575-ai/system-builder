@@ -1,34 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Database, Eye, KeyRound, Pencil, RefreshCw, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Database, KeyRound, RefreshCw } from 'lucide-react';
 import {
   subscribeToCanonicalData,
-  updateCanonicalDataRow,
   type CanonicalCollectionName,
   type CanonicalDataRow,
 } from '../services/firebaseService';
 
 type SortDirection = 'asc' | 'desc';
 type SortState = { column: string; direction: SortDirection } | null;
-
-type RecoveryCandidate = {
-  habitId?: string;
-  dateKey?: string;
-  Iscompleted?: boolean;
-  evidence?: string;
-  confidence?: string;
-  status?: string;
-  existingHabitLogIds?: string[];
-};
-
-type RecoveryReport = {
-  generatedAt?: string;
-  readOnly?: boolean;
-  previewOnly?: boolean;
-  writesPerformed?: number;
-  canRestoreAutomatically?: number;
-  damagedRows?: Array<{ documentId?: string; habitLogId?: string; missingFields?: string[] }>;
-  restorable?: RecoveryCandidate[];
-};
 
 const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> = {
   users: { userId: 'PK' },
@@ -84,12 +63,6 @@ export const DataWorkspace: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortState>(null);
-  const [recoveryReport, setRecoveryReport] = useState<RecoveryReport | null>(null);
-  const [recoveryLoading, setRecoveryLoading] = useState(false);
-  const [recoveryError, setRecoveryError] = useState<string | null>(null);
-  const [editingRow, setEditingRow] = useState<CanonicalDataRow | null>(null);
-  const [editDraft, setEditDraft] = useState<Record<string, string | boolean>>({});
-  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
 
@@ -131,50 +104,6 @@ export const DataWorkspace: React.FC = () => {
     setActive(collection);
     setSort(null);
   };
-  const previewHabitLogRecovery = async () => {
-    setRecoveryLoading(true);
-    setRecoveryError(null);
-    try {
-      const response = await fetch('/api/habitlogs/recovery-report', { method: 'GET' });
-      const report = await response.json();
-      if (!response.ok) throw new Error(report.error || 'Recovery preview failed');
-      if (report.readOnly !== true || report.previewOnly !== true || Number(report.writesPerformed || 0) !== 0) {
-        throw new Error('Server did not confirm a read-only recovery preview.');
-      }
-      setRecoveryReport(report);
-    } catch (err) {
-      setRecoveryError(err instanceof Error ? err.message : 'Recovery preview failed');
-    } finally {
-      setRecoveryLoading(false);
-    }
-  };
-
-  const openRowEditor = (row: CanonicalDataRow) => {
-    const draft: Record<string, string | boolean> = {};
-    TABLE_COLUMNS[active].forEach((column) => {
-      const value = row[column];
-      draft[column] = typeof value === 'boolean' ? value : String(value ?? '');
-    });
-    setEditDraft(draft);
-    setEditingRow(row);
-  };
-
-  const saveRowEdit = async () => {
-    if (!editingRow || (active !== 'tasks' && active !== 'habitLogs')) return;
-    setSavingEdit(true);
-    setError(null);
-    try {
-      const payload: Record<string, unknown> = { ...editDraft };
-      if (active === 'tasks') payload.taskOrder = Number(editDraft.taskOrder || 1);
-      await updateCanonicalDataRow(active, editingRow.id, payload);
-      setEditingRow(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to save changes');
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
   const columns = TABLE_COLUMNS[active];
 
   return (
@@ -215,63 +144,6 @@ export const DataWorkspace: React.FC = () => {
 
       {error && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">{error}</div>}
 
-      {active === 'habitLogs' && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 lg:shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="text-xs font-black text-amber-900">HabitLog recovery preview</div>
-              <div className="text-[10px] font-semibold text-amber-700">Read-only analysis. Previewing performs zero Firestore writes or deletes.</div>
-            </div>
-            <button
-              type="button"
-              onClick={previewHabitLogRecovery}
-              disabled={recoveryLoading}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-black text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              {recoveryLoading ? 'Analyzing…' : 'Preview recoverable values'}
-            </button>
-          </div>
-          {recoveryError && <div className="mt-2 text-xs font-bold text-rose-700">{recoveryError}</div>}
-          {recoveryReport && (
-            <div className="mt-3 space-y-2">
-              <div className="flex flex-wrap gap-2 text-[10px] font-bold">
-                <span className="rounded bg-white px-2 py-1 border border-amber-200">Damaged rows: {recoveryReport.damagedRows?.length || 0}</span>
-                <span className="rounded bg-white px-2 py-1 border border-amber-200">Evidence-backed candidates: {recoveryReport.restorable?.length || 0}</span>
-                <span className="rounded bg-emerald-50 px-2 py-1 border border-emerald-200 text-emerald-700">Writes: {recoveryReport.writesPerformed || 0}</span>
-              </div>
-              {(recoveryReport.restorable?.length || 0) > 0 ? (
-                <div className="overflow-auto max-h-56 rounded-lg border border-amber-200 bg-white">
-                  <table className="w-full min-w-max text-left text-xs">
-                    <thead className="sticky top-0 bg-slate-50">
-                      <tr>
-                        {['habitId', 'dateKey', 'Iscompleted', 'evidence', 'confidence', 'status'].map((column) => (
-                          <th key={column} className="border-b border-r border-slate-200 px-2 py-1.5 text-[9px] uppercase tracking-wide text-slate-500">{column}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recoveryReport.restorable?.map((candidate, index) => (
-                        <tr key={`${candidate.habitId}-${candidate.dateKey}-${index}`}>
-                          <td className="border-b border-r border-slate-100 px-2 py-1.5 font-bold">{candidate.habitId || '—'}</td>
-                          <td className="border-b border-r border-slate-100 px-2 py-1.5 font-bold">{candidate.dateKey || '—'}</td>
-                          <td className="border-b border-r border-slate-100 px-2 py-1.5">{candidate.Iscompleted ? '1' : '0'}</td>
-                          <td className="border-b border-r border-slate-100 px-2 py-1.5">{candidate.evidence || '—'}</td>
-                          <td className="border-b border-r border-slate-100 px-2 py-1.5">{candidate.confidence || '—'}</td>
-                          <td className="border-b border-slate-100 px-2 py-1.5">{candidate.status || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-xs font-semibold text-slate-600">No evidence-backed missing habit/date pairs were found.</div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden lg:flex-1 lg:min-h-0">
         <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="font-black text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
@@ -284,7 +156,6 @@ export const DataWorkspace: React.FC = () => {
             <table className="w-full min-w-max border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-white shadow-sm">
                 <tr>
-                  {(active === 'tasks' || active === 'habitLogs') && <th className="border-b border-r border-slate-200 px-2.5 py-2 text-[10px] uppercase tracking-wide font-black text-slate-500">Edit</th>}
                   {columns.map((column) => {
                     const keyType = KEY_COLUMNS[active][column];
                     const isSorted = sort?.column === column;
@@ -319,13 +190,6 @@ export const DataWorkspace: React.FC = () => {
               <tbody>
                 {sortedRows.map((row) => (
                   <tr key={row.id} className="hover:bg-blue-50/40">
-                    {(active === 'tasks' || active === 'habitLogs') && (
-                      <td className="border-b border-r border-slate-100 px-2 py-1.5">
-                        <button type="button" onClick={() => openRowEditor(row)} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-black text-slate-700 hover:bg-slate-50">
-                          <Pencil className="w-3 h-3" /> Edit
-                        </button>
-                      </td>
-                    )}
                     {columns.map((column) => (
                       <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {renderValue(row[column], column)}
@@ -338,42 +202,6 @@ export const DataWorkspace: React.FC = () => {
           )}
         </div>
       </div>
-      {editingRow && (active === 'tasks' || active === 'habitLogs') && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" onClick={() => setEditingRow(null)}>
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <div>
-                <div className="text-sm font-black">Edit {active === 'tasks' ? 'Task' : 'HabitLog'}</div>
-                <div className="text-[10px] font-semibold text-slate-500">Document: {editingRow.id}</div>
-              </div>
-              <button type="button" onClick={() => setEditingRow(null)} className="rounded-lg p-1.5 hover:bg-slate-100"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="grid gap-3 p-4 sm:grid-cols-2">
-              {TABLE_COLUMNS[active].map((column) => {
-                const isBoolean = column === 'Iscompleted';
-                return (
-                  <label key={column} className={column === 'notes' ? 'sm:col-span-2' : ''}>
-                    <span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-slate-500">{column}</span>
-                    {isBoolean ? (
-                      <select value={String(editDraft[column] ?? false)} onChange={(event) => setEditDraft((current) => ({ ...current, [column]: event.target.value === 'true' }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                        <option value="false">FALSE</option><option value="true">TRUE</option>
-                      </select>
-                    ) : column === 'notes' ? (
-                      <textarea value={String(editDraft[column] ?? '')} onChange={(event) => setEditDraft((current) => ({ ...current, [column]: event.target.value }))} rows={3} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                    ) : (
-                      <input value={String(editDraft[column] ?? '')} onChange={(event) => setEditDraft((current) => ({ ...current, [column]: event.target.value }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                    )}
-                  </label>
-                );
-              })}
-            </div>
-            <div className="flex justify-end gap-2 border-t border-slate-200 px-4 py-3">
-              <button type="button" onClick={() => setEditingRow(null)} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black">Cancel</button>
-              <button type="button" onClick={saveRowEdit} disabled={savingEdit} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-black text-white disabled:opacity-50">{savingEdit ? 'Saving…' : 'Save changes'}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

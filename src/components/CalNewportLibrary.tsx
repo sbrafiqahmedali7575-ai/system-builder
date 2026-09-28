@@ -27,13 +27,10 @@ import {
   CAL_NEWPORT_LIBRARY_UPDATED,
   CalNewportBook,
 } from '../data/calNewportLibrary';
-import { CAL_NEWPORT_CHAPTER_GUIDES } from '../data/calNewportChapterGuides';
 
 type ReaderTone = 'paper' | 'sepia' | 'night';
 type ReaderFont = 'serif' | 'sans';
 type ReaderWidth = 'narrow' | 'medium' | 'wide';
-type HighlightColor = 'yellow' | 'blue' | 'pink' | 'green';
-interface ReaderHighlight { id: string; text: string; color: HighlightColor; note: string; sectionId: string; createdAt: string; }
 
 interface CalNewportLibraryProps {
   theme: DashboardTheme;
@@ -72,9 +69,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarks, setBookmarks] = useState<Record<string, string[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [highlights, setHighlights] = useState<Record<string, ReaderHighlight[]>>({});
-  const [pendingSelection, setPendingSelection] = useState<{ text: string; sectionId: string; x: number; y: number } | null>(null);
-  const [isHighlightsOpen, setIsHighlightsOpen] = useState(false);
+  const [highlights, setHighlights] = useState<Record<string, string[]>>({});
   const [completedBooks, setCompletedBooks] = useState<string[]>([]);
   const [favoriteBooks, setFavoriteBooks] = useState<string[]>(() => CAL_NEWPORT_BOOKS.filter((book) => book.favorite).map((book) => book.id));
 
@@ -100,10 +95,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
       if (saved.readerWidth) setReaderWidth(saved.readerWidth);
       if (saved.lineHeight) setLineHeight(saved.lineHeight);
       const state = JSON.parse(window.localStorage.getItem(READER_STATE_KEY) || '{}');
-      setBookmarks(state.bookmarks || {}); setNotes(state.notes || {});
-      const rawHighlights = state.highlights || {};
-      const migratedHighlights = Object.fromEntries(Object.entries(rawHighlights).map(([bookId, items]: [string, any]) => [bookId, (Array.isArray(items) ? items : []).map((item: any, index: number) => typeof item === 'string' ? { id: `legacy-${bookId}-${index}`, text: item, color: 'yellow', note: '', sectionId: 'overview', createdAt: new Date().toISOString() } : item)]));
-      setHighlights(migratedHighlights);
+      setBookmarks(state.bookmarks || {}); setNotes(state.notes || {}); setHighlights(state.highlights || {});
       setCompletedBooks(state.completedBooks || []); if (state.favoriteBooks) setFavoriteBooks(state.favoriteBooks);
       const y = Number(state.positions?.[activeBookId] || 0); if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
     } catch { /* keep defaults */ }
@@ -149,19 +141,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const toggleBookmark = (id: string) => setBookmarks((prev) => ({ ...prev, [activeBookId]: (prev[activeBookId] || []).includes(id) ? (prev[activeBookId] || []).filter((x) => x !== id) : [...(prev[activeBookId] || []), id] }));
   const toggleFavorite = () => setFavoriteBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
   const toggleComplete = () => setCompletedBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
-  const captureSelection = () => {
-    const selection = window.getSelection(); const text = selection?.toString().trim(); if (!selection || !text || selection.rangeCount === 0) return;
-    const range = selection.getRangeAt(0); const rect = range.getBoundingClientRect();
-    const element = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE ? range.commonAncestorContainer as Element : range.commonAncestorContainer.parentElement;
-    const section = element?.closest('[id^="theme-"], #overview, #summary') as HTMLElement | null;
-    setPendingSelection({ text, sectionId: section?.id || 'overview', x: Math.min(window.innerWidth - 220, Math.max(12, rect.left + rect.width / 2 - 100)), y: rect.bottom + window.scrollY + 8 });
-  };
-  const createHighlight = (color: HighlightColor) => {
-    if (!pendingSelection) return; const item: ReaderHighlight = { id: `hl-${Date.now()}`, text: pendingSelection.text, color, note: '', sectionId: pendingSelection.sectionId, createdAt: new Date().toISOString() };
-    setHighlights(prev => ({ ...prev, [activeBookId]: [...(prev[activeBookId] || []), item] })); setPendingSelection(null); window.getSelection()?.removeAllRanges();
-  };
-  const updateHighlightNote = (id: string, note: string) => setHighlights(prev => ({ ...prev, [activeBookId]: (prev[activeBookId] || []).map(item => item.id === id ? { ...item, note } : item) }));
-  const deleteHighlight = (id: string) => setHighlights(prev => ({ ...prev, [activeBookId]: (prev[activeBookId] || []).filter(item => item.id !== id) }));
+  const addHighlight = () => { const selected = window.getSelection()?.toString().trim(); if (!selected) return; setHighlights((prev) => ({ ...prev, [activeBookId]: [...(prev[activeBookId] || []), selected] })); window.getSelection()?.removeAllRanges(); };
   const remainingMinutes = Math.max(0, Math.ceil((100 - readingProgress) / 100 * Number(activeBook.readingTime.match(/\d+/)?.[0] || 20)));
 
   const selectBook = (book: CalNewportBook) => {
@@ -212,6 +192,8 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             <button type="button" onClick={toggleFavorite} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Favorite"><Star className={`w-4 h-4 ${favoriteBooks.includes(activeBookId) ? 'fill-current text-amber-500' : ''}`} /></button>
             <button type="button" onClick={toggleComplete} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Mark complete"><Check className={`w-4 h-4 ${completedBooks.includes(activeBookId) ? 'text-emerald-600' : ''}`} /></button>
             <button type="button" onClick={() => setIsFocusReader(v => !v)} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Distraction-free reading">{isFocusReader ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
+          </div>
+
           <div className="flex items-center gap-1.5 shrink-0">
             <div
               className={`hidden sm:flex items-center rounded-xl border p-1 ${
@@ -246,29 +228,31 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
         {!isFocusReader && (isTocOpen || isSearchOpen) && <div className="border-t border-slate-200/70 px-3 sm:px-5 py-3">
           {isSearchOpen && <div className="relative max-w-xl mb-3"><Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search themes and ideas…" className="w-full h-9 pl-9 pr-9 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:border-blue-500" /><button onClick={() => {setSearchQuery('');setIsSearchOpen(false)}} className="absolute right-2 top-2 h-5 w-5"><X className="w-4 h-4" /></button></div>}
-          {isTocOpen && <div className="flex gap-2 overflow-x-auto pb-1"><button onClick={() => jumpTo('overview')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Overview</button><button onClick={() => jumpTo('chapter-guides')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">Chapter Guide</button>{activeBook.themes.map((t,i)=><button key={t.title} onClick={() => jumpTo(`theme-${i}`)} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">{t.title}</button>)}<button onClick={() => jumpTo('summary')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Summary</button></div>}
+          {isTocOpen && <div className="flex gap-2 overflow-x-auto pb-1"><button onClick={() => jumpTo('overview')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Overview</button>{activeBook.themes.map((t,i)=><button key={t.title} onClick={() => jumpTo(`theme-${i}`)} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium whitespace-nowrap">{t.title}</button>)}<button onClick={() => jumpTo('summary')} className="px-3 h-8 rounded-lg bg-slate-100 text-xs font-medium">Summary</button></div>}
         </div>}
 
-        {!isFocusReader && <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
-          <div className="flex items-center gap-1.5 min-w-max">
-            {CAL_NEWPORT_BOOKS.map((book, index) => (
-              <button
-                key={book.id}
-                type="button"
-                onClick={() => selectBook(book)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
-                  activeBookId === book.id
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : readerTone === 'night'
-                    ? 'border-[#343a40] hover:bg-white/5'
-                    : 'border-black/10 hover:bg-black/5'
-                }`}
-              >
-                {index + 1}. {book.id === 'so-good' ? book.title : book.shortTitle}
-              </button>
-            ))}
+        {!isFocusReader && (
+          <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
+            <div className="flex items-center gap-1.5 min-w-max">
+              {CAL_NEWPORT_BOOKS.map((book, index) => (
+                <button
+                  key={book.id}
+                  type="button"
+                  onClick={() => selectBook(book)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                    activeBookId === book.id
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : readerTone === 'night'
+                      ? 'border-[#343a40] hover:bg-white/5'
+                      : 'border-black/10 hover:bg-black/5'
+                  }`}
+                >
+                  {index + 1}. {book.id === 'so-good' ? book.title : book.shortTitle}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>}
+        )}
         {!isFocusReader && <div className="border-t border-slate-200/70 px-3 sm:px-5 py-2 flex items-center gap-2 overflow-x-auto">
           <span className="text-[11px] text-slate-500 whitespace-nowrap">{Math.round(readingProgress)}% · ~{remainingMinutes} min left</span>
           <span className="h-4 w-px bg-slate-200" />
@@ -281,31 +265,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
           <button onClick={() => setReaderWidth(v => v==='narrow'?'medium':v==='medium'?'wide':'narrow')} className="px-2 h-7 rounded-md text-xs bg-slate-100">Width: {readerWidth}</button>
           <button onClick={() => toggleBookmark(currentSections[Math.min(currentSections.length-1, Math.floor(readingProgress/100*currentSections.length))])} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Bookmark className="inline w-3.5 h-3.5 mr-1" />Bookmark</button>
           <button onClick={() => { const note=window.prompt('Add a note for this book', notes[activeBookId] || ''); if(note!==null)setNotes(p=>({...p,[activeBookId]:note})); }} className="px-2 h-7 rounded-md text-xs bg-slate-100"><StickyNote className="inline w-3.5 h-3.5 mr-1" />Note</button>
-          <button onClick={() => setIsHighlightsOpen(v => !v)} className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100"><Highlighter className="w-3.5 h-3.5 mr-1" />Highlights {(highlights[activeBookId]||[]).length}</button>
+          <span className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100"><Highlighter className="w-3.5 h-3.5 mr-1" />{(highlights[activeBookId]||[]).length}</span>
         </div>}
       </header>
-
-      {pendingSelection && <div className="absolute z-[100] w-[200px] rounded-xl border border-slate-200 bg-white shadow-lg p-2" style={{ left: pendingSelection.x, top: pendingSelection.y }}>
-        <div className="text-[11px] text-slate-500 px-1 pb-2 truncate">{pendingSelection.text}</div>
-        <div className="flex items-center justify-between">
-          {(['yellow','blue','pink','green'] as HighlightColor[]).map(color => <button key={color} onClick={() => createHighlight(color)} aria-label={`Highlight ${color}`} className={`w-7 h-7 rounded-full border border-black/10 ${color==='yellow'?'bg-yellow-300':color==='blue'?'bg-blue-300':color==='pink'?'bg-pink-300':'bg-green-300'}`} />)}
-          <button onClick={() => setPendingSelection(null)} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100"><X className="w-4 h-4" /></button>
-        </div>
-      </div>}
-
-      {isHighlightsOpen && <aside className="fixed right-0 top-0 z-[90] h-screen w-full sm:w-[380px] border-l border-slate-200 bg-white shadow-xl flex flex-col">
-        <div className="h-14 px-4 border-b border-slate-200 flex items-center justify-between"><div><div className="font-semibold text-sm">Highlights & Notes</div><div className="text-[11px] text-slate-500">{activeBook.shortTitle} · {(highlights[activeBookId]||[]).length} highlights</div></div><button onClick={() => setIsHighlightsOpen(false)} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><X className="w-4 h-4" /></button></div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {(highlights[activeBookId]||[]).length === 0 ? <div className="py-16 text-center text-sm text-slate-500">Select text in the reader to create your first highlight.</div> : (highlights[activeBookId]||[]).slice().reverse().map(item => <div key={item.id} className="rounded-lg border border-slate-200 p-3">
-            <button onClick={() => { jumpTo(item.sectionId); setIsHighlightsOpen(false); }} className="w-full text-left">
-              <div className={`border-l-4 pl-2 text-sm leading-6 ${item.color==='yellow'?'border-yellow-400':item.color==='blue'?'border-blue-400':item.color==='pink'?'border-pink-400':'border-green-400'}`}>{item.text}</div>
-              <div className="mt-2 text-[10px] text-slate-400">{new Date(item.createdAt).toLocaleString()}</div>
-            </button>
-            <textarea value={item.note} onChange={e => updateHighlightNote(item.id,e.target.value)} placeholder="Add note…" rows={2} className="mt-2 w-full resize-none rounded-md border border-slate-200 px-2 py-1.5 text-xs outline-none focus:border-blue-500" />
-            <div className="mt-2 flex justify-end"><button onClick={() => deleteHighlight(item.id)} className="text-[11px] text-red-500 hover:text-red-600">Delete</button></div>
-          </div>)}
-        </div>
-      </aside>}
 
       <div className={`w-full ${isFocusReader ? 'px-0 py-0' : 'px-3 sm:px-5 lg:px-7 py-4 lg:py-5'}`}>
         <main className="min-w-0">
@@ -341,7 +303,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
             <div
               className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10"
-              onMouseUp={captureSelection}
+              onMouseUp={addHighlight}
               style={{ fontSize: `${fontScale}rem`, fontFamily, lineHeight }}
             >
               <section id="overview" className={`${widthClass} mx-auto scroll-mt-28`}>
@@ -357,7 +319,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <div className="space-y-5 leading-[1.9]">
                   {activeBook.overview.map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>
-                  )})}
+                  ))}
                 </div>
               </section>
 
@@ -483,8 +445,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                         </div>
                       </div>
                     </details>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
               </section>
 
               <div
@@ -492,20 +455,6 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   readerTone === 'night' ? 'border-[#343a40]' : 'border-black/10'
                 }`}
               />
-
-
-              <div className={`${widthClass} mx-auto my-10 border-t ${readerTone === 'night' ? 'border-[#343a40]' : 'border-black/10'}`} />
-
-              <section id="chapter-guides" className="max-w-[920px] mx-auto scroll-mt-28">
-                <div className="flex items-center gap-2 mb-5"><BookMarked className="w-5 h-5 text-blue-600" /><h3 className="text-xl sm:text-2xl font-semibold" style={{fontFamily:'Inter, ui-sans-serif, system-ui, sans-serif'}}>Chapter-by-Chapter Study Guide</h3></div>
-                <div className="space-y-3">{CAL_NEWPORT_CHAPTER_GUIDES[activeBookId].map((chapter,index)=><details key={chapter.title} className={`rounded-xl border ${cardClasses}`} open={index===0}><summary className="cursor-pointer list-none px-4 py-3 font-semibold" style={{fontFamily:'Inter, ui-sans-serif, system-ui, sans-serif'}}>{chapter.title}</summary><div className="border-t border-black/10 px-4 py-4 space-y-5">
-                  <div><h4 className="text-sm font-semibold mb-2">Summary</h4><div className="space-y-3 text-sm leading-7">{chapter.summary.map((x,i)=><p key={i}>{x}</p>)}</div></div>
-                  <div><h4 className="text-sm font-semibold mb-2">Key ideas</h4><ul className="space-y-1 text-sm">{chapter.keyIdeas.map(x=><li key={x}>• {x}</li>)}</ul></div>
-                  <div><h4 className="text-sm font-semibold mb-2">Examples</h4><div className="grid md:grid-cols-2 gap-2">{chapter.examples.map(x=><div key={x.title} className="rounded-lg border border-black/10 p-3"><div className="text-sm font-semibold">{x.title}</div><p className={`mt-1 text-sm leading-6 ${mutedText}`}>{x.body}</p></div>)}</div></div>
-                  <div><h4 className="text-sm font-semibold mb-2">Action plan</h4><ol className="space-y-1 text-sm">{chapter.actionPlan.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></div>
-                  <div><h4 className="text-sm font-semibold mb-2">Review questions</h4><ol className="space-y-2 text-sm">{chapter.reviewQuestions.map((x,i)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{i+1}. {x}</li>)}</ol></div>
-                </div></details>)}</div>
-              </section>
 
               <section id="summary" className={`${widthClass} mx-auto scroll-mt-28`}>
                 <div className="flex items-center gap-2 mb-4">

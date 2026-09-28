@@ -31,6 +31,7 @@ type TaskDraft = {
   title: string;
   dateKey: string;
   quadrant: MatrixQuadrant | '';
+  notes: string;
 };
 
 const WEEKLY_TARGET_PERCENTAGE = 80;
@@ -189,7 +190,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
 
   const openAdd = () => {
     setEditingTaskId(null);
-    setDraft({ title: '', dateKey: today, quadrant: '' });
+    setDraft({ title: '', dateKey: today, quadrant: '', notes: '' });
     setFormOpen(true);
   };
 
@@ -199,6 +200,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
       title: task.taskOfTheDay,
       dateKey: task.taskKey,
       quadrant: task.matrixQuadrant || '',
+      notes: task.notes || '',
     });
     setFormOpen(true);
   };
@@ -206,7 +208,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
   const closeForm = () => {
     setFormOpen(false);
     setEditingTaskId(null);
-    setDraft({ title: '', dateKey: today, quadrant: '' });
+    setDraft({ title: '', dateKey: today, quadrant: '', notes: '' });
   };
 
   const savingTaskRef = useRef(false);
@@ -229,6 +231,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
           taskKey: draft.dateKey,
           matrixQuadrant: draft.quadrant,
           priority: priorityForQuadrant(draft.quadrant),
+          notes: draft.notes.trim(),
           updatedAt: new Date().toISOString(),
         });
       } else {
@@ -239,6 +242,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
           priority: priorityForQuadrant(draft.quadrant),
           category: 'General',
           matrixQuadrant: draft.quadrant,
+          notes: draft.notes.trim(),
           updatedAt: new Date().toISOString(),
         });
       }
@@ -465,6 +469,18 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
             >
               {isSavingTask ? 'Saving…' : editingTaskId ? 'Update' : 'Save'}
             </button>
+          <textarea
+            value={draft.notes}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                notes: event.target.value,
+              }))
+            }
+            placeholder="Notes"
+            rows={3}
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none resize-y focus:border-blue-400"
+          />
           </div>
         </div>
       )}

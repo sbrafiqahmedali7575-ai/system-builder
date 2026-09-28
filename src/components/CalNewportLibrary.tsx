@@ -31,6 +31,8 @@ import {
 type ReaderTone = 'paper' | 'sepia' | 'night';
 type ReaderFont = 'serif' | 'sans';
 type ReaderWidth = 'narrow' | 'medium' | 'wide';
+type HighlightColor = 'yellow' | 'blue' | 'pink' | 'green';
+interface ReaderHighlight { id:string; text:string; color:HighlightColor; note:string; sectionId:string; createdAt:string; }
 
 interface CalNewportLibraryProps {
   theme: DashboardTheme;
@@ -60,7 +62,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   });
   const [readerTone, setReaderTone] = useState<ReaderTone>('paper');
   const [readerFont, setReaderFont] = useState<ReaderFont>('serif');
-  const [readerWidth, setReaderWidth] = useState<ReaderWidth>('medium');
+  const [readerWidth, setReaderWidth] = useState<ReaderWidth>('wide');
   const [lineHeight, setLineHeight] = useState(1.9);
   const [readingProgress, setReadingProgress] = useState(0);
   const [isFocusReader, setIsFocusReader] = useState(false);
@@ -69,7 +71,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [bookmarks, setBookmarks] = useState<Record<string, string[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [highlights, setHighlights] = useState<Record<string, string[]>>({});
+  const [highlights, setHighlights] = useState<Record<string, ReaderHighlight[]>>({});
+  const [pendingSelection, setPendingSelection] = useState<{text:string;sectionId:string;x:number;y:number}|null>(null);
+  const [isHighlightsOpen, setIsHighlightsOpen] = useState(false);
   const [completedBooks, setCompletedBooks] = useState<string[]>([]);
   const [favoriteBooks, setFavoriteBooks] = useState<string[]>(() => CAL_NEWPORT_BOOKS.filter((book) => book.favorite).map((book) => book.id));
 
@@ -95,7 +99,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
       if (saved.readerWidth) setReaderWidth(saved.readerWidth);
       if (saved.lineHeight) setLineHeight(saved.lineHeight);
       const state = JSON.parse(window.localStorage.getItem(READER_STATE_KEY) || '{}');
-      setBookmarks(state.bookmarks || {}); setNotes(state.notes || {}); setHighlights(state.highlights || {});
+      setBookmarks(state.bookmarks || {}); setNotes(state.notes || {});
+      const raw = state.highlights || {}; setHighlights(Object.fromEntries(Object.entries(raw).map(([k,v]:[string,any]) => [k,(Array.isArray(v)?v:[]).map((x:any,i:number)=>typeof x==='string'?{id:`legacy-${k}-${i}`,text:x,color:'yellow',note:'',sectionId:'overview',createdAt:new Date().toISOString()}:x)])));
+
       setCompletedBooks(state.completedBooks || []); if (state.favoriteBooks) setFavoriteBooks(state.favoriteBooks);
       const y = Number(state.positions?.[activeBookId] || 0); if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
     } catch { /* keep defaults */ }
@@ -138,10 +144,18 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const fontFamily = readerFont === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, ui-sans-serif, system-ui, sans-serif';
   const currentSections = ['overview', ...activeBook.themes.map((_, i) => `theme-${i}`), 'summary'];
   const jumpTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const getCurrentSection = () => {
+    const ids = ['overview', ...activeBook.themes.map((_,i)=>`theme-${i}`), 'summary'];
+    let current = 'overview'; for (const id of ids) { const el=document.getElementById(id); if(el && el.getBoundingClientRect().top <= 180) current=id; } return current;
+  };
   const toggleBookmark = (id: string) => setBookmarks((prev) => ({ ...prev, [activeBookId]: (prev[activeBookId] || []).includes(id) ? (prev[activeBookId] || []).filter((x) => x !== id) : [...(prev[activeBookId] || []), id] }));
   const toggleFavorite = () => setFavoriteBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
   const toggleComplete = () => setCompletedBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
-  const addHighlight = () => { const selected = window.getSelection()?.toString().trim(); if (!selected) return; setHighlights((prev) => ({ ...prev, [activeBookId]: [...(prev[activeBookId] || []), selected] })); window.getSelection()?.removeAllRanges(); };
+  const captureSelection = () => { const s=window.getSelection(); const text=s?.toString().trim(); if(!s||!text||!s.rangeCount)return; const r=s.getRangeAt(0), rect=r.getBoundingClientRect(); const n=r.commonAncestorContainer.nodeType===Node.ELEMENT_NODE?r.commonAncestorContainer as Element:r.commonAncestorContainer.parentElement; const section=n?.closest('[id^="theme-"],#overview,#summary') as HTMLElement|null; setPendingSelection({text,sectionId:section?.id||getCurrentSection(),x:Math.max(12,Math.min(window.innerWidth-230,rect.left+rect.width/2-105)),y:rect.bottom+window.scrollY+8}); };
+  const createHighlight=(color:HighlightColor)=>{if(!pendingSelection)return;const h:ReaderHighlight={id:`hl-${Date.now()}`,text:pendingSelection.text,color,note:'',sectionId:pendingSelection.sectionId,createdAt:new Date().toISOString()};setHighlights(p=>({...p,[activeBookId]:[...(p[activeBookId]||[]),h]}));setPendingSelection(null);window.getSelection()?.removeAllRanges();};
+  const updateHighlightNote=(id:string,note:string)=>setHighlights(p=>({...p,[activeBookId]:(p[activeBookId]||[]).map(h=>h.id===id?{...h,note}:h)}));
+  const deleteHighlight=(id:string)=>setHighlights(p=>({...p,[activeBookId]:(p[activeBookId]||[]).filter(h=>h.id!==id)}));
+  const addSectionNote=()=>{const section=getCurrentSection();const key=`${activeBookId}::${section}`;const note=window.prompt('Note for this section',notes[key]||'');if(note!==null)setNotes(p=>({...p,[key]:note}));};
   const remainingMinutes = Math.max(0, Math.ceil((100 - readingProgress) / 100 * Number(activeBook.readingTime.match(/\d+/)?.[0] || 20)));
 
   const selectBook = (book: CalNewportBook) => {
@@ -263,9 +277,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
           <button onClick={() => setReaderFont(v => v==='serif'?'sans':'serif')} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Type className="inline w-3.5 h-3.5 mr-1" />{readerFont}</button>
           <button onClick={() => setLineHeight(v => v >= 2.1 ? 1.6 : Number((v+.1).toFixed(1)))} className="px-2 h-7 rounded-md text-xs bg-slate-100"><AlignJustify className="inline w-3.5 h-3.5 mr-1" />Spacing</button>
           <button onClick={() => setReaderWidth(v => v==='narrow'?'medium':v==='medium'?'wide':'narrow')} className="px-2 h-7 rounded-md text-xs bg-slate-100">Width: {readerWidth}</button>
-          <button onClick={() => toggleBookmark(currentSections[Math.min(currentSections.length-1, Math.floor(readingProgress/100*currentSections.length))])} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Bookmark className="inline w-3.5 h-3.5 mr-1" />Bookmark</button>
-          <button onClick={() => { const note=window.prompt('Add a note for this book', notes[activeBookId] || ''); if(note!==null)setNotes(p=>({...p,[activeBookId]:note})); }} className="px-2 h-7 rounded-md text-xs bg-slate-100"><StickyNote className="inline w-3.5 h-3.5 mr-1" />Note</button>
-          <span className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100"><Highlighter className="w-3.5 h-3.5 mr-1" />{(highlights[activeBookId]||[]).length}</span>
+          <button onClick={() => toggleBookmark(getCurrentSection())} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Bookmark className="inline w-3.5 h-3.5 mr-1" />Bookmark</button>
+          <button onClick={addSectionNote} className="px-2 h-7 rounded-md text-xs bg-slate-100"><StickyNote className="inline w-3.5 h-3.5 mr-1" />Note</button>
+          <button onClick={()=>setIsHighlightsOpen(true)} className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100"><Highlighter className="w-3.5 h-3.5 mr-1" />Highlights {(highlights[activeBookId]||[]).length}</button>
         </div>}
       </header>
 
@@ -303,7 +317,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
             <div
               className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10"
-              onMouseUp={addHighlight}
+              onMouseUp={captureSelection}
               style={{ fontSize: `${fontScale}rem`, fontFamily, lineHeight }}
             >
               <section id="overview" className={`${widthClass} mx-auto scroll-mt-28`}>

@@ -549,7 +549,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
         <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-blue-600">
           Priority workspace
         </p>
-        <label className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 shrink-0">
+        <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 shrink-0">
           <input
             type="checkbox"
             checked={showCompleted}
@@ -560,7 +560,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 flex items-center gap-2">
+        <div className="tools-feedback-error flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
@@ -603,11 +603,11 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[300px] lg:min-h-0 ${compact ? 'rounded-xl' : 'rounded-xl'} border transition-all overflow-hidden flex flex-col shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${theme.border} ${theme.surface} ${
+              className={`relative min-h-[300px] lg:min-h-0 ${compact ? 'rounded-xl' : 'rounded-xl'} border transition-all overflow-hidden flex flex-col  ${theme.border} ${theme.surface} ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'
-                    : 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-50 shadow-lg -translate-y-0.5'
+                    : 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-50 '
                   : ''
               }`}
             >
@@ -670,7 +670,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                               : current
                           )
                         }
-                        className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold outline-none focus:border-blue-400"
+                        className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-medium outline-none focus:border-blue-400"
                         aria-label={`Edit quadrant ${quadrant.roman} action`}
                       />
                       <div className="rounded-xl border border-black/10 bg-white p-2.5 space-y-2.5">
@@ -779,7 +779,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                     </div>
                   ) : (
                     <div className="min-w-0">
-                      <div className={`text-[13px] font-bold ${theme.header}`}>
+                      <div className={`text-[13px] font-medium ${theme.header}`}>
                         {quadrant.title}
                       </div>
                       <div className="text-[10px] font-medium text-slate-500">

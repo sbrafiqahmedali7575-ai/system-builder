@@ -1165,7 +1165,14 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
   });
 
   await normalizeTaskOrderForDate(targetDateKey);
-  await rebuildDaySummary(targetDateKey);
+
+  // Future task scheduling/copy-forward must create only the Task record.
+  // Days and HabitLogs are current-day derived data and must never be
+  // pre-created for tomorrow or any later date.
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  if (targetDateKey === today) {
+    await rebuildDaySummary(today);
+  }
 }
 
 /**

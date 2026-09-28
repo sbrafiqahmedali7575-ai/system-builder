@@ -30,6 +30,7 @@ interface HabitTrackerProps {
   habits: HabitItem[];
   onAddHabit: (habit: Omit<HabitItem, 'id'>) => Promise<void>;
   onUpdateHabit: (habit: HabitItem) => Promise<void>;
+  onCheckIn: (habit: HabitItem, isCompleted: boolean) => Promise<void>;
   onDeleteHabit: (habitId: string) => Promise<void>;
   density?: ToolsDensity;
 }
@@ -103,6 +104,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   habits,
   onAddHabit,
   onUpdateHabit,
+  onCheckIn,
   onDeleteHabit,
   density = 'compact',
 }) => {
@@ -268,14 +270,11 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   };
 
   const toggleCheckIn = async (habit: HabitItem, dateKey: string) => {
-    if (!isHabitDue(habit, dateKey) || dateKey > today) return;
+    if (!isHabitDue(habit, dateKey) || dateKey !== today) return;
     try {
       setBusyId(habit.id);
-      const exists = habit.checkIns.includes(dateKey);
-      const checkIns = exists
-        ? habit.checkIns.filter((key) => key !== dateKey)
-        : [...habit.checkIns, dateKey].sort();
-      await onUpdateHabit({ ...habit, checkIns, updatedAt: new Date().toISOString() });
+      const isCompleted = !habit.checkIns.includes(today);
+      await onCheckIn(habit, isCompleted);
     } finally {
       setBusyId(null);
     }

@@ -354,15 +354,10 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   const usedNumbers = new Set<number>();
   const todayLogs: Array<typeof logsSnapshot.docs[number]> = [];
 
-  const futureLogRefs: Array<typeof logsSnapshot.docs[number]['ref']> = [];
-
   logsSnapshot.docs.forEach((logDoc) => {
     const data = logDoc.data();
     const logDateKey = normalizeModelDateKey(data.dateKey);
-    if (logDateKey && logDateKey > today) {
-      futureLogRefs.push(logDoc.ref);
-      return;
-    }
+    if (logDateKey && logDateKey > today) return;
     const storedId = String(data.habitLogId || logDoc.id);
     const match = /^HL(\d+)$/i.exec(storedId);
     if (match) usedNumbers.add(Number(match[1]));
@@ -374,13 +369,6 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
       todayLogs.push(logDoc);
     }
   });
-
-  // Enforce the invariant during normal runtime too: future HabitLogs never survive.
-  if (futureLogRefs.length > 0) {
-    const cleanupBatch = writeBatch(db);
-    futureLogRefs.forEach((ref) => cleanupBatch.delete(ref));
-    await cleanupBatch.commit();
-  }
 
   // Do not create HabitLogs in advance. A new row is eligible only for today.
   if (todayLogs.length === 0) {
@@ -415,13 +403,7 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
     { merge: true }
   );
 
-  // Remove duplicate rows for the same habit/today.
-  const duplicates = todayLogs.filter((logDoc) => logDoc.id !== primary.id);
-  if (duplicates.length > 0) {
-    const batch = writeBatch(db);
-    duplicates.forEach((logDoc) => batch.delete(logDoc.ref));
-    await batch.commit();
-  }
+  // Never auto-delete duplicate HabitLogs here; cleanup must be non-destructive.
 }
 
 async function getCompletedHabitDates(habitId: string): Promise<Set<string>> {

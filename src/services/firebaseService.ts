@@ -617,8 +617,10 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 10000) / 100 : 0;
   const habitCompletionRate =
     habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 10000) / 100 : 0;
-  const weightedCompletionRate =
-    taskCompletionRate * 0.8 + habitCompletionRate * 0.2;
+  const dayCompleted =
+    Math.round(
+      (taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 100
+    ) / 100;
 
   await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
     dateKey,
@@ -628,7 +630,8 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     habitsCompleted,
     habitTotal,
     habitCompletionRate,
-    IsdayCompleted: weightedCompletionRate >= 80,
+    dayCompleted,
+    IsdayCompleted: dayCompleted >= 80,
   });
 }
 

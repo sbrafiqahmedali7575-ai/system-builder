@@ -161,18 +161,22 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
     let guard = 0;
 
     while (weekStart <= currentWeekStart && guard < 5200) {
-      let due = 0;
-      let completed = 0;
-      for (let index = 0; index < 7; index += 1) {
-        const dateKey = addHabitDays(weekStart, index);
-        if (dateKey > today) break;
-        habits.forEach((habit) => {
-          if (!isHabitDue(habit, dateKey)) return;
-          due += 1;
-          if (habit.checkIns.includes(dateKey)) completed += 1;
-        });
+      const weekEnd = addHabitDays(weekStart, 6);
+      // Best Week uses complete Monday-Sunday weeks only. Never compare a
+      // partial/current week until all seven calendar days have elapsed.
+      if (weekEnd <= today) {
+        let due = 0;
+        let completed = 0;
+        for (let index = 0; index < 7; index += 1) {
+          const dateKey = addHabitDays(weekStart, index);
+          habits.forEach((habit) => {
+            if (!isHabitDue(habit, dateKey)) return;
+            due += 1;
+            if (habit.checkIns.includes(dateKey)) completed += 1;
+          });
+        }
+        if (due > 0) best = Math.max(best, Math.round((completed / due) * 100));
       }
-      if (due > 0) best = Math.max(best, Math.round((completed / due) * 100));
       weekStart = addHabitDays(weekStart, 7);
       guard += 1;
     }

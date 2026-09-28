@@ -147,6 +147,37 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   const weekCompletionRate = dueThisWeek
     ? Math.round((completedThisWeek / dueThisWeek) * 100)
     : 0;
+  const bestWeekCompletionRate = useMemo(() => {
+    if (habits.length === 0) return 0;
+    const activityDates = habits.flatMap((habit) => [
+      habit.activeFrom || habit.createdAt?.slice(0, 10) || today,
+      ...(habit.checkIns || []),
+    ]).filter(Boolean).sort((a, b) => a.localeCompare(b));
+    if (activityDates.length === 0) return 0;
+
+    let weekStart = getMonday(activityDates[0]);
+    const currentWeekStart = getMonday(today);
+    let best = 0;
+    let guard = 0;
+
+    while (weekStart <= currentWeekStart && guard < 5200) {
+      let due = 0;
+      let completed = 0;
+      for (let index = 0; index < 7; index += 1) {
+        const dateKey = addHabitDays(weekStart, index);
+        if (dateKey > today) break;
+        habits.forEach((habit) => {
+          if (!isHabitDue(habit, dateKey)) return;
+          due += 1;
+          if (habit.checkIns.includes(dateKey)) completed += 1;
+        });
+      }
+      if (due > 0) best = Math.max(best, Math.round((completed / due) * 100));
+      weekStart = addHabitDays(weekStart, 7);
+      guard += 1;
+    }
+    return best;
+  }, [habits, today]);
   const { currentAllHabitsStreak, bestAllHabitsStreak } = useMemo(() => {
     if (habits.length === 0) return { currentAllHabitsStreak: 0, bestAllHabitsStreak: 0 };
 
@@ -413,7 +444,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             {weekCompletionRate}%
           </div>
           <div className="text-[9px] font-bold text-slate-500">
-            {completedThisWeek}/{dueThisWeek} check-ins
+            Best Week: {bestWeekCompletionRate}%
           </div>
         </div>
 

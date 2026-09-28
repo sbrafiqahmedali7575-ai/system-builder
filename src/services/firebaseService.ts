@@ -652,8 +652,11 @@ export async function ensureHabitLogsForDate(dateKey: string): Promise<void> {
 }
 
 export async function rebuildDaySummary(dateKey: string): Promise<void> {
-  if (!dateKey) return;
+  const normalizedDateKey = normalizeModelDateKey(dateKey);
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  if (!normalizedDateKey || normalizedDateKey !== today) return;
 
+  dateKey = normalizedDateKey;
   await ensureHabitLogsForDate(dateKey);
 
   const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
@@ -716,25 +719,8 @@ export async function initializeDayHabitStatus(dateKey: string): Promise<void> {
 }
 
 async function rebuildAllDaySummaries(): Promise<void> {
-  const [daysSnap, tasksSnap, logsSnap] = await Promise.all([
-    getDocs(collection(db, DAYS_COLLECTION)),
-    getDocs(collection(db, TASKS_COLLECTION)),
-    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
-  ]);
-  const dateKeys = new Set<string>();
-  daysSnap.forEach((d) => {
-    const key = normalizeModelDateKey(d.data().dateKey || d.id);
-    if (key) dateKeys.add(key);
-  });
-  tasksSnap.forEach((d) => {
-    const key = normalizeModelDateKey(d.data().scheduledDate);
-    if (key) dateKeys.add(key);
-  });
-  logsSnap.forEach((d) => {
-    const key = normalizeModelDateKey(d.data().dateKey);
-    if (key) dateKeys.add(key);
-  });
-  for (const key of [...dateKeys].sort()) await rebuildDaySummary(key);
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  await rebuildDaySummary(today);
 }
 
 export interface CountdownSettings {

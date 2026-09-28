@@ -150,7 +150,7 @@ function isHabitDue(data: Record<string, unknown>, dateKey: string): boolean {
 
 function roundedRate(completed: number, total: number): number {
   if (total <= 0) return 0;
-  return Math.round((completed / total) * 10000) / 100;
+  return Math.round((completed / total) * 100);
 }
 
 async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
@@ -486,10 +486,7 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
       completedHabitIds.has(habit.id)
     ).length;
     const habitsCompleted = roundedRate(habitsDone, Habits);
-    const dayCompleted =
-      Math.round(
-        (tasksCompleted * 0.8 + habitsCompleted * 0.2) * 100
-      ) / 100;
+    const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
 
     dayWrites.push({
       ref: doc(db, 'days', dateKey),
@@ -929,10 +926,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     ).length;
     const Habits = dueHabits.length;
     const habitsCompleted = roundedRate(habitsDone, Habits);
-    const dayCompleted =
-      Math.round(
-        (tasksCompleted * 0.8 + habitsCompleted * 0.2) * 100
-      ) / 100;
+    const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
 
     writes.push({
       ref: doc(db, 'days', dateKey),

@@ -178,6 +178,47 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
 
+  const achievedWeeks = useMemo(() => {
+    if (tasks.length === 0) return 0;
+
+    const getMonday = (dateKey: string) => {
+      const date = new Date(`${dateKey}T12:00:00`);
+      const day = date.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      date.setDate(date.getDate() + diff);
+      return formatCalendarDate(date);
+    };
+    const addDays = (dateKey: string, days: number) => {
+      const date = new Date(`${dateKey}T12:00:00`);
+      date.setDate(date.getDate() + days);
+      return formatCalendarDate(date);
+    };
+    const dailyRate = (dateKey: string) => {
+      const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
+      if (dayTasks.length === 0) return 0;
+      return (dayTasks.filter((task) => task.isCompleted).length / dayTasks.length) * 100;
+    };
+
+    const firstTaskDate = tasks.map((task) => task.taskKey).sort()[0];
+    if (!firstTaskDate) return 0;
+
+    let weekStart = getMonday(firstTaskDate);
+    const currentWeekStart = getMonday(currentDateKey);
+    let achieved = 0;
+    let guard = 0;
+
+    while (weekStart < currentWeekStart && guard < 5200) {
+      const score =
+        Array.from({ length: 7 }, (_, index) => dailyRate(addDays(weekStart, index)))
+          .reduce((sum, rate) => sum + rate, 0) / 7;
+      if (score >= 80) achieved += 1;
+      weekStart = addDays(weekStart, 7);
+      guard += 1;
+    }
+    return achieved;
+  }, [tasks, currentDateKey]);
+
+
   // Command Center "Overall" is historical progress through yesterday.
   // Do not use records.length here: the canonical Days collection can have
   // gaps when a date had no persisted day document. The denominator must be
@@ -439,6 +480,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               currentDayFormatted={currentCadenceDay.formattedDate}
               currentDayName={currentCadenceDay.fullDayName}
               overallCompletionPercentage={commandCenterOverall.completionRate}
+              achievedWeeks={achievedWeeks}
               completedDays={commandCenterOverall.completedDays}
               totalDays={commandCenterOverall.totalDays}
               countdownDaysRemaining={longTermCountdown.daysRemaining}

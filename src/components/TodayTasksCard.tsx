@@ -495,27 +495,27 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <div>
             <div className="flex items-center gap-1">
               <div>
-                <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.16em] font-black text-blue-600 dark:text-blue-400">
+                <p className="text-[11px] sm:text-xs uppercase tracking-[0.16em] font-semibold text-blue-600 dark:text-blue-400">
                   {activeDateTab === 'TODAY' ? "Today's Focus" : "Next Day Plan"}
                 </p>
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
                 </h2>
               </div>
               {isSyncing && (
-                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono flex items-center gap-0.5">
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-mono flex items-center gap-0.5">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Syncing</span>
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-1 text-[9px] font-semibold text-slate-400">
+            <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-400">
               <span>Current day</span>
-              <span className="font-mono font-black text-slate-600 dark:text-slate-300">
+              <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">
                 {currentDayFormatted}
               </span>
               <span>•</span>
-              <span className="font-black text-slate-600 dark:text-slate-300">
+              <span className="font-semibold text-slate-600 dark:text-slate-300">
                 {currentDayName}
               </span>
             </div>
@@ -718,7 +718,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                                   else next.add(task.id);
                                   return next;
                                 })}
-                                className="mt-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                                className="mt-0.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
                               >
                                 {expandedNotes.has(task.id) ? 'Collapse' : 'Expand'}
                               </button>
@@ -728,14 +728,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                         <div className="mt-1.5 flex flex-wrap items-center gap-1">
                           <span
-                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-black ${quadrantMeta.classes}`}
+                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-xs font-semibold ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
                           >
                             {quadrantMeta.roman}
                           </span>
 
                           <span
-                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black ${
+                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
                               priorityLabel === 'High'
                                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
                                 : priorityLabel === 'Medium'
@@ -748,7 +748,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
                               isTaskCompleted
                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
@@ -768,7 +768,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}
@@ -821,7 +821,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     <Plus className="w-4 h-4 stroke-[3]" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                       Enter Tasks
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -858,7 +858,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     }`}
                   >
                     <span className="text-xs font-bold">Today</span>
-                    <span className="text-[10px] font-mono opacity-80">{todayOption.formattedDate}</span>
+                    <span className="text-xs font-mono opacity-80">{todayOption.formattedDate}</span>
                   </button>
 
                   {/* Tomorrow */}
@@ -874,7 +874,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     }`}
                   >
                     <span className="text-xs font-bold">Tomorrow</span>
-                    <span className="text-[10px] font-mono opacity-80">{tomorrowOption.formattedDate}</span>
+                    <span className="text-xs font-mono opacity-80">{tomorrowOption.formattedDate}</span>
                   </button>
 
                 </div>
@@ -1036,7 +1036,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               }`}
             >
               <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                   Edit Task
                 </h3>
                 <button
@@ -1069,7 +1069,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         const quadrantMeta = getTaskQuadrantMeta(editingTask.matrixQuadrant);
                         return (
                           <span
-                            className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 font-black ${quadrantMeta.classes}`}
+                            className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 font-semibold ${quadrantMeta.classes}`}
                           >
                             <span>{quadrantMeta.roman}</span>
                             <span className="font-semibold">{quadrantMeta.label}</span>
@@ -1078,7 +1078,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       })()}
                     </div>
                   </div>
-                  <span className="text-[10px] text-slate-400 block mt-1">
+                  <span className="text-xs text-slate-400 block mt-1">
                     Task date and ID {editingTask.id.slice(0, 10)}... are preserved.
                   </span>
                 </div>
@@ -1184,7 +1184,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <Trash2 className="w-5 h-5" />
               </div>
 
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 mb-0.5">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-0.5">
                 Delete Task?
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">

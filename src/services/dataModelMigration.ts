@@ -303,10 +303,12 @@ async function migrateCanonicalIds(): Promise<void> {
   await commitQueuedWrites(writes);
 
   // Delete only superseded document keys, after all replacement docs/FKs exist.
+  // Habits and Tasks retain the legacy cleanup behavior. HabitLogs are
+  // deliberately excluded: never delete/re-key a HabitLog during startup.
+  // Runtime uniqueness repair safely removes only proven duplicate habit/day rows.
   const deletes = [
     ...sortedHabits.filter((d) => habitIdMap.get(d.id) !== d.id).map((d) => d.ref),
     ...sortedTasks.filter((d) => taskIdMap.get(d.id) !== d.id).map((d) => d.ref),
-    ...sortedLogs.filter((d) => logIdMap.get(d.id) !== d.id).map((d) => d.ref),
   ];
   for (let i = 0; i < deletes.length; i += MIGRATION_BATCH_LIMIT) {
     const batch = writeBatch(db);

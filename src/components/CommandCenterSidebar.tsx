@@ -1,7 +1,6 @@
 import React from 'react';
 import { Award, Hourglass, Trophy } from 'lucide-react';
 import { DashboardTheme } from '../types';
-import { AnimatedProgressRing } from './AnimatedProgressRing';
 import { PomodoroTimer } from './PomodoroTimer';
 
 interface CommandCenterSidebarProps {
@@ -48,39 +47,19 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Command Center
         </h2>
-        <div className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-          <span>Current day</span>
-          <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">
-            {currentDayFormatted}
-          </span>
-          <span>•</span>
-          <span className="font-semibold text-slate-600 dark:text-slate-300">
-            {currentDayName}
-          </span>
-        </div>
       </div>
 
       <div className="grid grid-cols-3 shrink-0 border-b border-slate-100 dark:border-slate-800 divide-x divide-slate-100 dark:divide-slate-800">
-        <div className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 flex items-center gap-2">
-          <AnimatedProgressRing
-            value={overallCompletionPercentage}
-            size={38}
-            strokeWidth={4}
-            label={`${Math.round(overallCompletionPercentage)}%`}
-            trackClassName="text-slate-200 dark:text-slate-800"
-            progressClassName="text-blue-500"
-          />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              <Award className="w-3 h-3 text-blue-500" />
-              Overall
-            </div>
-            <div className="text-xs font-semibold text-slate-800 dark:text-slate-100">
-              {overallCompletionPercentage.toFixed(1)}%
-            </div>
-            <div className="text-xs font-normal text-slate-500 dark:text-slate-400">
-              {completedDays}/{totalDays} days
-            </div>
+        <div className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 flex flex-col justify-center">
+          <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <Award className="w-3 h-3 text-blue-500" />
+            Overall
+          </div>
+          <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+            {Math.round(overallCompletionPercentage)}%
+          </div>
+          <div className="mt-0.5 text-xs font-normal text-slate-500 dark:text-slate-400">
+            {completedDays}/{totalDays} days
           </div>
         </div>
 

@@ -11,6 +11,15 @@ export interface CalNewportTheme {
   actionPlan: string[];
 }
 
+export interface CalNewportChapterGuide {
+  title: string;
+  summary: string[];
+  keyIdeas: string[];
+  examples: CalNewportExample[];
+  actionPlan: string[];
+  reviewQuestions: string[];
+}
+
 export interface CalNewportBook {
   id:
     | 'so-good'
@@ -29,6 +38,7 @@ export interface CalNewportBook {
   themes: CalNewportTheme[];
   summary: string[];
   conciseActionPlan: string[];
+  chapterGuides?: CalNewportChapterGuide[];
 }
 
 export const CAL_NEWPORT_BOOKS: CalNewportBook[] = [

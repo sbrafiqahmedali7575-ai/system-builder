@@ -1,0 +1,110 @@
+name: V11 HabitLog Live Repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v11-habitlog-live-repair.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+
+      - name: Run V11 migration and verify
+        run: |
+          cat > v11-live-repair.ts <<'TS'
+          import { collection, getDocs } from 'firebase/firestore';
+          import { db } from './src/services/firebaseService.ts';
+          import { migrateLegacyDataModel } from './src/services/dataModelMigration.ts';
+
+          const normalize = (value: unknown): string => {
+            const raw = String(value ?? '').trim();
+            const m = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+            return m ? `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` : '';
+          };
+
+          const result = await migrateLegacyDataModel();
+          console.log('MIGRATION_RESULT=' + JSON.stringify(result));
+
+          const [habitsSnap, logsSnap, daysSnap] = await Promise.all([
+            getDocs(collection(db,'habits')),
+            getDocs(collection(db,'habitLogs')),
+            getDocs(collection(db,'days')),
+          ]);
+
+          const grouped = new Map<string, number>();
+          let trueRows = 0;
+          let falseRows = 0;
+          const logRows:any[] = [];
+
+          logsSnap.forEach((d) => {
+            const x = d.data();
+            const habitId = String(x.habitId || '');
+            const dateKey = normalize(x.dateKey);
+            const key = `${habitId}::${dateKey}`;
+            grouped.set(key, (grouped.get(key) || 0) + 1);
+            if (x.Iscompleted === true) trueRows += 1;
+            else falseRows += 1;
+            logRows.push({id:d.id,habitId,dateKey,Iscompleted:x.Iscompleted === true});
+          });
+
+          const duplicatePairs = [...grouped.entries()]
+            .filter(([,count]) => count > 1)
+            .map(([key,count]) => ({key,count}));
+
+          const badIds = logRows.filter(
+            (row) => row.id !== `${row.habitId}_${row.dateKey}`
+          );
+
+          let weightedMismatches = 0;
+          const mismatches:any[] = [];
+          daysSnap.forEach((d) => {
+            const x = d.data();
+            const weighted =
+              Number(x.taskCompletionRate || 0) * 0.8 +
+              Number(x.habitCompletionRate || 0) * 0.2;
+            const expected = weighted >= 80;
+            if ((x.IsdayCompleted === true) !== expected) {
+              weightedMismatches += 1;
+              mismatches.push({
+                dateKey:String(x.dateKey || d.id),
+                taskCompletionRate:Number(x.taskCompletionRate || 0),
+                habitCompletionRate:Number(x.habitCompletionRate || 0),
+                IsdayCompleted:x.IsdayCompleted === true,
+                expected,
+              });
+            }
+          });
+
+          console.log('AUDIT=' + JSON.stringify({
+            habits: habitsSnap.size,
+            habitLogs: logsSnap.size,
+            trueRows,
+            falseRows,
+            uniqueHabitDatePairs: grouped.size,
+            duplicatePairCount: duplicatePairs.length,
+            nonCanonicalIdCount: badIds.length,
+            dayCount: daysSnap.size,
+            weightedDayMismatchCount: weightedMismatches,
+          }));
+          if (duplicatePairs.length) console.log('DUPLICATES='+JSON.stringify(duplicatePairs));
+          if (badIds.length) console.log('BAD_IDS='+JSON.stringify(badIds.slice(0,50)));
+          if (mismatches.length) console.log('DAY_MISMATCHES='+JSON.stringify(mismatches.slice(0,50)));
+
+          if (duplicatePairs.length || badIds.length || weightedMismatches) {
+            process.exitCode = 1;
+          }
+          TS
+
+          bun v11-live-repair.ts
+          rm -f v11-live-repair.ts

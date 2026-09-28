@@ -1,0 +1,76 @@
+name: Inspect Overall Date Span
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-overall-date-span.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect live Firestore date span
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.parse, datetime
+
+          cfg=json.load(open("firebase-applet-config.json"))
+          base=f"https://firestore.googleapis.com/v1/projects/{cfg['projectId']}/databases/{cfg['firestoreDatabaseId']}/documents"
+          key=cfg["apiKey"]
+
+          def get_collection(name):
+              docs=[]
+              token=""
+              while True:
+                  url=f"{base}/{name}?pageSize=300&key={urllib.parse.quote(key)}"
+                  if token:
+                      url += "&pageToken="+urllib.parse.quote(token)
+                  with urllib.request.urlopen(url, timeout=30) as r:
+                      data=json.load(r)
+                  docs.extend(data.get("documents",[]))
+                  token=data.get("nextPageToken","")
+                  if not token: break
+              return docs
+
+          def sval(fields,k):
+              v=fields.get(k,{})
+              return v.get("stringValue","")
+
+          days=get_collection("days")
+          tasks=get_collection("tasks")
+          habits=get_collection("habits")
+
+          day_dates=sorted(filter(None,[sval(d.get("fields",{}),"dateKey") or d["name"].rsplit("/",1)[-1] for d in days]))
+          task_dates=sorted(filter(None,[sval(d.get("fields",{}),"scheduledDate") for d in tasks]))
+          habit_dates=sorted(filter(None,[sval(d.get("fields",{}),"activeFrom") for d in habits]))
+
+          all_dates=sorted(set(day_dates+task_dates+habit_dates))
+          today=datetime.date(2026,9,28)
+          yesterday=today-datetime.timedelta(days=1)
+          eligible=[datetime.date.fromisoformat(x) for x in all_dates if x <= yesterday.isoformat()]
+          first=min(eligible) if eligible else None
+          total=(yesterday-first).days+1 if first else 0
+
+          completed=0
+          completed_dates=set()
+          for d in days:
+              f=d.get("fields",{})
+              date=sval(f,"dateKey") or d["name"].rsplit("/",1)[-1]
+              if date > yesterday.isoformat(): continue
+              if f.get("IsdayCompleted",{}).get("booleanValue") is True:
+                  completed_dates.add(date)
+          completed=len(completed_dates)
+
+          print("DAYS_COUNT",len(days))
+          print("TASKS_COUNT",len(tasks))
+          print("HABITS_COUNT",len(habits))
+          print("FIRST_DAY_DOC",day_dates[0] if day_dates else "")
+          print("FIRST_TASK_DATE",task_dates[0] if task_dates else "")
+          print("FIRST_HABIT_DATE",habit_dates[0] if habit_dates else "")
+          print("FIRST_TRACKED_DATE",first.isoformat() if first else "")
+          print("TOTAL_THROUGH_YESTERDAY",total)
+          print("COMPLETED_THROUGH_YESTERDAY",completed)
+          PY

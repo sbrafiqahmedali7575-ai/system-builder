@@ -96,7 +96,6 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     title: '',
     dateKey: today,
     quadrant: '',
-    notes: '',
   });
 
   const weekDates = useMemo(() => {

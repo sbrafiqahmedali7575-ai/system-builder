@@ -49,6 +49,18 @@ export function normalizeRepeatDays(habit: HabitItem): number[] {
 export function isHabitDue(habit: HabitItem, dateKey: string): boolean {
   if (dateKey < getHabitStartKey(habit)) return false;
 
+  const inactiveForDate = (habit.inactivePeriods || []).some((period) => {
+    if (!period?.from || dateKey < period.from) return false;
+    return !period.to || dateKey <= period.to;
+  });
+  if (inactiveForDate) return false;
+
+  // Backward compatibility for any legacy inactive habit that does not yet
+  // have a recorded pause period.
+  if (habit.isActive === false && !(habit.inactivePeriods || []).length) {
+    return false;
+  }
+
   const skipped = new Set(habit.skippedDates || []);
   const extras = new Set(habit.extraDates || []);
 

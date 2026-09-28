@@ -340,7 +340,57 @@ async function resetHabitLogsToRequestedNineRows(): Promise<void> {
   await batch.commit();
 }
 
+async function deduplicateHabitLogs(): Promise<void> {
+  const snapshot = await getDocs(collection(db, 'habitLogs'));
+  const groups = new Map<string, typeof snapshot.docs>();
+
+  snapshot.docs.forEach((logDoc) => {
+    const data = logDoc.data();
+    const habitId = String(data.habitId || '').trim();
+    const dateKey = toDateKey(data.dateKey);
+    if (!habitId || !dateKey) return;
+    const key = `${habitId}::${dateKey}`;
+    groups.set(key, [...(groups.get(key) || []), logDoc]);
+  });
+
+  for (const logs of groups.values()) {
+    if (logs.length <= 1) continue;
+
+    const sorted = [...logs].sort((a, b) => {
+      const aId = String(a.data().habitLogId || a.id);
+      const bId = String(b.data().habitLogId || b.id);
+      const aMatch = /^HL(\d+)$/i.exec(aId);
+      const bMatch = /^HL(\d+)$/i.exec(bId);
+      if (aMatch && bMatch) return Number(aMatch[1]) - Number(bMatch[1]);
+      if (aMatch) return -1;
+      if (bMatch) return 1;
+      return aId.localeCompare(bId, undefined, { numeric: true });
+    });
+
+    const primary = sorted[0];
+    const primaryData = primary.data();
+    const completed = sorted.some((logDoc) => logDoc.data().Iscompleted === true);
+    const batch = writeBatch(db);
+    batch.set(
+      primary.ref,
+      {
+        habitLogId: String(primaryData.habitLogId || primary.id),
+        habitId: String(primaryData.habitId || '').trim(),
+        dateKey: toDateKey(primaryData.dateKey),
+        Iscompleted: completed,
+      },
+      { merge: true }
+    );
+    sorted.slice(1).forEach((duplicate) => batch.delete(duplicate.ref));
+    await batch.commit();
+  }
+}
+
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
+  // Enforce the HabitLogs uniqueness rule for all historical and current data:
+  // one row per (habitId, dateKey). Completion is preserved if any duplicate was completed.
+  await deduplicateHabitLogs();
+
   const [
     recordsSnap,
     tasksSnap,

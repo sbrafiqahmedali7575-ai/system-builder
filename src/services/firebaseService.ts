@@ -344,123 +344,70 @@ function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
   };
 }
 
-function habitLogDocumentId(habitId: string, dateKey: string): string {
-  return `${habitId}_${dateKey}`;
-}
-
-async function commitBatchedMutations(
-  writes: Array<{
-    ref: DocumentReference<DocumentData>;
-    data?: Record<string, unknown>;
-    delete?: boolean;
-  }>
-): Promise<void> {
-  for (let index = 0; index < writes.length; index += 400) {
-    const batch = writeBatch(db);
-    writes.slice(index, index + 400).forEach((write) => {
-      if (write.delete) {
-        batch.delete(write.ref);
-      } else {
-        batch.set(write.ref, write.data || {}, { merge: true });
-      }
-    });
-    await batch.commit();
-  }
-}
-
-/**
- * Keep exactly one HabitLog per habit/date.
- *
- * The canonical document ID is "{habitId}_{YYYY-MM-DD}". Existing duplicate
- * rows are collapsed into that document. A missing check-in is represented by
- * Iscompleted=false rather than by a missing HabitLog.
- */
 async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
-  const [logsSnapshot, daysSnapshot] = await Promise.all([
-    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
-    getDocs(collection(db, DAYS_COLLECTION)),
-  ]);
-
-  const checkedDates = new Set(
-    (habit.checkIns || [])
-      .map((value) => normalizeModelDateKey(value))
-      .filter(Boolean)
-  );
-
-  const candidateDates = new Set<string>(checkedDates);
-  daysSnapshot.forEach((dayDoc) => {
-    const dateKey = normalizeModelDateKey(dayDoc.data().dateKey || dayDoc.id);
-    if (dateKey) candidateDates.add(dateKey);
-  });
-
+  const logsSnapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-  candidateDates.add(today);
+  const checkedToday = (habit.checkIns || [])
+    .map((value) => normalizeModelDateKey(value))
+    .includes(today);
 
-  const existingByDate = new Map<
-    string,
-    Array<typeof logsSnapshot.docs[number]>
-  >();
+  const usedNumbers = new Set<number>();
+  const todayLogs: Array<typeof logsSnapshot.docs[number]> = [];
 
   logsSnapshot.docs.forEach((logDoc) => {
     const data = logDoc.data();
-    if (String(data.habitId || '') !== habit.id) return;
+    const storedId = String(data.habitLogId || logDoc.id);
+    const match = /^HL(\d+)$/i.exec(storedId);
+    if (match) usedNumbers.add(Number(match[1]));
 
-    const dateKey = normalizeModelDateKey(data.dateKey);
-    if (!dateKey) return;
-
-    const rows = existingByDate.get(dateKey) || [];
-    rows.push(logDoc);
-    existingByDate.set(dateKey, rows);
-    candidateDates.add(dateKey);
+    if (
+      String(data.habitId || '') === habit.id &&
+      normalizeModelDateKey(data.dateKey) === today
+    ) {
+      todayLogs.push(logDoc);
+    }
   });
 
-  const writes: Array<{
-    ref: DocumentReference<DocumentData>;
-    data?: Record<string, unknown>;
-    delete?: boolean;
-  }> = [];
+  // Do not create HabitLogs in advance. A new row is eligible only for today.
+  if (todayLogs.length === 0) {
+    if (!storedHabitIsDue(habitStoragePayload(habit), today) && !checkedToday) return;
 
-  for (const dateKey of [...candidateDates].sort()) {
-    const due = storedHabitIsDue(
-      habitStoragePayload(habit),
-      dateKey
-    );
-    const existing = existingByDate.get(dateKey) || [];
+    let nextNumber = 1;
+    while (usedNumbers.has(nextNumber)) nextNumber += 1;
+    const habitLogId = `HL${nextNumber}`;
 
-    if (!due && existing.length === 0 && !checkedDates.has(dateKey)) {
-      continue;
-    }
-
-    const canonicalId = habitLogDocumentId(habit.id, dateKey);
-    const canonicalRef = doc(db, HABIT_LOGS_COLLECTION, canonicalId);
-
-    const anyExistingCompleted = existing.some(
-      (logDoc) => logDoc.data().Iscompleted === true
-    );
-    const isCompleted = checkedDates.has(dateKey)
-      ? true
-      : anyExistingCompleted && habit.checkIns.includes(dateKey);
-
-    // Due habits always receive a row, including unchecked/not-checked rows.
-    // Existing non-due rows are preserved canonically rather than duplicated.
-    writes.push({
-      ref: canonicalRef,
-      data: {
-        habitLogId: canonicalId,
-        habitId: habit.id,
-        dateKey,
-        Iscompleted: due ? checkedDates.has(dateKey) : isCompleted,
-      },
+    await setDoc(doc(db, HABIT_LOGS_COLLECTION, habitLogId), {
+      habitLogId,
+      habitId: habit.id,
+      dateKey: today,
+      Iscompleted: checkedToday,
     });
-
-    existing.forEach((logDoc) => {
-      if (logDoc.id !== canonicalId) {
-        writes.push({ ref: logDoc.ref, delete: true });
-      }
-    });
+    return;
   }
 
-  await commitBatchedMutations(writes);
+  // Existing today's row is updated in place; no additional row is created.
+  const primary = todayLogs.find((logDoc) =>
+    /^HL\d+$/i.test(String(logDoc.data().habitLogId || logDoc.id))
+  ) || todayLogs[0];
+
+  await setDoc(
+    primary.ref,
+    {
+      habitLogId: String(primary.data().habitLogId || primary.id),
+      habitId: habit.id,
+      dateKey: today,
+      Iscompleted: checkedToday,
+    },
+    { merge: true }
+  );
+
+  // Remove duplicate rows for the same habit/today.
+  const duplicates = todayLogs.filter((logDoc) => logDoc.id !== primary.id);
+  if (duplicates.length > 0) {
+    const batch = writeBatch(db);
+    duplicates.forEach((logDoc) => batch.delete(logDoc.ref));
+    await batch.commit();
+  }
 }
 
 async function getCompletedHabitDates(habitId: string): Promise<Set<string>> {

@@ -186,6 +186,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   // Panel date selection mirrors the two main tabs.
   const [panelDateTab, setPanelDateTab] = useState<'TODAY' | 'TOMORROW'>('TODAY');
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskNotes, setNewTaskNotes] = useState('');
   const [newTaskQuadrant, setNewTaskQuadrant] = useState<MatrixQuadrant | ''>('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
@@ -195,6 +196,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   // UI state for Editing a Task
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editNotes, setEditNotes] = useState('');
   const [editCompleted, setEditCompleted] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -230,6 +232,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     const tabToUse = preselectedTab || activeDateTab;
     setPanelDateTab(tabToUse);
     setNewTaskTitle('');
+    setNewTaskNotes('');
     setNewTaskQuadrant('');
     setPanelError(null);
     setRecentlyAddedInSession([]);
@@ -271,17 +274,20 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       await onAddTask({
         taskKey: panelTargetDateKey,
         taskOfTheDay: trimmedTitle,
+        notes: editNotes.trim(),
         isCompleted: false,
         priority: newTaskQuadrant
           ? priorityForQuadrant(newTaskQuadrant)
           : 'Normal',
         category: 'General',
         matrixQuadrant: newTaskQuadrant || undefined,
+        notes: newTaskNotes.trim(),
       });
 
       // Keep panel open, add to session list, clear input and refocus!
       setRecentlyAddedInSession((prev) => [trimmedTitle, ...prev]);
       setNewTaskTitle('');
+      setNewTaskNotes('');
       setTimeout(() => {
         taskInputRef.current?.focus();
       }, 50);
@@ -385,6 +391,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const handleStartEdit = (task: TaskItem) => {
     setEditingTask(task);
     setEditTitle(task.taskOfTheDay);
+    setEditNotes(task.notes || '');
     setEditCompleted(task.isCompleted);
     setEditError(null);
   };
@@ -884,11 +891,18 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') setIsEnterPanelOpen(false);
                       }}
-                      className={`w-full p-1.5 rounded-xl border text-sm focus:outline-none transition ${
+                      className={`w-full h-8 px-2 rounded-lg border text-sm focus:outline-none transition ${
                         isDark
                           ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
                           : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'
                       }`}
+                    />
+                    <textarea
+                      value={newTaskNotes}
+                      onChange={(e) => setNewTaskNotes(e.target.value)}
+                      placeholder="Notes"
+                      rows={2}
+                      className={`mt-1 w-full resize-none px-2 py-1.5 rounded-lg border text-xs focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
                     />
                   </div>
 
@@ -1066,6 +1080,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500'
                         : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'
                     }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    rows={3}
+                    placeholder="Add notes"
+                    className={`w-full resize-none px-2 py-1.5 rounded-lg border text-xs focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
                   />
                 </div>
 

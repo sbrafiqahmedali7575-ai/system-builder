@@ -27,6 +27,7 @@ import {
   CAL_NEWPORT_LIBRARY_UPDATED,
   CalNewportBook,
 } from '../data/calNewportLibrary';
+import { CAL_NEWPORT_FULL_STUDY } from '../data/calNewportFullStudy';
 
 type ReaderTone = 'paper' | 'sepia' | 'night';
 type ReaderFont = 'serif' | 'sans';
@@ -65,6 +66,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [readerWidth, setReaderWidth] = useState<ReaderWidth>('wide');
   const [lineHeight, setLineHeight] = useState(1.9);
   const [readingProgress, setReadingProgress] = useState(0);
+  const [isFullStudy, setIsFullStudy] = useState(false);
   const [isFocusReader, setIsFocusReader] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -158,9 +160,8 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const addSectionNote=()=>{const section=getCurrentSection();const key=`${activeBookId}::${section}`;const note=window.prompt('Note for this section',notes[key]||'');if(note!==null)setNotes(p=>({...p,[key]:note}));};
   const remainingMinutes = Math.max(0, Math.ceil((100 - readingProgress) / 100 * Number(activeBook.readingTime.match(/\d+/)?.[0] || 20)));
 
-  const selectBook = (book: CalNewportBook) => {
-    setActiveBookId(book.id);
-  };
+  const selectBook = (book: CalNewportBook) => { setActiveBookId(book.id); setIsFullStudy(false); };
+  const openFullStudy = (book: CalNewportBook) => { setActiveBookId(book.id); setIsFullStudy(true); requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'})); };
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${toneClasses}`}>
@@ -253,6 +254,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   key={book.id}
                   type="button"
                   onClick={() => selectBook(book)}
+                  onDoubleClick={() => openFullStudy(book)}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
                     activeBookId === book.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
@@ -300,7 +302,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   {activeBook.year}
                 </span>
                 <span className={`text-[11px] font-bold ${mutedText}`}>
-                  {activeBook.readingTime}
+                  {isFullStudy ? CAL_NEWPORT_FULL_STUDY[activeBookId].readingMinutes : activeBook.readingTime}
                 </span>
               </div>
 
@@ -317,7 +319,13 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               </p>
             </div>
 
-            <div
+            {isFullStudy && <div className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
+              <section className={`${widthClass} mx-auto`}><div className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {CAL_NEWPORT_FULL_STUDY[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{CAL_NEWPORT_FULL_STUDY[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
+              <div className="space-y-8">{CAL_NEWPORT_FULL_STUDY[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
+              <section className="mt-10 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{CAL_NEWPORT_FULL_STUDY[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
+            </div>}
+
+            {!isFullStudy &&             <div
               className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10"
               onMouseUp={captureSelection}
               style={{ fontSize: `${fontScale}rem`, fontFamily, lineHeight }}
@@ -531,7 +539,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   It summarizes ideas in new language and does not reproduce the books.
                 </div>
               </section>
-            </div>
+            </div>}
           </article>
         </main>
       </div>

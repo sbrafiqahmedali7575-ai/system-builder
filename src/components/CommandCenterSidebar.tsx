@@ -60,8 +60,8 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5 shrink-0">
-        <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-white/80 dark:bg-slate-950/50 p-2 flex items-center gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 shrink-0">
+        <div className="min-w-0 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex items-center gap-2">
           <AnimatedProgressRing
             value={overallCompletionPercentage}
             size={50}
@@ -84,7 +84,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
+        <div className="min-w-0 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 flex flex-col justify-center">
           <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide font-black text-slate-400">
             <Trophy className="w-3 h-3 text-blue-500" />
             Achieved Weeks
@@ -101,7 +101,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           type="button"
           onClick={onOpenCountdown}
           disabled={!onOpenCountdown}
-          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 text-left transition-colors enabled:hover:bg-slate-50 dark:enabled:hover:bg-slate-900 disabled:cursor-default"
+          className="min-w-0 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2 text-left transition-colors enabled:hover:bg-slate-50 dark:enabled:hover:bg-slate-900 disabled:cursor-default"
           title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
           aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
         >

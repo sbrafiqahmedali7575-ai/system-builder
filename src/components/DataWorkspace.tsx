@@ -123,13 +123,13 @@ export const DataWorkspace: React.FC = () => {
     <div className="space-y-3 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 lg:shrink-0">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-blue-600">Firestore workspace</p>
+          <p className="text-[11px] font-medium text-slate-500">Firestore workspace</p>
         </div>
       </div>
 
       <div className="space-y-2 lg:shrink-0">
         <div>
-          <div className="mb-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-500">Fact</div>
+          <div className="mb-1 text-[10px] font-medium text-slate-500">Fact</div>
           <div className="grid grid-cols-3 gap-1.5">
             {FACT_COLLECTIONS.map((collection) => {
               const selected = active === collection.id;
@@ -138,9 +138,9 @@ export const DataWorkspace: React.FC = () => {
                   key={collection.id}
                   type="button"
                   onClick={() => selectCollection(collection.id)}
-                  className={`relative rounded-xl border px-2 py-2 text-left transition-all ${
+                  className={`relative rounded-xl border px-2 py-2 text-left transition-colors ${
                     selected
-                      ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200'
+                      ? 'border-[#4772fa] bg-blue-50/50 '
                       : 'border-slate-200 bg-white hover:bg-slate-50'
                   }`}
                 >
@@ -174,7 +174,7 @@ export const DataWorkspace: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowDimensions((value) => !value)}
-            className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-400 hover:text-slate-600"
+            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 hover:text-slate-600"
             aria-expanded={showDimensions}
             title="Show dimension tables"
           >
@@ -194,9 +194,9 @@ export const DataWorkspace: React.FC = () => {
                     key={collection.id}
                     type="button"
                     onClick={() => selectCollection(collection.id)}
-                    className={`relative rounded-xl border px-2 py-2 text-left transition-all ${
+                    className={`relative rounded-xl border px-2 py-2 text-left transition-colors ${
                       selected
-                        ? 'border-blue-300 bg-blue-50 ring-1 ring-blue-200'
+                        ? 'border-[#4772fa] bg-blue-50/50 '
                         : 'border-slate-200 bg-white hover:bg-slate-50'
                     }`}
                   >
@@ -240,7 +240,7 @@ export const DataWorkspace: React.FC = () => {
             <div className="min-h-40 flex items-center justify-center text-sm font-medium text-slate-400">No documents</div>
           ) : (
             <table className="w-full min-w-max border-collapse text-left">
-              <thead className="sticky top-0 z-10 bg-white shadow-sm">
+              <thead className="sticky top-0 z-10 bg-white ">
                 <tr>
                   {columns.map((column) => {
                     const keyType = KEY_COLUMNS[active][column];
@@ -275,9 +275,9 @@ export const DataWorkspace: React.FC = () => {
               </thead>
               <tbody>
                 {sortedRows.map((row) => (
-                  <tr key={row.id} className="hover:bg-blue-50/40">
+                  <tr key={row.id} className="hover:bg-slate-50">
                     {columns.map((column) => (
-                      <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-medium text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {renderValue(row[column], column)}
                       </td>
                     ))}

@@ -8,7 +8,6 @@ import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils'
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
-import { WeeklyProgressCards } from './WeeklyProgressCards';
 import {
   saveCountdownSettings,
   subscribeToCountdownSettings,
@@ -474,41 +473,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
               isSyncing={isSyncing}
             />
           </motion.div>
-
-          {!focusMode && <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.36, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="min-w-0 min-h-0 xl:h-full"
-          >
-            <CommandCenterSidebar
-              theme={theme}
-              currentDayFormatted={currentCadenceDay.formattedDate}
-              currentDayName={currentCadenceDay.fullDayName}
-              overallCompletionPercentage={commandCenterOverall.completionRate}
-              achievedWeeks={achievedWeeks}
-              completedDays={commandCenterOverall.completedDays}
-              totalDays={commandCenterOverall.totalDays}
-              countdownDaysRemaining={longTermCountdown.daysRemaining}
-              countdownReason={longTermCountdown.reason}
-              countdownTargetLabel={longTermCountdown.targetDateLabel}
-              currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
-              onOpenCountdown={openCountdownEditor}
-            />
-          </motion.div>}
-        </div>
-
-        {!focusMode && <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.34, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <WeeklyProgressCards
-            tasks={tasks}
-            habits={habits}
-            theme={theme}
-          />
-        </motion.div>}
       </section>
 
       {isCountdownEditorOpen && typeof document !== 'undefined'

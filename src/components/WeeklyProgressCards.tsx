@@ -123,8 +123,8 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
       <div
         className={`rounded-2xl border p-2.5 ${
           isDark
-            ? 'bg-slate-900/80 border-blue-900/50'
-            : 'bg-slate-50/70 border-blue-200/80'
+            ? 'bg-slate-900/80 border-slate-800'
+            : 'bg-slate-50/70 border-slate-200/80'
         }`}
       >
         <div className="flex items-center justify-between gap-2 mb-2">
@@ -224,13 +224,13 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
       <div
         className={`rounded-2xl border p-2.5 ${
           isDark
-            ? 'bg-slate-900/80 border-emerald-900/50'
-            : 'bg-slate-50/70 border-emerald-200/80'
+            ? 'bg-slate-900/80 border-slate-800'
+            : 'bg-slate-50/70 border-slate-200/80'
         }`}
       >
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <Repeat2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <Repeat2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
             <span className="truncate text-[10px] uppercase tracking-wider font-black text-slate-600 dark:text-slate-300">
               This week · habits
             </span>
@@ -240,7 +240,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
             title={`Weekly habit score: ${weekHabitScore.toFixed(1)}% of the full 700% weekly capacity. Target: ${WEEKLY_TARGET_PERCENTAGE}%.`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-black text-blue-600 dark:text-blue-400">
                 {weekHabitScore.toFixed(1)}%
               </span>
               <span className="text-[7px] font-bold uppercase tracking-wide text-slate-400">
@@ -257,7 +257,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
               aria-valuetext={`${weekHabitScore.toFixed(1)}%, target ${WEEKLY_TARGET_PERCENTAGE}%`}
             >
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all"
+                className="h-full rounded-full bg-blue-500 transition-all"
                 style={{ width: `${Math.min(100, Math.max(0, weekHabitScore))}%` }}
               />
               <span
@@ -285,7 +285,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
                   <div
                     className={`w-full rounded-t-md transition-all ${
                       day.due > 0
-                        ? 'bg-emerald-500'
+                        ? 'bg-blue-500'
                         : 'bg-slate-300 dark:bg-slate-700'
                     }`}
                     style={{
@@ -311,7 +311,7 @@ export const WeeklyProgressCards: React.FC<WeeklyProgressCardsProps> = ({
               <div
                 className={`mt-1 text-[9px] font-black ${
                   day.dateKey === today
-                    ? 'text-emerald-600 dark:text-emerald-300'
+                    ? 'text-emerald-600 dark:text-blue-300'
                     : 'text-slate-400'
                 }`}
               >

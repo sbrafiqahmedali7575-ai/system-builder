@@ -4,7 +4,6 @@ import {
   History,
   ListChecks,
   Pencil,
-  Plus,
   Target,
   Trash2,
   Trophy,
@@ -190,12 +189,6 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
   const historyTask =
     tasks.find((task) => task.id === historyTaskId) || null;
 
-  const openAdd = () => {
-    setEditingTaskId(null);
-    setDraft({ title: '', dateKey: today, quadrant: '', notes: '' });
-    setFormOpen(true);
-  };
-
   const openEdit = (task: TaskItem) => {
     setEditingTaskId(task.id);
     setDraft({
@@ -305,10 +298,10 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
           tasks={tasks}
           habits={habits}
           onAddTask={onAddTask}
-          onUpdateTask={onUpdateTask}
           onToggleTaskStatus={onToggleTaskStatus}
           onUpdateHabit={onUpdateHabit}
           density="compact"
+          focusMode={focusMode}
         />
         </div>
       </section>

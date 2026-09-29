@@ -232,13 +232,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
   }, [tasks, currentDateKey]);
 
 
-  // Overall = SUM(IsdayCompleted) / COUNT(IsdayCompleted) × 100 using stored Days rows only.
+  // Overall = Successful Days / Total calendar days since 1 Aug 2026 × 100.
   const commandCenterOverall = useMemo(() => {
-    const totalDays = records.length;
+    const startUtc = Date.UTC(2026, 7, 1);
+    const [year, month, day] = currentDateKey.split('-').map(Number);
+    const todayUtc = Date.UTC(year, month - 1, day);
+    const totalDays = Math.max(0, Math.floor((todayUtc - startUtc) / (24 * 60 * 60 * 1000)) + 1);
     const completedDays = records.reduce((sum, record) => sum + (record.isCompleted ? 1 : 0), 0);
     const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
     return { completedDays, totalDays, completionRate };
-  }, [records]);
+  }, [records, currentDateKey]);
 
   const currentFocusTask = useMemo(
     () =>

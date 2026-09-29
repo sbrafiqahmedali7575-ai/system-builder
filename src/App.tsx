@@ -136,6 +136,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isTaskSearchOpen, setIsTaskSearchOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [toolsFocusMode, setToolsFocusMode] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -1022,11 +1023,17 @@ export default function App() {
   };
 
   if (isLibraryOpen) {
-    return <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />;
+    return (
+      <>
+        <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />
+        <MobileBottomNav onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => { handleCloseLibrary(); setFocusMode(true); }} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
+      </>
+    );
   }
 
   if (isToolsOpen) {
     return (
+      <>
       <MoreWorkspace
         theme={theme}
         initialTab={toolsInitialTab}
@@ -1042,7 +1049,11 @@ export default function App() {
         onCheckIn={handleHabitCheckIn}
         onDeleteHabit={handleDeleteHabit}
         isSyncing={isSyncing}
+        focusMode={toolsFocusMode}
+        onFocusChange={setToolsFocusMode}
       />
+      <MobileBottomNav onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      </>
     );
   }
 
@@ -1080,7 +1091,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setFocusMode(false)}
-          className="hidden md:inline-flex fixed top-3 right-3 z-[160] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
+          className="inline-flex fixed top-3 right-3 z-[160] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
           aria-label="Exit Focus Mode"
           title="Exit Focus Mode"
         >
@@ -1115,7 +1126,7 @@ export default function App() {
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
       {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
-      {!focusMode && <MobileBottomNav onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />}
+      <MobileBottomNav onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
 
       {/* 3. Add Record Modal */}
       <AddRecordModal

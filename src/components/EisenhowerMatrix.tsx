@@ -33,6 +33,7 @@ interface EisenhowerMatrixProps {
   onToggleTaskStatus: (taskId: string) => Promise<void>;
   isSyncing?: boolean;
   density?: ToolsDensity;
+  focusMode?: boolean;
 }
 
 type QuadrantColor =
@@ -335,6 +336,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
   onToggleTaskStatus,
   isSyncing = false,
   density = 'compact',
+  focusMode = false,
 }) => {
   const [drafts, setDrafts] = useState<Record<MatrixQuadrant, string>>({
     'urgent-important': '',
@@ -545,7 +547,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     <div
       className="tools-workspace-view lg:flex lg:flex-col"
     >
-      <div className="tools-view-header lg:shrink-0">
+      {!focusMode && <div className="tools-view-header lg:shrink-0">
         <div><h2 className="tools-view-title">Eisenhower Matrix</h2><p className="tools-view-subtitle">Prioritize today's tasks by importance and urgency.</p></div>
         <label className="matrix-mobile-filter min-h-11 sm:min-h-0 px-2 sm:px-0 rounded-lg sm:rounded-none inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 shrink-0">
           <input
@@ -555,7 +557,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
           />
           Show completed
         </label>
-      </div>
+      </div>}
 
       {error && (
         <div className="tools-feedback-error flex items-center gap-2">
@@ -565,7 +567,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-slate-100 dark:bg-slate-800 flex-1 min-h-0 lg:grid-rows-2">
-        {quadrants.map((quadrant) => {
+        {quadrants.filter((quadrant) => !focusMode || quadrant.roman === 'I' || quadrant.roman === 'II').map((quadrant) => {
           const theme = QUADRANT_THEMES[quadrant.color];
           const QuadrantIconComponent =
             QUADRANT_ICONS[quadrant.icon].component;

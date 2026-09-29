@@ -375,7 +375,8 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .dark .command-item:hover,.dark .task-menu-item:hover { background:rgb(30 41 59); }
 .command-item svg,.task-menu-item svg { width:16px; height:16px; }
 .command-item kbd { margin-left:auto; font-size:10px; color:rgb(148 163 184); }
-@media (max-width:47.999rem) { .system-app-shell main { padding-bottom:5.5rem; } }
+@media (max-width:47.999rem) { .system-app-shell main { padding-bottom:calc(5.75rem + env(safe-area-inset-bottom)); } }
+@media (max-width:23.5rem) { .mobile-nav-action { font-size:9px; } .mobile-nav-action svg { width:17px; height:17px; } }
 
 /* TickTick-inspired productivity shell */
 :root { --tt-blue:#4772fa; --tt-sidebar:#f5f6f8; --tt-canvas:#fff; --tt-border:#e8e8e8; --tt-text:#252525; --tt-muted:#8a8f98; }

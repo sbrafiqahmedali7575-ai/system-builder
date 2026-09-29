@@ -535,3 +535,31 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
   .dark .mobile-nav-action:active { color:#93c5fd; background:#111c2f; }
   .system-planning-surface { min-height:calc(100dvh - 46px); height:auto; }
 }
+
+
+/* Compact mobile header and tab-control refinement */
+@media (max-width:639px) {
+  .tools-view-header { min-height:54px; padding:7px 10px; gap:8px; }
+  .tools-view-header > div:first-child { min-width:0; }
+  .tools-view-title { font-size:15px; line-height:19px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tools-view-subtitle { margin-top:0; font-size:10.5px; line-height:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dark .tools-view-header { background:#0f172a; border-color:#273449; }
+  .dark .tools-view-title { color:#f8fafc; }
+  .dark .tools-view-subtitle { color:#9aa8bb; }
+
+  [role="tablist"][aria-label="System Builder tools"] { scrollbar-width:none; }
+  [role="tablist"][aria-label="System Builder tools"]::-webkit-scrollbar { display:none; }
+  [role="tablist"][aria-label="System Builder tools"] [role="tab"] { min-width:64px; min-height:44px; padding-left:7px; padding-right:7px; }
+  .dark [role="tablist"][aria-label="System Builder tools"] [role="tab"][aria-selected="true"] { color:#93c5fd; border-color:#4772fa; background:rgba(71,114,250,.08); }
+  .dark [role="tablist"][aria-label="System Builder tools"] [role="tab"][aria-selected="false"] { color:#94a3b8; }
+
+  .matrix-mobile-filter { background:#f8fafc; }
+  .dark .matrix-mobile-filter { background:#111c2f; color:#cbd5e1; }
+  .matrix-mobile-filter input { width:18px; height:18px; accent-color:#4772fa; }
+
+  .tools-view-header .tools-primary-action { min-height:42px; border-radius:8px; white-space:nowrap; }
+  .dark .tools-view-header .tools-primary-action { box-shadow:0 0 0 1px rgba(147,197,253,.08); }
+
+  [data-tools-density] select { padding-left:10px; padding-right:30px; }
+  [data-tools-density] input[type="checkbox"] { min-height:0; width:18px; height:18px; }
+}

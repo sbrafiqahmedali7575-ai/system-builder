@@ -136,7 +136,6 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isTaskSearchOpen, setIsTaskSearchOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const [toolsFocusMode, setToolsFocusMode] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -1049,10 +1048,10 @@ export default function App() {
         onCheckIn={handleHabitCheckIn}
         onDeleteHabit={handleDeleteHabit}
         isSyncing={isSyncing}
-        focusMode={toolsFocusMode}
-        onFocusChange={setToolsFocusMode}
+        focusMode={focusMode}
+        onFocusChange={setFocusMode}
       />
-      <MobileBottomNav onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      <MobileBottomNav onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
       </>
     );
   }

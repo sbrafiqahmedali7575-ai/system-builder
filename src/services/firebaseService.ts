@@ -364,6 +364,29 @@ function habitLogDocumentId(habitId: string, dateKey: string): string {
   return `${habitId}_${dateKey}`;
 }
 
+function firestoreValueEqual(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((value, index) => firestoreValueEqual(value, b[index]));
+  }
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    const aa = a as Record<string, unknown>;
+    const bb = b as Record<string, unknown>;
+    const keys = new Set([...Object.keys(aa), ...Object.keys(bb)]);
+    return [...keys].every((key) => firestoreValueEqual(aa[key], bb[key]));
+  }
+  return a === b;
+}
+
+function storedFieldsMatch(
+  stored: Record<string, unknown>,
+  desired: Record<string, unknown>
+): boolean {
+  return Object.entries(desired).every(([key, value]) =>
+    firestoreValueEqual(stored[key], value)
+  );
+}
+
 async function commitBatchedMutations(
   writes: Array<{
     ref: DocumentReference<DocumentData>;
@@ -443,16 +466,15 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
     /^HL\d+$/i.test(String(logDoc.data().habitLogId || logDoc.id))
   ) || todayLogs[0];
 
-  await setDoc(
-    primary.ref,
-    {
-      habitLogId: String(primary.data().habitLogId || primary.id),
-      habitId: habit.id,
-      dateKey: today,
-      Iscompleted: checkedToday,
-    },
-    { merge: true }
-  );
+  const desiredLog = {
+    habitLogId: String(primary.data().habitLogId || primary.id),
+    habitId: habit.id,
+    dateKey: today,
+    Iscompleted: checkedToday,
+  };
+  if (!storedFieldsMatch(primary.data() as Record<string, unknown>, desiredLog)) {
+    await setDoc(primary.ref, desiredLog, { merge: true });
+  }
 
   // Remove duplicate rows for the same habit/today.
   const duplicates = todayLogs.filter((logDoc) => logDoc.id !== primary.id);
@@ -780,7 +802,9 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
   const habitCompletionRate = habitsCompleted;
 
   try {
-    await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
+    const dayRef = doc(db, DAYS_COLLECTION, dateKey);
+    const existingDay = await getDoc(dayRef);
+    const desiredDay = {
       dateKey,
       tasksCompleted: tasksDone,
       taskTotal: tasks,
@@ -789,13 +813,24 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
       habitTotal: Habits,
       habitCompletionRate,
       IsdayCompleted: tasks > 0 && taskCompletionRate === 100,
-      // Remove obsolete summary fields as the canonical model is rewritten.
-      tasksDone: deleteField(),
-      tasks: deleteField(),
-      habitsDone: deleteField(),
-      Habits: deleteField(),
-      dayCompleted: deleteField(),
-    }, { merge: true });
+    };
+    const existingData = existingDay.exists()
+      ? (existingDay.data() as Record<string, unknown>)
+      : null;
+    const hasLegacyFields = Boolean(
+      existingData &&
+      ['tasksDone', 'tasks', 'habitsDone', 'Habits', 'dayCompleted'].some((key) => key in existingData)
+    );
+    if (!existingData || !storedFieldsMatch(existingData, desiredDay) || hasLegacyFields) {
+      await setDoc(dayRef, {
+        ...desiredDay,
+        tasksDone: deleteField(),
+        tasks: deleteField(),
+        habitsDone: deleteField(),
+        Habits: deleteField(),
+        dayCompleted: deleteField(),
+      }, { merge: true });
+    }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes('quota') || msg.includes('resource-exhausted')) {
@@ -1420,7 +1455,10 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
     const habitForStorage = applyHabitActivationTransition(previousHabit, currentDayOnlyHabit);
     const scheduleChanged = habitScheduleChanged(previousHabit, habitForStorage);
 
-    await setDoc(habitRef, habitStoragePayload(habitForStorage), { merge: true });
+    const desiredHabit = habitStoragePayload(habitForStorage);
+    if (!previousHabit || !storedFieldsMatch(previousHabit, desiredHabit)) {
+      await setDoc(habitRef, desiredHabit, { merge: true });
+    }
     await syncHabitLogsFromHabit(habitForStorage);
 
     if (scheduleChanged) {

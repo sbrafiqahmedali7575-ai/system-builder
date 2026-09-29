@@ -578,3 +578,8 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
   .system-edition .ui-surface,
   .system-edition .tools-panel { border-radius:var(--app-radius); }
 }
+
+
+/* Task detail labels: identical presentation on mobile and desktop. */
+.task-detail-labels { display:flex !important; flex-wrap:wrap; align-items:center; gap:.25rem; }
+.task-detail-labels > * { display:inline-flex; flex-shrink:0; }

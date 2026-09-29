@@ -44,9 +44,9 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
 }) => (
   <section
     aria-label="Month calendar"
-    className="h-full min-h-[560px] flex flex-col bg-white"
+    className="h-full min-h-[560px] flex flex-col bg-white dark:bg-slate-950"
   >
-    <div className="grid grid-cols-7 border-b border-slate-100 bg-white shrink-0">
+    <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
       {WEEKDAY_LABELS.map((day) => (
         <div
           key={day}
@@ -58,7 +58,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
       ))}
     </div>
 
-    <div className="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 border-l border-slate-100">
+    <div className="flex-1 grid grid-cols-7 grid-rows-6 min-h-0 border-l border-slate-100 dark:border-slate-800">
       {calendarDays.map((dateKey) => {
         const date = parseKey(dateKey);
 

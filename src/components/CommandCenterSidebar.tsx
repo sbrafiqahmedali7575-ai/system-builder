@@ -43,14 +43,14 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           : 'bg-white border-slate-200'
       }`}
     >
-      <div className="shrink-0 px-3 py-2.5 border-b border-slate-100 dark:border-slate-800">
+      <div className="shrink-0 px-3 py-2 sm:py-2.5 border-b border-slate-100 dark:border-slate-800">
         <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Command Center
         </h2>
       </div>
 
       <div className="grid grid-cols-3 shrink-0 border-b border-slate-100 dark:border-slate-800 divide-x divide-slate-100 dark:divide-slate-800">
-        <div className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 flex flex-col items-center justify-center text-center">
+        <div className="min-w-0 bg-white dark:bg-slate-900 px-1.5 sm:px-2.5 py-2 flex flex-col items-center justify-center text-center">
           <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
             <Award className="w-3 h-3 text-blue-500" />
             Overall
@@ -60,7 +60,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           </div>
         </div>
 
-        <div className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 flex flex-col items-center justify-center text-center">
+        <div className="min-w-0 bg-white dark:bg-slate-900 px-1.5 sm:px-2.5 py-2 flex flex-col items-center justify-center text-center">
           <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
             <Trophy className="w-3 h-3 text-blue-500" />
             Weeks
@@ -74,7 +74,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           type="button"
           onClick={onOpenCountdown}
           disabled={!onOpenCountdown}
-          className="min-w-0 bg-white dark:bg-slate-900 px-2.5 py-2 text-center transition-colors enabled:hover:bg-slate-50 dark:enabled:hover:bg-slate-800 disabled:cursor-default"
+          className="min-w-0 bg-white dark:bg-slate-900 px-1.5 sm:px-2.5 py-2 text-center transition-colors enabled:hover:bg-slate-50 dark:enabled:hover:bg-slate-800 disabled:cursor-default"
           title={`${countdownReason} · Target: ${countdownTargetLabel}${onOpenCountdown ? ' · Click to edit' : ''}`}
           aria-label={`${countdownDaysRemaining} days remaining. ${countdownReason}.`}
         >
@@ -88,7 +88,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         </button>
       </div>
 
-      <div className="p-2 min-h-0 flex-1 bg-white dark:bg-slate-900">
+      <div className="p-1.5 sm:p-2 min-h-0 flex-1 bg-white dark:bg-slate-900">
         <PomodoroTimer
           className="h-full"
           currentTaskTitle={currentTaskTitle}

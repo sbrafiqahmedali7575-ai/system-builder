@@ -1,9 +1,0 @@
-{
-  "firestore": [
-    {
-      "database": "ai-studio-powerbiskillprog-68c6ef1e-cce3-42f5-a93a-7da822711935",
-      "rules": "firestore.rules",
-      "indexes": "firestore.indexes.json"
-    }
-  ]
-}

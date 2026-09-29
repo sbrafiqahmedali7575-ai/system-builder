@@ -5,12 +5,12 @@ import{isHabitDue}from'../utils/habitUtils';
 type Period='week'|'month'|'quarter'|'all';
 interface Props{tasks:TaskItem[];habits:HabitItem[];records:DailyRecord[];currentDateKey:string;achievedWeeks:number}
 const DAY=86400000;
-const utc=(s:string)=>{const a=s.split('-').map(Number);return Date.UTC(a[0],a[1]-1,a[2])};
+const utc=(s:string)=>{const a=s.split('-').map(Number);if(a.length!==3||a.some(v=>!Number.isFinite(v)))return NaN;return Date.UTC(a[0],a[1]-1,a[2])};
 const key=(ms:number)=>{const d=new Date(ms);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')};
 const pct=(a:number,b:number)=>b?Math.round(a/b*100):0;
 export const PerformanceIntelligence:React.FC<Props>=({tasks,habits,records,currentDateKey,achievedWeeks})=>{
  const[period,setPeriod]=useState<Period>('quarter');
- const m=useMemo(()=>{const today=utc(currentDateKey);const dates=[...tasks.map(t=>t.taskKey),...habits.map(h=>h.activeFrom||h.createdAt.slice(0,10))].filter(Boolean).sort();const first=utc(dates[0]||currentDateKey);const n=period==='week'?7:period==='month'?30:period==='quarter'?90:Math.max(1,Math.floor((today-first)/DAY)+1);const start=today-(n-1)*DAY;
+ const m=useMemo(()=>{const parsedToday=utc(currentDateKey);const today=Number.isFinite(parsedToday)?parsedToday:Date.now();const allStart=utc('2026-08-01');const dates=[...tasks.map(t=>t.taskKey),...habits.map(h=>h.activeFrom||h.createdAt?.slice(0,10)||'')].filter(Boolean).sort();const parsedFirst=utc(dates[0]||currentDateKey);const first=Number.isFinite(parsedFirst)?parsedFirst:today;const n=period==='week'?7:period==='month'?30:period==='quarter'?90:Math.max(1,Math.floor((today-allStart)/DAY)+1);const start=period==='all'?allStart:today-(n-1)*DAY;
  const recordMs=(r:DailyRecord)=>{const ms=Date.parse(r.date+' UTC');return Number.isFinite(ms)?ms:NaN};
  const range=(from:number,to:number)=>{let td=0,tt=0,hd=0,ht=0,sd=0,ed=0;for(let ms=from;ms<=to&&ms<=today;ms+=DAY){const k=key(ms),ts=tasks.filter(t=>t.taskKey===k),due=habits.filter(h=>isHabitDue(h,k));tt+=ts.length;td+=ts.filter(t=>t.isCompleted).length;ht+=due.length;hd+=due.filter(h=>h.checkIns.includes(k)).length;if(ts.length){ed++;if(ts.every(t=>t.isCompleted))sd++}}const task=pct(td,tt),habit=pct(hd,ht);const dayRows=records.filter(r=>{const ms=recordMs(r);return Number.isFinite(ms)&&ms>=from&&ms<=to&&ms<=today});const dayDone=dayRows.reduce((s,r)=>s+(r.isCompleted?1:0),0);return{task,habit,score:pct(dayDone,dayRows.length),sd:dayDone,ed:dayRows.length}};
  const cur=range(start,today),prev=range(start-n*DAY,start-DAY),delta=cur.score-prev.score;
@@ -20,7 +20,8 @@ export const PerformanceIntelligence:React.FC<Props>=({tasks,habits,records,curr
  let run=0,bestRun=0;for(let ms=first;ms<=today;ms+=DAY){const k=key(ms),due=habits.filter(h=>isHabitDue(h,k)),ok=due.length>0&&due.every(h=>h.checkIns.includes(k));run=ok?run+1:0;bestRun=Math.max(bestRun,run)}
  return{cur,delta,weeks,strong,weak,best,low,run,bestRun,tracked:Math.max(1,Math.floor((today-first)/DAY)+1),done:tasks.filter(t=>t.isCompleted).length,checks:habits.reduce((s,h)=>s+h.checkIns.length,0)}},[tasks,habits,records,currentDateKey,achievedWeeks,period]);
  const overallStart=utc('2026-08-01');
- const today=utc(currentDateKey);
+ const parsedToday=utc(currentDateKey);
+ const today=Number.isFinite(parsedToday)?parsedToday:overallStart;
  const totalDays=Math.max(0,Math.floor((today-overallStart)/DAY)+1);
  const successfulDays=records.filter(r=>{const ms=Date.parse(r.date+' UTC');return r.isCompleted&&Number.isFinite(ms)&&ms>=overallStart&&ms<=today}).length;
  const overallScore=pct(successfulDays,totalDays);

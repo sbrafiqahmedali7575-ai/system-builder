@@ -586,19 +586,19 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         Iscompleted: isCompleted,
       };
 
-      writes.push({
-        ref: taskDoc.ref,
-        data: {
-          taskId: taskDoc.id,
-          title: normalized.title,
-          quadrant: normalized.quadrant,
-          scheduledDate: normalized.scheduledDate,
-          sortOrder: normalized.sortOrder,
-          notes: normalized.notes,
-          Iscompleted: normalized.Iscompleted,
-        },
-      });
-      result.tasks += 1;
+      const desiredTask = {
+        taskId: taskDoc.id,
+        title: normalized.title,
+        quadrant: normalized.quadrant,
+        scheduledDate: normalized.scheduledDate,
+        sortOrder: normalized.sortOrder,
+        notes: normalized.notes,
+        Iscompleted: normalized.Iscompleted,
+      };
+      if (!migrationFieldsMatch(data, desiredTask)) {
+        writes.push({ ref: taskDoc.ref, data: desiredTask });
+        result.tasks += 1;
+      }
       return normalized;
     })
     .filter((task) => Boolean(task.scheduledDate));
@@ -621,6 +621,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   });
 
   // Normalize habits and split any remaining legacy checkIns into HabitLogs.
+  const existingHabitLogsById = new Map(habitLogsSnap.docs.map((logDoc) => [logDoc.id, logDoc.data() as Record<string, unknown>]));
   const normalizedHabits = habitsSnap.docs.map((habitDoc) => {
     const data = habitDoc.data() as Record<string, unknown>;
     const repeatDays = repeatDaysForHabit(data);
@@ -644,34 +645,35 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
       checkIns,
     };
 
-    writes.push({
-      ref: habitDoc.ref,
-      data: {
-        habitId: habitDoc.id,
-        name: String(data.name || '').trim(),
-        repeatDays,
-        activeFrom,
-        isActive: normalized.isActive,
-        inactivePeriods: Array.isArray(data.inactivePeriods)
-          ? data.inactivePeriods
-          : [],
-        color: colorToHex(data.color),
-      },
-    });
-    result.habits += 1;
+    const desiredHabit = {
+      habitId: habitDoc.id,
+      name: String(data.name || '').trim(),
+      repeatDays,
+      activeFrom,
+      isActive: normalized.isActive,
+      inactivePeriods: Array.isArray(data.inactivePeriods)
+        ? data.inactivePeriods
+        : [],
+      color: colorToHex(data.color),
+    };
+    if (!migrationFieldsMatch(data, desiredHabit)) {
+      writes.push({ ref: habitDoc.ref, data: desiredHabit });
+      result.habits += 1;
+    }
 
     for (const dateKey of checkIns) {
       const habitLogId = `${habitDoc.id}_${dateKey}`;
-      writes.push({
-        ref: doc(db, 'habitLogs', habitLogId),
-        data: {
-          habitLogId,
-          habitId: habitDoc.id,
-          dateKey,
-          Iscompleted: true,
-        },
-      });
-      result.habitLogs += 1;
+      const desiredLog = {
+        habitLogId,
+        habitId: habitDoc.id,
+        dateKey,
+        Iscompleted: true,
+      };
+      const existingLog = existingHabitLogsById.get(habitLogId);
+      if (!existingLog || !migrationFieldsMatch(existingLog, desiredLog)) {
+        writes.push({ ref: doc(db, 'habitLogs', habitLogId), data: desiredLog });
+        result.habitLogs += 1;
+      }
     }
 
     return normalized;
@@ -743,20 +745,21 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     const habitsCompleted = roundedRate(habitsDone, Habits);
     const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
 
-    writes.push({
-      ref: doc(db, 'days', dateKey),
-      data: {
-        dateKey,
-        tasksCompleted: tasksDone,
-        taskTotal: tasks,
-        taskCompletionRate: tasksCompleted,
-        habitsCompleted: habitsDone,
-        habitTotal: Habits,
-        habitCompletionRate: habitsCompleted,
-        IsdayCompleted: tasks > 0 && tasksCompleted === 100,
-      },
-    });
-    result.days += 1;
+    const desiredDay = {
+      dateKey,
+      tasksCompleted: tasksDone,
+      taskTotal: tasks,
+      taskCompletionRate: tasksCompleted,
+      habitsCompleted: habitsDone,
+      habitTotal: Habits,
+      habitCompletionRate: habitsCompleted,
+      IsdayCompleted: tasks > 0 && tasksCompleted === 100,
+    };
+    const existingDay = existingDaysSnap.docs.find((dayDoc) => dayDoc.id === dateKey);
+    if (!existingDay || !migrationFieldsMatch(existingDay.data() as Record<string, unknown>, desiredDay)) {
+      writes.push({ ref: doc(db, 'days', dateKey), data: desiredDay });
+      result.days += 1;
+    }
   }
 
   await commitQueuedWrites(writes);

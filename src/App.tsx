@@ -17,66 +17,32 @@ import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyIn
 import { getBadgeProgress } from './utils/badgeSystem';
 import { isHabitDue } from './utils/habitUtils';
 import {
-  subscribeToRecords,
   addRecordToCloud,
   updateRecordInCloud,
   deleteRecordFromCloud,
-  subscribeToTasks,
   addTaskToCloud,
   updateTaskInCloud,
   deleteTaskFromCloud,
-  subscribeToHabits,
   addHabitToCloud,
   updateHabitInCloud,
   setTodayHabitCheckIn,
   deleteHabitFromCloud,
-  initializeDayHabitStatus,
   isFirestoreWriteQuotaExhausted,
-  isQuotaExceededError,
-  markFirestoreWriteQuotaExhausted,
 } from './services/firebaseService';
 import {
-  getCachedRecords,
   setCachedRecords,
-  getCachedTasks,
   setCachedTasks,
-  getCachedHabits,
   setCachedHabits,
   queueMutation,
-  processPendingSync,
   isNetworkOrOfflineError,
 } from './services/offlineStorage';
-import {
-  migrateLegacyDataModel,
-  repairCanonicalHabitLogsAndDays,
-} from './services/dataModelMigration';
+import { useSystemDataLifecycle, type PendingTaskMutation } from './hooks/useSystemDataLifecycle';
 import { useCurrentDateKey } from './hooks/useCurrentDateKey';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
-const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V16_DAYS_DEDUP_FUTURE_CLEANUP';
-const HABIT_LOG_REPAIR_KEY = 'SYSTEM_BUILDER_V13_FULL_HISTORICAL_DAYS_REBUILD';
-type PendingTaskMutation =
-  | { kind: 'upsert'; task: TaskItem }
-  | { kind: 'delete' };
-
-function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
-  return (
-    a.id === b.id &&
-    a.taskKey === b.taskKey &&
-    a.taskOfTheDay === b.taskOfTheDay &&
-    a.isCompleted === b.isCompleted &&
-    (a.priority || 'Normal') === (b.priority || 'Normal') &&
-    (a.timeEstimate || '') === (b.timeEstimate || '') &&
-    (a.category || '') === (b.category || '') &&
-    (a.notes || '') === (b.notes || '') &&
-    (a.completedAt || '') === (b.completedAt || '') &&
-    (a.matrixQuadrant || '') === (b.matrixQuadrant || '')
-  );
-}
-
 export default function App() {
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
@@ -217,238 +183,13 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
-  // Hydrate from IndexedDB on initial mount
-  useEffect(() => {
-    let isMounted = true;
-
-    async function hydrateFromIndexedDB() {
-      try {
-        const [cachedRecords, cachedTasks, cachedHabits] = await Promise.all([
-          getCachedRecords(),
-          getCachedTasks(),
-          getCachedHabits(),
-        ]);
-        if (!isMounted) return;
-
-        if (cachedRecords && cachedRecords.length > 0) {
-          setRecords(cachedRecords);
-        }
-        if (cachedTasks && cachedTasks.length > 0) {
-          setTasks(cachedTasks);
-        }
-        if (cachedHabits && cachedHabits.length > 0) {
-          setHabits(cachedHabits);
-        }
-      } catch (err) {
-        console.warn('Error hydrating from IndexedDB:', err);
-      }
-    }
-
-    hydrateFromIndexedDB();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // One-time, non-destructive migration from the legacy Firestore model to
-  // the single-user collections/fields. The legacy data remains in place for
-  // compatibility, and the completion flag is written only after a full success.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (isFirestoreWriteQuotaExhausted()) return;
-
-    if (localStorage.getItem(DATA_MODEL_MIGRATION_KEY) === '1') {
-      return;
-    }
-
-    let cancelled = false;
-
-    async function runDataModelMigration() {
-      try {
-        const result = await migrateLegacyDataModel();
-        if (cancelled) return;
-
-        localStorage.setItem(DATA_MODEL_MIGRATION_KEY, '1');
-        console.info('System Builder data model migration completed:', result);
-      } catch (error) {
-        if (isQuotaExceededError(error)) {
-          markFirestoreWriteQuotaExhausted();
-        }
-        // Migration is intentionally best-effort while the app remains backward compatible.
-        // A Firestore permission failure must not prevent the dashboard from loading.
-        console.warn(
-          'System Builder data model migration is pending and will retry later:',
-          error
-        );
-      }
-    }
-
-    runDataModelMigration();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // V11 focused repair: canonicalize historical HabitLogs independently
-  // of the broader legacy migration so unrelated collection permissions cannot
-  // block habit/day repair.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (isFirestoreWriteQuotaExhausted()) return;
-    if (localStorage.getItem(HABIT_LOG_REPAIR_KEY) === '1') return;
-
-    let cancelled = false;
-
-    async function repairHabitHistory() {
-      try {
-        await repairCanonicalHabitLogsAndDays();
-        if (!cancelled) {
-          localStorage.setItem(HABIT_LOG_REPAIR_KEY, '1');
-        }
-      } catch (error) {
-        if (isQuotaExceededError(error)) {
-          markFirestoreWriteQuotaExhausted();
-        }
-        if (!cancelled) {
-          console.warn('Historical HabitLog repair is pending:', error);
-        }
-      }
-    }
-
-    repairHabitHistory();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Materialize one HabitLog row for every habit due today, including
-  // Iscompleted=false for habits that have not been checked. The hook updates
-  // at midnight, so a new day's rows are created without requiring a refresh.
-  useEffect(() => {
-    if (isFirestoreWriteQuotaExhausted()) return;
-    let cancelled = false;
-
-    async function initializeTodayHabitRows() {
-      try {
-        await initializeDayHabitStatus(currentDateKey);
-      } catch (error) {
-        if (isQuotaExceededError(error)) {
-          markFirestoreWriteQuotaExhausted();
-        }
-        if (!cancelled) {
-          console.warn('Unable to initialize today habit status rows:', error);
-        }
-      }
-    }
-
-    initializeTodayHabitRows();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentDateKey]);
-
-  // Background sync for queued offline mutations when online
-  useEffect(() => {
-    const handleSync = async () => {
-      try {
-        await processPendingSync({
-          addTask: addTaskToCloud,
-          updateTask: updateTaskInCloud,
-          deleteTask: deleteTaskFromCloud,
-          addHabit: addHabitToCloud,
-          updateHabit: updateHabitInCloud,
-          deleteHabit: deleteHabitFromCloud,
-          addRecord: addRecordToCloud,
-          updateRecord: updateRecordInCloud,
-          deleteRecord: deleteRecordFromCloud,
-        });
-      } catch (err) {
-        console.warn('Background sync for offline queue attempt:', err);
-      }
-    };
-
-    window.addEventListener('online', handleSync);
-    // Also attempt when component mounts in case pending mutations existed from earlier session
-    handleSync();
-
-    return () => {
-      window.removeEventListener('online', handleSync);
-    };
-  }, []);
-
-  // Subscribe to real-time Firestore updates for records
-  useEffect(() => {
-    const unsubscribe = subscribeToRecords(
-      (cloudRecords) => {
-        if (cloudRecords && cloudRecords.length > 0) {
-          setRecords(cloudRecords);
-          setCachedRecords(cloudRecords);
-        }
-      },
-      (error) => {
-        console.warn('Using IndexedDB/local storage cache for records due to:', error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  // Subscribe to real-time Firestore updates for tasks
-  useEffect(() => {
-    const unsubscribe = subscribeToTasks(
-      (cloudTasks) => {
-        const pending = pendingTaskMutationsRef.current;
-        const merged = new Map(cloudTasks.map((task) => [task.id, task]));
-
-        pending.forEach((mutation, taskId) => {
-          const cloudTask = merged.get(taskId);
-
-          if (mutation.kind === 'delete') {
-            if (!cloudTask) pending.delete(taskId);
-            merged.delete(taskId);
-            return;
-          }
-
-          if (cloudTask && taskContentMatches(cloudTask, mutation.task)) {
-            pending.delete(taskId);
-            return;
-          }
-
-          merged.set(taskId, mutation.task);
-        });
-
-        const nextTasks = Array.from(merged.values()).sort((a, b) =>
-          (b.taskKey || '').localeCompare(a.taskKey || '')
-        );
-        setTasks(nextTasks);
-        setCachedTasks(nextTasks);
-      },
-      (error) => {
-        console.warn('Using IndexedDB/local storage cache for tasks due to:', error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  // Subscribe to real-time Firestore updates for habits
-  useEffect(() => {
-    const unsubscribe = subscribeToHabits(
-      (cloudHabits) => {
-        setHabits(cloudHabits);
-        setCachedHabits(cloudHabits);
-      },
-      (error) => {
-        console.warn('Using IndexedDB/local storage cache for habits due to:', error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
+  useSystemDataLifecycle({
+    currentDateKey,
+    pendingTaskMutationsRef,
+    setRecords,
+    setTasks,
+    setHabits,
+  });
 
   // Save records to IndexedDB cache
   useEffect(() => {

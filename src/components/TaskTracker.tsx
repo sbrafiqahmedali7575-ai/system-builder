@@ -287,7 +287,6 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
       <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden border-0 bg-white dark:bg-slate-950 flex flex-col">
         {!focusMode && <div className="tools-view-header">
           <div className="min-w-0"><h2 className="tools-view-title">Task Planner</h2><p className="tools-view-subtitle">{todayTasks.length} today · {completedToday} completed · {weekTasks.length} this week</p></div>
-          <button type="button" onClick={openAdd} className="tools-primary-action h-11 sm:h-9 px-3 inline-flex items-center gap-1.5 text-sm font-medium"><Plus className="w-4 h-4" />New task</button>
         </div>}
         {!focusMode && formOpen && (
           <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 px-3 sm:px-4 py-3">

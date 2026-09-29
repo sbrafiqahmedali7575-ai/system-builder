@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Database, Focus, Wrench } from 'lucide-react';
+import { BookOpen, Focus, Wrench } from 'lucide-react';
+import { SystemBuilderLogo } from './SystemBuilderLogo';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 
@@ -67,13 +68,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             aria-label="Open System Builder dashboard"
             title="System Builder"
           >
-            <motion.div
-              whileHover={{ y: -2, rotate: -2, scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              className="system-mark w-8 h-8 rounded-lg text-white flex items-center justify-center font-semibold relative overflow-hidden"
-            >
-              <Database className="relative z-10 w-5 h-5 stroke-[2.4]" aria-hidden="true" />
-            </motion.div>
+            <SystemBuilderLogo className="size-8 rounded-lg text-xs" />
             <div className="hidden sm:block">
               <div className="flex items-center space-x-1">
                 <span className="text-sm sm:text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">

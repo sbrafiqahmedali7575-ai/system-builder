@@ -1091,7 +1091,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setFocusMode(false)}
-          className="inline-flex fixed top-3 right-3 z-[160] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
+          className="hidden md:inline-flex fixed top-3 right-3 z-[160] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
           aria-label="Exit Focus Mode"
           title="Exit Focus Mode"
         >

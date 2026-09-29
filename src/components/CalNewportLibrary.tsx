@@ -49,6 +49,7 @@ const READER_STATE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_READER_STATE';
 export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   theme: _theme,
   onBack,
+  externalFocusMode,
 }) => {
   const [activeBookId, setActiveBookId] = useState<CalNewportBook['id']>(() => {
     if (typeof window === 'undefined') return 'so-good';

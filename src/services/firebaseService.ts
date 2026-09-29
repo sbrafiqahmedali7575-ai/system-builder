@@ -76,11 +76,46 @@ export interface FirestoreErrorInfo {
   };
 }
 
+let quotaExhaustedMemory = false;
+
+export function isQuotaExceededError(error: unknown): boolean {
+  if (!error) return false;
+  const anyErr = error as any;
+  if (anyErr?.code === 'resource-exhausted') return true;
+  const msg = String(anyErr?.message || anyErr || '').toLowerCase();
+  return (
+    msg.includes('quota limit exceeded') ||
+    msg.includes('quota exceeded') ||
+    msg.includes('resource-exhausted')
+  );
+}
+
+export function isFirestoreWriteQuotaExhausted(): boolean {
+  if (quotaExhaustedMemory) return true;
+  if (typeof sessionStorage !== 'undefined') {
+    return sessionStorage.getItem('FIRESTORE_WRITE_QUOTA_EXHAUSTED') === 'true';
+  }
+  return false;
+}
+
+export function markFirestoreWriteQuotaExhausted(): void {
+  quotaExhaustedMemory = true;
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('FIRESTORE_WRITE_QUOTA_EXHAUSTED', 'true');
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('system-builder:quota-exceeded'));
+  }
+}
+
 export function handleFirestoreError(
   error: unknown,
   operationType: OperationType,
   path: string | null
 ): never {
+  if (isQuotaExceededError(error)) {
+    markFirestoreWriteQuotaExhausted();
+  }
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -336,6 +371,7 @@ async function commitBatchedMutations(
     delete?: boolean;
   }>
 ): Promise<void> {
+  if (isFirestoreWriteQuotaExhausted()) return;
   for (let index = 0; index < writes.length; index += 400) {
     const batch = writeBatch(db);
     writes.slice(index, index + 400).forEach((write) => {
@@ -345,7 +381,16 @@ async function commitBatchedMutations(
         batch.set(write.ref, write.data || {}, { merge: true });
       }
     });
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (err: unknown) {
+      if (isQuotaExceededError(err)) {
+        markFirestoreWriteQuotaExhausted();
+        console.warn('Firestore write quota limit reached during batch commit.');
+        return;
+      }
+      throw err;
+    }
   }
 }
 
@@ -673,13 +718,26 @@ export async function ensureHabitLogsForDate(dateKey: string): Promise<void> {
 }
 
 export async function rebuildDaySummary(dateKey: string): Promise<void> {
+  if (isFirestoreWriteQuotaExhausted()) return;
   const normalizedDateKey = normalizeModelDateKey(dateKey);
   if (!normalizedDateKey) return;
 
   dateKey = normalizedDateKey;
   // HabitLog creation remains current-day only, but Days summaries must be
   // rebuildable for every historical date affected by task edits/moves/deletes.
-  await ensureHabitLogsForDate(dateKey);
+  const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
+  if (dateKey === today) {
+    try {
+      await ensureHabitLogsForDate(dateKey);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('quota') || msg.includes('resource-exhausted')) {
+        console.warn('Firestore write quota limit reached during ensureHabitLogsForDate.');
+      } else {
+        throw err;
+      }
+    }
+  }
 
   const [tasksSnap, habitsSnap, logsSnap] = await Promise.all([
     getDocs(collection(db, TASKS_COLLECTION)),
@@ -721,22 +779,31 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
   const taskCompletionRate = tasksCompleted;
   const habitCompletionRate = habitsCompleted;
 
-  await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
-    dateKey,
-    tasksCompleted: tasksDone,
-    taskTotal: tasks,
-    taskCompletionRate,
-    habitsCompleted: habitsDone,
-    habitTotal: Habits,
-    habitCompletionRate,
-    IsdayCompleted: tasks > 0 && taskCompletionRate === 100,
-    // Remove obsolete summary fields as the canonical model is rewritten.
-    tasksDone: deleteField(),
-    tasks: deleteField(),
-    habitsDone: deleteField(),
-    Habits: deleteField(),
-    dayCompleted: deleteField(),
-  }, { merge: true });
+  try {
+    await setDoc(doc(db, DAYS_COLLECTION, dateKey), {
+      dateKey,
+      tasksCompleted: tasksDone,
+      taskTotal: tasks,
+      taskCompletionRate,
+      habitsCompleted: habitsDone,
+      habitTotal: Habits,
+      habitCompletionRate,
+      IsdayCompleted: tasks > 0 && taskCompletionRate === 100,
+      // Remove obsolete summary fields as the canonical model is rewritten.
+      tasksDone: deleteField(),
+      tasks: deleteField(),
+      habitsDone: deleteField(),
+      Habits: deleteField(),
+      dayCompleted: deleteField(),
+    }, { merge: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('quota') || msg.includes('resource-exhausted')) {
+      console.warn('Firestore write quota limit reached during rebuildDaySummary.');
+      return;
+    }
+    throw err;
+  }
 
   // Keep dateKey as the single canonical Days document ID. Remove any
   // duplicate document whose stored dateKey represents today's same date.
@@ -753,24 +820,25 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
 }
 
 export async function initializeDayHabitStatus(dateKey: string): Promise<void> {
+  if (isFirestoreWriteQuotaExhausted()) return;
   const normalizedDateKey = normalizeModelDateKey(dateKey);
   if (!normalizedDateKey) return;
   // rebuildDaySummary already ensures today's HabitLogs.
-  await rebuildDaySummary(normalizedDateKey);
+  try {
+    await rebuildDaySummary(normalizedDateKey);
+  } catch (err: unknown) {
+    if (isQuotaExceededError(err)) {
+      markFirestoreWriteQuotaExhausted();
+      console.warn('Firestore write quota limit reached during initializeDayHabitStatus.');
+      return;
+    }
+    throw err;
+  }
 }
 
 async function rebuildAllDaySummaries(): Promise<void> {
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
-  const [tasksSnap, daysSnap, logsSnap] = await Promise.all([
-    getDocs(collection(db, TASKS_COLLECTION)),
-    getDocs(collection(db, DAYS_COLLECTION)),
-    getDocs(collection(db, HABIT_LOGS_COLLECTION)),
-  ]);
-  const dates = new Set<string>([today]);
-  tasksSnap.forEach(d => { const key=normalizeModelDateKey(d.data().scheduledDate); if(key && key<=today) dates.add(key); });
-  daysSnap.forEach(d => { const key=normalizeModelDateKey(d.data().dateKey || d.id); if(key && key<=today) dates.add(key); });
-  logsSnap.forEach(d => { const key=normalizeModelDateKey(d.data().dateKey); if(key && key<=today) dates.add(key); });
-  for (const dateKey of [...dates].sort()) await rebuildDaySummary(dateKey);
+  await rebuildDaySummary(today);
 }
 
 export interface CountdownSettings {

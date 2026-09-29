@@ -8,7 +8,12 @@ import {
   type DocumentReference,
   type WriteBatch,
 } from 'firebase/firestore';
-import { db } from './firebaseService';
+import {
+  db,
+  isFirestoreWriteQuotaExhausted,
+  isQuotaExceededError,
+  markFirestoreWriteQuotaExhausted,
+} from './firebaseService';
 import { MONTH_MAP } from '../utils/dateUtils';
 import {
   CONFIGURED_TIMEZONE,
@@ -161,14 +166,32 @@ async function commitQueuedWrites(writes: QueuedWrite[]): Promise<void> {
     count += 1;
 
     if (count >= MIGRATION_BATCH_LIMIT) {
-      await batch.commit();
+      try {
+        await batch.commit();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('quota') || msg.includes('resource-exhausted')) {
+          console.warn('Firestore write quota limit reached during migration batch commit.');
+          return;
+        }
+        throw err;
+      }
       batch = writeBatch(db);
       count = 0;
     }
   }
 
   if (count > 0) {
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('quota') || msg.includes('resource-exhausted')) {
+        console.warn('Firestore write quota limit reached during migration final batch commit.');
+        return;
+      }
+      throw err;
+    }
   }
 }
 
@@ -224,6 +247,7 @@ async function deduplicateHabitLogs(): Promise<void> {
 }
 
 export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
+  if (isFirestoreWriteQuotaExhausted()) return;
   // Enforce the HabitLogs uniqueness rule for all historical and current data:
   // one row per (habitId, dateKey). Completion is preserved if any duplicate was completed.
   await deduplicateHabitLogs();
@@ -478,6 +502,9 @@ async function backfillTaskOrder(): Promise<void> {
 }
 
 export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult> {
+  if (isFirestoreWriteQuotaExhausted()) {
+    return { users: 0, days: 0, tasks: 0, habits: 0, habitLogs: 0, countdowns: 0 };
+  }
   const [
     recordsSnap,
     tasksSnap,

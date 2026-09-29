@@ -1,5 +1,10 @@
 import localforage from 'localforage';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
+import {
+  isFirestoreWriteQuotaExhausted,
+  isQuotaExceededError,
+  markFirestoreWriteQuotaExhausted,
+} from './firebaseService';
 
 // Configure localforage instance for CommitDaily / SystemBuilder
 export const offlineStore = localforage.createInstance({
@@ -265,7 +270,7 @@ let isSyncingQueue = false;
 export async function processPendingSync(
   handlers: SyncHandlers
 ): Promise<{ synced: number; failed: number }> {
-  if (isSyncingQueue) {
+  if (isSyncingQueue || isFirestoreWriteQuotaExhausted()) {
     return { synced: 0, failed: 0 };
   }
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -284,8 +289,13 @@ export async function processPendingSync(
     }
 
     const remaining: PendingMutation[] = [];
+    let quotaHit = false;
 
     for (const mutation of queue) {
+      if (quotaHit) {
+        remaining.push(mutation);
+        continue;
+      }
       try {
         switch (mutation.type) {
           case 'task_add':
@@ -320,7 +330,12 @@ export async function processPendingSync(
         }
         synced++;
       } catch (err) {
-        if (isNetworkOrOfflineError(err)) {
+        if (isQuotaExceededError(err)) {
+          markFirestoreWriteQuotaExhausted();
+          remaining.push(mutation);
+          failed++;
+          quotaHit = true;
+        } else if (isNetworkOrOfflineError(err)) {
           // Still offline, retain in remaining queue
           remaining.push(mutation);
           failed++;

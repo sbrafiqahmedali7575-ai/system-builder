@@ -31,6 +31,9 @@ import {
   setTodayHabitCheckIn,
   deleteHabitFromCloud,
   initializeDayHabitStatus,
+  isFirestoreWriteQuotaExhausted,
+  isQuotaExceededError,
+  markFirestoreWriteQuotaExhausted,
 } from './services/firebaseService';
 import {
   getCachedRecords,
@@ -150,6 +153,15 @@ export default function App() {
     return window.location.pathname === '/tools';
   });
   const [toolsInitialTab, setToolsInitialTab] = useState<MoreTab>('data');
+  const [booksFocusMode, setBooksFocusMode] = useState(false);
+  const [toolsFocusMode, setToolsFocusMode] = useState(false);
+  const [isQuotaExhausted, setIsQuotaExhausted] = useState(() => isFirestoreWriteQuotaExhausted());
+
+  useEffect(() => {
+    const onQuotaExceeded = () => setIsQuotaExhausted(true);
+    window.addEventListener('system-builder:quota-exceeded', onQuotaExceeded);
+    return () => window.removeEventListener('system-builder:quota-exceeded', onQuotaExceeded);
+  }, []);
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -242,6 +254,7 @@ export default function App() {
   // compatibility, and the completion flag is written only after a full success.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (isFirestoreWriteQuotaExhausted()) return;
 
     if (localStorage.getItem(DATA_MODEL_MIGRATION_KEY) === '1') {
       return;
@@ -257,6 +270,9 @@ export default function App() {
         localStorage.setItem(DATA_MODEL_MIGRATION_KEY, '1');
         console.info('System Builder data model migration completed:', result);
       } catch (error) {
+        if (isQuotaExceededError(error)) {
+          markFirestoreWriteQuotaExhausted();
+        }
         // Migration is intentionally best-effort while the app remains backward compatible.
         // A Firestore permission failure must not prevent the dashboard from loading.
         console.warn(
@@ -278,6 +294,7 @@ export default function App() {
   // block habit/day repair.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (isFirestoreWriteQuotaExhausted()) return;
     if (localStorage.getItem(HABIT_LOG_REPAIR_KEY) === '1') return;
 
     let cancelled = false;
@@ -289,6 +306,9 @@ export default function App() {
           localStorage.setItem(HABIT_LOG_REPAIR_KEY, '1');
         }
       } catch (error) {
+        if (isQuotaExceededError(error)) {
+          markFirestoreWriteQuotaExhausted();
+        }
         if (!cancelled) {
           console.warn('Historical HabitLog repair is pending:', error);
         }
@@ -306,12 +326,16 @@ export default function App() {
   // Iscompleted=false for habits that have not been checked. The hook updates
   // at midnight, so a new day's rows are created without requiring a refresh.
   useEffect(() => {
+    if (isFirestoreWriteQuotaExhausted()) return;
     let cancelled = false;
 
     async function initializeTodayHabitRows() {
       try {
         await initializeDayHabitStatus(currentDateKey);
       } catch (error) {
+        if (isQuotaExceededError(error)) {
+          markFirestoreWriteQuotaExhausted();
+        }
         if (!cancelled) {
           console.warn('Unable to initialize today habit status rows:', error);
         }
@@ -1084,6 +1108,33 @@ export default function App() {
         onToggleFocus={() => setFocusMode((value) => !value)}
         focusMode={focusMode}
       />}
+
+      {isQuotaExhausted && (
+        <div className="w-full bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/60 px-4 py-2.5 text-xs text-amber-900 dark:text-amber-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">⚠️ Daily Firestore Write Quota Reached:</span>
+            <span>The free-tier daily write limit for this Firebase project has been reached. Existing commitments remain readable, and writes will resume after midnight PT.</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://console.firebase.google.com/project/elaborate-lane-2f6jr/firestore/databases/ai-studio-powerbiskillprog-68c6ef1e-cce3-42f5-a93a-7da822711935/data?openUpgradeDialog=true"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100"
+            >
+              Upgrade in Firebase Console
+            </a>
+            <button
+              type="button"
+              onClick={() => setIsQuotaExhausted(false)}
+              className="w-5 h-5 rounded-md flex items-center justify-center text-amber-700 dark:text-amber-300 hover:bg-amber-200/50 dark:hover:bg-amber-900/50"
+              aria-label="Dismiss banner"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Main Daily Commitment Dashboard Container */}
       {focusMode && (

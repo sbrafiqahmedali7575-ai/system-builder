@@ -206,7 +206,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3 sm:p-4"
+          className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm p-0 sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -222,7 +222,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className={`w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden ${
+            className={`w-full max-w-md max-h-[92dvh] rounded-t-2xl sm:rounded-2xl border shadow-2xl overflow-hidden ${
               isDark
                 ? 'bg-slate-900 border-slate-700 text-slate-100'
                 : 'bg-white border-slate-200 text-slate-900'
@@ -256,7 +256,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   </button>
                 </div>
 
-                <div className="p-4 max-h-[72vh] overflow-y-auto">
+                <div className="p-3 sm:p-4 max-h-[calc(92dvh-76px)] sm:max-h-[72vh] overflow-y-auto overscroll-contain">
                   <p className="mb-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
                     Check completed tasks and today's habit check-ins, then press <strong>Mark Day</strong>.
                   </p>

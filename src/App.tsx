@@ -155,8 +155,6 @@ export default function App() {
     return window.location.pathname === '/tools';
   });
   const [toolsInitialTab, setToolsInitialTab] = useState<MoreTab>('data');
-  const [booksFocusMode, setBooksFocusMode] = useState(false);
-  const [toolsFocusMode, setToolsFocusMode] = useState(false);
   const [isQuotaExhausted, setIsQuotaExhausted] = useState(() => isFirestoreWriteQuotaExhausted());
 
   useEffect(() => {

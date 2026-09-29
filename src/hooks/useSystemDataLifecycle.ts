@@ -1,23 +1,15 @@
 import { useEffect, type MutableRefObject } from 'react';
 import type { DailyRecord, HabitItem, TaskItem } from '../types';
 import {
-  addHabitToCloud,
-  addRecordToCloud,
-  addTaskToCloud,
-  deleteHabitFromCloud,
-  deleteRecordFromCloud,
-  deleteTaskFromCloud,
-  initializeDayHabitStatus,
   isFirestoreWriteQuotaExhausted,
   isQuotaExceededError,
   markFirestoreWriteQuotaExhausted,
-  subscribeToHabits,
-  subscribeToRecords,
-  subscribeToTasks,
-  updateHabitInCloud,
-  updateRecordInCloud,
-  updateTaskInCloud,
 } from '../services/firebaseService';
+import {
+  tasksRepository,
+  habitsRepository,
+  daysRepository,
+} from '../services/repositories';
 import {
   getCachedHabits,
   getCachedRecords,
@@ -114,7 +106,7 @@ export function useSystemDataLifecycle({
 
   useEffect(() => {
     if (isFirestoreWriteQuotaExhausted()) return;
-    void initializeDayHabitStatus(currentDateKey).catch((error) => {
+    void daysRepository.initializeHabitStatus(currentDateKey).catch((error) => {
       if (isQuotaExceededError(error)) markFirestoreWriteQuotaExhausted();
       else console.warn('Today habit initialization failed:', error);
     });
@@ -124,15 +116,15 @@ export function useSystemDataLifecycle({
     const sync = () => {
       if (isFirestoreWriteQuotaExhausted()) return;
       void processPendingSync({
-        addTask: addTaskToCloud,
-        updateTask: updateTaskInCloud,
-        deleteTask: deleteTaskFromCloud,
-        addHabit: addHabitToCloud,
-        updateHabit: updateHabitInCloud,
-        deleteHabit: deleteHabitFromCloud,
-        addRecord: addRecordToCloud,
-        updateRecord: updateRecordInCloud,
-        deleteRecord: deleteRecordFromCloud,
+        addTask: tasksRepository.add,
+        updateTask: tasksRepository.update,
+        deleteTask: tasksRepository.remove,
+        addHabit: habitsRepository.add,
+        updateHabit: habitsRepository.update,
+        deleteHabit: habitsRepository.remove,
+        addRecord: daysRepository.add,
+        updateRecord: daysRepository.update,
+        deleteRecord: daysRepository.remove,
       }).catch((error) => console.warn('Offline queue sync failed:', error));
     };
     window.addEventListener('online', sync);
@@ -140,7 +132,7 @@ export function useSystemDataLifecycle({
     return () => window.removeEventListener('online', sync);
   }, []);
 
-  useEffect(() => subscribeToRecords(
+  useEffect(() => daysRepository.subscribe(
     (cloud) => {
       if (!cloud?.length) return;
       setRecords(cloud);
@@ -149,7 +141,7 @@ export function useSystemDataLifecycle({
     (error) => console.warn('Records using local cache:', error)
   ), [setRecords]);
 
-  useEffect(() => subscribeToTasks(
+  useEffect(() => tasksRepository.subscribe(
     (cloudTasks) => {
       const pending = pendingTaskMutationsRef.current;
       const merged = new Map(cloudTasks.map((task) => [task.id, task]));
@@ -171,7 +163,7 @@ export function useSystemDataLifecycle({
     (error) => console.warn('Tasks using local cache:', error)
   ), [pendingTaskMutationsRef, setTasks]);
 
-  useEffect(() => subscribeToHabits(
+  useEffect(() => habitsRepository.subscribe(
     (cloud) => {
       setHabits(cloud);
       void setCachedHabits(cloud);

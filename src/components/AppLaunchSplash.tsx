@@ -10,7 +10,7 @@ export const AppLaunchSplash: React.FC = () => {
   useEffect(() => {
     const mobile = window.matchMedia('(max-width: 767px)').matches;
     setIsMobile(mobile);
-    const timer = window.setTimeout(() => setVisible(false), mobile ? 6000 : 1500);
+    const timer = window.setTimeout(() => setVisible(false), mobile ? 8000 : 1500);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -118,7 +118,22 @@ export const AppLaunchSplash: React.FC = () => {
             )}
 
             <motion.div className={isMobile ? 'mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400' : 'mt-3 h-px w-10 bg-blue-500'} initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: isMobile ? 4.95 : 0.35, duration: 0.4}} />
-            <motion.p className={`mt-3 text-xs font-medium tracking-[0.18em] ${isMobile ? "text-slate-500" : "text-slate-400"}`} initial={{opacity: 0, y: 6}} animate={{opacity: 1, y: 0}} transition={{delay: isMobile ? 5.12 : 0.45}}>
+            <motion.p
+              className={`mt-3 text-xs font-medium tracking-[0.18em] ${isMobile ? "bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_100%] bg-clip-text text-transparent" : "text-slate-400"}`}
+              initial={{opacity: 0, y: 8, scale: 0.97}}
+              animate={isMobile ? {
+                opacity: [0, 1, 1, 1],
+                y: [8, 0, -1, 0],
+                scale: [0.97, 1, 1.035, 1],
+                backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '0% 50%']
+              } : {opacity: 1, y: 0, scale: 1}}
+              transition={isMobile ? {
+                delay: 5.12,
+                duration: 2.25,
+                times: [0, 0.22, 0.62, 1],
+                ease: [0.16, 1, 0.3, 1]
+              } : {delay: 0.45}}
+            >
               DEVELOPED BY RAFIQ AHMED
             </motion.p>
           </motion.div>

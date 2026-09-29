@@ -161,7 +161,7 @@ export default function App() {
     const onQuotaExceeded = () => setIsQuotaExhausted(true);
     window.addEventListener('system-builder:quota-exceeded', onQuotaExceeded);
     return () => window.removeEventListener('system-builder:quota-exceeded', onQuotaExceeded);
-  }, [isLibraryOpen, isToolsOpen]);
+  }, []);
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -203,7 +203,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [isLibraryOpen, isToolsOpen]);
 
   // Listen to popstate in case of browser navigation
   useEffect(() => {

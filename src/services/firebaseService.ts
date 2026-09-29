@@ -40,18 +40,7 @@ export const db =
 
 export const auth = getAuth(app);
 
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
-    }
-  }
-}
-testConnection();
-
-export enum OperationType {
+ export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
   DELETE = 'delete',
@@ -100,6 +89,7 @@ export function isFirestoreWriteQuotaExhausted(): boolean {
 }
 
 export function markFirestoreWriteQuotaExhausted(): void {
+  if (quotaExhaustedMemory) return;
   quotaExhaustedMemory = true;
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('FIRESTORE_WRITE_QUOTA_EXHAUSTED', 'true');
@@ -107,6 +97,13 @@ export function markFirestoreWriteQuotaExhausted(): void {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('system-builder:quota-exceeded'));
   }
+}
+
+function assertFirestoreWritesAvailable(): void {
+  if (!isFirestoreWriteQuotaExhausted()) return;
+  const error = new Error('Firestore writes are temporarily paused because the daily write quota is exhausted.');
+  (error as Error & { code?: string }).code = 'resource-exhausted';
+  throw error;
 }
 
 export function handleFirestoreError(
@@ -915,6 +912,7 @@ export function subscribeToCountdownSettings(
 export async function saveCountdownSettings(
   settings: Pick<CountdownSettings, 'targetDate' | 'reason'>
 ): Promise<void> {
+  assertFirestoreWritesAvailable();
   await setDoc(doc(db, COUNTDOWNS_COLLECTION, COUNTDOWN_SETTINGS_DOC), {
     countdownId: COUNTDOWN_SETTINGS_DOC,
     title: settings.reason || 'Countdown',
@@ -1019,21 +1017,25 @@ export async function seedInitialData(_records: DailyRecord[]): Promise<void> {
 }
 
 export async function addRecordToCloud(record: DailyRecord): Promise<void> {
+  assertFirestoreWritesAvailable();
   const dateKey = normalizeModelDateKey(record.date);
   if (dateKey) await rebuildDaySummary(dateKey);
 }
 
 export async function updateRecordInCloud(record: DailyRecord): Promise<void> {
+  assertFirestoreWritesAvailable();
   const dateKey = normalizeModelDateKey(record.date);
   if (dateKey) await rebuildDaySummary(dateKey);
 }
 
 export async function deleteRecordFromCloud(recordId: string): Promise<void> {
+  assertFirestoreWritesAvailable();
   const dateKey = normalizeModelDateKey(recordId);
   if (dateKey) await deleteDoc(doc(db, DAYS_COLLECTION, dateKey));
 }
 
 export async function bulkAddRecordsToCloud(records: DailyRecord[]): Promise<void> {
+  assertFirestoreWritesAvailable();
   for (const record of records) {
     const dateKey = normalizeModelDateKey(record.date);
     if (dateKey) await rebuildDaySummary(dateKey);
@@ -1041,6 +1043,7 @@ export async function bulkAddRecordsToCloud(records: DailyRecord[]): Promise<voi
 }
 
 export async function resetRecordsInCloud(_initialRecords: DailyRecord[]): Promise<void> {
+  assertFirestoreWritesAvailable();
   await rebuildAllDaySummaries();
 }
 
@@ -1158,6 +1161,7 @@ export function subscribeToTasks(
  * Seed initial tasks
  */
 export async function seedInitialTasks(tasks: TaskItem[]): Promise<void> {
+  assertFirestoreWritesAvailable();
   const batch = writeBatch(db);
   for (const t of tasks) {
     const docRef = doc(db, TASKS_COLLECTION, t.id);
@@ -1201,6 +1205,7 @@ async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
  * Add a new task with duplicate prevention on the same date
  */
 export async function addTaskToCloud(task: TaskItem): Promise<void> {
+  assertFirestoreWritesAvailable();
   const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
   const existingTasks = tasksSnap.docs.map((d) => d.data());
   const targetDateKey = normalizeModelDateKey(task.taskKey);
@@ -1242,6 +1247,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
  * Update an existing task with same-date/title duplicate prevention.
  */
 export async function updateTaskInCloud(task: TaskItem): Promise<void> {
+  assertFirestoreWritesAvailable();
   const tasksSnap = await getDocs(collection(db, TASKS_COLLECTION));
   const existingTaskDoc = tasksSnap.docs.find(
     (stored) => String(stored.data().taskId || stored.id) === task.id
@@ -1277,6 +1283,7 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
  * Delete a task
  */
 export async function deleteTaskFromCloud(taskId: string): Promise<void> {
+  assertFirestoreWritesAvailable();
   const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
   const existing = snapshot.docs.find(
     (taskDoc) => String(taskDoc.data().taskId || taskDoc.id) === taskId
@@ -1297,6 +1304,7 @@ export async function deleteTaskFromCloud(taskId: string): Promise<void> {
  * Reset tasks to initial set
  */
 export async function resetTasksInCloud(initialTasks: TaskItem[]): Promise<void> {
+  assertFirestoreWritesAvailable();
   const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
   const batch = writeBatch(db);
   snapshot.forEach((docSnap) => {
@@ -1423,6 +1431,7 @@ export function subscribeToHabits(
 }
 
 export async function addHabitToCloud(habit: HabitItem): Promise<void> {
+  assertFirestoreWritesAvailable();
   try {
     await setDoc(doc(db, HABITS_COLLECTION, habit.id), habitStoragePayload(habit));
     await syncHabitLogsFromHabit(habit);
@@ -1433,6 +1442,7 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
 }
 
 export async function setTodayHabitCheckIn(habit: HabitItem, isCompleted: boolean): Promise<void> {
+  assertFirestoreWritesAvailable();
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
   const checkIns = new Set(
     (habit.checkIns || []).map((value) => normalizeModelDateKey(value)).filter(Boolean)
@@ -1445,6 +1455,7 @@ export async function setTodayHabitCheckIn(habit: HabitItem, isCompleted: boolea
 }
 
 export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
+  assertFirestoreWritesAvailable();
   try {
     const habitRef = doc(db, HABITS_COLLECTION, habit.id);
     const [previousHabitSnapshot, previousCompletedDates] = await Promise.all([
@@ -1506,6 +1517,7 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
 }
 
 export async function deleteHabitFromCloud(habitId: string): Promise<void> {
+  assertFirestoreWritesAvailable();
   try {
     const logsSnapshot = await getDocs(collection(db, HABIT_LOGS_COLLECTION));
     const batch = writeBatch(db);
@@ -1531,6 +1543,7 @@ export async function syncAllDataInCloud(
   _records: DailyRecord[],
   tasks: TaskItem[]
 ): Promise<void> {
+  assertFirestoreWritesAvailable();
   const batch = writeBatch(db);
   for (const t of tasks) {
     batch.set(doc(db, TASKS_COLLECTION, t.id), taskStoragePayload(t));

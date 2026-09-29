@@ -636,20 +636,20 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   {/* Task row */}
                   <motion.div
                     
-                    className={`group relative min-w-0 pl-2.5 pr-1 py-2.5 sm:pl-3 sm:pr-1.5 transition-colors ${
+                    className={`group relative min-w-0 pl-2.5 pr-0.5 py-2.5 sm:pl-3 sm:pr-1 transition-colors ${
                       isTaskCompleted
                         ? 'bg-slate-50/45 dark:bg-slate-950/20'
                         : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'
                     }`}
                   >
                     <span aria-hidden="true" className={`absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full ${isTaskCompleted ? 'bg-slate-200 dark:bg-slate-700' : quadrantMeta.roman === 'I' ? 'bg-rose-400' : quadrantMeta.roman === 'II' ? 'bg-blue-400' : quadrantMeta.roman === 'III' ? 'bg-amber-400' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                    <div className="flex items-start gap-2.5">
+                    <div className="flex items-start gap-2.5 sm:gap-3">
                       <button
                         type="button"
                         role="checkbox"
                         aria-checked={isTaskCompleted}
                         onClick={() => handleToggleTask(task)}
-                        className={`mt-1 relative block !h-4 !w-4 min-h-4 min-w-4 max-h-4 max-w-4 aspect-square flex-none self-start p-0 rounded-[4px] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        className={`mt-[2px] relative block !h-4 !w-4 min-h-4 min-w-4 max-h-4 max-w-4 aspect-square flex-none self-start p-0 rounded-[4px] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           isTaskCompleted
                             ? 'bg-blue-600 text-white shadow-2xs'
                             : isDark
@@ -667,7 +667,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         )}
                       </button>
 
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 pt-px">
                         <button
                           type="button"
                           onClick={() => handleToggleTask(task)}
@@ -681,8 +681,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </button>
 
                         {task.notes?.trim() && (
-                          <div className="mt-1">
-                            <p className={`text-[11px] leading-[1.35rem] whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-1'}`}>
+                          <div className="mt-1.5">
+                            <p className={`text-[11px] leading-[1.15rem] whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-1'}`}>
                               {task.notes}
                             </p>
                             {(task.notes.length > 60 || task.notes.includes('\n')) && (
@@ -702,7 +702,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </div>
                         )}
 
-                        <div className="task-detail-labels mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                        <div className="task-detail-labels mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px]">
                           <span
                             className={`inline-flex items-center gap-1 font-medium ${isTaskCompleted ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-400'}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
@@ -725,7 +725,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </div>
                       </div>
 
-                      <div className="relative shrink-0">
+                      <div className="relative shrink-0 -mt-1">
                         <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-7 h-7 rounded-md text-slate-400 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
                           <MoreHorizontal className="w-4 h-4" />
                         </button>

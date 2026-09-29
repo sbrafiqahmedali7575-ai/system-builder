@@ -56,7 +56,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className="system-header w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 select-none sticky top-0 z-40 transition-colors"
+      className="system-header hidden md:block w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 select-none sticky top-0 z-40 transition-colors"
     >
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 lg:px-5 h-14 w-full">
         {/* Brand Zone */}

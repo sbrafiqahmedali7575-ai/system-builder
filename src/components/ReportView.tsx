@@ -232,41 +232,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
   }, [tasks, currentDateKey]);
 
 
-  // Command Center Overall uses the same all-time metric as Performance → All:
-  // aggregate task completion × 80% + aggregate due-habit completion × 20%.
+  // Overall = SUM(IsdayCompleted) / COUNT(IsdayCompleted) × 100 using stored Days rows only.
   const commandCenterOverall = useMemo(() => {
-    const trackedDates = [
-      ...tasks.map((task) => task.taskKey),
-      ...habits.map((habit) => habit.activeFrom || habit.createdAt?.slice(0, 10) || ''),
-    ].filter(Boolean).sort();
-    const firstTrackedDate = trackedDates[0] || currentDateKey;
-
-    let tasksDone = 0;
-    let tasksTotal = 0;
-    let habitsDone = 0;
-    let habitsTotal = 0;
-    let totalDays = 0;
-
-    for (let dateKey = firstTrackedDate; dateKey <= currentDateKey; dateKey = addDays(dateKey, 1)) {
-      totalDays += 1;
-      const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
-      const dueHabits = habits.filter((habit) => isHabitDue(habit, dateKey));
-      tasksTotal += dayTasks.length;
-      tasksDone += dayTasks.filter((task) => task.isCompleted).length;
-      habitsTotal += dueHabits.length;
-      habitsDone += dueHabits.filter((habit) => habit.checkIns.includes(dateKey)).length;
-    }
-
-    const taskRate = tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 100) : 0;
-    const habitRate = habitsTotal > 0 ? Math.round((habitsDone / habitsTotal) * 100) : 0;
-    const completionRate = Math.round(taskRate * 0.8 + habitRate * 0.2);
-
-    return {
-      completedDays: Math.round((completionRate / 100) * totalDays),
-      totalDays,
-      completionRate,
-    };
-  }, [tasks, habits, currentDateKey]);
+    const totalDays = records.length;
+    const completedDays = records.reduce((sum, record) => sum + (record.isCompleted ? 1 : 0), 0);
+    const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+    return { completedDays, totalDays, completionRate };
+  }, [records]);
 
   const currentFocusTask = useMemo(
     () =>
@@ -479,6 +451,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         <PerformanceIntelligence
           tasks={tasks}
           habits={habits}
+          records={records}
           currentDateKey={currentDateKey}
           achievedWeeks={achievedWeeks}
         />

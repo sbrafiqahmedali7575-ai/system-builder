@@ -12,6 +12,7 @@ export interface CalendarDayCellProps {
   habits: HabitItem[];
   onSelectDate: (dateKey: string) => void;
   onShowMore: (dateKey: string) => void;
+  onOpenDay: (dateKey: string) => void;
   onToggleTask: (taskId: string) => Promise<void>;
   onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
   maxVisibleItems?: number;
@@ -42,6 +43,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   habits,
   onSelectDate,
   onShowMore,
+  onOpenDay,
   onToggleTask,
   onToggleHabit,
   maxVisibleItems = 4,
@@ -72,6 +74,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       <button
         type="button"
         onClick={() => onSelectDate(dateKey)}
+        onDoubleClick={() => onOpenDay(dateKey)}
         aria-label={`Select ${longDate(dateKey)}`}
         aria-pressed={isSelected}
         className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"

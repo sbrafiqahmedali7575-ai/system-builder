@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Database, Wrench } from 'lucide-react';
+import { BookOpen, Database, Focus, Wrench } from 'lucide-react';
 import { DashboardTheme } from '../types';
 import { LongTermBadge } from '../utils/badgeSystem';
 
@@ -124,6 +124,21 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
 
         {/* Right Desktop Controls */}
         <div className="hidden md:flex items-center space-x-1.5">
+          {onToggleFocus && (
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onToggleFocus}
+              aria-pressed={focusMode}
+              className={`flex items-center space-x-1 px-1.5 py-1 text-xs font-semibold rounded-xl border transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 ${focusMode ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80'}`}
+              title={focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+              aria-label={focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+            >
+              <Focus className="w-3.5 h-3.5" />
+              <span>{focusMode ? 'Exit Focus' : 'Focus'}</span>
+            </motion.button>
+          )}
+
           {onOpenLibrary && (
             <motion.button
               whileHover={{ y: -2 }}

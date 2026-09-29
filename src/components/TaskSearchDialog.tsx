@@ -19,7 +19,7 @@ export const TaskSearchDialog: React.FC<TaskSearchDialogProps> = ({ tasks, onClo
   }, [query, tasks]);
 
   return (
-    <div className="fixed inset-0 z-[180] bg-slate-950/40 backdrop-blur-[2px] p-3 sm:p-6 flex items-start justify-center" role="dialog" aria-modal="true" aria-label="Search tasks" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[180] bg-slate-950/40 backdrop-blur-[2px] p-0 sm:p-6 flex items-end sm:items-start justify-center" role="dialog" aria-modal="true" aria-label="Search tasks" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="mt-[8vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 p-3">
           <Search className="w-5 h-5 text-slate-400" />

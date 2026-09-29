@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SystemBuilderLogo } from './components/SystemBuilderLogo';
 import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
@@ -901,20 +902,7 @@ export default function App() {
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.42, ease: [0.16, 1, 0.3, 1]}}
           >
-            <motion.div
-              className="relative flex size-11 flex-none items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-sm font-bold text-white shadow-lg shadow-indigo-200/60 dark:shadow-indigo-950/40 ring-1 ring-white/70"
-              initial={{scale: 0.82, rotate: -7}}
-              animate={{scale: [0.82, 1.06, 1], rotate: [-7, 2, 0], boxShadow: ['0 8px 18px rgba(79,70,229,0.12)', '0 8px 24px rgba(79,70,229,0.28)', '0 8px 18px rgba(79,70,229,0.16)']}}
-              transition={{duration: 0.8, times: [0, 0.62, 1], ease: [0.16, 1, 0.3, 1]}}
-              aria-hidden="true"
-            >
-              S
-              <motion.span
-                className="absolute inset-y-0 -left-8 w-5 rotate-12 bg-white/35 blur-[1px]"
-                animate={{x: [0, 70]}}
-                transition={{delay: 0.45, duration: 0.55, ease: 'easeOut'}}
-              />
-            </motion.div>
+            <SystemBuilderLogo className="size-11 rounded-[14px] text-sm" animated />
             <div className="min-w-0 flex-1">
               <div className="text-[16px] font-bold leading-tight tracking-[-0.015em] text-slate-950 dark:text-white">System Builder</div>
               <div className="mt-1 text-[10px] font-medium leading-none tracking-[0.035em] text-slate-500 dark:text-slate-400">Build today. Compound tomorrow.</div>

@@ -225,75 +225,41 @@ export const ReportView: React.FC<ReportViewProps> = ({
   }, [tasks, currentDateKey]);
 
 
-  // Command Center "Overall" is historical progress through yesterday.
-  // Do not use records.length here: the canonical Days collection can have
-  // gaps when a date had no persisted day document. The denominator must be
-  // every elapsed calendar day from the first tracked System Builder date
-  // through yesterday.
+  // Command Center Overall uses the same all-time metric as Performance → All:
+  // aggregate task completion × 80% + aggregate due-habit completion × 20%.
   const commandCenterOverall = useMemo(() => {
-    const DAY_MS = 24 * 60 * 60 * 1000;
+    const trackedDates = [
+      ...tasks.map((task) => task.taskKey),
+      ...habits.map((habit) => habit.activeFrom || habit.createdAt?.slice(0, 10) || ''),
+    ].filter(Boolean).sort();
+    const firstTrackedDate = trackedDates[0] || currentDateKey;
 
-    const toUtcDay = (value?: string): number => {
-      if (!value) return 0;
+    let tasksDone = 0;
+    let tasksTotal = 0;
+    let habitsDone = 0;
+    let habitsTotal = 0;
+    let totalDays = 0;
 
-      const iso = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-      if (iso) {
-        return Date.UTC(
-          Number(iso[1]),
-          Number(iso[2]) - 1,
-          Number(iso[3])
-        );
-      }
-
-      const parsed = parseDateToTimestamp(value);
-      if (!parsed) return 0;
-      const date = new Date(parsed);
-      return Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-      );
-    };
-
-    const todayUtc = toUtcDay(currentDateKey);
-    const yesterdayUtc = todayUtc ? todayUtc - DAY_MS : 0;
-
-    const firstTrackedUtc = toUtcDay(SYSTEM_BUILDER_START_DATE_KEY);
-
-    if (!yesterdayUtc || !firstTrackedUtc || yesterdayUtc < firstTrackedUtc) {
-      return {
-        completedDays: 0,
-        totalDays: 0,
-        completionRate: 0,
-      };
+    for (let dateKey = firstTrackedDate; dateKey <= currentDateKey; dateKey = addDays(dateKey, 1)) {
+      totalDays += 1;
+      const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
+      const dueHabits = habits.filter((habit) => isHabitDue(habit, dateKey));
+      tasksTotal += dayTasks.length;
+      tasksDone += dayTasks.filter((task) => task.isCompleted).length;
+      habitsTotal += dueHabits.length;
+      habitsDone += dueHabits.filter((habit) => habit.checkIns.includes(dateKey)).length;
     }
-    const totalDays =
-      Math.floor((yesterdayUtc - firstTrackedUtc) / DAY_MS) + 1;
 
-    const completedDateKeys = new Set(
-      records
-        .filter((record) => {
-          const timestamp = toUtcDay(record.date);
-          return (
-            record.isCompleted &&
-            timestamp >= firstTrackedUtc &&
-            timestamp <= yesterdayUtc
-          );
-        })
-        .map((record) => toUtcDay(record.date))
-        .filter((timestamp) => timestamp > 0)
-    );
-
-    const completedDays = completedDateKeys.size;
-    const completionRate =
-      totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
+    const taskRate = tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 100) : 0;
+    const habitRate = habitsTotal > 0 ? Math.round((habitsDone / habitsTotal) * 100) : 0;
+    const completionRate = Math.round(taskRate * 0.8 + habitRate * 0.2);
 
     return {
-      completedDays,
+      completedDays: Math.round((completionRate / 100) * totalDays),
       totalDays,
       completionRate,
     };
-  }, [records, currentDateKey]);
+  }, [tasks, habits, currentDateKey]);
 
   const currentFocusTask = useMemo(
     () =>

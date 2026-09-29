@@ -19,10 +19,10 @@ export interface CalendarWorkspaceProps {
   tasks: TaskItem[];
   habits: HabitItem[];
   onAddTask: (task: Omit<TaskItem, 'id'>) => Promise<void>;
-  onUpdateTask: (task: TaskItem) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
   onUpdateHabit: (habit: HabitItem) => Promise<void>;
   density?: ToolsDensity;
+  focusMode?: boolean;
 }
 
 export interface CalendarViewOption {
@@ -116,6 +116,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   onToggleTaskStatus,
   onUpdateHabit,
   density = 'compact',
+  focusMode = false,
 }) => {
   const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const todayDate = useMemo(() => parseKey(today), [today]);
@@ -367,7 +368,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         compact ? 'text-sm' : ''
       }`}
     >
-      <CalendarTopBar
+      {!focusMode && <CalendarTopBar
         view={view}
         periodLabel={periodLabel}
         onViewChange={changeView}
@@ -375,9 +376,9 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         onNext={() => navigatePeriod(1)}
         onToday={jumpToday}
         onAdd={() => setAddTaskOpen(true)}
-      />
+      />}
 
-      <div className="shrink-0 min-h-9 px-3 sm:px-5 flex items-center justify-end gap-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+      {!focusMode && <div className="shrink-0 min-h-9 px-3 sm:px-5 flex items-center justify-end gap-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
         <label className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
           <input
             type="checkbox"

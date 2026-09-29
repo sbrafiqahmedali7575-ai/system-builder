@@ -5,6 +5,8 @@ import {
   ListChecks,
   Repeat2,
   Database,
+  Focus,
+  X,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
 import { EisenhowerMatrix } from './EisenhowerMatrix';
@@ -69,13 +71,14 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   isSyncing = false,
 }) => {
   const [activeTab, setActiveTab] = useState<MoreTab>(initialTab);
+  const [focusMode, setFocusMode] = useState(false);
 
   return (
     <div
       data-tools-density="compact"
       className="min-h-screen lg:h-screen bg-[#f7f7f7] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col"
     >
-      <header className="sticky top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <header className={`${focusMode ? 'hidden' : 'sticky'} top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950`}>
         <div className="w-full px-1.5 sm:px-4 lg:px-5 flex items-center gap-1 sm:gap-2">
           <button
             type="button"
@@ -138,11 +141,33 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             })}
           </div>
 
+          <button
+            type="button"
+            onClick={() => setFocusMode(true)}
+            className="hidden md:inline-flex h-9 px-2.5 rounded-lg items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+            title="Focus on current tool"
+            aria-label="Focus on current tool"
+          >
+            <Focus className="w-3.5 h-3.5" />
+            Focus
+          </button>
 
        </div>
       </header>
 
-      <main className="w-full px-0 sm:px-4 lg:px-5 py-0 sm:py-3 flex-1 min-h-0 lg:overflow-hidden">
+      {focusMode && (
+        <button
+          type="button"
+          onClick={() => setFocusMode(false)}
+          className="hidden md:inline-flex fixed top-3 right-3 z-[80] h-9 px-3 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 items-center gap-1.5 text-xs font-semibold shadow-lg"
+          aria-label="Exit Tools Focus Mode"
+          title="Exit Focus Mode"
+        >
+          <X className="w-3.5 h-3.5" /> Exit Focus
+        </button>
+      )}
+
+      <main className={`w-full ${focusMode ? 'px-0 py-0' : 'px-0 sm:px-4 lg:px-5 py-0 sm:py-3'} flex-1 min-h-0 lg:overflow-hidden`}>
         <section className="lg:h-full lg:overflow-hidden">
           {activeTab === 'eisenhower' && (
             <div

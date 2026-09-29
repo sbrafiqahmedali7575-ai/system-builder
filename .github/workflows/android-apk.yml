@@ -1,0 +1,70 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install app dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build latest System Builder
+        run: bun run build
+
+      - name: Install Capacitor tooling
+        run: npm install --no-save @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+
+      - name: Configure Android wrapper
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.rafiq.systembuilder",
+            "appName": "System Builder",
+            "webDir": "dist"
+          }
+          EOF
+          npx cap add android
+          npx cap sync android
+
+      - name: Build fresh-install APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Stage APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk System-Builder-latest.apk
+          sha256sum System-Builder-latest.apk > System-Builder-latest.apk.sha256
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: System-Builder-Android-latest
+          path: |
+            System-Builder-latest.apk
+            System-Builder-latest.apk.sha256
+          if-no-files-found: error
+          retention-days: 30

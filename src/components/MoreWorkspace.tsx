@@ -31,6 +31,8 @@ interface MoreWorkspaceProps {
   onCheckIn: (habit: HabitItem, isCompleted: boolean) => Promise<void>;
   onDeleteHabit: (habitId: string) => Promise<void>;
   isSyncing?: boolean;
+  focusMode?: boolean;
+  onFocusChange?: (focused: boolean) => void;
 }
 
 const TABS: Array<{
@@ -69,9 +71,11 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   onCheckIn,
   onDeleteHabit,
   isSyncing = false,
+  focusMode = false,
+  onFocusChange,
 }) => {
   const [activeTab, setActiveTab] = useState<MoreTab>(initialTab);
-  const [focusMode, setFocusMode] = useState(false);
+  const setFocusMode = (focused: boolean) => onFocusChange?.(focused);
 
   return (
     <div
@@ -144,7 +148,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
           <button
             type="button"
             onClick={() => setFocusMode(true)}
-            className="hidden md:inline-flex w-8 h-8 rounded-full items-center justify-center shrink-0 bg-slate-900/10 dark:bg-slate-100/10 text-slate-500/40 dark:text-slate-400/40 opacity-40 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
+            className="inline-flex w-8 h-8 rounded-full items-center justify-center shrink-0 bg-slate-900/10 dark:bg-slate-100/10 text-slate-500/40 dark:text-slate-400/40 opacity-40 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
             title="Focus on current tool"
             aria-label="Focus on current tool"
           >
@@ -158,7 +162,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
         <button
           type="button"
           onClick={() => setFocusMode(false)}
-          className="hidden md:inline-flex fixed top-3 right-3 z-[80] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
+          className="inline-flex fixed top-3 right-3 z-[80] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
           aria-label="Exit Tools Focus Mode"
           title="Exit Focus Mode"
         >

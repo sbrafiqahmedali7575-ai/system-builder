@@ -629,7 +629,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       )}
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden ">
-        <div className="px-3 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
+        <div className="px-2.5 sm:px-3 py-3 border-b border-slate-200 dark:border-slate-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3">
           <button
             type="button"
             onClick={() => setWeekAnchor(addHabitDays(weekAnchor, -7))}

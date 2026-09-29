@@ -15,7 +15,7 @@ import {
   ArrowRight,
   MoreHorizontal,
 } from 'lucide-react';
-import { DashboardTheme, MatrixQuadrant, TaskItem } from '../types';
+import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
 import {
   CONFIGURED_TIMEZONE,
@@ -25,6 +25,7 @@ import {
   toInputDateValue,
 } from '../utils/taskDateUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
+import { addHabitDays, isHabitDue, parseHabitDateKey } from '../utils/habitUtils';
 import confetti from 'canvas-confetti';
 
 const TASK_QUADRANT_OPTIONS: Array<{
@@ -104,6 +105,7 @@ function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
 
 interface TodayTasksCardProps {
   tasks: TaskItem[];
+  habits: HabitItem[];
   theme: DashboardTheme;
   onAddTask: (task: Omit<TaskItem, 'id'>) => Promise<void>;
   onUpdateTask: (task: TaskItem) => Promise<void>;
@@ -118,6 +120,7 @@ interface TodayTasksCardProps {
 
 export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   tasks,
+  habits,
   theme,
   onAddTask,
   onUpdateTask,
@@ -154,6 +157,38 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const dateTasks = useMemo(() => {
     return tasks.filter((t) => areDatesEqual(t.taskKey, activeDateKey));
   }, [tasks, activeDateKey]);
+
+  const weeklyReview = useMemo(() => {
+    const todayDate = parseHabitDateKey(currentDateKey);
+    const weekday = todayDate.getUTCDay();
+    const monday = addHabitDays(currentDateKey, weekday === 0 ? -6 : 1 - weekday);
+
+    const elapsedDates = Array.from({ length: 7 }, (_, index) => addHabitDays(monday, index))
+      .filter((dateKey) => dateKey <= currentDateKey);
+
+    const taskDays = elapsedDates.map((dateKey) => {
+      const dayTasks = tasks.filter((task) => areDatesEqual(task.taskKey, dateKey));
+      const completed = dayTasks.filter((task) => task.isCompleted).length;
+      return {
+        dateKey,
+        label: parseHabitDateKey(dateKey).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).slice(0, 1),
+        rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
+      };
+    });
+
+    const habitRates = elapsedDates.map((dateKey) => {
+      const due = habits.filter((habit) => isHabitDue(habit, dateKey));
+      const completed = due.filter((habit) => habit.checkIns.includes(dateKey)).length;
+      return due.length ? Math.round((completed / due.length) * 100) : 0;
+    });
+
+    const taskScore = Math.round((taskDays.reduce((sum, day) => sum + day.rate, 0) / 7) * 10) / 10;
+    const habitScore = Math.round((habitRates.reduce((sum, rate) => sum + rate, 0) / 7) * 10) / 10;
+    const strongest = [...taskDays].sort((a, b) => b.rate - a.rate)[0];
+    const weakest = [...taskDays].sort((a, b) => a.rate - b.rate)[0];
+
+    return { taskScore, habitScore, strongest, weakest };
+  }, [tasks, habits, currentDateKey]);
 
   // Split for progress counts, then display in Eisenhower quadrant order:
   // I → II → III → unassigned → IV. Within each group, incomplete tasks stay above completed tasks.
@@ -816,6 +851,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         </div>
       )}
       </div>
+
+      {!focusMode && activeDateTab === 'TODAY' && (
+        <div
+          aria-label="Weekly Review"
+          className="mt-1.5 shrink-0 border-t border-slate-200/80 dark:border-slate-800 pt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400"
+        >
+          <span className="font-semibold text-slate-700 dark:text-slate-200">Weekly Review</span>
+          <span>Tasks {weeklyReview.taskScore.toFixed(1)}%</span>
+          <span>Habits {weeklyReview.habitScore.toFixed(1)}%</span>
+          {weeklyReview.strongest && <span>Strongest: {weeklyReview.strongest.label} {weeklyReview.strongest.rate}%</span>}
+          {weeklyReview.weakest && <span>Needs attention: {weeklyReview.weakest.label} {weeklyReview.weakest.rate}%</span>}
+        </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────
           5. "ENTER TASKS" PANEL

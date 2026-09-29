@@ -1058,7 +1058,7 @@ export function subscribeToTasks(
 
   return onSnapshot(
     tasksCol,
-    async (snapshot) => {
+    (snapshot) => {
       if (snapshot.empty) {
         onUpdate([]);
         return;
@@ -1100,8 +1100,8 @@ export function subscribeToTasks(
       });
       const visibleTasks = Array.from(dedupedByLogicalKey.values());
 
-      // Normalize taskOrder in memory first so the UI never renders gaps.
-      // Persist any differences to Firestore in parallel.
+      // Normalize taskOrder in memory only. Subscriptions are deliberately read-only;
+      // persistence normalization happens in explicit task mutations/migrations.
       const taskById = new Map(visibleTasks.map((task) => [task.id, task]));
       const byDate = new Map<string, typeof snapshot.docs>();
       snapshot.docs.forEach((taskDoc) => {
@@ -1111,30 +1111,16 @@ export function subscribeToTasks(
         group.push(taskDoc);
         byDate.set(dateKey, group);
       });
-
-      const repairBatch = writeBatch(db);
-      let needsRepair = false;
       byDate.forEach((taskDocs) => {
-        taskDocs.sort((a, b) => {
-          const aTaskId = String(a.data().taskId || a.id);
-          const bTaskId = String(b.data().taskId || b.id);
-          return aTaskId.localeCompare(bTaskId, undefined, { numeric: true, sensitivity: 'base' });
+        taskDocs.sort((left, right) => {
+          const leftId = String(left.data().taskId || left.id);
+          const rightId = String(right.data().taskId || right.id);
+          return leftId.localeCompare(rightId, undefined, { numeric: true, sensitivity: 'base' });
         });
-
         taskDocs.forEach((taskDoc, index) => {
-          const expectedOrder = index + 1;
           const taskId = String(taskDoc.data().taskId || taskDoc.id);
           const loadedTask = taskById.get(taskId);
-          if (loadedTask) loadedTask.taskOrder = expectedOrder;
-
-          if (Number(taskDoc.data().sortOrder ?? taskDoc.data().taskOrder) !== expectedOrder || taskDoc.data().taskOrder !== undefined) {
-            repairBatch.set(
-              taskDoc.ref,
-              { sortOrder: expectedOrder, taskOrder: deleteField() },
-              { merge: true }
-            );
-            needsRepair = true;
-          }
+          if (loadedTask) loadedTask.taskOrder = index + 1;
         });
       });
 
@@ -1146,9 +1132,6 @@ export function subscribeToTasks(
       });
       onUpdate(visibleTasks);
 
-      if (needsRepair) {
-        await repairBatch.commit();
-      }
     },
     (err) => {
       console.error('Firestore tasks real-time subscription error:', err);
@@ -1398,9 +1381,6 @@ export function subscribeToHabits(
     (snapshot) => {
       habitsSnapshot = snapshot;
       emit();
-      void ensureCurrentDayHabitLogs().catch((error) => {
-        console.error('Failed to ensure current-day HabitLogs:', error);
-      });
     },
     (err) => {
       console.error('Firestore habits real-time subscription error:', err);

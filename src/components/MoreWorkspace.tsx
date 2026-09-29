@@ -144,12 +144,11 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
           <button
             type="button"
             onClick={() => setFocusMode(true)}
-            className="hidden md:inline-flex h-9 px-2.5 rounded-lg items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+            className="hidden md:inline-flex w-8 h-8 rounded-full items-center justify-center shrink-0 bg-slate-900/10 dark:bg-slate-100/10 text-slate-500/40 dark:text-slate-400/40 opacity-40 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
             title="Focus on current tool"
             aria-label="Focus on current tool"
           >
-            <Focus className="w-3.5 h-3.5" />
-            Focus
+            <Focus className="w-4 h-4" />
           </button>
 
        </div>
@@ -159,11 +158,11 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
         <button
           type="button"
           onClick={() => setFocusMode(false)}
-          className="hidden md:inline-flex fixed top-3 right-3 z-[80] h-9 px-3 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 items-center gap-1.5 text-xs font-semibold shadow-lg"
+          className="hidden md:inline-flex fixed top-3 right-3 z-[80] w-8 h-8 rounded-full bg-slate-900/20 dark:bg-slate-100/15 text-slate-500/30 dark:text-slate-400/30 items-center justify-center opacity-30 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
           aria-label="Exit Tools Focus Mode"
           title="Exit Focus Mode"
         >
-          <X className="w-3.5 h-3.5" /> Exit Focus
+          <X className="w-4 h-4" />
         </button>
       )}
 
@@ -177,6 +176,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               aria-labelledby="tools-tab-eisenhower"
             >
             <EisenhowerMatrix
+              focusMode={focusMode}
               tasks={tasks}
               onAddTask={onAddTask}
               onUpdateTask={onUpdateTask}
@@ -196,6 +196,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               aria-labelledby="tools-tab-habits"
             >
             <HabitTracker
+              focusMode={focusMode}
               habits={habits}
               onAddHabit={onAddHabit}
               onUpdateHabit={onUpdateHabit}
@@ -214,6 +215,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               aria-labelledby="tools-tab-tasks"
             >
             <TaskTracker
+              focusMode={focusMode}
               tasks={tasks}
               habits={habits}
               onAddTask={onAddTask}
@@ -233,7 +235,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
               className="h-full"
               aria-labelledby="tools-tab-data"
             >
-              <DataWorkspace />
+              <DataWorkspace focusMode={focusMode} />
             </div>
           )}
 

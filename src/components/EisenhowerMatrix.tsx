@@ -547,7 +547,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
     >
       <div className="tools-view-header lg:shrink-0">
         <div><h2 className="tools-view-title">Eisenhower Matrix</h2><p className="tools-view-subtitle">Prioritize today's tasks by importance and urgency.</p></div>
-        <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 shrink-0">
+        <label className="matrix-mobile-filter min-h-11 sm:min-h-0 px-2 sm:px-0 rounded-lg sm:rounded-none inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 shrink-0">
           <input
             type="checkbox"
             checked={showCompleted}
@@ -601,7 +601,7 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({
                 );
               }}
               onDrop={(event) => void handleDrop(event, quadrant.id)}
-              className={`relative min-h-[300px] lg:min-h-0 border-0 transition-colors overflow-hidden flex flex-col bg-white dark:bg-slate-950 dark:bg-slate-900 ${
+              className={`relative min-h-[280px] sm:min-h-[300px] lg:min-h-0 border-0 transition-colors overflow-hidden flex flex-col bg-white dark:bg-slate-950 ${
                 isDropTarget && draggedTaskId
                   ? sameQuadrant
                     ? 'ring-2 ring-slate-300 ring-offset-2 ring-offset-slate-50'

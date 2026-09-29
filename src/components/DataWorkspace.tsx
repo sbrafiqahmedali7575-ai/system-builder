@@ -122,9 +122,9 @@ export const DataWorkspace: React.FC = () => {
     <div className="tools-workspace-view lg:flex lg:flex-col">
       <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle"></p></div></div>
 
-      <div className="space-y-2 p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
+      <div className="space-y-2 p-2.5 sm:p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
         <div>
-          <div className="mb-1 text-[10px] font-medium text-slate-500">Fact</div>
+          <div className="mb-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">Fact</div>
           <div className="grid grid-cols-3 gap-1.5">
             {FACT_COLLECTIONS.map((collection) => {
               const selected = active === collection.id;
@@ -169,7 +169,7 @@ export const DataWorkspace: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowDimensions((value) => !value)}
-            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 hover:text-slate-600"
+            className="min-h-11 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
             aria-expanded={showDimensions}
             title="Show dimension tables"
           >
@@ -225,16 +225,16 @@ export const DataWorkspace: React.FC = () => {
 
       {error && <div className="tools-feedback-error">{error}</div>}
 
-      <div className="bg-white dark:bg-slate-950 dark:bg-slate-900 overflow-hidden lg:flex-1 lg:min-h-0">
+      <div className="bg-white dark:bg-slate-950 overflow-hidden lg:flex-1 lg:min-h-0">
         <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 flex items-center justify-between">
           <div className="font-semibold text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
           <div className="text-[10px] font-medium text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>
         </div>
-        <div className="overflow-auto lg:h-[calc(100%-41px)]">
+        <div className="overflow-x-auto overflow-y-auto overscroll-contain lg:h-[calc(100%-41px)]">
           {rows.length === 0 ? (
             <div className="min-h-40 flex items-center justify-center text-sm font-medium text-slate-400">No documents</div>
           ) : (
-            <table className="w-full min-w-max border-collapse text-left">
+            <table className="w-full min-w-[760px] border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-white dark:bg-slate-950 ">
                 <tr>
                   {columns.map((column) => {
@@ -246,7 +246,7 @@ export const DataWorkspace: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => cycleSort(column)}
-                            className="w-full px-2.5 py-2 inline-flex items-center gap-1.5 text-left hover:bg-slate-100 transition-colors"
+                            className="w-full min-h-11 sm:min-h-0 px-2.5 py-2 inline-flex items-center gap-1.5 text-left hover:bg-slate-100 transition-colors"
                             title={`Sort by ${column} (${keyType})`}
                           >
                             <KeyRound className="w-3 h-3 text-amber-500 shrink-0" />
@@ -272,7 +272,7 @@ export const DataWorkspace: React.FC = () => {
                 {sortedRows.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50">
                     {columns.map((column) => (
-                      <td key={column} className="max-w-[320px] border-b border-r border-slate-100 px-2.5 py-2 text-xs font-medium text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <td key={column} className="max-w-[320px] border-b border-r border-slate-100 dark:border-slate-800 px-2.5 py-2.5 sm:py-2 text-xs font-medium text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {renderValue(row[column], column)}
                       </td>
                     ))}

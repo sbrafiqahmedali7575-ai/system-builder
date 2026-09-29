@@ -183,7 +183,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
       </div>
 
       <header className="sticky top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="w-full px-3 sm:px-5 lg:px-7 h-14 flex items-center justify-between gap-3">
+        <div className="w-full px-2.5 sm:px-5 lg:px-7 h-14 flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
@@ -303,7 +303,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             className={`rounded-xl border overflow-hidden ${cardClasses}`}
           >
             <div
-              className={`px-5 sm:px-8 lg:px-12 py-8 sm:py-10 border-b ${
+              className={`px-4 sm:px-8 lg:px-12 py-6 sm:py-10 border-b ${
                 readerTone === 'night' ? 'border-[#2b3035]' : 'border-black/10'
               }`}
             >
@@ -329,7 +329,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               </p>
             </div>
 
-            {isFullStudy && <div className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
+            {isFullStudy && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
               <section className={`${widthClass} mx-auto`}><div className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {CAL_NEWPORT_FULL_STUDY[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{CAL_NEWPORT_FULL_STUDY[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
               <div className="space-y-8">{CAL_NEWPORT_FULL_STUDY[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
               <section className="mt-10 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{CAL_NEWPORT_FULL_STUDY[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>

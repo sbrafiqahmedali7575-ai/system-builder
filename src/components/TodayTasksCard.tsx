@@ -763,7 +763,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                         {task.notes?.trim() && (
                           <div className="mt-0.5">
-                            <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
+                            <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
                               {task.notes}
                             </p>
                             {(task.notes.length > 90 || task.notes.includes('\n')) && (
@@ -825,7 +825,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex max-w-full min-w-0 items-center truncate rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}

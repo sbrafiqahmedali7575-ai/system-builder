@@ -119,18 +119,19 @@ export const AppLaunchSplash: React.FC = () => {
 
             <motion.div className={isMobile ? 'mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400' : 'mt-3 h-px w-10 bg-blue-500'} initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: isMobile ? 4.95 : 0.35, duration: 0.4}} />
             <motion.p
-              className={`mt-3 text-xs font-medium tracking-[0.18em] ${isMobile ? "bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_100%] bg-clip-text text-transparent" : "text-slate-400"}`}
-              initial={{opacity: 0, y: 8, scale: 0.97}}
+              className={`mt-3 text-xs font-semibold ${isMobile ? "bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:220%_100%] bg-clip-text text-transparent" : "tracking-[0.18em] text-slate-400"}`}
+              initial={{opacity: 0, y: 7, letterSpacing: '0.11em', filter: 'blur(2px)'}}
               animate={isMobile ? {
                 opacity: [0, 1, 1, 1],
-                y: [8, 0, -1, 0],
-                scale: [0.97, 1, 1.035, 1],
-                backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '0% 50%']
-              } : {opacity: 1, y: 0, scale: 1}}
+                y: [7, 0, 0, 0],
+                letterSpacing: ['0.11em', '0.18em', '0.205em', '0.18em'],
+                filter: ['blur(2px)', 'blur(0px)', 'blur(0px)', 'blur(0px)'],
+                backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']
+              } : {opacity: 1, y: 0, letterSpacing: '0.18em', filter: 'blur(0px)'}}
               transition={isMobile ? {
                 delay: 5.12,
-                duration: 2.25,
-                times: [0, 0.22, 0.62, 1],
+                duration: 2.15,
+                times: [0, 0.28, 0.72, 1],
                 ease: [0.16, 1, 0.3, 1]
               } : {delay: 0.45}}
             >

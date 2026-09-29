@@ -1,4 +1,4 @@
-import { useEffect, type MutableRefObject } from 'react';
+import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { DailyRecord, HabitItem, TaskItem } from '../types';
 import {
   isFirestoreWriteQuotaExhausted,
@@ -49,9 +49,9 @@ function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
 interface Params {
   currentDateKey: string;
   pendingTaskMutationsRef: MutableRefObject<Map<string, PendingTaskMutation>>;
-  setRecords: React.Dispatch<React.SetStateAction<DailyRecord[]>>;
-  setTasks: React.Dispatch<React.SetStateAction<TaskItem[]>>;
-  setHabits: React.Dispatch<React.SetStateAction<HabitItem[]>>;
+  setRecords: Dispatch<SetStateAction<DailyRecord[]>>;
+  setTasks: Dispatch<SetStateAction<TaskItem[]>>;
+  setHabits: Dispatch<SetStateAction<HabitItem[]>>;
 }
 
 export function useSystemDataLifecycle({

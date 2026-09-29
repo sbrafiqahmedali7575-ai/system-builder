@@ -119,7 +119,7 @@ export const AppLaunchSplash: React.FC = () => {
                 DEVELOPED BY
               </span>
               <motion.span
-                className="mt-1.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[13px] font-bold leading-none tracking-[0.16em] text-transparent"
+                className="mt-1 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[13px] font-bold leading-none tracking-[0.16em] text-transparent"
                 initial={{backgroundPosition: '0% 50%'}}
                 animate={{backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']}}
                 transition={{delay: 3.35, duration: 1.45, times: [0, 0.22, 0.72, 1], ease: 'easeInOut'}}

@@ -827,6 +827,10 @@ export default function App() {
 
   const isDark = theme === 'dark';
   const completedDaysForBadge = records.filter((record) => record.isCompleted).length;
+  const systemStartUtc = Date.UTC(2026, 7, 1);
+  const [currentYear, currentMonth, currentDay] = currentDateKey.split('-').map(Number);
+  const currentUtc = Date.UTC(currentYear, currentMonth - 1, currentDay);
+  const totalCalendarDays = Math.max(0, Math.floor((currentUtc - systemStartUtc) / 86400000) + 1);
   const currentBadge = getBadgeProgress(completedDaysForBadge).current;
 
   return (
@@ -845,7 +849,7 @@ export default function App() {
         onOpenTools={() => handleOpenTools()}
         theme={theme}
         onThemeChange={setTheme}
-        totalRecordsCount={records.length}
+        totalRecordsCount={totalCalendarDays}
         currentBadge={currentBadge}
         isSyncing={isSyncing}
         onOpenQuickAdd={() => setIsAddModalOpen(true)}

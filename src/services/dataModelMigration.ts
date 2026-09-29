@@ -509,10 +509,12 @@ async function backfillTaskOrder(): Promise<void> {
     });
     tasks.forEach((taskDoc, index) => {
       const data = taskDoc.data() as Record<string, unknown>;
+      const expectedOrder = index + 1;
+      if (Number(data.sortOrder ?? data.taskOrder) === expectedOrder && data.taskOrder === undefined) return;
       const { taskOrder: _legacyTaskOrder, ...withoutLegacyTaskOrder } = data;
       writes.push({
         ref: taskDoc.ref,
-        data: { ...withoutLegacyTaskOrder, sortOrder: index + 1 },
+        data: { ...withoutLegacyTaskOrder, sortOrder: expectedOrder },
       });
     });
   }

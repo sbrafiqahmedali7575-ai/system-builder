@@ -303,7 +303,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             className={`rounded-xl border overflow-hidden ${cardClasses}`}
           >
             <div
-              className={`px-5 sm:px-8 lg:px-12 py-8 sm:py-10 border-b ${
+              className={`px-4 sm:px-8 lg:px-12 py-6 sm:py-10 border-b ${
                 readerTone === 'night' ? 'border-[#2b3035]' : 'border-black/10'
               }`}
             >

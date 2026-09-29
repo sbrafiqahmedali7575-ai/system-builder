@@ -783,7 +783,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </div>
                         )}
 
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                        <div className="task-detail-labels mt-1.5 flex flex-wrap items-center gap-1">
                           <span
                             className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}

@@ -109,20 +109,20 @@ export const AppLaunchSplash: React.FC = () => {
 
             <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 2.4, duration: 0.25}} />
             <motion.div
-              className="mt-3 flex items-baseline justify-center gap-1.5 whitespace-nowrap"
-              initial={{opacity: 0, y: 7, filter: 'blur(2px)'}}
-              animate={{opacity: [0, 1, 1], y: [7, 0, 0], filter: ['blur(2px)', 'blur(0px)', 'blur(0px)']}}
-              transition={{delay: 2.5, duration: 0.8, times: [0, 0.72, 1], ease: [0.16, 1, 0.3, 1]}}
+              className="mt-3.5 flex flex-col items-center justify-center text-center"
+              initial={{opacity: 0, y: 6, filter: 'blur(1.5px)'}}
+              animate={{opacity: [0, 1, 1], y: [6, 0, 0], filter: ['blur(1.5px)', 'blur(0px)', 'blur(0px)']}}
+              transition={{delay: 2.5, duration: 0.9, times: [0, 0.68, 1], ease: [0.16, 1, 0.3, 1]}}
               aria-label="Developed by Rafiq Ahmed"
             >
-              <span className="text-[9px] font-semibold tracking-[0.18em] text-slate-400">
+              <span className="text-[8px] font-semibold leading-none tracking-[0.22em] text-slate-400">
                 DEVELOPED BY
               </span>
               <motion.span
-                className="bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[12px] font-bold tracking-[0.14em] text-transparent"
+                className="mt-1.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[13px] font-bold leading-none tracking-[0.16em] text-transparent"
                 initial={{backgroundPosition: '0% 50%'}}
                 animate={{backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']}}
-                transition={{delay: 3.2, duration: 1.65, times: [0, 0.18, 0.7, 1], ease: 'easeInOut'}}
+                transition={{delay: 3.35, duration: 1.45, times: [0, 0.22, 0.72, 1], ease: 'easeInOut'}}
               >
                 RAFIQ AHMED
               </motion.span>

@@ -724,7 +724,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         : 'bg-transparent sm:bg-white sm:border-slate-200 sm:hover:border-slate-300 sm:shadow-2xs'
                     }`}
                   >
-                    <div className="flex items-center gap-2 sm:items-start">
+                    <div className="flex h-9 items-center gap-2 sm:h-auto sm:items-start">
                       <button
                         type="button"
                         role="checkbox"
@@ -752,7 +752,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         <button
                           type="button"
                           onClick={() => handleToggleTask(task)}
-                          className={`block w-full text-left text-sm font-semibold leading-snug break-words select-none ${
+                          className={`block w-full truncate text-left text-sm font-semibold leading-snug sm:whitespace-normal sm:break-words select-none ${
                             isTaskCompleted
                               ? 'line-through text-slate-400 dark:text-slate-500'
                               : 'text-slate-900 dark:text-slate-100'
@@ -762,7 +762,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </button>
 
                         {task.notes?.trim() && (
-                          <div className="mt-1">
+                          <div className="hidden sm:block mt-1">
                             <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
                               {task.notes}
                             </p>
@@ -783,7 +783,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </div>
                         )}
 
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                        <div className="mt-0 flex shrink-0 items-center gap-1 sm:mt-1.5 sm:flex-wrap">
                           <span
                             className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
@@ -792,7 +792,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`hidden sm:inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
                               priorityLabel === 'High'
                                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
                                 : priorityLabel === 'Medium'
@@ -805,7 +805,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`hidden sm:inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
                               isTaskCompleted
                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
@@ -825,7 +825,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="hidden sm:inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}

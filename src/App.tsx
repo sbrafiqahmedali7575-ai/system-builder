@@ -139,6 +139,8 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isTaskSearchOpen, setIsTaskSearchOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [toolsFocusMode, setToolsFocusMode] = useState(false);
+  const [booksFocusMode, setBooksFocusMode] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -161,7 +163,7 @@ export default function App() {
     const onQuotaExceeded = () => setIsQuotaExhausted(true);
     window.addEventListener('system-builder:quota-exceeded', onQuotaExceeded);
     return () => window.removeEventListener('system-builder:quota-exceeded', onQuotaExceeded);
-  }, []);
+  }, [isLibraryOpen, isToolsOpen]);
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -193,7 +195,9 @@ export default function App() {
         setIsAddModalOpen(true);
       } else if (event.key.toLowerCase() === 'f') {
         event.preventDefault();
-        setFocusMode((value) => !value);
+        if (isLibraryOpen) setBooksFocusMode((value) => !value);
+        else if (isToolsOpen) setToolsFocusMode((value) => !value);
+        else setFocusMode((value) => !value);
       } else if (event.key.toLowerCase() === 't') {
         event.preventDefault();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1048,8 +1052,8 @@ export default function App() {
   if (isLibraryOpen) {
     return (
       <>
-        <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} externalFocusMode={booksFocusMode} />
-        <MobileBottomNav onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
+        <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} focusMode={booksFocusMode} onFocusChange={setBooksFocusMode} />
+        <MobileBottomNav activeSection="books" focusActive={booksFocusMode} onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
       </>
     );
   }
@@ -1075,7 +1079,7 @@ export default function App() {
         focusMode={toolsFocusMode}
         onFocusChange={setToolsFocusMode}
       />
-      <MobileBottomNav onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
       </>
     );
   }
@@ -1149,7 +1153,7 @@ export default function App() {
         </button>
       )}
 
-      <main className={`flex-1 w-full mx-auto ${focusMode ? 'max-w-4xl px-3 py-6' : 'max-w-7xl px-2 sm:px-3 lg:px-4 py-3 sm:py-4'}`}>
+      <main className={`flex-1 w-full mx-auto pb-20 md:pb-0 ${focusMode ? 'max-w-4xl px-3 pt-6 md:py-6' : 'max-w-7xl px-2 sm:px-3 lg:px-4 pt-3 sm:pt-4 md:py-4'}`}>
         <ReportView
           records={records}
           tasks={tasks}
@@ -1176,7 +1180,7 @@ export default function App() {
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
       {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
-      <MobileBottomNav onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
+      <MobileBottomNav activeSection="today" focusActive={focusMode} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
 
       {/* 3. Add Record Modal */}
       <AddRecordModal

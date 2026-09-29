@@ -9,7 +9,7 @@ export const AppLaunchSplash: React.FC = () => {
   
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), 6000);
+    const timer = window.setTimeout(() => setVisible(false), 8000);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -42,7 +42,7 @@ export const AppLaunchSplash: React.FC = () => {
                 aria-label="Completing launch tasks"
               >
                 {launchTasks.map((task, index) => {
-                  const delay = 0.65 + index * 0.7;
+                  const delay = 0.9 + index * 1.05;
                   return (
                     <motion.div
                       key={task}
@@ -107,22 +107,22 @@ export const AppLaunchSplash: React.FC = () => {
                 })}
               </motion.div>
 
-            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 2.4, duration: 0.25}} />
+            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 3.45, duration: 0.25}} />
             <motion.div
-              className="mt-3.5 flex flex-col items-center justify-center text-center"
+              className="mt-3 flex flex-col items-center justify-center text-center"
               initial={{opacity: 0, y: 6, filter: 'blur(1.5px)'}}
               animate={{opacity: [0, 1, 1], y: [6, 0, 0], filter: ['blur(1.5px)', 'blur(0px)', 'blur(0px)']}}
-              transition={{delay: 2.5, duration: 0.9, times: [0, 0.68, 1], ease: [0.16, 1, 0.3, 1]}}
+              transition={{delay: 3.6, duration: 0.95, times: [0, 0.68, 1], ease: [0.16, 1, 0.3, 1]}}
               aria-label="Developed by Rafiq Ahmed"
             >
               <span className="text-[8px] font-semibold leading-none tracking-[0.22em] text-slate-400">
                 DEVELOPED BY
               </span>
               <motion.span
-                className="mt-1 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[13px] font-bold leading-none tracking-[0.16em] text-transparent"
+                className="mt-0.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[13px] font-bold leading-none tracking-[0.16em] text-transparent"
                 initial={{backgroundPosition: '0% 50%'}}
                 animate={{backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']}}
-                transition={{delay: 3.35, duration: 1.45, times: [0, 0.22, 0.72, 1], ease: 'easeInOut'}}
+                transition={{delay: 4.55, duration: 1.35, times: [0, 0.22, 0.72, 1], ease: 'easeInOut'}}
               >
                 RAFIQ AHMED
               </motion.span>

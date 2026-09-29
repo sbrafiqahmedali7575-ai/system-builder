@@ -244,6 +244,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setIsEnterPanelOpen(true);
   };
 
+  // Allow global quick-add controls (such as the mobile + button) to open this panel.
+  useEffect(() => {
+    const openEnterTasks = () => handleOpenEnterPanel();
+    window.addEventListener('system-builder:open-enter-tasks', openEnterTasks);
+    return () => window.removeEventListener('system-builder:open-enter-tasks', openEnterTasks);
+  }, []);
+
   // Focus input when Enter panel opens
   useEffect(() => {
     if (isEnterPanelOpen) {

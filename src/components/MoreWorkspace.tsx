@@ -12,10 +12,11 @@ import { HabitTracker } from './HabitTracker';
 import { TaskTracker } from './TaskTracker';
 import { DataWorkspace } from './DataWorkspace';
 
-type MoreTab = 'eisenhower' | 'habits' | 'tasks' | 'data';
+export type MoreTab = 'eisenhower' | 'habits' | 'tasks' | 'data';
 
 interface MoreWorkspaceProps {
   theme: DashboardTheme;
+  initialTab?: MoreTab;
   onBack: () => void;
   tasks: TaskItem[];
   habits: HabitItem[];
@@ -53,6 +54,7 @@ const TOOL_TAB_INACTIVE =
 
 export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   theme: _theme,
+  initialTab = 'data',
   onBack,
   tasks,
   habits,
@@ -66,7 +68,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   onDeleteHabit,
   isSyncing = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<MoreTab>('data');
+  const [activeTab, setActiveTab] = useState<MoreTab>(initialTab);
 
   return (
     <div

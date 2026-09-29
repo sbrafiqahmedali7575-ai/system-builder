@@ -402,29 +402,20 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
   return (
     <div className="tools-workspace-view lg:overflow-y-auto">
-      <div className={`flex flex-col lg:flex-row lg:items-center justify-between ${compact ? 'gap-2' : 'gap-3'}`}>
-        <div>
-          <p className="text-[11px] font-medium text-slate-500">
-            Habits
-          </p>
-          <h2 className={`${compact ? 'mt-0.5 text-xl sm:text-2xl' : 'mt-1 text-2xl sm:text-3xl'} font-semibold tracking-tight`}>
-            Habit Tracker
-          </h2>
-          <p className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-semibold text-slate-600 hidden md:block`}>
-            Custom schedules, weekly check-ins, streaks, and completion history.
-          </p>
+      <div className="tools-view-header">
+        <div className="min-w-0">
+          <h2 className="tools-view-title">Habit Tracker</h2>
+          <p className="tools-view-subtitle">{completedToday}/{dueToday.length} today · {weekCompletionRate}% this week</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={formOpen && !editingHabitId ? closeForm : openAdd}
-            className={`${compact ? 'h-8 px-2.5 rounded-lg text-xs gap-1.5' : 'h-10 px-3 rounded-xl text-sm gap-2'} bg-blue-600 text-white font-semibold inline-flex items-center`}
-          >
-            {formOpen && !editingHabitId ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            {formOpen && !editingHabitId ? 'Cancel' : 'Add Habit'}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={formOpen && !editingHabitId ? closeForm : openAdd}
+          className="tools-primary-action h-11 sm:h-9 px-3 text-xs sm:text-sm font-medium inline-flex items-center gap-1.5 shrink-0"
+        >
+          {formOpen && !editingHabitId ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          <span className="hidden xs:inline">{formOpen && !editingHabitId ? 'Cancel' : 'Add Habit'}</span>
+          <span className="xs:hidden">{formOpen && !editingHabitId ? 'Cancel' : 'Add'}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">

@@ -1024,8 +1024,8 @@ export default function App() {
   if (isLibraryOpen) {
     return (
       <>
-        <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} />
-        <MobileBottomNav onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => { handleCloseLibrary(); setFocusMode(true); }} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
+        <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} externalFocusMode={booksFocusMode} />
+        <MobileBottomNav onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
       </>
     );
   }
@@ -1048,10 +1048,10 @@ export default function App() {
         onCheckIn={handleHabitCheckIn}
         onDeleteHabit={handleDeleteHabit}
         isSyncing={isSyncing}
-        focusMode={focusMode}
-        onFocusChange={setFocusMode}
+        focusMode={toolsFocusMode}
+        onFocusChange={setToolsFocusMode}
       />
-      <MobileBottomNav onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      <MobileBottomNav onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
       </>
     );
   }

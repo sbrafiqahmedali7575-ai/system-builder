@@ -282,24 +282,24 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     <div
       className="tools-workspace-view lg:overflow-y-auto"
     >
-      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden border-0 bg-white flex flex-col">
+      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden border-0 bg-white dark:bg-slate-950 flex flex-col">
         <div className="tools-view-header">
           <div className="min-w-0"><h2 className="tools-view-title">Task Planner</h2><p className="tools-view-subtitle">{todayTasks.length} today · {completedToday} completed · {weekTasks.length} this week</p></div>
           <button type="button" onClick={openAdd} className="tools-primary-action h-9 px-3 inline-flex items-center gap-1.5 text-sm font-medium"><Plus className="w-4 h-4" />New task</button>
         </div>
         {formOpen && (
-          <div className="border-b border-slate-200 bg-slate-50/70 px-3 sm:px-4 py-3">
+          <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 px-3 sm:px-4 py-3">
             <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold">{editingTaskId ? 'Edit task' : 'Add task'}</div><button type="button" onClick={closeForm} className="w-7 h-7 rounded-md hover:bg-slate-200 flex items-center justify-center" aria-label="Close task editor"><X className="w-4 h-4" /></button></div>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_160px_220px_auto] gap-2">
-              <input autoFocus value={draft.title} onChange={e=>setDraft(v=>({...v,title:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&draft.quadrant)void saveTask()}} placeholder="What needs to be done?" className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"/>
-              <input type="date" value={draft.dateKey} onChange={e=>setDraft(v=>({...v,dateKey:e.target.value}))} className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none focus:border-blue-500"/>
-              <select value={draft.quadrant} onChange={e=>setDraft(v=>({...v,quadrant:e.target.value as MatrixQuadrant|''}))} className="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm outline-none focus:border-blue-500"><option value="">Priority / quadrant</option>{QUADRANTS.map(item=><option key={item.value} value={item.value}>{item.roman} · {item.label}</option>)}</select>
+              <input autoFocus value={draft.title} onChange={e=>setDraft(v=>({...v,title:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&draft.quadrant)void saveTask()}} placeholder="What needs to be done?" className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"/>
+              <input type="date" value={draft.dateKey} onChange={e=>setDraft(v=>({...v,dateKey:e.target.value}))} className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2.5 text-sm outline-none focus:border-blue-500"/>
+              <select value={draft.quadrant} onChange={e=>setDraft(v=>({...v,quadrant:e.target.value as MatrixQuadrant|''}))} className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2.5 text-sm outline-none focus:border-blue-500"><option value="">Priority / quadrant</option>{QUADRANTS.map(item=><option key={item.value} value={item.value}>{item.roman} · {item.label}</option>)}</select>
               <button type="button" onClick={()=>void saveTask()} disabled={isSavingTask||!draft.title.trim()||!draft.dateKey||!draft.quadrant} className="tools-primary-action h-9 px-4 text-sm font-medium disabled:opacity-40">{isSavingTask?'Saving…':editingTaskId?'Update':'Add task'}</button>
             </div>
-            <textarea value={draft.notes} onChange={e=>setDraft(v=>({...v,notes:e.target.value}))} placeholder="Add notes (optional)" rows={2} className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"/>
+            <textarea value={draft.notes} onChange={e=>setDraft(v=>({...v,notes:e.target.value}))} placeholder="Add notes (optional)" rows={2} className="mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm outline-none resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"/>
           </div>
         )}
-        <div className="min-h-0 flex-1 bg-white">
+        <div className="min-h-0 flex-1 bg-white dark:bg-slate-950">
         <CalendarWorkspace
           tasks={tasks}
           habits={habits}

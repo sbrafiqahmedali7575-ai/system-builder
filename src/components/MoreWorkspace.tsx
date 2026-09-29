@@ -158,7 +158,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
        </div>
       </header>
 
-      {focusMode && activeTab !== 'tasks' && (
+      {focusMode && (
         <button
           type="button"
           onClick={() => setFocusMode(false)}

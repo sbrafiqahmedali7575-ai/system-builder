@@ -24,18 +24,18 @@ export const AppLaunchSplash: React.FC = () => {
           aria-label="System Builder launch screen"
         >
           <motion.div
-            className="flex w-full max-w-xs flex-col items-center px-6 text-center"
+            className="flex w-full max-w-xs md:max-w-sm flex-col items-center px-6 md:px-8 text-center"
             initial={{opacity: 0, y: 14, scale: 0.97}}
             animate={{opacity: 1, y: 0, scale: 1}}
             transition={{duration: 0.5, ease: [0.16, 1, 0.3, 1]}}
           >
-            <SystemBuilderLogo className="mb-4 size-14 rounded-2xl text-xl" animated />
-            <motion.h1 className="text-2xl font-semibold tracking-tight" initial={{opacity: 0}} animate={{opacity: 1}} transition={{delay: 0.15}}>
+            <SystemBuilderLogo className="mb-4 size-14 md:size-16 rounded-2xl md:rounded-[18px] text-xl md:text-2xl" animated />
+            <motion.h1 className="text-2xl md:text-[28px] font-semibold tracking-tight" initial={{opacity: 0}} animate={{opacity: 1}} transition={{delay: 0.15}}>
               System Builder
             </motion.h1>
 
             <motion.div
-                className="mt-5 w-full space-y-2.5"
+                className="mt-5 md:mt-6 w-full space-y-2.5 md:space-y-3"
                 initial={{opacity: 0, y: 8}}
                 animate={{opacity: 1, y: 0}}
                 transition={{delay: 0.55, duration: 0.45}}
@@ -46,7 +46,7 @@ export const AppLaunchSplash: React.FC = () => {
                   return (
                     <motion.div
                       key={task}
-                      className="relative flex h-10 items-center gap-3 rounded-xl border px-3 text-left"
+                      className="relative flex h-10 md:h-11 items-center gap-3 rounded-xl border px-3 md:px-3.5 text-left"
                       initial={{opacity: 0, x: -10, backgroundColor: 'rgba(255,255,255,0.9)', borderColor: '#e2e8f0', boxShadow: '0 8px 24px rgba(51,65,85,0.04)'}}
                       animate={{
                         opacity: [0, 1, 1, 0.82],
@@ -82,7 +82,7 @@ export const AppLaunchSplash: React.FC = () => {
                         </svg>
                       </motion.span>
                       <motion.span
-                        className="min-w-0 truncate text-sm"
+                        className="min-w-0 truncate text-sm md:text-[15px]"
                         initial={{color: '#334155'}}
                         animate={{color: '#64748b', opacity: [1, 1, 0.82]}}
                         transition={{delay, duration: 0.65, times: [0, 0.6, 1]}}
@@ -116,7 +116,7 @@ export const AppLaunchSplash: React.FC = () => {
               aria-label="Developed by Rafiq Ahmed"
             >
               <motion.span
-                className="text-[8px] font-semibold leading-none tracking-[0.22em] text-slate-400"
+                className="text-[8px] md:text-[9px] font-semibold leading-none tracking-[0.22em] text-slate-400"
                 initial={{opacity: 0, y: 2}}
                 animate={{opacity: 1, y: 0}}
                 transition={{delay: 3.72, duration: 0.48, ease: 'easeOut'}}
@@ -124,7 +124,7 @@ export const AppLaunchSplash: React.FC = () => {
                 DEVELOPED BY
               </motion.span>
               <motion.span
-                className="relative mt-0.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:190%_100%] bg-clip-text text-[13px] font-bold leading-none text-transparent"
+                className="relative mt-0.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:190%_100%] bg-clip-text text-[13px] md:text-sm font-bold leading-none text-transparent"
                 initial={{opacity: 0, y: 4, scale: 0.96, letterSpacing: '0.12em', backgroundPosition: '0% 50%', filter: 'drop-shadow(0 0 0 rgba(99,102,241,0))'}}
                 animate={{
                   opacity: [0, 1, 1, 1],

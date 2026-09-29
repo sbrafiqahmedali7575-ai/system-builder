@@ -42,7 +42,7 @@ export const AppLaunchSplash: React.FC = () => {
                 aria-label="Completing launch tasks"
               >
                 {launchTasks.map((task, index) => {
-                  const delay = 0.55 + index * 0.55;
+                  const delay = 1.05;
                   return (
                     <motion.div
                       key={task}

@@ -636,13 +636,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   {/* Task row */}
                   <motion.div
                     
-                    className={`group relative min-w-0 pl-2 pr-0 py-2 sm:pl-3 sm:pr-1 sm:py-2.5 transition-colors ${
+                    className={`group relative min-w-0 px-1 py-2 sm:px-1.5 sm:py-2.5 transition-colors ${
                       isTaskCompleted
                         ? 'bg-slate-50/45 dark:bg-slate-950/20'
                         : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'
                     }`}
                   >
-                    <span aria-hidden="true" className={`absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full ${isTaskCompleted ? 'bg-slate-200 dark:bg-slate-700' : quadrantMeta.roman === 'I' ? 'bg-rose-400' : quadrantMeta.roman === 'II' ? 'bg-blue-400' : quadrantMeta.roman === 'III' ? 'bg-amber-400' : 'bg-slate-300 dark:bg-slate-600'}`} />
                     <div className="flex items-start gap-2 sm:gap-3">
                       <button
                         type="button"
@@ -701,28 +700,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                             )}
                           </div>
                         )}
-
-                        <div className="task-detail-labels mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:gap-x-2 text-[10px]">
-                          <span
-                            className={`inline-flex items-center gap-1 font-medium ${isTaskCompleted ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-400'}`}
-                            title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
-                          >
-                            <span className={`h-1.5 w-1.5 rounded-full ${quadrantMeta.roman === 'I' ? 'bg-rose-400' : quadrantMeta.roman === 'II' ? 'bg-blue-400' : quadrantMeta.roman === 'III' ? 'bg-amber-400' : 'bg-slate-400'}`} />
-                            Quadrant {quadrantMeta.roman}
-                          </span>
-
-                          {(priorityLabel === 'High' || priorityLabel === 'Medium') && (
-                            <span className={`inline-flex items-center rounded-md px-1.5 py-[2px] font-semibold ${priorityLabel === 'High' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}`} title={`Priority: ${priorityLabel}`}>
-                              {priorityLabel}
-                            </span>
-                          )}
-
-                          {task.category && task.category !== 'General' && (
-                            <span className="inline-flex items-center text-slate-400 dark:text-slate-500">
-                              {task.category}
-                            </span>
-                          )}
-                        </div>
                       </div>
 
                       <div className="relative shrink-0 -mt-0.5 sm:-mt-1">

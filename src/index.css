@@ -216,18 +216,7 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
   position: relative;
 }
 
-/* Desktop should breathe; compact density remains useful on small screens/tools. */
-@media (min-width: 64rem) {
-  .ui-compact .system-primary-focus.p-2\.5,
-  .ui-compact .system-primary-focus.sm\:p-3 {
-    padding: 0.9rem;
-  }
-
-  .ui-compact .system-secondary-panel.p-2\.5 {
-    padding: 0.75rem;
-  }
-}
-
+/* Shared density across mobile and desktop. Responsive layout may change, visual density does not. */
 /* Keep routine surfaces steady. Motion is reserved for meaningful feedback. */
 .system-primary-focus,
 .system-secondary-panel,
@@ -325,18 +314,8 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
   }
 }
 
-@media (max-width: 39.999rem) {
-  .system-app-shell {
-    background-image: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(246,248,255,0.98));
-  }
-  .system-app-shell::before {
-    opacity: 0.12;
-  }
-}
-
-.dark .system-app-shell {
-  background-image: linear-gradient(180deg, rgba(2,6,23,0.98), rgba(15,23,42,0.98));
-}
+.system-app-shell { background:#f7f7f7; background-image:none; }
+.dark .system-app-shell { background:#111827; background-image:none; }
 
 
 /* System Builder design tokens */
@@ -389,7 +368,7 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .system-edition :focus-visible { outline:2px solid var(--tt-blue);outline-offset:2px; }
 .ui-motion-section,.ui-motion-shell,.ui-motion-card,.ui-motion-icon { animation:none!important;will-change:auto; }
 .ui-motion-section:hover,.ui-motion-shell:hover,.ui-motion-card:hover { transform:none!important;box-shadow:none; }
-@media(max-width:39.999rem){.system-app-shell{background:#fff}.dark .system-app-shell{background:#0f172a}}
+
 
 /* Tools interaction system — TickTick-inspired */
 [data-tools-density] button:not([role="tab"]) { border-radius:7px; }
@@ -563,4 +542,39 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 
   [data-tools-density] select { padding-left:10px; padding-right:30px; }
   [data-tools-density] input[type="checkbox"] { min-height:0; width:18px; height:18px; }
+}
+
+
+/* Cross-device consistency: one visual system at every breakpoint. */
+.system-edition {
+  --app-canvas:#f7f7f7;
+  --app-surface:#ffffff;
+  --app-border:#e8e8e8;
+  --app-radius:10px;
+  --app-control-radius:7px;
+}
+.dark .system-edition {
+  --app-canvas:#111827;
+  --app-surface:#0f172a;
+  --app-border:#334155;
+}
+.system-edition .ui-surface,
+.system-edition .tools-panel {
+  border-color:var(--app-border);
+  border-radius:var(--app-radius);
+}
+.system-edition input,
+.system-edition textarea,
+.system-edition select {
+  border-radius:var(--app-control-radius);
+}
+.system-edition .system-primary-focus,
+.system-edition .system-secondary-panel,
+.system-edition .system-planning-surface {
+  background-image:none !important;
+  box-shadow:none !important;
+}
+@media (max-width:47.999rem) {
+  .system-edition .ui-surface,
+  .system-edition .tools-panel { border-radius:var(--app-radius); }
 }

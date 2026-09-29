@@ -183,7 +183,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
       </div>
 
       <header className="sticky top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="w-full px-3 sm:px-5 lg:px-7 h-14 flex items-center justify-between gap-3">
+        <div className="w-full px-2.5 sm:px-5 lg:px-7 h-14 flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"

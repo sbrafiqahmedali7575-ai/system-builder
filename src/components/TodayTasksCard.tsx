@@ -171,7 +171,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       const completed = dayTasks.filter((task) => task.isCompleted).length;
       return {
         dateKey,
-        label: parseHabitDateKey(dateKey).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).slice(0, 1),
+        label: parseHabitDateKey(dateKey).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }),
         rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
       };
     });

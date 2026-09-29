@@ -668,7 +668,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           </div>
         </div>
 
-        {!focusMode && <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
+        <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
           <div className="min-w-[790px]">
             <div className="grid grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200 dark:border-slate-800/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-semibold text-slate-500">
@@ -733,7 +733,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                           <div className="text-sm font-semibold leading-snug whitespace-normal break-words">{habit.name}</div>
                         </button>
                       </div>
-                      <button
+                      {!focusMode && <button
                         type="button"
                         onClick={() => openEdit(habit)}
                         className="w-7 h-7 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
@@ -741,8 +741,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                         aria-label={`Edit ${habit.name}`}
                       >
                         <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </button>}
+                      {!focusMode && <button
                         type="button"
                         onClick={() =>
                           setHistoryHabitId((current) =>
@@ -758,8 +758,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                         aria-label={`View ${habit.name} history`}
                       >
                         <History className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </button>}
+                      {!focusMode && <button
                         type="button"
                         onClick={() => void deleteHabit(habit.id)}
                         className="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"
@@ -767,7 +767,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                         aria-label={`Delete ${habit.name}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </button>}
                     </div>
 
                     {weekDates.map((dateKey) => {
@@ -818,10 +818,10 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               })
             )}
           </div>
-        </div>}
+        </div>
       </div>
 
-      {historyHabit && historyStats && (
+      {!focusMode && historyHabit && historyStats && (
         <section className={`${compact ? 'rounded-xl' : 'rounded-xl'} border border-slate-200 dark:border-slate-800 bg-slate-50 overflow-hidden`}>
           <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">

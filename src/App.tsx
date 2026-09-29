@@ -896,13 +896,13 @@ export default function App() {
       <main className={`flex-1 w-full mx-auto pb-20 md:pb-0 ${focusMode ? 'max-w-4xl px-3 pt-6 md:py-6' : 'max-w-7xl px-2 sm:px-3 lg:px-4 pt-3 sm:pt-4 md:py-4'}`}>
         {!focusMode && (
           <motion.div
-            className="md:hidden mb-3 flex items-center gap-3 rounded-2xl border border-blue-100/80 dark:border-slate-800 bg-white/85 dark:bg-slate-900/85 px-3 py-2.5 shadow-[0_8px_28px_rgba(37,99,235,0.07)] backdrop-blur-xl"
+            className="md:hidden mb-3.5 flex items-center gap-3.5 rounded-[20px] border border-blue-100/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 px-3.5 py-3 shadow-[0_10px_30px_rgba(37,99,235,0.08)] backdrop-blur-xl"
             initial={{opacity: 0, y: -8}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.42, ease: [0.16, 1, 0.3, 1]}}
           >
             <motion.div
-              className="relative flex size-10 flex-none items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-sm font-bold text-white shadow-lg shadow-indigo-200/60 dark:shadow-indigo-950/40 ring-1 ring-white/70"
+              className="relative flex size-11 flex-none items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-sm font-bold text-white shadow-lg shadow-indigo-200/60 dark:shadow-indigo-950/40 ring-1 ring-white/70"
               initial={{scale: 0.82, rotate: -7}}
               animate={{scale: [0.82, 1.06, 1], rotate: [-7, 2, 0], boxShadow: ['0 8px 18px rgba(79,70,229,0.12)', '0 8px 24px rgba(79,70,229,0.28)', '0 8px 18px rgba(79,70,229,0.16)']}}
               transition={{duration: 0.8, times: [0, 0.62, 1], ease: [0.16, 1, 0.3, 1]}}
@@ -916,12 +916,12 @@ export default function App() {
               />
             </motion.div>
             <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">System Builder</div>
-              <div className="mt-0.5 text-[10px] font-medium tracking-wide text-slate-500 dark:text-slate-400">Build today. Compound tomorrow.</div>
+              <div className="text-[16px] font-bold leading-tight tracking-[-0.015em] text-slate-950 dark:text-white">System Builder</div>
+              <div className="mt-1 text-[10px] font-medium leading-none tracking-[0.035em] text-slate-500 dark:text-slate-400">Build today. Compound tomorrow.</div>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-1 text-[9px] font-semibold text-blue-700 dark:text-blue-300">
-              <span className={`size-1.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
-              {isSyncing ? 'Syncing' : 'Ready'}
+            <div className={`flex flex-none items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-bold shadow-sm ${isSyncing ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'}`}>
+              <span className={`size-2 rounded-full ring-2 ring-white dark:ring-slate-900 ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
+              <span>{isSyncing ? 'Syncing' : 'Ready'}</span>
             </div>
           </motion.div>
         )}

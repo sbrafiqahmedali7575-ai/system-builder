@@ -58,7 +58,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
       className="system-header hidden md:block w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 select-none sticky top-0 z-40 transition-colors"
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 lg:px-5 h-14 w-full">
+      <div className="flex items-center gap-2 px-3 lg:px-5 h-14 w-full">
         {/* Brand Zone */}
         <div className="flex items-center space-x-1.5 min-w-0">
           <a
@@ -96,7 +96,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
         </div>
 
         {/* Dynamic Quotes */}
-        <div className="min-w-0 hidden lg:flex justify-center px-3">
+        <div className="min-w-0 hidden lg:flex flex-1 justify-center px-3">
           <motion.button
             type="button"
             onClick={showNextQuote}
@@ -123,7 +123,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
         </div>
 
         {/* Right Desktop Controls */}
-        <div className="hidden md:flex items-center space-x-1.5">
+        <div className="hidden md:flex items-center space-x-1.5 ml-auto shrink-0">
           {onToggleFocus && (
             <motion.button
               whileHover={{ y: -2 }}

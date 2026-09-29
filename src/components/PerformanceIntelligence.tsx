@@ -22,7 +22,8 @@ export const PerformanceIntelligence:React.FC<Props>=({tasks,habits,records,curr
  const overallStart=utc('2026-08-01');
  const parsedToday=utc(currentDateKey);
  const today=Number.isFinite(parsedToday)?parsedToday:overallStart;
- const totalDays=Math.max(0,Math.floor((today-overallStart)/DAY)+1);
+ const allTotalDays=Math.max(0,Math.floor((today-overallStart)/DAY)+1);
+ const totalDays=period==='week'?Math.min(7,allTotalDays):period==='month'?Math.min(30,allTotalDays):period==='quarter'?Math.min(90,allTotalDays):allTotalDays;
  const successfulDays=records.filter(r=>{const ms=Date.parse(r.date+' UTC');return r.isCompleted&&Number.isFinite(ms)&&ms>=overallStart&&ms<=today}).length;
  const insights=[m.delta===0?'Performance is steady versus the previous period.':'Performance '+(m.delta>0?'improved':'declined')+' by '+Math.abs(m.delta)+' percentage points versus the previous period.',m.strong?m.strong.name+' is your strongest task day at '+m.strong.rate+'%.':'More task history will reveal your strongest day.',m.best?m.best.name+' is your most consistent habit at '+m.best.rate+'%.':'Habit consistency will appear after scheduled check-ins.',Math.max(0,25-achievedWeeks)+' qualifying weeks remain to reach the 25-week milestone.'];
  return <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">

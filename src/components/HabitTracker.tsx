@@ -480,7 +480,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {formOpen && (
-        <div className={`${compact ? 'rounded-xl p-3' : 'rounded-xl p-4'} border border-slate-200 bg-slate-50`}>
+        <div className={`${compact ? 'rounded-xl p-3' : 'rounded-xl p-4'} border border-slate-200 dark:border-slate-800 bg-slate-50`}>
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <div className="text-sm font-semibold">
@@ -493,7 +493,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             <button
               type="button"
               onClick={closeForm}
-              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
+              className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100"
               aria-label="Close habit editor"
             >
               <X className="w-4 h-4" />
@@ -506,7 +506,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               onChange={(event) =>
                 setDraft((current) => ({ ...current, emoji: event.target.value.slice(0, 3) }))
               }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-center text-lg outline-none"
+              className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-center text-lg outline-none"
               aria-label="Habit emoji"
             />
             <input
@@ -523,7 +523,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 }
               }}
               placeholder="Habit name"
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-400"
+              className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-sm font-semibold outline-none focus:border-blue-400"
             />
             <select
               value={draft.frequency}
@@ -535,7 +535,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     event.target.value === 'custom' ? current.repeatDays : [],
                 }))
               }
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium outline-none"
+              className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-sm font-medium outline-none"
             >
               <option value="daily">Every day</option>
               <option value="weekdays">Weekdays</option>
@@ -568,7 +568,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                       className={`h-9 px-3 rounded-xl border text-xs font-semibold transition ${
                         selected
                           ? 'bg-blue-600 border-blue-600 text-white'
-                          : 'bg-white border-slate-200 hover:border-blue-300'
+                          : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-blue-300'
                       }`}
                     >
                       {day.short}
@@ -585,7 +585,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           )}
 
           {editingHabitId && (
-            <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between gap-4">
+            <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 flex items-center justify-between gap-4">
               <div>
                 <div className="text-xs font-medium text-slate-700">Habit status</div>
                 <div className="mt-0.5 text-[11px] font-semibold text-slate-500">
@@ -610,7 +610,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 title={draft.isActive ? 'Disable habit' : 'Enable habit'}
               >
                 <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white  transition-transform ${
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white dark:bg-slate-950  transition-transform ${
                     draft.isActive ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -635,12 +635,12 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden ">
-        <div className="px-3 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden ">
+        <div className="px-3 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setWeekAnchor(addHabitDays(weekAnchor, -7))}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-100"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-100"
           >
             Previous
           </button>
@@ -661,14 +661,14 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             <button
               type="button"
               onClick={() => setWeekAnchor(today)}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-100"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-100"
             >
               This Week
             </button>
             <button
               type="button"
               onClick={() => setWeekAnchor(addHabitDays(weekAnchor, 7))}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-100"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold hover:bg-slate-100"
             >
               Next
             </button>
@@ -677,7 +677,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
         <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
           <div className="min-w-[790px]">
-            <div className="grid grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200/80 bg-slate-50">
+            <div className="grid grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200 dark:border-slate-800/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                 Habit
               </div>
@@ -722,7 +722,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
-                    className={`grid grid-cols-[300px_repeat(7,1fr)_72px] border-b last:border-b-0 border-slate-200/80 ${
+                    className={`grid grid-cols-[300px_repeat(7,1fr)_72px] border-b last:border-b-0 border-slate-200 dark:border-slate-800/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
                     }`}
                   >
@@ -795,7 +795,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                                 ? 'border-transparent bg-slate-50 cursor-not-allowed opacity-50'
                                 : checked
                                 ? colorClasses[habit.color].active
-                                : 'border-slate-300 bg-white hover:border-blue-400'
+                                : 'border-slate-300 bg-white dark:bg-slate-950 hover:border-blue-400'
                             }`}
                             title={
                               isFuture
@@ -829,8 +829,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       </div>
 
       {historyHabit && historyStats && (
-        <section className={`${compact ? 'rounded-xl' : 'rounded-xl'} border border-slate-200 bg-slate-50 overflow-hidden`}>
-          <div className="px-4 py-3 border-b border-slate-200/80 flex items-center justify-between gap-3">
+        <section className={`${compact ? 'rounded-xl' : 'rounded-xl'} border border-slate-200 dark:border-slate-800 bg-slate-50 overflow-hidden`}>
+          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center text-xl shrink-0 ${
@@ -851,7 +851,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             <button
               type="button"
               onClick={() => setHistoryHabitId(null)}
-              className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
+              className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100"
               aria-label="Close habit history"
             >
               <X className="w-4 h-4" />
@@ -860,42 +860,42 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
           <div className={`${compact ? 'p-3 space-y-3 lg:max-h-[calc(100vh-195px)]' : 'p-4 space-y-4 lg:max-h-[calc(100vh-220px)]'} lg:overflow-y-auto`}>
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <Flame className="w-4 h-4 text-orange-500" />
                 <div className="mt-2 text-xl font-semibold">{historyStats.currentStreak}</div>
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                   Current streak
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <Trophy className="w-4 h-4 text-amber-500" />
                 <div className="mt-2 text-xl font-semibold">{historyStats.bestStreak}</div>
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                   Best streak
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
                 <div className="mt-2 text-xl font-semibold">{historyStats.thirty.rate}%</div>
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                   Last 30 days
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <BarChart3 className="w-4 h-4 text-violet-600" />
                 <div className="mt-2 text-xl font-semibold">{historyStats.ninety.rate}%</div>
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                   Last 90 days
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <Target className="w-4 h-4 text-emerald-600" />
                 <div className="mt-2 text-xl font-semibold">{historyStats.allTime.rate}%</div>
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                   All-time rate
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <Check className="w-4 h-4 text-emerald-600" />
                 <div className="mt-2 text-xl font-semibold">{historyStats.totalCheckIns}</div>
                 <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
@@ -905,7 +905,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-3">
-              <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 sm:p-4">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="text-sm font-semibold">Completion Trend</div>
@@ -928,7 +928,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   </div>
                 </div>
 
-                <div className={`${compact ? 'h-28' : 'h-40'} flex items-end gap-1.5 border-b border-slate-200 px-1`}>
+                <div className={`${compact ? 'h-28' : 'h-40'} flex items-end gap-1.5 border-b border-slate-200 dark:border-slate-800 px-1`}>
                   {weeklyTrend.map((week) => (
                     <div
                       key={week.key}
@@ -965,7 +965,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 sm:p-4">
                 <div className="mb-3">
                   <div className="text-sm font-semibold">Monthly Summary</div>
                   <div className="text-[11px] font-semibold text-slate-500">
@@ -1006,7 +1006,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
                   <div className="text-sm font-semibold">Calendar Heatmap</div>
@@ -1024,7 +1024,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     Missed
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200" />
+                    <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200 dark:border-slate-800" />
                     Not scheduled
                   </span>
                 </div>
@@ -1085,7 +1085,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                             isFuture
                               ? 'bg-transparent border-transparent'
                               : !due
-                              ? 'bg-slate-100 border-slate-200'
+                              ? 'bg-slate-100 border-slate-200 dark:border-slate-800'
                               : checked
                               ? `${colorClasses[historyHabit.color].dot} border-transparent`
                               : 'bg-rose-100 border-rose-200'
@@ -1098,7 +1098,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div>
                   <div className="text-sm font-semibold">Completion History</div>
@@ -1116,7 +1116,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     Missed
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200" />
+                    <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200 dark:border-slate-800" />
                     Not scheduled
                   </span>
                 </div>
@@ -1141,7 +1141,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                         })}: ${status}`}
                         className={`w-[18px] h-[18px] rounded-[4px] border ${
                           !due
-                            ? 'bg-slate-100 border-slate-200'
+                            ? 'bg-slate-100 border-slate-200 dark:border-slate-800'
                             : checked
                             ? `${colorClasses[historyHabit.color].dot} border-transparent`
                             : 'bg-rose-100 border-rose-200'

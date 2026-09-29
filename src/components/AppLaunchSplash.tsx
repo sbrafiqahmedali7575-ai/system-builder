@@ -109,23 +109,42 @@ export const AppLaunchSplash: React.FC = () => {
 
             <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 3.45, duration: 0.25}} />
             <motion.div
-              className="mt-3 flex flex-col items-center justify-center text-center"
-              initial={{opacity: 0, y: 6, filter: 'blur(1.5px)'}}
-              animate={{opacity: [0, 1, 1], y: [6, 0, 0], filter: ['blur(1.5px)', 'blur(0px)', 'blur(0px)']}}
-              transition={{delay: 3.6, duration: 0.95, times: [0, 0.68, 1], ease: [0.16, 1, 0.3, 1]}}
+              className="relative mt-3 flex flex-col items-center justify-center text-center"
+              initial={{opacity: 0, y: 10, scale: 0.975, filter: 'blur(2px)'}}
+              animate={{opacity: [0, 1, 1], y: [10, 0, 0], scale: [0.975, 1, 1], filter: ['blur(2px)', 'blur(0px)', 'blur(0px)']}}
+              transition={{delay: 3.6, duration: 0.9, times: [0, 0.72, 1], ease: [0.16, 1, 0.3, 1]}}
               aria-label="Developed by Rafiq Ahmed"
             >
-              <span className="text-[8px] font-semibold leading-none tracking-[0.22em] text-slate-400">
-                DEVELOPED BY
-              </span>
               <motion.span
-                className="mt-0.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:180%_100%] bg-clip-text text-[13px] font-bold leading-none tracking-[0.16em] text-transparent"
-                initial={{backgroundPosition: '0% 50%'}}
-                animate={{backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']}}
-                transition={{delay: 4.55, duration: 1.35, times: [0, 0.22, 0.72, 1], ease: 'easeInOut'}}
+                className="text-[8px] font-semibold leading-none tracking-[0.22em] text-slate-400"
+                initial={{opacity: 0, y: 2}}
+                animate={{opacity: 1, y: 0}}
+                transition={{delay: 3.72, duration: 0.48, ease: 'easeOut'}}
+              >
+                DEVELOPED BY
+              </motion.span>
+              <motion.span
+                className="relative mt-0.5 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:190%_100%] bg-clip-text text-[13px] font-bold leading-none text-transparent"
+                initial={{opacity: 0, y: 4, scale: 0.96, letterSpacing: '0.12em', backgroundPosition: '0% 50%', filter: 'drop-shadow(0 0 0 rgba(99,102,241,0))'}}
+                animate={{
+                  opacity: [0, 1, 1, 1],
+                  y: [4, 0, 0, 0],
+                  scale: [0.96, 1.045, 1, 1],
+                  letterSpacing: ['0.12em', '0.19em', '0.16em', '0.16em'],
+                  backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%'],
+                  filter: ['drop-shadow(0 0 0 rgba(99,102,241,0))', 'drop-shadow(0 3px 10px rgba(99,102,241,0.28))', 'drop-shadow(0 2px 6px rgba(99,102,241,0.14))', 'drop-shadow(0 0 0 rgba(99,102,241,0))']
+                }}
+                transition={{delay: 3.9, duration: 2.65, times: [0, 0.28, 0.66, 1], ease: [0.16, 1, 0.3, 1]}}
               >
                 RAFIQ AHMED
               </motion.span>
+              <motion.span
+                className="pointer-events-none absolute -bottom-2 h-px w-16 bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
+                initial={{opacity: 0, scaleX: 0.35}}
+                animate={{opacity: [0, 0.7, 0], scaleX: [0.35, 1, 1.12]}}
+                transition={{delay: 5.05, duration: 1.25, ease: 'easeInOut'}}
+                aria-hidden="true"
+              />
             </motion.div>
           </motion.div>
         </motion.div>

@@ -172,6 +172,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       return {
         dateKey,
         label: parseHabitDateKey(dateKey).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }),
+        total: dayTasks.length,
         rate: dayTasks.length ? Math.round((completed / dayTasks.length) * 100) : 0,
       };
     });
@@ -184,8 +185,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
     const taskScore = Math.round((taskDays.reduce((sum, day) => sum + day.rate, 0) / 7) * 10) / 10;
     const habitScore = Math.round((habitRates.reduce((sum, rate) => sum + rate, 0) / 7) * 10) / 10;
-    const strongest = [...taskDays].sort((a, b) => b.rate - a.rate)[0];
-    const weakest = [...taskDays].sort((a, b) => a.rate - b.rate)[0];
+    // Only days with at least one scheduled task are meaningful for best/worst ranking.
+    const rankedTaskDays = taskDays.filter((day) => day.total > 0);
+    const strongest = [...rankedTaskDays].sort((a, b) => b.rate - a.rate)[0];
+    const weakest = [...rankedTaskDays].sort((a, b) => a.rate - b.rate)[0];
 
     return { taskScore, habitScore, strongest, weakest };
   }, [tasks, habits, currentDateKey]);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
@@ -1079,11 +1080,11 @@ export default function App() {
         <button
           type="button"
           onClick={() => setFocusMode(false)}
-          className="hidden md:inline-flex fixed top-3 right-3 z-[160] h-9 px-3 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 items-center text-xs font-semibold shadow-lg"
+          className="hidden md:inline-flex fixed top-3 right-3 z-[160] w-8 h-8 rounded-full bg-slate-900/80 dark:bg-slate-100/90 text-white dark:text-slate-900 items-center justify-center shadow-md hover:scale-105 transition"
           aria-label="Exit Focus Mode"
           title="Exit Focus Mode"
         >
-          Exit Focus
+          <X className="w-4 h-4" />
         </button>
       )}
 

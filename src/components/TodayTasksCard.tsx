@@ -525,7 +525,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           1. CARD HEADER
       ───────────────────────────────────────────────────────────── */}
       <div className={`${focusMode ? 'hidden' : 'flex'} shrink-0 flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800`}>
-        <div className="flex items-start sm:items-center space-x-1.5">
+        <div className="relative flex w-full items-start sm:w-auto sm:items-center space-x-1.5">
           <div
             className="shrink-0"
             title={`${completedCount} of ${totalTasksCount} tasks completed • ${progressPercent}%`}
@@ -540,7 +540,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             />
           </div>
           <div>
-            <div className="flex items-start sm:items-center gap-1">
+            <div className="flex min-w-0 items-start sm:items-center gap-1 pr-12 sm:pr-0">
               <div className="min-w-0">
                 <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.16em] font-semibold text-blue-600 dark:text-blue-400">
                   {activeDateTab === 'TODAY' ? "Today's Focus" : "Next Day Plan"}
@@ -561,7 +561,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing}
                 title="Review today's tasks"
                 aria-label="Review today's tasks"
-                className="sm:hidden ml-auto -mt-1 w-9 h-9 shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition shadow-xs"
+                className="sm:hidden absolute right-0 top-0 w-9 h-9 min-w-9 min-h-9 max-w-9 max-h-9 aspect-square shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition shadow-xs"
               >
                 <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               </button>
@@ -731,7 +731,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         role="checkbox"
                         aria-checked={isTaskCompleted}
                         onClick={() => handleToggleTask(task)}
-                        className={`mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center transition shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        className={`mt-0.5 w-5 h-5 min-w-5 min-h-5 max-w-5 max-h-5 aspect-square rounded-md flex items-center justify-center self-start transition shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           isTaskCompleted
                             ? 'bg-blue-600 text-white shadow-2xs'
                             : isDark

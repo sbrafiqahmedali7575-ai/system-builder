@@ -8,6 +8,7 @@ import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils'
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
+import { PerformanceIntelligence } from './PerformanceIntelligence';
 import {
   saveCountdownSettings,
   subscribeToCountdownSettings,
@@ -499,6 +500,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
           </motion.div>}
         </div>
       </section>
+
+      {!focusMode && (
+        <PerformanceIntelligence
+          tasks={tasks}
+          habits={habits}
+          currentDateKey={currentDateKey}
+          achievedWeeks={achievedWeeks}
+        />
+      )}
 
       {isCountdownEditorOpen && typeof document !== 'undefined'
         ? createPortal(

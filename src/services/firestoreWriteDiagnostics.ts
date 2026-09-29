@@ -10,7 +10,9 @@ const MAX_EVENTS = 200;
 const events: FirestoreWriteDiagnostic[] = [];
 const enabled =
   typeof window !== 'undefined' &&
-  (import.meta.env.DEV || window.localStorage.getItem('SYSTEM_BUILDER_FIRESTORE_DIAGNOSTICS') === '1');
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.localStorage.getItem('SYSTEM_BUILDER_FIRESTORE_DIAGNOSTICS') === '1');
 
 export function recordFirestoreWrite(
   source: string,

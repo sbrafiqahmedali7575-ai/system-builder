@@ -454,7 +454,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         aria-label="Today Command Center"
         className="space-y-2"
       >
-        <div className={`grid grid-cols-1 gap-3 items-stretch ${focusMode ? '' : 'xl:grid-cols-[minmax(0,1fr)_320px] xl:h-[430px]'}`}>
+        <div className="grid grid-cols-1 gap-3 items-stretch xl:grid-cols-[minmax(0,1fr)_320px] xl:h-[430px]">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -477,7 +477,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             />
           </motion.div>
 
-          {!focusMode && <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
@@ -496,8 +496,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
               countdownTargetLabel={longTermCountdown.targetDateLabel}
               currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
               onOpenCountdown={openCountdownEditor}
+              focusMode={focusMode}
             />
-          </motion.div>}
+          </motion.div>
         </div>
       </section>
 

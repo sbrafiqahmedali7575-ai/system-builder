@@ -25,6 +25,7 @@ interface TaskTrackerProps {
   onToggleTaskStatus: (taskId: string) => Promise<void>;
   onUpdateHabit: (habit: HabitItem) => Promise<void>;
   density?: ToolsDensity;
+  focusMode?: boolean;
 }
 
 type TaskDraft = {
@@ -84,6 +85,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
   onToggleTaskStatus,
   onUpdateHabit,
   density = 'compact',
+  focusMode = false,
 }) => {
   const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const compact = density === 'compact';
@@ -283,11 +285,11 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
       className="tools-workspace-view lg:overflow-y-auto"
     >
       <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[680px] lg:h-[720px] min-h-[640px] overflow-hidden border-0 bg-white dark:bg-slate-950 flex flex-col">
-        <div className="tools-view-header">
+        {!focusMode && <div className="tools-view-header">
           <div className="min-w-0"><h2 className="tools-view-title">Task Planner</h2><p className="tools-view-subtitle">{todayTasks.length} today · {completedToday} completed · {weekTasks.length} this week</p></div>
           <button type="button" onClick={openAdd} className="tools-primary-action h-11 sm:h-9 px-3 inline-flex items-center gap-1.5 text-sm font-medium"><Plus className="w-4 h-4" />New task</button>
-        </div>
-        {formOpen && (
+        </div>}
+        {!focusMode && formOpen && (
           <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 px-3 sm:px-4 py-3">
             <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold">{editingTaskId ? 'Edit task' : 'Add task'}</div><button type="button" onClick={closeForm} className="w-11 h-11 sm:w-8 sm:h-8 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center" aria-label="Close task editor"><X className="w-4 h-4" /></button></div>
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_160px_220px_auto] gap-2">

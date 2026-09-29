@@ -471,6 +471,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               currentDayFormatted={currentCadenceDay.formattedDate}
               currentDayName={currentCadenceDay.fullDayName}
               isSyncing={isSyncing}
+              focusMode={focusMode}
             />
           </motion.div>
 

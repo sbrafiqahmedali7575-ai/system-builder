@@ -113,6 +113,7 @@ interface TodayTasksCardProps {
   currentDayFormatted: string;
   currentDayName: string;
   isSyncing?: boolean;
+  focusMode?: boolean;
 }
 
 export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
@@ -126,6 +127,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   currentDayFormatted,
   currentDayName,
   isSyncing = false,
+  focusMode = false,
 }) => {
   const isDark = theme === 'dark';
 
@@ -484,7 +486,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           1. CARD HEADER
       ───────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
+      <div className={`${focusMode ? 'hidden' : 'flex'} shrink-0 flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800`}>
         <div className="flex items-start sm:items-center space-x-1.5">
           <div
             className="shrink-0"

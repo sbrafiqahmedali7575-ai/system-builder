@@ -1,10 +1,6 @@
-import {
-  getCountdownSettings,
-  saveCountdownSettings,
-} from '../firebaseService';
+import { saveCountdownSettings } from '../firebaseService';
 
 export const countdownsRepository = {
-  get: getCountdownSettings,
   save: saveCountdownSettings,
 } as const;
 

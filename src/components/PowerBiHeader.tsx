@@ -61,27 +61,29 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
     >
       <div className="flex items-center gap-2 px-3 lg:px-5 h-14 w-full">
         {/* Brand Zone */}
-        <div className="flex items-center space-x-1.5 min-w-0">
+        <div className="flex items-center min-w-0">
           <a
             href="/"
-            className="flex items-center space-x-1.5 text-left rounded-lg p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group flex items-center gap-2.5 text-left rounded-xl px-1.5 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-900/70"
             aria-label="Open System Builder dashboard"
             title="System Builder"
           >
-            <SystemBuilderLogo className="size-8 rounded-lg text-xs" />
-            <div className="hidden sm:block">
+            <motion.div whileHover={{y: -1, scale: 1.035}} whileTap={{scale: 0.97}} transition={{duration: 0.18}}>
+              <SystemBuilderLogo className="size-9 rounded-[11px] text-sm shadow-md shadow-indigo-200/50 dark:shadow-indigo-950/40" />
+            </motion.div>
+            <div className="hidden sm:block min-w-0">
               <div className="flex items-center space-x-1">
-                <span className="text-sm sm:text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                <span className="text-[15px] font-bold leading-tight tracking-[-0.015em] text-slate-950 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                   System Builder
                 </span>
               </div>
-              <div className="flex items-center space-x-1 text-[11px] text-slate-500 dark:text-slate-400">
+              <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
-                    isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-blue-500'
+                    isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'
                   }`}
                 />
-                <span className="font-mono text-[10px]">
+                <span className="tracking-[0.01em]">
                   {isSyncing ? 'Syncing...' : `${totalRecordsCount} days logged`}
                 </span>
               </div>

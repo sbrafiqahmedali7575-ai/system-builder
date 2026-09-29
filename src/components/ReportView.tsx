@@ -5,6 +5,7 @@ import { RotateCcw, X } from 'lucide-react';
 import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from '../types';
 import { parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils';
+import { isHabitDue } from '../utils/habitUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
@@ -19,6 +20,12 @@ export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 const COUNTDOWN_TARGET_DATE_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_DATE';
 const COUNTDOWN_TARGET_REASON_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_REASON';
 const SYSTEM_BUILDER_START_DATE_KEY = '2026-08-01';
+
+const addDays = (dateKey: string, amount: number) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + amount));
+  return date.toISOString().slice(0, 10);
+};
 
 interface ReportViewProps {
   records: DailyRecord[];

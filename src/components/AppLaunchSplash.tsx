@@ -55,7 +55,7 @@ export const AppLaunchSplash: React.FC = () => {
                   return (
                     <motion.div
                       key={task}
-                      className="flex h-10 items-center gap-3 rounded-xl border px-3 text-left"
+                      className="relative flex h-10 items-center gap-3 rounded-xl border px-3 text-left"
                       initial={{opacity: 0, x: -10, backgroundColor: 'rgba(15,23,42,0.8)', borderColor: '#1e293b'}}
                       animate={{
                         opacity: [0, 1, 1, 0.72],
@@ -98,6 +98,19 @@ export const AppLaunchSplash: React.FC = () => {
                       >
                         {task}
                       </motion.span>
+                      {index === launchTasks.length - 1 && (
+                        <motion.span
+                          className="pointer-events-none absolute left-[10px] size-7 rounded-lg border border-blue-400/50"
+                          initial={{opacity: 0, scale: 0.7, boxShadow: '0 0 0px rgba(59,130,246,0)'}}
+                          animate={{
+                            opacity: [0, 0.8, 0],
+                            scale: [0.75, 1.25, 1.45],
+                            boxShadow: ['0 0 0px rgba(59,130,246,0)', '0 0 18px rgba(59,130,246,0.5)', '0 0 0px rgba(59,130,246,0)']
+                          }}
+                          transition={{delay: delay + 0.27, duration: 0.38, ease: 'easeOut'}}
+                          aria-hidden="true"
+                        />
+                      )}
                     </motion.div>
                   );
                 })}

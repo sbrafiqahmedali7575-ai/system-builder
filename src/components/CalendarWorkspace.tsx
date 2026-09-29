@@ -396,7 +396,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
           />
           Habits
         </label>
-      </div>
+      </div>}
 
       <div className="relative flex-1 min-h-0 overflow-auto pb-10 sm:pb-20">
         {view === 'year' && (

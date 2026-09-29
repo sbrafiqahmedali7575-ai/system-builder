@@ -299,6 +299,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
           habits={habits}
           onAddTask={onAddTask}
           onToggleTaskStatus={onToggleTaskStatus}
+          onUpdateTask={onUpdateTask}
           onUpdateHabit={onUpdateHabit}
           density="compact"
           focusMode={focusMode}

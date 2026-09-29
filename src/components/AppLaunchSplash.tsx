@@ -6,12 +6,10 @@ const launchTasks = ['Plan the day', 'Focus on priorities', 'Build consistency']
 
 export const AppLaunchSplash: React.FC = () => {
   const [visible, setVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  
 
   useEffect(() => {
-    const mobile = window.matchMedia('(max-width: 767px)').matches;
-    setIsMobile(mobile);
-    const timer = window.setTimeout(() => setVisible(false), mobile ? 8000 : 1500);
+    const timer = window.setTimeout(() => setVisible(false), 6000);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -19,7 +17,7 @@ export const AppLaunchSplash: React.FC = () => {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden ${isMobile ? "bg-[radial-gradient(circle_at_18%_18%,rgba(219,234,254,0.9),transparent_34%),radial-gradient(circle_at_82%_76%,rgba(237,233,254,0.85),transparent_38%),linear-gradient(145deg,#f8fbff_0%,#ffffff_48%,#faf7ff_100%)] text-slate-900" : "bg-slate-950 text-white"}`}
+          className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(219,234,254,0.9),transparent_34%),radial-gradient(circle_at_82%_76%,rgba(237,233,254,0.85),transparent_38%),linear-gradient(145deg,#f8fbff_0%,#ffffff_48%,#faf7ff_100%)] text-slate-900`}
           initial={{opacity: 1}}
           exit={{opacity: 0, scale: 1.025}}
           transition={{duration: 0.42, ease: [0.16, 1, 0.3, 1]}}
@@ -36,8 +34,7 @@ export const AppLaunchSplash: React.FC = () => {
               System Builder
             </motion.h1>
 
-            {isMobile && (
-              <motion.div
+            <motion.div
                 className="mt-5 w-full space-y-2.5"
                 initial={{opacity: 0, y: 8}}
                 animate={{opacity: 1, y: 0}}
@@ -45,7 +42,7 @@ export const AppLaunchSplash: React.FC = () => {
                 aria-label="Completing launch tasks"
               >
                 {launchTasks.map((task, index) => {
-                  const delay = 1.25 + index * 1.15;
+                  const delay = 0.9 + index * 0.85;
                   return (
                     <motion.div
                       key={task}
@@ -109,25 +106,24 @@ export const AppLaunchSplash: React.FC = () => {
                   );
                 })}
               </motion.div>
-            )}
 
-            <motion.div className={isMobile ? 'mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400' : 'mt-3 h-px w-10 bg-blue-500'} initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: isMobile ? 4.95 : 0.35, duration: 0.4}} />
+            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 2.9, duration: 0.3}} />
             <motion.p
-              className={`mt-3 text-xs font-semibold ${isMobile ? "bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:220%_100%] bg-clip-text text-transparent" : "tracking-[0.18em] text-slate-400"}`}
-              initial={{opacity: 0, y: 7, letterSpacing: '0.11em', filter: 'blur(2px)'}}
-              animate={isMobile ? {
+              className="mt-3 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:220%_100%] bg-clip-text text-xs font-semibold text-transparent"
+              initial={{opacity: 0, y: 8, letterSpacing: '0.10em', filter: 'blur(2px)'}}
+              animate={{
                 opacity: [0, 1, 1, 1],
-                y: [7, 0, 0, 0],
-                letterSpacing: ['0.11em', '0.18em', '0.205em', '0.18em'],
+                y: [8, 0, 0, 0],
+                letterSpacing: ['0.10em', '0.18em', '0.205em', '0.18em'],
                 filter: ['blur(2px)', 'blur(0px)', 'blur(0px)', 'blur(0px)'],
                 backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']
-              } : {opacity: 1, y: 0, letterSpacing: '0.18em', filter: 'blur(0px)'}}
-              transition={isMobile ? {
-                delay: 5.12,
-                duration: 2.15,
-                times: [0, 0.28, 0.72, 1],
+              }}
+              transition={{
+                delay: 3,
+                duration: 2.7,
+                times: [0, 0.25, 0.72, 1],
                 ease: [0.16, 1, 0.3, 1]
-              } : {delay: 0.45}}
+              }}
             >
               DEVELOPED BY RAFIQ AHMED
             </motion.p>

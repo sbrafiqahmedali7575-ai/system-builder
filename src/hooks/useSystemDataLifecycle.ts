@@ -171,8 +171,4 @@ export function useSystemDataLifecycle({
     (error) => console.warn('Habits using local cache:', error)
   ), [setHabits]);
 
-  useEffect(() => { if (currentDateKey) void setCachedRecords; }, [currentDateKey]);
-
-  // Cache writes are local-only and intentionally separate from Firestore writes.
-  // Components can update optimistically without coupling persistence to rendering.
 }

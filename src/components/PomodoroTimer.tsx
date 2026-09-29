@@ -389,7 +389,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             </span>
           </div>
 
-          <div className="mt-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70 px-2.5 py-2">
+          <div className="hidden sm:block mt-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70 px-2.5 py-2">
             <div className="text-[11px] uppercase tracking-wide font-semibold text-blue-600 dark:text-blue-400">
               Current Task
             </div>

@@ -714,28 +714,28 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <motion.div
                     whileHover={{ x: 2 }}
                     whileTap={{ scale: 0.995 }}
-                    className={`group ui-motion-card min-w-0 border-0 border-b border-slate-100 dark:border-slate-800 rounded-none px-1 py-1.5 shadow-none transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/35 ${
+                    className={`group ui-motion-card mb-1.5 min-w-0 rounded-xl border p-2 transition-all ${
                       isTaskCompleted
                         ? isDark
-                          ? 'bg-transparent opacity-70'
-                          : 'bg-transparent opacity-75'
+                          ? 'bg-slate-950/40 border-slate-800/60 opacity-80'
+                          : 'bg-slate-50/70 border-slate-200/60 opacity-85'
                         : isDark
-                        ? 'bg-transparent'
-                        : 'bg-transparent'
+                        ? 'bg-slate-800/50 border-slate-700/80 hover:border-slate-600'
+                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
                     }`}
                   >
-                    <div className="flex min-h-10 items-center gap-2.5">
+                    <div className="flex items-start gap-2">
                       <button
                         type="button"
                         role="checkbox"
                         aria-checked={isTaskCompleted}
                         onClick={() => handleToggleTask(task)}
-                        className={`relative inline-flex !size-5 min-h-5 min-w-5 max-h-5 max-w-5 aspect-square flex-none self-center items-center justify-center p-0 rounded-full transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        className={`mt-0.5 relative block !h-5 !w-5 min-h-5 min-w-5 max-h-5 max-w-5 aspect-square flex-none self-start p-0 rounded-[5px] sm:h-5 sm:w-5 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           isTaskCompleted
-                            ? 'border-2 border-blue-600 bg-blue-600 text-white'
+                            ? 'bg-blue-600 text-white shadow-2xs'
                             : isDark
-                            ? 'border-2 border-slate-500 hover:border-blue-400 bg-transparent'
-                            : 'border-2 border-slate-400 hover:border-blue-500 bg-transparent'
+                            ? 'border-2 border-slate-600 hover:border-blue-400 bg-slate-900'
+                            : 'border-2 border-slate-300 hover:border-blue-500 bg-white'
                         }`}
                         title={
                           isTaskCompleted
@@ -752,9 +752,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         <button
                           type="button"
                           onClick={() => handleToggleTask(task)}
-                          className={`block w-full truncate text-left text-sm font-medium leading-5 select-none ${
+                          className={`block w-full text-left text-sm font-semibold leading-snug break-words select-none ${
                             isTaskCompleted
-                              ? 'line-through text-slate-400 dark:text-slate-500 font-normal'
+                              ? 'line-through text-slate-400 dark:text-slate-500'
                               : 'text-slate-900 dark:text-slate-100'
                           }`}
                         >
@@ -762,8 +762,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </button>
 
                         {task.notes?.trim() && (
-                          <div className="mt-0.5">
-                            <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
+                          <div className="mt-1">
+                            <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
                               {task.notes}
                             </p>
                             {(task.notes.length > 90 || task.notes.includes('\n')) && (
@@ -783,9 +783,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </div>
                         )}
 
-                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
                           <span
-                            className={`inline-flex min-w-6 items-center justify-center rounded px-1 py-0.5 text-[10px] font-medium ${quadrantMeta.classes}`}
+                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
                           >
                             {quadrantMeta.roman}
@@ -825,7 +825,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="inline-flex max-w-full min-w-0 items-center truncate rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}
@@ -833,7 +833,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       </div>
 
                       <div className="relative shrink-0">
-                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-7 h-7 rounded-md text-slate-400 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
+                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {openTaskMenuId === task.id && (

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Check, motion, AnimatePresence} from 'framer-motion';
+import {motion, AnimatePresence} from 'framer-motion';
 
 const launchTasks = ['Plan the day', 'Focus on priorities', 'Build consistency'];
 
@@ -55,29 +55,46 @@ export const AppLaunchSplash: React.FC = () => {
                   return (
                     <motion.div
                       key={task}
-                      className="flex h-10 items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 px-3 text-left"
-                      initial={{opacity: 0, x: -10}}
-                      animate={{opacity: 1, x: 0}}
-                      transition={{delay: 0.25 + index * 0.12, duration: 0.3}}
+                      className="flex h-10 items-center gap-3 rounded-xl border px-3 text-left"
+                      initial={{opacity: 0, x: -10, backgroundColor: 'rgba(15,23,42,0.8)', borderColor: '#1e293b'}}
+                      animate={{
+                        opacity: [0, 1, 1, 0.72],
+                        x: 0,
+                        backgroundColor: ['rgba(15,23,42,0.8)', 'rgba(15,23,42,0.8)', 'rgba(37,99,235,0.16)', 'rgba(15,23,42,0.72)'],
+                        borderColor: ['#1e293b', '#1e293b', '#2563eb', '#1e293b']
+                      }}
+                      transition={{
+                        opacity: {times: [0, 0.18, 0.78, 1], delay: 0.25 + index * 0.12, duration: delay + 0.45 - (0.25 + index * 0.12)},
+                        x: {delay: 0.25 + index * 0.12, duration: 0.28},
+                        backgroundColor: {delay, duration: 0.4, times: [0, 0.15, 0.48, 1]},
+                        borderColor: {delay, duration: 0.4, times: [0, 0.15, 0.48, 1]}
+                      }}
                     >
                       <motion.span
-                        className="relative block size-5 flex-none rounded-[5px] border border-slate-600"
-                        animate={{backgroundColor: ['#0f172a', '#2563eb'], borderColor: ['#475569', '#2563eb']}}
-                        transition={{delay, duration: 0.22}}
+                        className="relative block size-5 flex-none rounded-[5px] border"
+                        initial={{backgroundColor: '#0f172a', borderColor: '#475569'}}
+                        animate={{backgroundColor: '#2563eb', borderColor: '#2563eb'}}
+                        transition={{delay, duration: 0.14}}
                       >
-                        <motion.span
-                          className="absolute inset-0 flex items-center justify-center"
-                          initial={{scale: 0, opacity: 0}}
-                          animate={{scale: 1, opacity: 1}}
-                          transition={{delay: delay + 0.1, type: 'spring', stiffness: 420, damping: 20}}
-                        >
-                          <Check className="size-3.5 stroke-[3] text-white" />
-                        </motion.span>
+                        <svg viewBox="0 0 20 20" className="absolute inset-0 size-full p-[3px]" aria-hidden="true">
+                          <motion.path
+                            d="M4.5 10.2 8.2 14 15.7 6.4"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            initial={{pathLength: 0, opacity: 0}}
+                            animate={{pathLength: 1, opacity: 1}}
+                            transition={{delay: delay + 0.05, duration: 0.16, ease: 'easeOut'}}
+                          />
+                        </svg>
                       </motion.span>
                       <motion.span
-                        className="min-w-0 truncate text-sm text-slate-300"
-                        animate={{color: ['#cbd5e1', '#94a3b8']}}
-                        transition={{delay, duration: 0.22}}
+                        className="min-w-0 truncate text-sm"
+                        initial={{color: '#cbd5e1'}}
+                        animate={{color: '#94a3b8', opacity: [1, 1, 0.78]}}
+                        transition={{delay, duration: 0.4, times: [0, 0.55, 1]}}
                       >
                         {task}
                       </motion.span>

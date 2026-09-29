@@ -666,11 +666,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         )}
                       </button>
 
-                      <div className="min-w-0 flex-1 pt-px pr-0.5 sm:pr-0">
+                      <div className="min-w-0 flex-1 pt-px pr-1 sm:pr-0 overflow-hidden">
                         <button
                           type="button"
                           onClick={() => handleToggleTask(task)}
-                          className={`block w-full text-left text-[13px] sm:text-sm font-semibold leading-[1.25rem] sm:leading-snug break-words select-none ${
+                          className={`block w-full text-left text-[13px] sm:text-sm font-semibold leading-[1.25rem] sm:leading-snug whitespace-normal break-words [overflow-wrap:anywhere] select-none ${
                             isTaskCompleted
                               ? 'line-through text-slate-400 dark:text-slate-500'
                               : 'text-slate-900 dark:text-slate-100'
@@ -681,10 +681,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                         {task.notes?.trim() && (
                           <div className="mt-1 sm:mt-1.5">
-                            <p className={`text-[11px] leading-[1.15rem] whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-1'}`}>
+                            <p className={`text-[11px] leading-[1.15rem] whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2 sm:line-clamp-1'}`}>
                               {task.notes}
                             </p>
-                            {(task.notes.length > 60 || task.notes.includes('\n')) && (
+                            {(task.notes.length > 70 || task.notes.includes('\n')) && (
                               <button
                                 type="button"
                                 onClick={() => setExpandedNotes((current) => {

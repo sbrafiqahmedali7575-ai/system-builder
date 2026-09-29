@@ -762,7 +762,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </button>
 
                         {task.notes?.trim() && (
-                          <div className="mt-0.5 hidden">
+                          <div className="mt-0.5">
                             <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
                               {task.notes}
                             </p>
@@ -783,7 +783,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </div>
                         )}
 
-                        <div className="mt-0 flex shrink-0 items-center gap-1">
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
                           <span
                             className={`inline-flex min-w-6 items-center justify-center rounded px-1 py-0.5 text-[10px] font-medium ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
@@ -792,7 +792,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`hidden sm:inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
                               priorityLabel === 'High'
                                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
                                 : priorityLabel === 'Medium'
@@ -805,7 +805,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`hidden sm:inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
                               isTaskCompleted
                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
@@ -825,7 +825,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="hidden sm:inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}

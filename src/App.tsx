@@ -1059,7 +1059,7 @@ export default function App() {
       }`}
     >
       {/* 1. Clean Navigation Header */}
-      <PowerBiHeader
+      {!focusMode && <PowerBiHeader
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
         onOpenTools={() => handleOpenTools()}
@@ -1072,10 +1072,22 @@ export default function App() {
         onOpenSearch={() => setIsTaskSearchOpen(true)}
         onToggleFocus={() => setFocusMode((value) => !value)}
         focusMode={focusMode}
-      />
+      />}
 
       {/* 2. Main Daily Commitment Dashboard Container */}
-      <main className={`flex-1 w-full mx-auto px-2 sm:px-3 lg:px-4 py-3 sm:py-4 ${focusMode ? 'max-w-4xl' : 'max-w-7xl'}`}>
+      {focusMode && (
+        <button
+          type="button"
+          onClick={() => setFocusMode(false)}
+          className="hidden md:inline-flex fixed top-3 right-3 z-[160] h-9 px-3 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 items-center text-xs font-semibold shadow-lg"
+          aria-label="Exit Focus Mode"
+          title="Exit Focus Mode"
+        >
+          Exit Focus
+        </button>
+      )}
+
+      <main className={`flex-1 w-full mx-auto ${focusMode ? 'max-w-4xl px-3 py-6' : 'max-w-7xl px-2 sm:px-3 lg:px-4 py-3 sm:py-4'}`}>
         <ReportView
           records={records}
           tasks={tasks}
@@ -1102,7 +1114,7 @@ export default function App() {
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
       {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
-      <MobileBottomNav onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
+      {!focusMode && <MobileBottomNav onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />}
 
       {/* 3. Add Record Modal */}
       <AddRecordModal

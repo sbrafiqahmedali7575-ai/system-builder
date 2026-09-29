@@ -136,7 +136,7 @@ export const DataWorkspace: React.FC = () => {
                   className={`relative rounded-xl border px-2 py-2 text-left transition-colors ${
                     selected
                       ? 'border-[#4772fa] bg-blue-50/50 '
-                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
@@ -192,7 +192,7 @@ export const DataWorkspace: React.FC = () => {
                     className={`relative rounded-xl border px-2 py-2 text-left transition-colors ${
                       selected
                         ? 'border-[#4772fa] bg-blue-50/50 '
-                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center gap-1.5">
@@ -225,8 +225,8 @@ export const DataWorkspace: React.FC = () => {
 
       {error && <div className="tools-feedback-error">{error}</div>}
 
-      <div className="bg-white dark:bg-slate-900 overflow-hidden lg:flex-1 lg:min-h-0">
-        <div className="px-3 py-2 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-950 dark:bg-slate-900 overflow-hidden lg:flex-1 lg:min-h-0">
+        <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 flex items-center justify-between">
           <div className="font-semibold text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
           <div className="text-[10px] font-medium text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>
         </div>
@@ -235,13 +235,13 @@ export const DataWorkspace: React.FC = () => {
             <div className="min-h-40 flex items-center justify-center text-sm font-medium text-slate-400">No documents</div>
           ) : (
             <table className="w-full min-w-max border-collapse text-left">
-              <thead className="sticky top-0 z-10 bg-white ">
+              <thead className="sticky top-0 z-10 bg-white dark:bg-slate-950 ">
                 <tr>
                   {columns.map((column) => {
                     const keyType = KEY_COLUMNS[active][column];
                     const isSorted = sort?.column === column;
                     return (
-                      <th key={column} className="border-b border-r border-slate-200 p-0 text-[10px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap">
+                      <th key={column} className="border-b border-r border-slate-200 dark:border-slate-800 p-0 text-[10px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap">
                         {keyType ? (
                           <button
                             type="button"

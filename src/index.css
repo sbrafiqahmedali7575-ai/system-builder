@@ -507,3 +507,31 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .dark [data-tools-density] .bg-white { background:#0f172a !important; }
 .dark [data-tools-density] .border-slate-100,
 .dark [data-tools-density] .border-slate-200 { border-color:#273449 !important; }
+
+
+/* Mobile dark-mode usability pass */
+@media (max-width: 639px) {
+  .dark .system-edition { --mobile-dark-surface:#0f172a; --mobile-dark-raised:#111c2f; --mobile-dark-border:#334155; }
+  [data-tools-density] button:not([role="tab"]),
+  [data-tools-density] input,
+  [data-tools-density] select { min-height:44px; }
+  [data-tools-density] textarea { min-height:72px; }
+  .tools-view-header { min-height:56px; padding:8px 12px; }
+  .tools-view-subtitle { color:#64748b; line-height:15px; }
+  .dark .tools-view-subtitle { color:#a8b3c4; }
+  .tools-list-row { min-height:48px; padding:8px 12px; }
+  .dark .tools-list-row { border-color:#273449; }
+  .tools-segment { min-height:44px; padding:3px; }
+  .tools-segment > button { min-height:38px !important; padding-left:10px; padding-right:10px; }
+  .tools-modal { width:calc(100vw - 20px); max-height:calc(100dvh - 24px); overflow:auto; }
+  .dark .tools-modal { background:#0f172a; border-color:#334155; }
+  .dark .tools-workspace-view { border-color:#273449; }
+  .dark [data-tools-density] .text-slate-400 { color:#94a3b8 !important; }
+  .dark [data-tools-density] .text-slate-500 { color:#a8b3c4 !important; }
+  .dark [data-tools-density] .text-slate-600 { color:#c0cad8 !important; }
+  .dark [data-tools-density] button:hover { border-color:#475569; }
+  .mobile-nav-action { min-height:52px; padding-top:4px; padding-bottom:4px; }
+  .dark .mobile-nav-action { color:#a8b3c4; }
+  .dark .mobile-nav-action:active { color:#93c5fd; background:#111c2f; }
+  .system-planning-surface { min-height:calc(100dvh - 46px); height:auto; }
+}

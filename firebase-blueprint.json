@@ -1,0 +1,294 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Single System Builder user profile.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "email"
+      ]
+    },
+    "Day": {
+      "title": "Day",
+      "description": "Derived daily task and habit completion summary.",
+      "type": "object",
+      "properties": {
+        "dateKey": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "tasksCompleted": {
+          "type": "integer"
+        },
+        "taskTotal": {
+          "type": "integer"
+        },
+        "taskCompletionRate": {
+          "type": "number"
+        },
+        "habitsCompleted": {
+          "type": "integer"
+        },
+        "habitTotal": {
+          "type": "integer"
+        },
+        "habitCompletionRate": {
+          "type": "number"
+        },
+        "dayCompleted": {
+          "type": "number",
+          "description": "Overall day progress percentage: (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20), rounded to 2 decimals."
+        },
+        "IsdayCompleted": {
+          "type": "boolean",
+          "description": "True when (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20) is at least 80."
+        }
+      },
+      "required": [
+        "dateKey",
+        "tasksCompleted",
+        "taskTotal",
+        "taskCompletionRate",
+        "habitsCompleted",
+        "habitTotal",
+        "habitCompletionRate",
+        "dayCompleted",
+        "IsdayCompleted"
+      ]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Single-user scheduled task in Eisenhower quadrant order.",
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "quadrant": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "I",
+            "II",
+            "III",
+            "IV",
+            null
+          ]
+        },
+        "scheduledDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "sortOrder": {
+          "type": "integer"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "Iscompleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "taskId",
+        "title",
+        "scheduledDate",
+        "sortOrder",
+        "notes",
+        "Iscompleted"
+      ]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "Recurring habit definition.",
+      "type": "object",
+      "properties": {
+        "habitId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "repeatDays": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "activeFrom": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color"
+        },
+        "inactivePeriods": {
+          "type": "array",
+          "description": "Internal pause history. Each item has inclusive from/to YYYY-MM-DD dates; to is null while currently inactive.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "from"
+            ]
+          }
+        }
+      },
+      "required": [
+        "habitId",
+        "name",
+        "repeatDays",
+        "activeFrom",
+        "isActive",
+        "color"
+      ]
+    },
+    "HabitLog": {
+      "title": "HabitLog",
+      "description": "Exactly one daily status row per due habit/date. Iscompleted is true when checked and false when unchecked or not checked.",
+      "type": "object",
+      "properties": {
+        "habitLogId": {
+          "type": "string"
+        },
+        "habitId": {
+          "type": "string"
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "Iscompleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "habitLogId",
+        "habitId",
+        "dateKey",
+        "Iscompleted"
+      ]
+    },
+    "Countdown": {
+      "title": "Countdown",
+      "description": "Single-user countdown target.",
+      "type": "object",
+      "properties": {
+        "countdownId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "targetDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+        },
+        "isActive": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "countdownId",
+        "title",
+        "targetDate",
+        "isActive"
+      ]
+    },
+    "NotificationSettings": {
+      "title": "NotificationSettings",
+      "description": "System configuration retained outside the analytical six-collection model.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "recipientEmail": {
+          "type": "string"
+        },
+        "recipientName": {
+          "type": "string"
+        },
+        "scheduledTime": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "lastSentDate": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "enabled",
+        "recipientEmail",
+        "recipientName",
+        "scheduledTime",
+        "timezone"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User"
+    },
+    "/days/{dateKey}": {
+      "schema": "Day"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task"
+    },
+    "/habits/{habitId}": {
+      "schema": "Habit"
+    },
+    "/habitLogs/{habitLogId}": {
+      "schema": "HabitLog"
+    },
+    "/countdowns/{countdownId}": {
+      "schema": "Countdown"
+    },
+    "/notification_settings/{settingId}": {
+      "schema": "NotificationSettings",
+      "description": "Retained application configuration. Existing delivery/reminder collections remain operational during migration."
+    }
+  }
+}

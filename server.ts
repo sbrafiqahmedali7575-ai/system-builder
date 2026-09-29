@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config({ override: true });
 import express from 'express';
 import path from 'path';
-import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { fetchAllProjectData, generateAllCsvFiles } from './server/backupService';
 import { db, collection, getDocs, doc, getDoc } from './server/db';
@@ -142,25 +141,17 @@ async function startServer() {
     }
   });
 
-  // Serve static dist build if available, otherwise fall back to Vite
-  const rootIndexExists = fs.existsSync(path.join(process.cwd(), 'index.html'));
-  const distPath = path.join(process.cwd(), 'dist');
-  const distIndexExists = fs.existsSync(path.join(distPath, 'index.html'));
-
-  if (!rootIndexExists && distIndexExists) {
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  } else if (process.env.NODE_ENV !== 'production') {
+  // Vite middleware for development or static serving in production
+  if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
+    app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

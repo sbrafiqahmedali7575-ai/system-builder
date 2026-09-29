@@ -6,7 +6,7 @@ import { ReportView } from './components/ReportView';
 import { AddRecordModal } from './components/AddRecordModal';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
-import { MoreWorkspace } from './components/MoreWorkspace';
+import { MoreWorkspace, type MoreTab } from './components/MoreWorkspace';
 import { TaskSearchDialog } from './components/TaskSearchDialog';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CommandPalette } from './components/CommandPalette';
@@ -148,6 +148,7 @@ export default function App() {
     if (typeof window === 'undefined') return false;
     return window.location.pathname === '/tools';
   });
+  const [toolsInitialTab, setToolsInitialTab] = useState<MoreTab>('data');
 
   // Filter state for report view
   const [filterState, setFilterState] = useState<FilterState>({
@@ -990,7 +991,8 @@ export default function App() {
     setIsLibraryOpen(false);
   };
 
-  const handleOpenTools = () => {
+  const handleOpenTools = (initialTab: MoreTab = 'data') => {
+    setToolsInitialTab(initialTab);
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/tools');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1026,6 +1028,7 @@ export default function App() {
     return (
       <MoreWorkspace
         theme={theme}
+        initialTab={toolsInitialTab}
         onBack={handleCloseTools}
         tasks={tasks}
         habits={habits}
@@ -1059,7 +1062,7 @@ export default function App() {
       <PowerBiHeader
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
-        onOpenTools={handleOpenTools}
+        onOpenTools={() => handleOpenTools()}
         theme={theme}
         onThemeChange={setTheme}
         totalRecordsCount={records.length}
@@ -1098,8 +1101,8 @@ export default function App() {
 
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
-      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={handleOpenTools} />}
-      <MobileBottomNav onAdd={() => setIsAddModalOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={handleOpenTools} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
+      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
+      <MobileBottomNav onAdd={() => setIsAddModalOpen(true)} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onTools={() => handleOpenTools()} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
 
       {/* 3. Add Record Modal */}
       <AddRecordModal

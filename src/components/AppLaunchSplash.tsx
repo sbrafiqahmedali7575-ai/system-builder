@@ -42,7 +42,7 @@ export const AppLaunchSplash: React.FC = () => {
                 aria-label="Completing launch tasks"
               >
                 {launchTasks.map((task, index) => {
-                  const delay = 0.9 + index * 0.85;
+                  const delay = 0.55 + index * 0.55;
                   return (
                     <motion.div
                       key={task}
@@ -107,7 +107,7 @@ export const AppLaunchSplash: React.FC = () => {
                 })}
               </motion.div>
 
-            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 2.9, duration: 0.3}} />
+            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 1.9, duration: 0.25}} />
             <motion.p
               className="mt-3 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-[length:220%_100%] bg-clip-text text-xs font-semibold text-transparent"
               initial={{opacity: 0, y: 8, letterSpacing: '0.10em', filter: 'blur(2px)'}}
@@ -119,8 +119,8 @@ export const AppLaunchSplash: React.FC = () => {
                 backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%']
               }}
               transition={{
-                delay: 3,
-                duration: 2.7,
+                delay: 2,
+                duration: 3.7,
                 times: [0, 0.25, 0.72, 1],
                 ease: [0.16, 1, 0.3, 1]
               }}

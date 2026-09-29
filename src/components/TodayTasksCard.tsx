@@ -714,17 +714,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <motion.div
                     whileHover={{ x: 2 }}
                     whileTap={{ scale: 0.995 }}
-                    className={`group ui-motion-card mb-1.5 min-w-0 rounded-xl border p-2 transition-all ${
+                    className={`group ui-motion-card mb-1 min-w-0 border-0 border-b border-slate-100 dark:border-slate-800 rounded-none px-1 py-2 shadow-none sm:mb-1.5 sm:rounded-xl sm:border sm:p-2 transition-all ${
                       isTaskCompleted
                         ? isDark
-                          ? 'bg-slate-950/40 border-slate-800/60 opacity-80'
-                          : 'bg-slate-50/70 border-slate-200/60 opacity-85'
+                          ? 'bg-transparent sm:bg-slate-950/40 sm:border-slate-800/60 opacity-80'
+                          : 'bg-transparent sm:bg-slate-50/70 sm:border-slate-200/60 opacity-85'
                         : isDark
-                        ? 'bg-slate-800/50 border-slate-700/80 hover:border-slate-600'
-                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                        ? 'bg-transparent sm:bg-slate-800/50 sm:border-slate-700/80 sm:hover:border-slate-600'
+                        : 'bg-transparent sm:bg-white sm:border-slate-200 sm:hover:border-slate-300 sm:shadow-2xs'
                     }`}
                   >
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2 sm:items-start">
                       <button
                         type="button"
                         role="checkbox"
@@ -833,7 +833,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       </div>
 
                       <div className="relative shrink-0">
-                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
+                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {openTaskMenuId === task.id && (

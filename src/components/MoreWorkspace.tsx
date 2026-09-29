@@ -43,7 +43,7 @@ const TABS: Array<{
 ];
 
 const TOOL_TAB_BASE =
-  'relative h-10 min-w-0 px-3 text-xs font-medium inline-flex items-center justify-center gap-1.5 transition-colors select-none whitespace-nowrap overflow-hidden border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40';
+  'relative h-11 sm:h-10 min-w-0 px-2 sm:px-3 text-[11px] sm:text-xs font-medium inline-flex items-center justify-center gap-1.5 transition-colors select-none whitespace-nowrap overflow-hidden border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40';
 
 const TOOL_TAB_ACTIVE =
   'border-[#4772fa] text-[#4772fa] dark:text-blue-300 bg-transparent';
@@ -74,11 +74,11 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
       className="min-h-screen lg:h-screen bg-[#f7f7f7] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col"
     >
       <header className="sticky top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-        <div className="w-full px-3 sm:px-4 lg:px-5 flex items-center gap-2">
+        <div className="w-full px-1.5 sm:px-4 lg:px-5 flex items-center gap-1 sm:gap-2">
           <button
             type="button"
             onClick={onBack}
-            className="h-9 w-9 rounded-lg text-slate-500 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            className="h-11 w-11 sm:h-9 sm:w-9 rounded-lg text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0 hover:bg-slate-100 hover:text-slate-900 transition-colors"
             aria-label="Back to dashboard"
             title="Back to dashboard"
           >
@@ -88,7 +88,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
           <div
             role="tablist"
             aria-label="System Builder tools"
-            className="flex items-center justify-start gap-1 min-w-0 flex-1 overflow-hidden"
+            className="flex items-center justify-start gap-0.5 sm:gap-1 min-w-0 flex-1 overflow-x-auto scrollbar-none"
           >
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -140,7 +140,7 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
        </div>
       </header>
 
-      <main className="w-full px-3 sm:px-4 lg:px-5 py-3 flex-1 min-h-0 lg:overflow-hidden">
+      <main className="w-full px-0 sm:px-4 lg:px-5 py-0 sm:py-3 flex-1 min-h-0 lg:overflow-hidden">
         <section className="lg:h-full lg:overflow-hidden">
           {activeTab === 'eisenhower' && (
             <div

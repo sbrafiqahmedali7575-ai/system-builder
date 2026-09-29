@@ -19,6 +19,7 @@ import {
   type DocumentReference,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
+import { recordFirestoreWrite } from './firestoreWriteDiagnostics';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS, INITIAL_TASKS } from '../data/initialData';
 import { standardizeDate } from '../utils/dateUtils';
@@ -406,6 +407,7 @@ async function commitBatchedMutations(
     });
     try {
       await batch.commit();
+      recordFirestoreWrite('Firestore.batchMutation', 'mixed', 'batch', writes.slice(index, index + 400).length);
     } catch (err: unknown) {
       if (isQuotaExceededError(err)) {
         markFirestoreWriteQuotaExhausted();
@@ -458,6 +460,7 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
       dateKey: today,
       Iscompleted: checkedToday,
     });
+    recordFirestoreWrite('HabitTracker.syncTodayLog', HABIT_LOGS_COLLECTION, 'create');
     return;
   }
 
@@ -474,6 +477,7 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
   };
   if (!storedFieldsMatch(primary.data() as Record<string, unknown>, desiredLog)) {
     await setDoc(primary.ref, desiredLog, { merge: true });
+    recordFirestoreWrite('HabitTracker.syncTodayLog', HABIT_LOGS_COLLECTION, 'update');
   }
 
   // Remove duplicate rows for the same habit/today.
@@ -482,6 +486,7 @@ async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
     const batch = writeBatch(db);
     duplicates.forEach((logDoc) => batch.delete(logDoc.ref));
     await batch.commit();
+    recordFirestoreWrite('HabitTracker.removeDuplicateLogs', HABIT_LOGS_COLLECTION, 'delete', duplicates.length);
   }
 }
 
@@ -830,6 +835,7 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
         Habits: deleteField(),
         dayCompleted: deleteField(),
       }, { merge: true });
+      recordFirestoreWrite('Days.rebuildSummary', DAYS_COLLECTION, existingData ? 'update' : 'create');
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -915,6 +921,7 @@ export async function saveCountdownSettings(
     targetDate: settings.targetDate,
     isActive: Boolean(settings.targetDate),
   });
+  recordFirestoreWrite('Countdown.save', COUNTDOWNS_COLLECTION, 'update');
 }
 
 /**
@@ -1157,6 +1164,7 @@ export async function seedInitialTasks(tasks: TaskItem[]): Promise<void> {
     batch.set(docRef, taskStoragePayload(t));
   }
   await batch.commit();
+  recordFirestoreWrite('Tasks.seed', TASKS_COLLECTION, 'batch', tasks.length);
 }
 
 async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
@@ -1183,7 +1191,10 @@ async function normalizeTaskOrderForDate(dateKey: string): Promise<void> {
     const data = d.data();
     return Number(data.sortOrder ?? data.taskOrder) !== index + 1 || data.taskOrder !== undefined;
   });
-  if (needsWrite) await batch.commit();
+  if (needsWrite) {
+    await batch.commit();
+    recordFirestoreWrite('Tasks.normalizeOrder', TASKS_COLLECTION, 'batch', matching.filter((d, index) => { const data = d.data(); return Number(data.sortOrder ?? data.taskOrder) !== index + 1 || data.taskOrder !== undefined; }).length);
+  }
 }
 
 /**
@@ -1221,6 +1232,7 @@ export async function addTaskToCloud(task: TaskItem): Promise<void> {
       sortOrder: sameDateCount + 1,
     });
   });
+  recordFirestoreWrite('TaskTracker.addTask', TASKS_COLLECTION, 'transaction');
 
   await normalizeTaskOrderForDate(targetDateKey);
   if (targetDateKey) await rebuildDaySummary(targetDateKey);
@@ -1250,6 +1262,7 @@ export async function updateTaskInCloud(task: TaskItem): Promise<void> {
   }
 
   await setDoc(existingTaskDoc.ref, taskStoragePayload(task), { merge: true });
+  recordFirestoreWrite('TaskTracker.updateTask', TASKS_COLLECTION, 'update');
   await normalizeTaskOrderForDate(nextDateKey);
 
   if (nextDateKey) await rebuildDaySummary(nextDateKey);
@@ -1272,6 +1285,7 @@ export async function deleteTaskFromCloud(taskId: string): Promise<void> {
 
   const dateKey = normalizeModelDateKey(existing.data().scheduledDate);
   await deleteDoc(existing.ref);
+  recordFirestoreWrite('TaskTracker.deleteTask', TASKS_COLLECTION, 'delete');
 
   if (dateKey) {
     await normalizeTaskOrderForDate(dateKey);
@@ -1458,6 +1472,7 @@ export async function updateHabitInCloud(habit: HabitItem): Promise<void> {
     const desiredHabit = habitStoragePayload(habitForStorage);
     if (!previousHabit || !storedFieldsMatch(previousHabit, desiredHabit)) {
       await setDoc(habitRef, desiredHabit, { merge: true });
+      recordFirestoreWrite('HabitTracker.updateHabit', HABITS_COLLECTION, previousHabit ? 'update' : 'create');
     }
     await syncHabitLogsFromHabit(habitForStorage);
 

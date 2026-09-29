@@ -732,10 +732,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         onClick={() => handleToggleTask(task)}
                         className={`relative inline-flex !size-5 min-h-5 min-w-5 max-h-5 max-w-5 aspect-square flex-none self-center items-center justify-center p-0 rounded-full transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           isTaskCompleted
-                            ? 'bg-blue-600 text-white shadow-2xs'
+                            ? 'border-2 border-blue-600 bg-blue-600 text-white'
                             : isDark
-                            ? 'border-2 border-slate-600 hover:border-blue-400 bg-slate-900'
-                            : 'border-2 border-slate-300 hover:border-blue-500 bg-white'
+                            ? 'border-2 border-slate-500 hover:border-blue-400 bg-transparent'
+                            : 'border-2 border-slate-400 hover:border-blue-500 bg-transparent'
                         }`}
                         title={
                           isTaskCompleted
@@ -754,7 +754,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           onClick={() => handleToggleTask(task)}
                           className={`block w-full truncate text-left text-sm font-medium leading-5 select-none ${
                             isTaskCompleted
-                              ? 'line-through text-slate-400 dark:text-slate-500'
+                              ? 'line-through text-slate-400 dark:text-slate-500 font-normal'
                               : 'text-slate-900 dark:text-slate-100'
                           }`}
                         >

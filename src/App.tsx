@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
@@ -893,6 +894,37 @@ export default function App() {
       )}
 
       <main className={`flex-1 w-full mx-auto pb-20 md:pb-0 ${focusMode ? 'max-w-4xl px-3 pt-6 md:py-6' : 'max-w-7xl px-2 sm:px-3 lg:px-4 pt-3 sm:pt-4 md:py-4'}`}>
+        {!focusMode && (
+          <motion.div
+            className="md:hidden mb-3 flex items-center gap-3 rounded-2xl border border-blue-100/80 dark:border-slate-800 bg-white/85 dark:bg-slate-900/85 px-3 py-2.5 shadow-[0_8px_28px_rgba(37,99,235,0.07)] backdrop-blur-xl"
+            initial={{opacity: 0, y: -8}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.42, ease: [0.16, 1, 0.3, 1]}}
+          >
+            <motion.div
+              className="relative flex size-10 flex-none items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-sm font-bold text-white shadow-lg shadow-indigo-200/60 dark:shadow-indigo-950/40 ring-1 ring-white/70"
+              initial={{scale: 0.82, rotate: -7}}
+              animate={{scale: [0.82, 1.06, 1], rotate: [-7, 2, 0], boxShadow: ['0 8px 18px rgba(79,70,229,0.12)', '0 8px 24px rgba(79,70,229,0.28)', '0 8px 18px rgba(79,70,229,0.16)']}}
+              transition={{duration: 0.8, times: [0, 0.62, 1], ease: [0.16, 1, 0.3, 1]}}
+              aria-hidden="true"
+            >
+              S
+              <motion.span
+                className="absolute inset-y-0 -left-8 w-5 rotate-12 bg-white/35 blur-[1px]"
+                animate={{x: [0, 70]}}
+                transition={{delay: 0.45, duration: 0.55, ease: 'easeOut'}}
+              />
+            </motion.div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[15px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">System Builder</div>
+              <div className="mt-0.5 text-[10px] font-medium tracking-wide text-slate-500 dark:text-slate-400">Build today. Compound tomorrow.</div>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 px-2 py-1 text-[9px] font-semibold text-blue-700 dark:text-blue-300">
+              <span className={`size-1.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
+              {isSyncing ? 'Syncing' : 'Ready'}
+            </div>
+          </motion.div>
+        )}
         <ReportView
           records={records}
           tasks={tasks}

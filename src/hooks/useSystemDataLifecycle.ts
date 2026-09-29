@@ -25,7 +25,7 @@ import {
 } from '../services/dataModelMigration';
 
 const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V16_DAYS_DEDUP_FUTURE_CLEANUP';
-const HABIT_LOG_REPAIR_KEY = 'SYSTEM_BUILDER_V13_FULL_HISTORICAL_DAYS_REBUILD';
+const HABIT_LOG_REPAIR_KEY = 'SYSTEM_BUILDER_V17_CALENDAR_DAYS_BACKFILL';
 
 export type PendingTaskMutation =
   | { kind: 'upsert'; task: TaskItem }

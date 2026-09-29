@@ -731,7 +731,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         role="checkbox"
                         aria-checked={isTaskCompleted}
                         onClick={() => handleToggleTask(task)}
-                        className={`mt-0.5 w-5 h-5 min-w-5 min-h-5 max-w-5 max-h-5 aspect-square rounded-md flex items-center justify-center self-start transition shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        className={`mt-0.5 !w-5 !h-5 min-w-[20px] min-h-[20px] max-w-[20px] max-h-[20px] aspect-square rounded-[4px] flex-none inline-flex items-center justify-center self-start transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                           isTaskCompleted
                             ? 'bg-blue-600 text-white shadow-2xs'
                             : isDark

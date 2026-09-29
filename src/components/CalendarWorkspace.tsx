@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  CalendarArrowUp,
   X,
 } from 'lucide-react';
 import type { HabitItem, MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
@@ -20,6 +21,7 @@ export interface CalendarWorkspaceProps {
   habits: HabitItem[];
   onAddTask: (task: Omit<TaskItem, 'id'>) => Promise<void>;
   onToggleTaskStatus: (taskId: string) => Promise<void>;
+  onUpdateTask: (task: TaskItem) => Promise<void>;
   onUpdateHabit: (habit: HabitItem) => Promise<void>;
   density?: ToolsDensity;
   focusMode?: boolean;
@@ -114,6 +116,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   habits,
   onAddTask,
   onToggleTaskStatus,
+  onUpdateTask,
   onUpdateHabit,
   density = 'compact',
   focusMode = false,
@@ -428,6 +431,10 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
               selectDate(dateKey);
               setDetailsDate(dateKey);
             }}
+            onOpenDay={(dateKey) => {
+              selectDate(dateKey);
+              setDetailsDate(dateKey);
+            }}
             onToggleTask={onToggleTaskStatus}
             onToggleHabit={toggleHabit}
           />
@@ -438,10 +445,13 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         <CalendarDayDetailsDialog
           dateKey={detailsDate}
           today={today}
-          tasks={tasksByDate.get(detailsDate) || []}
+          tasks={allTasksByDate.get(detailsDate) || []}
           habits={getHabitsForDate(detailsDate)}
           onClose={() => setDetailsDate(null)}
           onToggleTask={onToggleTaskStatus}
+          onMoveTaskToToday={async (task) => {
+            await onUpdateTask({ ...task, taskKey: today, updatedAt: new Date().toISOString() });
+          }}
           onToggleHabit={toggleHabit}
         />
       )}
@@ -605,6 +615,7 @@ interface CalendarDayDetailsDialogProps {
   habits: HabitItem[];
   onClose: () => void;
   onToggleTask: (taskId: string) => Promise<void>;
+  onMoveTaskToToday: (task: TaskItem) => Promise<void>;
   onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
 }
 
@@ -615,6 +626,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
   habits,
   onClose,
   onToggleTask,
+  onMoveTaskToToday,
   onToggleHabit,
 }) => {
   const isFuture = dateKey > today;
@@ -662,23 +674,38 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
             <section>
               <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Tasks</div>
               <div className="space-y-1.5">
-                {tasks.map((task) => (
-                  <button
-                    key={task.id}
-                    type="button"
-                    disabled={isFuture}
-                    onClick={() => void onToggleTask(task.id)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 flex items-center gap-2 text-left hover:bg-slate-50 disabled:opacity-55 disabled:cursor-default"
-                  >
-                    <input type="checkbox" checked={task.isCompleted} readOnly tabIndex={-1} className="pointer-events-none" />
-                    <span className={task.isCompleted ? 'min-w-0 flex-1 text-xs font-semibold text-slate-400 line-through' : 'min-w-0 flex-1 text-xs font-semibold text-slate-800'}>
-                      {task.taskOfTheDay}
-                    </span>
-                    {task.timeEstimate && (
-                      <span className="shrink-0 text-[11px] font-medium text-slate-400">{task.timeEstimate}</span>
-                    )}
-                  </button>
-                ))}
+                {tasks.map((task) => {
+                  const canMoveToToday = dateKey < today && !task.isCompleted;
+                  return (
+                    <div key={task.id} className="w-full rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2.5 flex items-center gap-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900">
+                      <button
+                        type="button"
+                        disabled={isFuture}
+                        onClick={() => void onToggleTask(task.id)}
+                        className="min-w-0 flex-1 flex items-center gap-2 text-left disabled:opacity-55 disabled:cursor-default"
+                      >
+                        <input type="checkbox" checked={task.isCompleted} readOnly tabIndex={-1} className="pointer-events-none" />
+                        <span className={task.isCompleted ? 'min-w-0 flex-1 text-xs font-semibold text-slate-400 line-through' : 'min-w-0 flex-1 text-xs font-semibold text-slate-800 dark:text-slate-200'}>
+                          {task.taskOfTheDay}
+                        </span>
+                        {task.timeEstimate && (
+                          <span className="shrink-0 text-[11px] font-medium text-slate-400">{task.timeEstimate}</span>
+                        )}
+                      </button>
+                      {canMoveToToday && (
+                        <button
+                          type="button"
+                          onClick={() => void onMoveTaskToToday(task)}
+                          title="Move task to today"
+                          aria-label={`Move ${task.taskOfTheDay} to today`}
+                          className="shrink-0 w-8 h-8 rounded-lg inline-flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        >
+                          <CalendarArrowUp className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}

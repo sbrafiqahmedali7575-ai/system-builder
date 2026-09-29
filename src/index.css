@@ -433,3 +433,77 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .tools-segment > button[aria-selected="true"],.tools-segment > button[data-active="true"] { background:#fff!important;color:#252525!important;box-shadow:0 1px 2px rgba(0,0,0,.08); }
 .dark .tools-segment > button[aria-selected="true"],.dark .tools-segment > button[data-active="true"] { background:#334155!important;color:#fff!important; }
 @media(max-width:639px){.tools-workspace-view{border-left:0;border-right:0;border-radius:0}.tools-view-header{padding:9px 12px}.tools-view-title{font-size:15px}}
+
+
+/* TickTick-inspired complete dark-mode normalization */
+.dark {
+  --tt-sidebar:#111827;
+  --tt-canvas:#0f172a;
+  --tt-border:#273449;
+  --tt-text:#f1f5f9;
+  --tt-muted:#94a3b8;
+}
+.dark .system-edition { color:var(--tt-text); background:#0b1220; }
+.dark .system-app-shell { background:#0b1220 !important; background-image:none !important; }
+.dark .system-edition .bg-white { background-color:#0f172a !important; }
+.dark .system-edition .bg-slate-50,
+.dark .system-edition .bg-slate-50\/40,
+.dark .system-edition .bg-slate-50\/70 { background-color:#111827 !important; }
+.dark .system-edition .bg-slate-100 { background-color:#1e293b !important; }
+.dark .system-edition .border-slate-100,
+.dark .system-edition .border-slate-200,
+.dark .system-edition .border-gray-100,
+.dark .system-edition .border-gray-200 { border-color:#273449 !important; }
+.dark .system-edition .text-slate-900,
+.dark .system-edition .text-slate-800,
+.dark .system-edition .text-slate-700,
+.dark .system-edition .text-gray-900,
+.dark .system-edition .text-gray-800,
+.dark .system-edition .text-gray-700 { color:#e5e7eb !important; }
+.dark .system-edition .text-slate-600,
+.dark .system-edition .text-slate-500,
+.dark .system-edition .text-gray-600,
+.dark .system-edition .text-gray-500 { color:#94a3b8 !important; }
+.dark .system-edition .hover\:bg-slate-50:hover,
+.dark .system-edition .hover\:bg-slate-100:hover,
+.dark .system-edition .hover\:bg-gray-50:hover { background-color:#1a2537 !important; }
+.dark .system-edition input,
+.dark .system-edition textarea,
+.dark .system-edition select { background:#111827; border-color:#334155; color:#f1f5f9; }
+.dark .system-edition input::placeholder,
+.dark .system-edition textarea::placeholder { color:#64748b; }
+.dark .system-edition table { color:#dbe3ee; }
+.dark .system-edition thead { background:#111827 !important; color:#94a3b8; }
+.dark .system-edition tbody tr { border-color:#273449 !important; }
+.dark .system-edition tbody tr:hover { background:#111c2f !important; }
+.dark .system-edition [role="dialog"] { color:#f1f5f9; }
+.dark .system-edition .shadow-sm,
+.dark .system-edition .shadow-md,
+.dark .system-edition .shadow-lg,
+.dark .system-edition .shadow-xl,
+.dark .system-edition .shadow-2xl { box-shadow:0 10px 28px rgba(0,0,0,.28); }
+
+/* Preserve semantic task/calendar accents in dark mode. */
+.dark .system-edition .bg-blue-50,
+.dark .system-edition .bg-blue-50\/45,
+.dark .system-edition .bg-blue-100 { background-color:#172554 !important; }
+.dark .system-edition .text-blue-700,
+.dark .system-edition .text-blue-800 { color:#93c5fd !important; }
+.dark .system-edition .bg-orange-100,
+.dark .system-edition .bg-amber-100 { background-color:#431407 !important; }
+.dark .system-edition .text-orange-800,
+.dark .system-edition .text-amber-800 { color:#fdba74 !important; }
+.dark .system-edition .bg-emerald-100,
+.dark .system-edition .bg-teal-50 { background-color:#052e2b !important; }
+.dark .system-edition .text-emerald-800,
+.dark .system-edition .text-teal-800 { color:#6ee7b7 !important; }
+.dark .system-edition .bg-rose-100 { background-color:#4c0519 !important; }
+.dark .system-edition .text-rose-800 { color:#fda4af !important; }
+
+/* Mobile and Tools chrome share the same dark elevation system. */
+.dark .mobile-bottom-nav,
+.dark nav[class*="fixed"][class*="bottom"] { background:#0f172a !important; border-color:#273449 !important; }
+.dark [data-tools-density] { color:#e5e7eb; }
+.dark [data-tools-density] .bg-white { background:#0f172a !important; }
+.dark [data-tools-density] .border-slate-100,
+.dark [data-tools-density] .border-slate-200 { border-color:#273449 !important; }

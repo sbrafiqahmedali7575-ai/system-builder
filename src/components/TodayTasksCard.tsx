@@ -680,8 +680,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         </button>
 
                         {task.notes?.trim() && (
-                          <div className="mt-1 sm:mt-1.5">
-                            <p className={`text-[11px] leading-[1.15rem] whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2 sm:line-clamp-1'}`}>
+                          <div className="mt-1.5">
+                            <p className={`text-xs leading-[1.25rem] whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-slate-600 dark:text-slate-300 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2 sm:line-clamp-1'}`}>
                               {task.notes}
                             </p>
                             {(task.notes.length > 70 || task.notes.includes('\n')) && (

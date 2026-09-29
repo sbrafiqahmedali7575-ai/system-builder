@@ -523,7 +523,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing}
                 title="Review today's tasks"
                 aria-label="Review today's tasks"
-                className="sm:hidden ml-1 -mt-1 w-9 h-9 shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition shadow-xs"
+                className="sm:hidden ml-auto -mt-1 w-9 h-9 shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition shadow-xs"
               >
                 <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               </button>

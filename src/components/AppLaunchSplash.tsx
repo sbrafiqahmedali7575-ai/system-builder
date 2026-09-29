@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
+import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 const launchTasks = ['Plan the day', 'Focus on priorities', 'Build consistency'];
 
@@ -30,14 +31,7 @@ export const AppLaunchSplash: React.FC = () => {
             animate={{opacity: 1, y: 0, scale: 1}}
             transition={{duration: 0.5, ease: [0.16, 1, 0.3, 1]}}
           >
-            <motion.div
-              className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-xl font-bold text-white shadow-xl ring-1 ring-white/70 ${isMobile ? "shadow-indigo-200/70" : "shadow-blue-500/25"}`}
-              initial={{rotate: -8, scale: 0.8}}
-              animate={{rotate: 0, scale: 1}}
-              transition={{type: 'spring', stiffness: 220, damping: 16}}
-            >
-              S
-            </motion.div>
+            <SystemBuilderLogo className="mb-4 size-14 rounded-2xl text-xl" animated />
             <motion.h1 className="text-2xl font-semibold tracking-tight" initial={{opacity: 0}} animate={{opacity: 1}} transition={{delay: 0.15}}>
               System Builder
             </motion.h1>

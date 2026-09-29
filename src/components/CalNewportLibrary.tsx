@@ -38,6 +38,7 @@ interface ReaderHighlight { id:string; text:string; color:HighlightColor; note:s
 interface CalNewportLibraryProps {
   theme: DashboardTheme;
   onBack: () => void;
+  externalFocusMode?: boolean;
 }
 
 const ACTIVE_BOOK_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_ACTIVE_BOOK';
@@ -67,7 +68,12 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [lineHeight, setLineHeight] = useState(1.9);
   const [readingProgress, setReadingProgress] = useState(0);
   const [isFullStudy, setIsFullStudy] = useState(false);
-  const [isFocusReader, setIsFocusReader] = useState(false);
+  const [internalFocusReader, setInternalFocusReader] = useState(false);
+  const isFocusReader = externalFocusMode ?? internalFocusReader;
+  const setIsFocusReader = (updater: boolean | ((value: boolean) => boolean)) => {
+    if (externalFocusMode !== undefined) return;
+    setInternalFocusReader(updater);
+  };
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

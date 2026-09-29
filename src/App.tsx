@@ -818,7 +818,7 @@ export default function App() {
         focusMode={toolsFocusMode}
         onFocusChange={setToolsFocusMode}
       />
-      <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      <MobileBottomNav activeSection="plan" focusActive={false} onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => {}} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} hideFocus />
       </>
     );
   }

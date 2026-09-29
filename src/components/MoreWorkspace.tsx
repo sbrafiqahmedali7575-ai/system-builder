@@ -145,15 +145,15 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
             })}
           </div>
 
-          {activeTab !== 'tasks' && <button
+          <button
             type="button"
-            onClick={() => setFocusMode(true)}
+            onClick={() => { if (activeTab !== 'tasks') setFocusMode(true); }}
             className="hidden md:inline-flex w-8 h-8 rounded-full items-center justify-center shrink-0 bg-slate-900/10 dark:bg-slate-100/10 text-slate-500/40 dark:text-slate-400/40 opacity-40 hover:opacity-100 hover:bg-slate-900/90 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 hover:shadow-md hover:scale-105 transition-all duration-200"
-            title="Focus on current tool"
-            aria-label="Focus on current tool"
+            title={activeTab === 'tasks' ? 'Focus is unavailable in Task Planner' : 'Focus on current tool'}
+            aria-label={activeTab === 'tasks' ? 'Focus unavailable in Task Planner' : 'Focus on current tool'}
           >
             <Focus className="w-4 h-4" />
-          </button>}
+          </button>
 
        </div>
       </header>

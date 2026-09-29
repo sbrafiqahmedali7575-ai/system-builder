@@ -60,7 +60,7 @@ function renderValue(value: unknown, column?: string): string {
   return String(value);
 }
 
-export const DataWorkspace: React.FC = () => {
+export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = false }) => {
   const [active, setActive] = useState<CanonicalCollectionName>('days');
   const [data, setData] = useState<Record<CanonicalCollectionName, CanonicalDataRow[]>>({
     users: [], days: [], tasks: [], habits: [], habitLogs: [], countdowns: [],
@@ -120,9 +120,9 @@ export const DataWorkspace: React.FC = () => {
 
   return (
     <div className="tools-workspace-view lg:flex lg:flex-col">
-      <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle"></p></div></div>
+      {!focusMode && <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle"></p></div></div>}
 
-      <div className="space-y-2 p-2.5 sm:p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
+      {!focusMode && <div className="space-y-2 p-2.5 sm:p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
         <div>
           <div className="mb-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">Fact</div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -221,7 +221,7 @@ export const DataWorkspace: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {error && <div className="tools-feedback-error">{error}</div>}
 

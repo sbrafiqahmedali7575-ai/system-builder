@@ -420,7 +420,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
         </button>
       </div>}
 
-      {!focusMode && <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      {!focusMode && <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-2">
         <div className="rounded-xl border border-blue-200/80 bg-blue-50/60 px-3 py-2">
           <div className="text-[11px] uppercase tracking-wider font-semibold text-blue-600">
             Today
@@ -629,7 +629,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       )}
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden ">
-        <div className="px-3 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
+        <div className="px-2.5 sm:px-3 py-3 border-b border-slate-200 dark:border-slate-800/80 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3">
           <button
             type="button"
             onClick={() => setWeekAnchor(addHabitDays(weekAnchor, -7))}

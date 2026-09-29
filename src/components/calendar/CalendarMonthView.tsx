@@ -11,6 +11,7 @@ export interface CalendarMonthViewProps {
   getHabitsForDate: (dateKey: string) => HabitItem[];
   onSelectDate: (dateKey: string) => void;
   onShowMore: (dateKey: string) => void;
+  onOpenDay: (dateKey: string) => void;
   onToggleTask: (taskId: string) => Promise<void>;
   onToggleHabit: (habit: HabitItem, dateKey: string) => Promise<void>;
 }
@@ -39,6 +40,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
   getHabitsForDate,
   onSelectDate,
   onShowMore,
+  onOpenDay,
   onToggleTask,
   onToggleHabit,
 }) => (
@@ -74,6 +76,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
             habits={getHabitsForDate(dateKey)}
             onSelectDate={onSelectDate}
             onShowMore={onShowMore}
+            onOpenDay={onOpenDay}
             onToggleTask={onToggleTask}
             onToggleHabit={onToggleHabit}
             maxVisibleItems={MAX_VISIBLE_ITEMS}

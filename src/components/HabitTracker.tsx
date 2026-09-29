@@ -33,6 +33,7 @@ interface HabitTrackerProps {
   onCheckIn: (habit: HabitItem, isCompleted: boolean) => Promise<void>;
   onDeleteHabit: (habitId: string) => Promise<void>;
   density?: ToolsDensity;
+  focusMode?: boolean;
 }
 
 type HabitDraft = {
@@ -107,6 +108,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   onCheckIn,
   onDeleteHabit,
   density = 'compact',
+  focusMode = false,
 }) => {
   const today = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const [weekAnchor, setWeekAnchor] = useState(today);
@@ -402,7 +404,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
   return (
     <div className="tools-workspace-view lg:overflow-y-auto">
-      <div className="tools-view-header">
+      {!focusMode && <div className="tools-view-header">
         <div className="min-w-0">
           <h2 className="tools-view-title">Habit Tracker</h2>
           <p className="tools-view-subtitle">{completedToday}/{dueToday.length} today · {weekCompletionRate}% this week</p>
@@ -416,9 +418,9 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           <span className="hidden xs:inline">{formOpen && !editingHabitId ? 'Cancel' : 'Add Habit'}</span>
           <span className="xs:hidden">{formOpen && !editingHabitId ? 'Cancel' : 'Add'}</span>
         </button>
-      </div>
+      </div>}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      {!focusMode && <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="rounded-xl border border-blue-200/80 bg-blue-50/60 px-3 py-2">
           <div className="text-[11px] uppercase tracking-wider font-semibold text-blue-600">
             Today
@@ -468,9 +470,9 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             weeks at {WEEKLY_TARGET_PERCENTAGE}%+ target
           </div>
         </div>
-      </div>
+      </div>}
 
-      {formOpen && (
+      {!focusMode && formOpen && (
         <div className={`${compact ? 'rounded-xl p-3' : 'rounded-xl p-4'} border border-slate-200 dark:border-slate-800 bg-slate-50`}>
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
@@ -666,7 +668,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           </div>
         </div>
 
-        <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
+        {!focusMode && <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
           <div className="min-w-[790px]">
             <div className="grid grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200 dark:border-slate-800/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-semibold text-slate-500">
@@ -816,7 +818,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               })
             )}
           </div>
-        </div>
+        </div>}
       </div>
 
       {historyHabit && historyStats && (

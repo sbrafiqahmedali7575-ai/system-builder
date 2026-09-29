@@ -533,111 +533,31 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           : 'bg-slate-50/70 border-slate-200/80'
       }`}
     >
-      {/* ─────────────────────────────────────────────────────────────
-          1. CARD HEADER
-      ───────────────────────────────────────────────────────────── */}
-      <div className={`${focusMode ? 'hidden' : 'flex'} shrink-0 flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800`}>
-        <div className="relative flex w-full items-start sm:w-auto sm:items-center space-x-1.5">
-          <div
-            className="shrink-0"
-            title={`Overall ${progressPercent}% • Tasks ${Math.round(taskCompletionPercent)}% (80%) • Habits ${Math.round(habitCompletionPercent)}% (20%)`}
-          >
-            <AnimatedProgressRing
-              value={progressPercent}
-              size={38}
-              strokeWidth={4}
-              label={`${progressPercent}%`}
-              trackClassName="text-slate-200 dark:text-slate-800"
-              progressClassName={progressPercent === 100 ? 'text-emerald-500' : 'text-blue-500'}
-            />
+      {/* Primary execution header */}
+      <div className={`${focusMode ? 'hidden' : 'block'} shrink-0 pb-2 mb-1 border-b border-slate-200/80 dark:border-slate-800`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
+            </h2>
+            <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+              {activeDateTab === 'TODAY' ? `${currentDayName} · ${currentDayFormatted}` : tomorrowOption.label}
+            </div>
           </div>
-          <div>
-            <div className="flex min-w-0 items-start sm:items-center gap-1 pr-12 sm:pr-0">
-              <div className="min-w-0">
-                <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.16em] font-semibold text-blue-600 dark:text-blue-400">
-                  {activeDateTab === 'TODAY' ? "Today's Focus" : "Next Day Plan"}
-                </p>
-                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                  {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
-                </h2>
-              </div>
-              {isSyncing && (
-                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono flex items-center gap-0.5">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>Syncing</span>
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={onOpenDayReview}
-                disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing}
-                title="Review today's tasks"
-                aria-label="Review today's tasks"
-                className="sm:hidden absolute right-0 top-0 w-8 h-8 min-w-8 min-h-8 max-w-8 max-h-8 aspect-square shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg transition"
-              >
-                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-              </button>
-
-            </div>
-            <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-400">
-              <span>Current day</span>
-              <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">
-                {currentDayFormatted}
-              </span>
-              <span>•</span>
-              <span className="font-semibold text-slate-600 dark:text-slate-300">
-                {currentDayName}
-              </span>
-            </div>
+          <div className="flex items-center gap-1">
+            {isSyncing && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />}
+            <button id="btn-add-task-card-header" type="button" onClick={() => handleOpenEnterPanel()} className="h-8 px-2.5 inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold" aria-label="Add Task"><Plus className="w-3.5 h-3.5"/><span className="hidden sm:inline">Add</span></button>
+            <button id="btn-review-task-day" type="button" onClick={onOpenDayReview} disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing} className="h-8 px-2.5 inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Review today's tasks"><CheckCircle2 className="w-3.5 h-3.5"/><span className="hidden sm:inline">Review</span></button>
           </div>
         </div>
-
-        {/* Date tabs + task actions grouped in the card header */}
-        <div className="hidden sm:flex flex-wrap items-center justify-end gap-1">
-
-          <button
-            type="button"
-            onClick={() => setActiveDateTab('TODAY')}
-            onDoubleClick={() => setActiveDateTab('TOMORROW')}
-            title="Click for Today • Double-click for Tomorrow"
-            aria-label="Today tasks. Double-click to show tomorrow tasks."
-            className={`flex items-center space-x-1 px-2 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
-              activeDateTab === 'TODAY'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-indigo-600 text-white shadow-xs'
-            }`}
-          >
-            <span>{activeDateTab === 'TODAY' ? 'Today' : 'Tomorrow'}</span>
-          </button>
-
-          <button
-            id="btn-add-task-card-header"
-            type="button"
-            onClick={() => handleOpenEnterPanel()}
-            title="Add Task"
-            aria-label="Add Task"
-            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-          </button>
-
-          <button
-            id="btn-review-task-day"
-            type="button"
-            onClick={onOpenDayReview}
-            disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing}
-            title={
-              activeDateTab !== 'TODAY'
-                ? 'Review is available for the current day only'
-                : totalTasksCount === 0
-                ? 'Add at least one task before reviewing today'
-                : 'Review today tasks before marking the day'
-            }
-            aria-label="Review today's tasks"
-            className="w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          >
-            <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-          </button>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5" role="tablist" aria-label="Task date">
+            {(['TODAY','TOMORROW'] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeDateTab===tab} onClick={() => setActiveDateTab(tab)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${activeDateTab===tab?'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm':'text-slate-500 dark:text-slate-400'}`}>{tab==='TODAY'?'Today':'Tomorrow'}</button>)}
+          </div>
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">{completedCount} of {totalTasksCount} completed</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" title={`Task completion ${Math.round(taskCompletionPercent)}%`}>
+          <div className="h-full rounded-full bg-blue-600 transition-[width] duration-300" style={{ width: `${Math.round(taskCompletionPercent)}%` }} />
         </div>
       </div>
 
@@ -695,14 +615,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ) : (
         <div className="relative divide-y divide-slate-100 dark:divide-slate-800/80">
           <AnimatePresence initial={false}>
-            {sortedTasks.map((task) => {
+            {[...incompleteTasks, ...completedTasks].map((task, taskIndex) => {
               const isTaskCompleted = task.isCompleted;
               const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
               const priorityLabel = task.priority || 'Normal';
 
+              const showCompletedHeading = taskIndex === incompleteTasks.length && completedTasks.length > 0;
+
               return (
+                <React.Fragment key={task.id}>
+                {showCompletedHeading && <div className="pt-3 pb-1 px-1 text-[10px] uppercase tracking-[0.12em] font-semibold text-slate-400 dark:text-slate-500">Completed {completedTasks.length}</div>}
                 <motion.div
-                  key={task.id}
                   layout
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -758,10 +681,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                         {task.notes?.trim() && (
                           <div className="mt-1">
-                            <p className={`text-[11px] leading-[1.35rem] whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
+                            <p className={`text-[11px] leading-[1.35rem] whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-1'}`}>
                               {task.notes}
                             </p>
-                            {(task.notes.length > 90 || task.notes.includes('\n')) && (
+                            {(task.notes.length > 60 || task.notes.includes('\n')) && (
                               <button
                                 type="button"
                                 onClick={() => setExpandedNotes((current) => {
@@ -772,7 +695,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                                 })}
                                 className="mt-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
                               >
-                                {expandedNotes.has(task.id) ? 'Collapse' : 'Expand'}
+                                {expandedNotes.has(task.id) ? 'Less' : 'More'}
                               </button>
                             )}
                           </div>
@@ -786,38 +709,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                             {quadrantMeta.roman}
                           </span>
 
-                          <span
-                            className={`inline-flex items-center rounded-md px-1.5 py-[2px] text-[10px] font-medium ${
-                              priorityLabel === 'High'
-                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
-                                : priorityLabel === 'Medium'
-                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                            }`}
-                            title={`Priority: ${priorityLabel}`}
-                          >
-                            {priorityLabel}
-                          </span>
-
-                          <span
-                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-[2px] text-[10px] font-medium ${
-                              isTaskCompleted
-                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                            }`}
-                          >
-                            {isTaskCompleted ? (
-                              <>
-                                <CheckCircle2 className="w-3 h-3" />
-                                Completed
-                              </>
-                            ) : (
-                              <>
-                                <Circle className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                                To do
-                              </>
-                            )}
-                          </span>
+                          {(priorityLabel === 'High' || priorityLabel === 'Medium') && (
+                            <span className={`inline-flex items-center rounded-md px-1.5 py-[2px] text-[10px] font-medium ${priorityLabel === 'High' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}`} title={`Priority: ${priorityLabel}`}>
+                              {priorityLabel}
+                            </span>
+                          )}
 
                           {task.category && task.category !== 'General' && (
                             <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-[2px] text-[10px] font-medium text-slate-500 dark:text-slate-400">
@@ -842,6 +738,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     </div>
                   </motion.div>
                 </motion.div>
+                </React.Fragment>
               );
             })}
           </AnimatePresence>

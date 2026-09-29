@@ -61,12 +61,12 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 
   return (
     <div
-      className={`relative min-w-0 min-h-[76px] sm:min-h-[108px] border-r border-b border-slate-100 transition-colors ${
+      className={`relative min-w-0 min-h-[76px] sm:min-h-[108px] border-r border-b border-slate-100 dark:border-slate-800 transition-colors ${
         !inMonth
-          ? 'bg-slate-50/40'
+          ? 'bg-slate-50/40 dark:bg-slate-950/60'
           : isSelected
-          ? 'bg-blue-50/45'
-          : 'bg-white hover:bg-slate-50/70'
+          ? 'bg-blue-50/45 dark:bg-blue-950/35'
+          : 'bg-white dark:bg-slate-950 hover:bg-slate-50/70 dark:hover:bg-slate-900'
       }`}
     >
       <button
@@ -88,7 +88,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
                 : isSelected
                 ? 'bg-blue-100 text-blue-700'
                 : inMonth
-                ? 'text-slate-700 hover:bg-slate-100'
+                ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 : 'text-slate-300 hover:bg-slate-100/70'
             }`}
             aria-label={`Select ${longDate(dateKey)}`}

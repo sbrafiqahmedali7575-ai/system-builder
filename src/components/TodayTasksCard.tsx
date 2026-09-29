@@ -485,7 +485,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           1. CARD HEADER
       ───────────────────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-start sm:items-center space-x-1.5">
           <div
             className="shrink-0"
             title={`${completedCount} of ${totalTasksCount} tasks completed • ${progressPercent}%`}
@@ -500,8 +500,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             />
           </div>
           <div>
-            <div className="flex items-center gap-1">
-              <div>
+            <div className="flex items-start sm:items-center gap-1">
+              <div className="min-w-0">
                 <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.16em] font-semibold text-blue-600 dark:text-blue-400">
                   {activeDateTab === 'TODAY' ? "Today's Focus" : "Next Day Plan"}
                 </p>
@@ -515,6 +515,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <span>Syncing</span>
                 </span>
               )}
+              <button
+                type="button"
+                onClick={onOpenDayReview}
+                disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing}
+                title="Review today's tasks"
+                aria-label="Review today's tasks"
+                className="sm:hidden ml-1 -mt-1 w-9 h-9 shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition shadow-xs"
+              >
+                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              </button>
+
             </div>
             <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-slate-400">
               <span>Current day</span>
@@ -530,7 +541,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         </div>
 
         {/* Date tabs + task actions grouped in the card header */}
-        <div className="flex flex-wrap items-center justify-end gap-1">
+        <div className="hidden sm:flex flex-wrap items-center justify-end gap-1">
 
           <button
             type="button"

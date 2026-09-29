@@ -222,7 +222,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className={`w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden ${
+            className={`w-full max-w-md max-h-[92dvh] rounded-t-2xl sm:rounded-2xl border shadow-2xl overflow-hidden ${
               isDark
                 ? 'bg-slate-900 border-slate-700 text-slate-100'
                 : 'bg-white border-slate-200 text-slate-900'

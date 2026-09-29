@@ -6,7 +6,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import type { HabitItem, TaskItem, ToolsDensity } from '../types';
+import type { HabitItem, MatrixQuadrant, TaskItem, ToolsDensity } from '../types';
 import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { isHabitDue } from '../utils/habitUtils';
@@ -318,16 +318,25 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
   );
 
   const addTaskToDate = useCallback(
-    async (title: string, dateKey = selectedDate) => {
+    async (title: string, notes: string, quadrant: MatrixQuadrant | '', dateKey = selectedDate) => {
       const cleanTitle = title.trim();
       if (!cleanTitle) return;
+
+      const priority: NonNullable<TaskItem['priority']> =
+        quadrant === 'urgent-important'
+          ? 'High'
+          : quadrant === 'important' || quadrant === 'urgent'
+          ? 'Medium'
+          : 'Normal';
 
       await onAddTask({
         taskKey: dateKey,
         taskOfTheDay: cleanTitle,
         isCompleted: false,
-        priority: 'Normal',
+        priority,
         category: 'Calendar',
+        matrixQuadrant: quadrant || undefined,
+        notes: notes.trim(),
         updatedAt: new Date().toISOString(),
       });
     },
@@ -440,9 +449,8 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         <QuickAddTaskDialog
           selectedDate={selectedDate}
           onClose={() => setAddTaskOpen(false)}
-          onSubmit={async (title) => {
-            await addTaskToDate(title);
-            setAddTaskOpen(false);
+          onSubmit={async (title, notes, quadrant) => {
+            await addTaskToDate(title, notes, quadrant);
           }}
         />
       )}
@@ -706,8 +714,15 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
 interface QuickAddTaskDialogProps {
   selectedDate: string;
   onClose: () => void;
-  onSubmit: (title: string) => Promise<void>;
+  onSubmit: (title: string, notes: string, quadrant: MatrixQuadrant | '') => Promise<void>;
 }
+
+const TASK_QUADRANT_OPTIONS: Array<{ value: MatrixQuadrant; roman: string; label: string }> = [
+  { value: 'urgent-important', roman: 'I', label: 'Urgent & Important' },
+  { value: 'important', roman: 'II', label: 'Not Urgent & Important' },
+  { value: 'urgent', roman: 'III', label: 'Urgent & Unimportant' },
+  { value: 'neither', roman: 'IV', label: 'Not Urgent & Unimportant' },
+];
 
 const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
   selectedDate,
@@ -715,65 +730,60 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
   onSubmit,
 }) => {
   const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
+  const [quadrant, setQuadrant] = useState<MatrixQuadrant | ''>('');
   const [saving, setSaving] = useState(false);
+  const [addedCount, setAddedCount] = useState(0);
 
   const submit = async () => {
     const clean = title.trim();
     if (!clean || saving) return;
-
     try {
       setSaving(true);
-      await onSubmit(clean);
+      await onSubmit(clean, notes, quadrant);
+      setTitle('');
+      setNotes('');
+      setQuadrant('');
+      setAddedCount((count) => count + 1);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[2px]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Add task"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
-        <div className="text-sm font-bold">Add Task</div>
-        <div className="mt-1 text-[10px] font-medium text-slate-500">
-          {longDate(selectedDate)}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-2 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-slate-900 dark:text-slate-100 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5 mb-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400"><Plus className="w-4 h-4 stroke-[3]" /></div>
+            <div><h3 className="text-base font-semibold">Enter Tasks</h3><p className="text-xs text-slate-500 dark:text-slate-400">Add one or multiple tasks for ${longDate(selectedDate)}</p></div>
+          </div>
+          <button type="button" onClick={onClose} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
-        <input
-          autoFocus
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') void submit();
-            if (event.key === 'Escape') onClose();
-          }}
-          placeholder="Task title"
-          className="mt-3 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm font-medium outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-        />
+        <div className="mb-2 px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between">
+          <span className="text-slate-500 dark:text-slate-400">Schedule for</span><span className="font-semibold text-blue-600 dark:text-blue-400 font-mono">{longDate(selectedDate)}</span>
+        </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-10 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
+        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_190px] gap-2 items-start">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Task Title / Objective</label>
+            <input autoFocus value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter')void submit();if(e.key==='Escape')onClose();}} placeholder="What needs to be done?" className="w-full h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm outline-none focus:border-blue-500" />
+            <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} placeholder="Notes" rows={2} className="mt-1 w-full min-h-[48px] resize-y px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Quadrant <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span></label>
+            <select value={quadrant} onChange={(e)=>setQuadrant(e.target.value as MatrixQuadrant|'')} className="w-full h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold outline-none focus:border-blue-500">
+              <option value="">No quadrant</option>
+              {TASK_QUADRANT_OPTIONS.map((item)=><option key={item.value} value={item.value}>{item.roman} — {item.label}</option>)}
+            </select>
+          </div>
+        </div>
 
-          <button
-            type="button"
-            disabled={!title.trim() || saving}
-            onClick={() => void submit()}
-            className="h-10 rounded-xl bg-blue-600 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-40"
-          >
-            {saving ? 'Adding...' : 'Add Task'}
-          </button>
+        {addedCount > 0 && <div className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-300">Added in this session: {addedCount}</div>}
+        <div className="mt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-2">
+          <button type="button" onClick={onClose} className="px-3 h-9 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-xs font-semibold">Done</button>
+          <button type="button" disabled={!title.trim()||saving} onClick={()=>void submit()} className="h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 inline-flex items-center gap-1"><Plus className="w-4 h-4"/>{saving?'Adding...':'Add'}</button>
         </div>
       </div>
     </div>

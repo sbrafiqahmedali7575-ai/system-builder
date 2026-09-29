@@ -36,6 +36,24 @@ type QueuedWrite = {
   data: Record<string, unknown>;
 };
 
+function migrationValueEqual(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((value, index) => migrationValueEqual(value, b[index]));
+  }
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    const aa = a as Record<string, unknown>;
+    const bb = b as Record<string, unknown>;
+    const keys = new Set([...Object.keys(aa), ...Object.keys(bb)]);
+    return [...keys].every((key) => migrationValueEqual(aa[key], bb[key]));
+  }
+  return a === b;
+}
+
+function migrationFieldsMatch(stored: Record<string, unknown>, desired: Record<string, unknown>): boolean {
+  return Object.entries(desired).every(([key, value]) => migrationValueEqual(stored[key], value));
+}
+
 function toDateKey(value: unknown): string {
   const raw = String(value ?? '').trim();
   if (!raw) return '';
@@ -341,19 +359,20 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
     const habitsCompleted = roundedRate(habitsDone, Habits);
     const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
 
-    dayWrites.push({
-      ref: doc(db, 'days', dateKey),
-      data: {
-        dateKey,
-        tasksCompleted: tasksDone,
-        taskTotal: tasks,
-        taskCompletionRate: tasksCompleted,
-        habitsCompleted: habitsDone,
-        habitTotal: Habits,
-        habitCompletionRate: habitsCompleted,
-        IsdayCompleted: tasks > 0 && tasksCompleted === 100,
-      },
-    });
+    const desiredDay = {
+      dateKey,
+      tasksCompleted: tasksDone,
+      taskTotal: tasks,
+      taskCompletionRate: tasksCompleted,
+      habitsCompleted: habitsDone,
+      habitTotal: Habits,
+      habitCompletionRate: habitsCompleted,
+      IsdayCompleted: tasks > 0 && tasksCompleted === 100,
+    };
+    const existingDay = daysSnap.docs.find((dayDoc) => dayDoc.id === dateKey);
+    if (!existingDay || !migrationFieldsMatch(existingDay.data() as Record<string, unknown>, desiredDay)) {
+      dayWrites.push({ ref: doc(db, 'days', dateKey), data: desiredDay });
+    }
   }
 
   await commitQueuedWrites(dayWrites);

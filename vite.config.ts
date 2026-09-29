@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // Relative asset paths allow the production bundle to load inside the Android WebView.
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

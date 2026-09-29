@@ -9,7 +9,7 @@ export const AppLaunchSplash: React.FC = () => {
   
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), 8000);
+    const timer = window.setTimeout(() => setVisible(false), 6600);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -42,7 +42,7 @@ export const AppLaunchSplash: React.FC = () => {
                 aria-label="Completing launch tasks"
               >
                 {launchTasks.map((task, index) => {
-                  const delay = 0.9 + index * 1.05;
+                  const delay = 0.72 + index * 0.92;
                   return (
                     <motion.div
                       key={task}
@@ -55,8 +55,8 @@ export const AppLaunchSplash: React.FC = () => {
                         borderColor: ['#e2e8f0', '#dbeafe', '#818cf8', '#e0e7ff']
                       }}
                       transition={{
-                        opacity: {times: [0, 0.18, 0.78, 1], delay: 0.25 + index * 0.12, duration: delay + 0.7 - (0.25 + index * 0.12)},
-                        x: {delay: 0.25 + index * 0.12, duration: 0.28},
+                        opacity: {times: [0, 0.18, 0.78, 1], delay: 0.2 + index * 0.1, duration: delay + 0.62 - (0.2 + index * 0.1)},
+                        x: {delay: 0.2 + index * 0.1, duration: 0.25},
                         backgroundColor: {delay, duration: 0.65, times: [0, 0.15, 0.48, 1]},
                         borderColor: {delay, duration: 0.65, times: [0, 0.15, 0.48, 1]}
                       }}
@@ -98,7 +98,7 @@ export const AppLaunchSplash: React.FC = () => {
                             scale: [0.75, 1.25, 1.45],
                             boxShadow: ['0 0 0px rgba(124,58,237,0)', '0 0 20px rgba(124,58,237,0.38)', '0 0 0px rgba(124,58,237,0)']
                           }}
-                          transition={{delay: delay + 0.48, duration: 0.55, ease: 'easeOut'}}
+                          transition={{delay: delay + 0.38, duration: 0.48, ease: 'easeOut'}}
                           aria-hidden="true"
                         />
                       )}
@@ -107,19 +107,19 @@ export const AppLaunchSplash: React.FC = () => {
                 })}
               </motion.div>
 
-            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 3.45, duration: 0.25}} />
+            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 2.95, duration: 0.25}} />
             <motion.div
               className="relative mt-3 flex flex-col items-center justify-center text-center"
               initial={{opacity: 0, y: 10, scale: 0.975, filter: 'blur(2px)'}}
               animate={{opacity: [0, 1, 1], y: [10, 0, 0], scale: [0.975, 1, 1], filter: ['blur(2px)', 'blur(0px)', 'blur(0px)']}}
-              transition={{delay: 3.6, duration: 0.9, times: [0, 0.72, 1], ease: [0.16, 1, 0.3, 1]}}
+              transition={{delay: 3.2, duration: 0.75, times: [0, 0.72, 1], ease: [0.16, 1, 0.3, 1]}}
               aria-label="Developed by Rafiq Ahmed"
             >
               <motion.span
                 className="text-[8px] md:text-[9px] font-semibold leading-none tracking-[0.22em] text-slate-400"
                 initial={{opacity: 0, y: 2}}
                 animate={{opacity: 1, y: 0}}
-                transition={{delay: 3.72, duration: 0.48, ease: 'easeOut'}}
+                transition={{delay: 3.3, duration: 0.42, ease: 'easeOut'}}
               >
                 DEVELOPED BY
               </motion.span>
@@ -134,7 +134,7 @@ export const AppLaunchSplash: React.FC = () => {
                   backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%'],
                   filter: ['drop-shadow(0 0 0 rgba(99,102,241,0))', 'drop-shadow(0 3px 10px rgba(99,102,241,0.28))', 'drop-shadow(0 2px 6px rgba(99,102,241,0.14))', 'drop-shadow(0 0 0 rgba(99,102,241,0))']
                 }}
-                transition={{delay: 3.9, duration: 2.65, times: [0, 0.28, 0.66, 1], ease: [0.16, 1, 0.3, 1]}}
+                transition={{delay: 3.45, duration: 2.75, times: [0, 0.28, 0.66, 1], ease: [0.16, 1, 0.3, 1]}}
               >
                 RAFIQ AHMED
               </motion.span>
@@ -142,7 +142,7 @@ export const AppLaunchSplash: React.FC = () => {
                 className="pointer-events-none absolute -bottom-2 h-px w-16 bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
                 initial={{opacity: 0, scaleX: 0.35}}
                 animate={{opacity: [0, 0.7, 0], scaleX: [0.35, 1, 1.12]}}
-                transition={{delay: 5.05, duration: 1.25, ease: 'easeInOut'}}
+                transition={{delay: 5.15, duration: 1.25, ease: 'easeInOut'}}
                 aria-hidden="true"
               />
             </motion.div>

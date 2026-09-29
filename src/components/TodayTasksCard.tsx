@@ -220,7 +220,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
   const totalTasksCount = dateTasks.length;
   const completedCount = completedTasks.length;
-  const progressPercent = totalTasksCount > 0 ? Math.round((completedCount / totalTasksCount) * 100) : 0;
+  const taskCompletionPercent = totalTasksCount > 0 ? (completedCount / totalTasksCount) * 100 : 0;
+  const dueHabits = useMemo(
+    () => habits.filter((habit) => isHabitDue(habit, activeDateKey)),
+    [habits, activeDateKey]
+  );
+  const completedHabitsCount = useMemo(
+    () => dueHabits.filter((habit) => habit.checkIns.includes(activeDateKey)).length,
+    [dueHabits, activeDateKey]
+  );
+  const habitCompletionPercent =
+    dueHabits.length > 0 ? (completedHabitsCount / dueHabits.length) * 100 : 0;
+  // Today's Tasks ring: tasks carry 80% of the score and habits carry 20%.
+  const progressPercent = Math.round(taskCompletionPercent * 0.8 + habitCompletionPercent * 0.2);
 
   // UI state for "Enter Tasks" panel
   const [isEnterPanelOpen, setIsEnterPanelOpen] = useState(false);
@@ -528,7 +540,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         <div className="relative flex w-full items-start sm:w-auto sm:items-center space-x-1.5">
           <div
             className="shrink-0"
-            title={`${completedCount} of ${totalTasksCount} tasks completed • ${progressPercent}%`}
+            title={`Overall ${progressPercent}% • Tasks ${Math.round(taskCompletionPercent)}% (80%) • Habits ${Math.round(habitCompletionPercent)}% (20%)`}
           >
             <AnimatedProgressRing
               value={progressPercent}
@@ -586,29 +598,16 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => setActiveDateTab('TODAY')}
-            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
+            onDoubleClick={() => setActiveDateTab('TOMORROW')}
+            title="Click for Today • Double-click for Tomorrow"
+            aria-label="Today tasks. Double-click to show tomorrow tasks."
+            className={`flex items-center space-x-1 px-2 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
               activeDateTab === 'TODAY'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : isDark
-                ? 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80'
+                : 'bg-indigo-600 text-white shadow-xs'
             }`}
           >
-            <span>Today</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveDateTab('TOMORROW')}
-            className={`flex items-center space-x-1 px-1.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer ${
-              activeDateTab === 'TOMORROW'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : isDark
-                ? 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80'
-            }`}
-          >
-            <span>Tomorrow</span>
+            <span>{activeDateTab === 'TODAY' ? 'Today' : 'Tomorrow'}</span>
           </button>
 
           <button

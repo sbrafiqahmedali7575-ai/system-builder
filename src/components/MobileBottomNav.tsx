@@ -11,6 +11,7 @@ interface Props {
   onTop: () => void;
   activeSection?: MobileSection;
   focusActive?: boolean;
+  hideFocus?: boolean;
 }
 
 export const MobileBottomNav: React.FC<Props> = ({
@@ -21,6 +22,7 @@ export const MobileBottomNav: React.FC<Props> = ({
   onTop,
   activeSection = 'today',
   focusActive = false,
+  hideFocus = false,
 }) => {
   const actionClass = (active: boolean) =>
     `mobile-nav-action ${active ? 'text-blue-600 dark:text-blue-400' : ''}`;
@@ -31,7 +33,7 @@ export const MobileBottomNav: React.FC<Props> = ({
         <button onClick={onTop} className={actionClass(activeSection === 'today' && !focusActive)} aria-current={activeSection === 'today' && !focusActive ? 'page' : undefined}><Home/><span>Today</span></button>
         <button onClick={onPlan} className={actionClass(activeSection === 'plan' && !focusActive)} aria-current={activeSection === 'plan' && !focusActive ? 'page' : undefined}><CalendarDays/><span>Plan</span></button>
         <button onClick={onAdd} className="mx-auto -mt-3 w-11 h-11 min-w-11 min-h-11 aspect-square shrink-0 rounded-full bg-[#4772fa] text-white shadow-md inline-flex items-center justify-center" aria-label="Add task"><Plus className="w-6 h-6"/></button>
-        <button onClick={onFocus} className={actionClass(focusActive)} aria-pressed={focusActive}><Focus/><span>Focus</span></button>
+        {!hideFocus ? <button onClick={onFocus} className={actionClass(focusActive)} aria-pressed={focusActive}><Focus/><span>Focus</span></button> : <div aria-hidden="true" />}
         <button onClick={onBooks} className={actionClass(activeSection === 'books' && !focusActive)} aria-current={activeSection === 'books' && !focusActive ? 'page' : undefined}><BookOpen/><span>Books</span></button>
       </div>
     </nav>

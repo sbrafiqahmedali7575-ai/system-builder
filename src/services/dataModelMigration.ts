@@ -270,14 +270,7 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
   // one row per (habitId, dateKey). Completion is preserved if any duplicate was completed.
   await deduplicateHabitLogs();
 
-  const [
-    recordsSnap,
-    tasksSnap,
-    habitsSnap,
-    logsSnap,
-    daysSnap,
-  ] = await Promise.all([
-    getDocs(collection(db, 'records')),
+  const [tasksSnap, habitsSnap, logsSnap, daysSnap] = await Promise.all([
     getDocs(collection(db, 'tasks')),
     getDocs(collection(db, 'habits')),
     getDocs(collection(db, 'habitLogs')),
@@ -286,20 +279,13 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
 
   const today = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
   const dateKeys = new Set<string>();
-
-  const addHistoricalDate = (value: unknown) => {
-    const dateKey = toDateKey(value);
-    if (dateKey && dateKey <= today) dateKeys.add(dateKey);
-  };
-
-  recordsSnap.forEach((recordDoc) => addHistoricalDate(recordDoc.data().date));
-  tasksSnap.forEach((taskDoc) =>
-    addHistoricalDate(taskDoc.data().scheduledDate || taskDoc.data().taskKey)
-  );
-  daysSnap.forEach((dayDoc) =>
-    addHistoricalDate(dayDoc.data().dateKey || dayDoc.id)
-  );
-  logsSnap.forEach((logDoc) => addHistoricalDate(logDoc.data().dateKey));
+  const SYSTEM_START_DATE = '2026-08-01';
+  for (let cursor = SYSTEM_START_DATE; cursor <= today; ) {
+    dateKeys.add(cursor);
+    const [year, month, day] = cursor.split('-').map(Number);
+    const next = new Date(Date.UTC(year, month - 1, day + 1));
+    cursor = next.toISOString().slice(0, 10);
+  }
 
   // Never manufacture HabitLogs for missing/future dates here. Existing
   // Preserve existing HabitLog document IDs; startup repair only normalizes data.
@@ -357,8 +343,6 @@ export async function repairCanonicalHabitLogsAndDays(): Promise<void> {
       completedHabitIds.has(habit.id)
     ).length;
     const habitsCompleted = roundedRate(habitsDone, Habits);
-    const dayCompleted = Math.round(tasksCompleted * 0.8 + habitsCompleted * 0.2);
-
     const desiredDay = {
       dateKey,
       tasksCompleted: tasksDone,

@@ -573,7 +573,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing}
                 title="Review today's tasks"
                 aria-label="Review today's tasks"
-                className="sm:hidden absolute right-0 top-0 w-9 h-9 min-w-9 min-h-9 max-w-9 max-h-9 aspect-square shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl transition shadow-xs"
+                className="sm:hidden absolute right-0 top-0 w-8 h-8 min-w-8 min-h-8 max-w-8 max-h-8 aspect-square shrink-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg transition"
               >
                 <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               </button>
@@ -673,7 +673,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
       {totalTasksCount === 0 ? (
-        <div className="py-4 px-2 text-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+        <div className="py-6 px-3 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/30">
           <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
             <CalendarDays className="w-5 h-5" />
           </div>
@@ -681,7 +681,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             No tasks planned for {activeDateTab === 'TODAY' ? 'today' : activeDateLabel.toLowerCase()}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-2">
-            Take a moment to define meaningful actions. Keep daily commitments and build steady momentum.
+            Add a clear next action and keep today focused.
           </p>
           <button
             type="button"
@@ -693,7 +693,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </button>
         </div>
       ) : (
-        <div className="relative pl-0.5 sm:pl-1">
+        <div className="relative divide-y divide-slate-100 dark:divide-slate-800/80">
           <AnimatePresence initial={false}>
             {sortedTasks.map((task) => {
               const isTaskCompleted = task.isCompleted;
@@ -712,16 +712,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 >
                   {/* Task row */}
                   <motion.div
-                    whileHover={{ x: 2 }}
-                    whileTap={{ scale: 0.995 }}
-                    className={`group ui-motion-card mb-1.5 min-w-0 rounded-xl border p-2 transition-all ${
+                    
+                    className={`group min-w-0 px-1 py-2.5 sm:px-1.5 transition-colors ${
                       isTaskCompleted
-                        ? isDark
-                          ? 'bg-slate-950/40 border-slate-800/60 opacity-80'
-                          : 'bg-slate-50/70 border-slate-200/60 opacity-85'
-                        : isDark
-                        ? 'bg-slate-800/50 border-slate-700/80 hover:border-slate-600'
-                        : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                        ? 'bg-slate-50/45 dark:bg-slate-950/20'
+                        : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'
                     }`}
                   >
                     <div className="flex items-start gap-2">
@@ -752,7 +747,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         <button
                           type="button"
                           onClick={() => handleToggleTask(task)}
-                          className={`block w-full text-left text-sm font-semibold leading-snug break-words select-none ${
+                          className={`block w-full text-left text-[13px] sm:text-sm font-medium leading-snug break-words select-none ${
                             isTaskCompleted
                               ? 'line-through text-slate-400 dark:text-slate-500'
                               : 'text-slate-900 dark:text-slate-100'
@@ -763,7 +758,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                         {task.notes?.trim() && (
                           <div className="mt-1">
-                            <p className={`text-[11px] leading-4 whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
+                            <p className={`text-[11px] leading-[1.35rem] whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2'}`}>
                               {task.notes}
                             </p>
                             {(task.notes.length > 90 || task.notes.includes('\n')) && (
@@ -783,16 +778,16 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </div>
                         )}
 
-                        <div className="task-detail-labels mt-1.5 flex flex-wrap items-center gap-1">
+                        <div className="task-detail-labels mt-1 flex flex-wrap items-center gap-1">
                           <span
-                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${quadrantMeta.classes}`}
+                            className={`inline-flex min-w-7 items-center justify-center rounded-md border px-1.5 py-[2px] text-[9px] font-semibold ${quadrantMeta.classes}`}
                             title={`Quadrant ${quadrantMeta.roman} — ${quadrantMeta.label}`}
                           >
                             {quadrantMeta.roman}
                           </span>
 
                           <span
-                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center rounded-md px-1.5 py-[2px] text-[10px] font-medium ${
                               priorityLabel === 'High'
                                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
                                 : priorityLabel === 'Medium'
@@ -805,7 +800,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           <span
-                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-[2px] text-[10px] font-medium ${
                               isTaskCompleted
                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
@@ -825,7 +820,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </span>
 
                           {task.category && task.category !== 'General' && (
-                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-[2px] text-[10px] font-medium text-slate-500 dark:text-slate-400">
                               {task.category}
                             </span>
                           )}
@@ -833,7 +828,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       </div>
 
                       <div className="relative shrink-0">
-                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
+                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-7 h-7 rounded-md text-slate-400 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {openTaskMenuId === task.id && (

@@ -948,7 +948,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="submit"
                     disabled={isAddingTask || !newTaskTitle.trim()}
-                    className={`h-[34px] px-3 rounded-xl font-semibold text-xs inline-flex items-center justify-center gap-1 transition shadow-xs shrink-0 sm:mt-[21px] ${
+                    className={`hidden h-[34px] px-3 rounded-xl font-semibold text-xs sm:mt-[21px] sm:inline-flex items-center justify-center gap-1 transition shadow-xs shrink-0 ${
                       isAddingTask || !newTaskTitle.trim()
                         ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
                         : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'
@@ -994,7 +994,29 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 )}
 
                 {/* Bottom Footer Actions */}
-                <div className="flex items-center justify-end pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-slate-200 dark:border-slate-800 sm:flex sm:items-center sm:justify-end">
+                  <button
+                    type="submit"
+                    disabled={isAddingTask || !newTaskTitle.trim()}
+                    className={`inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-xl px-2.5 text-xs font-semibold transition shadow-xs sm:hidden ${
+                      isAddingTask || !newTaskTitle.trim()
+                        ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
+                        : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'
+                    }`}
+                  >
+                    {isAddingTask ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                        <span>Adding...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 shrink-0" />
+                        <span>Add</span>
+                      </>
+                    )}
+                  </button>
+
                   <button
                     type="button"
                     disabled={isAddingTask}
@@ -1003,7 +1025,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       setActiveDateTab(panelDateTab);
                       handleCloseEnterPanel();
                     }}
-                    className="px-2 py-1 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 text-white font-semibold text-xs cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex min-h-9 w-full items-center justify-center rounded-xl bg-slate-800 px-2.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700 sm:w-auto"
                   >
                     Done
                   </button>

@@ -73,7 +73,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
           scalar: 1.05,
           origin: { x: 0.02, y: 0.76 },
           colors,
-          zIndex: 170,
+          zIndex: 240,
         });
         confetti({
           particleCount: 95,
@@ -85,7 +85,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
           scalar: 1.05,
           origin: { x: 0.98, y: 0.76 },
           colors,
-          zIndex: 170,
+          zIndex: 240,
         });
       }, 360));
 
@@ -100,7 +100,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
           scalar: 1.14,
           origin: { x: 0.5, y: 0.42 },
           colors,
-          zIndex: 170,
+          zIndex: 240,
         });
       }, 960));
 
@@ -115,7 +115,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
             startVelocity: 32,
             origin: { x: 0.12, y: 0.18 },
             colors,
-            zIndex: 170,
+            zIndex: 240,
           });
           confetti({
             particleCount: 5,
@@ -124,7 +124,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
             startVelocity: 32,
             origin: { x: 0.88, y: 0.18 },
             colors,
-            zIndex: 170,
+            zIndex: 240,
           });
           if (Date.now() < end) requestAnimationFrame(shower);
         };
@@ -150,7 +150,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
     <AnimatePresence>
       {badge && (
         <motion.div
-          className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-5 overflow-hidden"
+          className="fixed inset-0 z-[230] flex items-center justify-center p-3 sm:p-5 overflow-hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -215,7 +215,7 @@ export const BadgeCelebration: React.FC<BadgeCelebrationProps> = ({
               y: { type: 'spring', stiffness: 240, damping: 22 },
               scale: { duration: 0.42 },
             }}
-            className={`relative z-10 w-full max-w-lg overflow-hidden rounded-[28px] border shadow-[0_30px_100px_rgba(0,0,0,0.55)] ${
+            className={`relative z-10 w-full max-w-lg max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-[28px] border shadow-[0_30px_100px_rgba(0,0,0,0.55)] ${
               isDark ? 'bg-slate-950 border-slate-700' : 'bg-white border-white'
             }`}
           >

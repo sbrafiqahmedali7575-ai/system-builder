@@ -144,12 +144,29 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const returnToDashboardForShortcut = (afterReturn: () => void) => {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      setBooksFocusMode(false);
+      setToolsFocusMode(false);
+      setIsLibraryOpen(false);
+      setIsToolsOpen(false);
+      window.setTimeout(afterReturn, 0);
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT' || target?.isContentEditable;
+      const awayFromDashboard = isLibraryOpen || isToolsOpen;
+
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setIsCommandPaletteOpen(true);
+        if (awayFromDashboard) {
+          returnToDashboardForShortcut(() => setIsCommandPaletteOpen(true));
+        } else {
+          setIsCommandPaletteOpen(true);
+        }
         return;
       }
       if (event.key === 'Escape') {
@@ -159,10 +176,20 @@ export default function App() {
       if (typing) return;
       if (event.key === '/') {
         event.preventDefault();
-        setIsTaskSearchOpen(true);
+        if (awayFromDashboard) {
+          returnToDashboardForShortcut(() => setIsTaskSearchOpen(true));
+        } else {
+          setIsTaskSearchOpen(true);
+        }
       } else if (event.key.toLowerCase() === 'n') {
         event.preventDefault();
-        window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'));
+        const openEnterTasks = () =>
+          window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'));
+        if (awayFromDashboard) {
+          returnToDashboardForShortcut(openEnterTasks);
+        } else {
+          openEnterTasks();
+        }
       } else if (event.key.toLowerCase() === 'f') {
         event.preventDefault();
         if (isLibraryOpen) setBooksFocusMode((value) => !value);
@@ -830,7 +857,7 @@ export default function App() {
 
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
-      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
+      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onCalendar={() => handleOpenTools('tasks')} onTools={() => handleOpenTools()} />}
       <MobileBottomNav activeSection="today" focusActive={focusMode} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
 
       {/* 5. Header-triggered current-day review */}

@@ -183,6 +183,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
       setIsToolsOpen(window.location.pathname === '/tools');
+      setIsDayReviewOpen(params.get('review') === '1');
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -657,35 +658,48 @@ export default function App() {
 
   const handleOpenLibrary = () => {
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/books/cal-newport');
+      if (window.location.pathname !== '/books/cal-newport') {
+        window.history.pushState({}, '', '/books/cal-newport');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    setToolsFocusMode(false);
+    setIsToolsOpen(false);
     setIsLibraryOpen(true);
   };
 
   const handleCloseLibrary = () => {
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/');
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    setBooksFocusMode(false);
     setIsLibraryOpen(false);
   };
 
   const handleOpenTools = (initialTab: MoreTab = 'data') => {
     setToolsInitialTab(initialTab);
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/tools');
+      if (window.location.pathname !== '/tools') {
+        window.history.pushState({}, '', '/tools');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    setBooksFocusMode(false);
     setIsLibraryOpen(false);
     setIsToolsOpen(true);
   };
 
   const handleCloseTools = () => {
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', '/');
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    setToolsFocusMode(false);
     setIsToolsOpen(false);
   };
 
@@ -732,7 +746,7 @@ export default function App() {
         focusMode={toolsFocusMode}
         onFocusChange={setToolsFocusMode}
       />
-      <MobileBottomNav activeSection="plan" focusActive={false} onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => {}} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
       </>
     );
   }

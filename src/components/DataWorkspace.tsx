@@ -30,7 +30,7 @@ const TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
     'habitCompletionRate',
     'IsdayCompleted',
   ],
-  tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'notes', 'Iscompleted'],
+  tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'EstimationTime', 'ActualTime', 'notes', 'Iscompleted'],
   habits: ['habitId', 'name', 'repeatDays', 'activeFrom', 'isActive', 'color'],
   habitLogs: ['habitLogId', 'habitId', 'dateKey', 'Iscompleted'],
   countdowns: ['countdownId', 'title', 'targetDate', 'isActive'],

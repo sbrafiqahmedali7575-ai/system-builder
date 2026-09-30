@@ -2,7 +2,13 @@ import React, {useEffect, useState} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
-const launchTasks = ['Plan the day', 'Focus on priorities', 'Build consistency'];
+const CONTROL_LINES = [
+  'Focus on what you can control.',
+  'Choose your perception.',
+  'Direct your effort.',
+  'Own your response.',
+  'Take the next useful action.',
+] as const;
 
 export const AppLaunchSplash: React.FC = () => {
   const [visible, setVisible] = useState(true);
@@ -35,91 +41,95 @@ export const AppLaunchSplash: React.FC = () => {
             </motion.h1>
 
             <motion.div
-                className="mt-5 md:mt-6 w-full space-y-2.5 md:space-y-3"
-                initial={{opacity: 0, y: 8}}
+              className="mt-5 md:mt-6 w-full"
+              initial={{opacity: 0, y: 8}}
+              animate={{opacity: 1, y: 0}}
+              transition={{delay: 0.45, duration: 0.4}}
+              aria-label="Control-focused launch guidance inspired by The Obstacle Is the Way"
+            >
+              <motion.div
+                className="mb-2.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500/90"
+                initial={{opacity: 0, y: 4}}
                 animate={{opacity: 1, y: 0}}
-                transition={{delay: 0.55, duration: 0.45}}
-                aria-label="Completing launch tasks"
+                transition={{delay: 0.5, duration: 0.3}}
               >
-                {launchTasks.map((task, index) => {
-                  const delay = 0.72 + index * 0.92;
+                Within your control
+              </motion.div>
+
+              <div className="relative h-[92px] md:h-[98px] overflow-hidden rounded-2xl border border-indigo-100/90 bg-white/82 px-4 shadow-[0_14px_34px_rgba(79,70,229,0.08)] backdrop-blur-sm">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(99,102,241,0.12),transparent_58%)]"
+                />
+
+                {CONTROL_LINES.map((line, index) => {
+                  const delay = 0.72 + index * 0.5;
                   return (
                     <motion.div
-                      key={task}
-                      className="relative flex h-10 md:h-11 items-center gap-3 rounded-xl border px-3 md:px-3.5 text-left"
-                      initial={{opacity: 0, x: -10, backgroundColor: 'rgba(255,255,255,0.9)', borderColor: '#e2e8f0', boxShadow: '0 8px 24px rgba(51,65,85,0.04)'}}
+                      key={line}
+                      className="absolute inset-0 flex items-center justify-center px-5"
+                      initial={{opacity: 0, y: 16, scale: 0.97, filter: 'blur(3px)'}}
                       animate={{
-                        opacity: [0, 1, 1, 0.82],
-                        x: 0,
-                        backgroundColor: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.98)', 'rgba(238,242,255,0.98)', 'rgba(255,255,255,0.9)'],
-                        borderColor: ['#e2e8f0', '#dbeafe', '#818cf8', '#e0e7ff']
+                        opacity: [0, 1, 1, 0],
+                        y: [16, 0, 0, -12],
+                        scale: [0.97, 1.015, 1, 0.99],
+                        filter: ['blur(3px)', 'blur(0px)', 'blur(0px)', 'blur(2px)'],
                       }}
                       transition={{
-                        opacity: {times: [0, 0.18, 0.78, 1], delay: 0.2 + index * 0.1, duration: delay + 0.62 - (0.2 + index * 0.1)},
-                        x: {delay: 0.2 + index * 0.1, duration: 0.25},
-                        backgroundColor: {delay, duration: 0.65, times: [0, 0.15, 0.48, 1]},
-                        borderColor: {delay, duration: 0.65, times: [0, 0.15, 0.48, 1]}
+                        delay,
+                        duration: 0.86,
+                        times: [0, 0.22, 0.72, 1],
+                        ease: [0.16, 1, 0.3, 1],
                       }}
                     >
-                      <motion.span
-                        className="relative block size-5 flex-none rounded-[5px] border"
-                        initial={{backgroundColor: '#ffffff', borderColor: '#94a3b8'}}
-                        animate={{backgroundColor: index === 1 ? '#4f46e5' : index === 2 ? '#7c3aed' : '#2563eb', borderColor: index === 1 ? '#4f46e5' : index === 2 ? '#7c3aed' : '#2563eb'}}
-                        transition={{delay, duration: 0.2}}
-                      >
-                        <svg viewBox="0 0 20 20" className="absolute inset-0 size-full p-[3px]" aria-hidden="true">
-                          <motion.path
-                            d="M4.5 10.2 8.2 14 15.7 6.4"
-                            fill="none"
-                            stroke="white"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            initial={{pathLength: 0, opacity: 0}}
-                            animate={{pathLength: 1, opacity: 1}}
-                            transition={{delay: delay + 0.08, duration: 0.24, ease: 'easeOut'}}
-                          />
-                        </svg>
-                      </motion.span>
-                      <motion.span
-                        className="min-w-0 truncate text-sm md:text-[15px]"
-                        initial={{color: '#334155'}}
-                        animate={{color: '#64748b', opacity: [1, 1, 0.82]}}
-                        transition={{delay, duration: 0.65, times: [0, 0.6, 1]}}
-                      >
-                        {task}
-                      </motion.span>
-                      {index === launchTasks.length - 1 && (
-                        <motion.span
-                          className="pointer-events-none absolute left-[10px] size-7 rounded-lg border border-violet-400/50"
-                          initial={{opacity: 0, scale: 0.7, boxShadow: '0 0 0px rgba(124,58,237,0)'}}
-                          animate={{
-                            opacity: [0, 0.8, 0],
-                            scale: [0.75, 1.25, 1.45],
-                            boxShadow: ['0 0 0px rgba(124,58,237,0)', '0 0 20px rgba(124,58,237,0.38)', '0 0 0px rgba(124,58,237,0)']
-                          }}
-                          transition={{delay: delay + 0.38, duration: 0.48, ease: 'easeOut'}}
+                      <div className="text-center">
+                        <motion.div
                           aria-hidden="true"
+                          className="mx-auto mb-2 h-px w-10 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"
+                          initial={{scaleX: 0}}
+                          animate={{scaleX: 1}}
+                          transition={{delay: delay + 0.06, duration: 0.28}}
                         />
-                      )}
+                        <p className="text-[15px] md:text-[17px] font-extrabold leading-snug tracking-[-0.015em] text-slate-900">
+                          {line}
+                        </p>
+                      </div>
                     </motion.div>
                   );
                 })}
-              </motion.div>
 
-            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 2.95, duration: 0.25}} />
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
+                  initial={{width: '0%'}}
+                  animate={{width: '100%'}}
+                  transition={{delay: 0.68, duration: 2.62, ease: 'linear'}}
+                />
+              </div>
+
+              <motion.p
+                className="mt-2.5 text-[9px] md:text-[10px] font-semibold tracking-[0.025em] text-slate-400"
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                transition={{delay: 0.6, duration: 0.35}}
+              >
+                Inspired by The Obstacle Is the Way
+              </motion.p>
+            </motion.div>
+
+            <motion.div className="mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-amber-400" initial={{scaleX: 0}} animate={{scaleX: 1}} transition={{delay: 3.3, duration: 0.25}} />
             <motion.div
               className="relative mt-3 flex flex-col items-center justify-center text-center"
               initial={{opacity: 0, y: 10, scale: 0.975, filter: 'blur(2px)'}}
               animate={{opacity: [0, 1, 1], y: [10, 0, 0], scale: [0.975, 1, 1], filter: ['blur(2px)', 'blur(0px)', 'blur(0px)']}}
-              transition={{delay: 3.2, duration: 0.75, times: [0, 0.72, 1], ease: [0.16, 1, 0.3, 1]}}
+              transition={{delay: 3.48, duration: 0.75, times: [0, 0.72, 1], ease: [0.16, 1, 0.3, 1]}}
               aria-label="Developed by Rafiq Ahmed"
             >
               <motion.span
                 className="text-[8px] md:text-[9px] font-semibold leading-none tracking-[0.22em] text-slate-400"
                 initial={{opacity: 0, y: 2}}
                 animate={{opacity: 1, y: 0}}
-                transition={{delay: 3.3, duration: 0.42, ease: 'easeOut'}}
+                transition={{delay: 3.6, duration: 0.42, ease: 'easeOut'}}
               >
                 DEVELOPED BY
               </motion.span>
@@ -134,7 +144,7 @@ export const AppLaunchSplash: React.FC = () => {
                   backgroundPosition: ['0% 50%', '0% 50%', '100% 50%', '100% 50%'],
                   filter: ['drop-shadow(0 0 0 rgba(99,102,241,0))', 'drop-shadow(0 3px 10px rgba(99,102,241,0.28))', 'drop-shadow(0 2px 6px rgba(99,102,241,0.14))', 'drop-shadow(0 0 0 rgba(99,102,241,0))']
                 }}
-                transition={{delay: 3.45, duration: 2.75, times: [0, 0.28, 0.66, 1], ease: [0.16, 1, 0.3, 1]}}
+                transition={{delay: 3.75, duration: 2.45, times: [0, 0.28, 0.66, 1], ease: [0.16, 1, 0.3, 1]}}
               >
                 RAFIQ AHMED
               </motion.span>
@@ -142,7 +152,7 @@ export const AppLaunchSplash: React.FC = () => {
                 className="pointer-events-none absolute -bottom-2 h-px w-16 bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
                 initial={{opacity: 0, scaleX: 0.35}}
                 animate={{opacity: [0, 0.7, 0], scaleX: [0.35, 1, 1.12]}}
-                transition={{delay: 5.15, duration: 1.25, ease: 'easeInOut'}}
+                transition={{delay: 5.35, duration: 1.05, ease: 'easeInOut'}}
                 aria-hidden="true"
               />
             </motion.div>

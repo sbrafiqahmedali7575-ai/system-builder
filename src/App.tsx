@@ -1009,7 +1009,7 @@ export default function App() {
             </div>
             <div className={`flex flex-none items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-bold shadow-sm ${isSyncing ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'}`}>
               <span className={`size-2 rounded-full ring-2 ring-white dark:ring-slate-900 ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
-              <span>{isSyncing ? 'Syncing' : 'Ready'}</span>
+              <span>{isSyncing ? 'Syncing' : 'By Rafiq Ahmed'}</span>
             </div>
           </motion.div>
         )}

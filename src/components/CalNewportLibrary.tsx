@@ -348,7 +348,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   };
 
   const activeBookmarks = bookmarks[activeBookId] || [];
-  const activeSectionNotes = Object.entries(notes)
+  const activeSectionNotes = (Object.entries(notes) as Array<[string, string]>)
     .filter(([key, value]) => key.startsWith(`${activeBookId}::`) && Boolean(value.trim()))
     .map(([key, value]) => ({ sectionId: key.slice(activeBookId.length + 2), value }));
 

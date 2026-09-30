@@ -73,7 +73,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               transition={{duration: 0.2, ease: [0.16, 1, 0.3, 1]}}
               className="rounded-[11px] transition-shadow duration-200 group-hover:shadow-[0_8px_20px_rgba(79,70,229,0.16)] dark:group-hover:shadow-[0_8px_20px_rgba(79,70,229,0.12)]"
             >
-              <SystemBuilderLogo className="size-9 rounded-[11px] text-sm shadow-md shadow-indigo-200/50 dark:shadow-indigo-950/40" />
+              <SystemBuilderLogo className="size-9 text-sm" />
             </motion.div>
             <div className="hidden sm:block min-w-0">
               <div className="flex items-center space-x-1">

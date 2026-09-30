@@ -726,6 +726,22 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           {task.taskOfTheDay}
                         </button>
 
+                        {(task.EstimationTime?.trim() || task.ActualTime?.trim()) && (
+                          <div
+                            className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200/80 bg-white/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400"
+                            aria-label={`Planned ${task.EstimationTime?.trim() || 'not set'}, actual ${task.ActualTime?.trim() || 'not set'}`}
+                            title="Planned time vs actual time"
+                          >
+                            <span className="text-slate-400 dark:text-slate-500">Plan</span>
+                            <span className="text-slate-700 dark:text-slate-200">{task.EstimationTime?.trim() || '—'}</span>
+                            <span className="text-slate-300 dark:text-slate-600">→</span>
+                            <span className="text-slate-400 dark:text-slate-500">Actual</span>
+                            <span className={task.ActualTime?.trim() ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}>
+                              {task.ActualTime?.trim() || '—'}
+                            </span>
+                          </div>
+                        )}
+
                         {task.notes?.trim() && (
                           <div className="mt-1.5">
                             <p className={`text-xs leading-[1.25rem] whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-slate-600 dark:text-slate-300 ${expandedNotes.has(task.id) ? '' : 'line-clamp-2 sm:line-clamp-1'}`}>

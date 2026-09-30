@@ -321,6 +321,24 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!openTaskMenuId) return;
+    const closeMenu = () => setOpenTaskMenuId(null);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeMenu();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('[data-task-action-menu]')) closeMenu();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [openTaskMenuId]);
+
+  useEffect(() => {
     setCopyForwardFeedback(null);
     setCardError(null);
   }, [activeDateKey]);
@@ -815,15 +833,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         )}
                       </div>
 
-                      <div className="relative shrink-0 -mt-0.5 sm:-mt-1">
+                      <div data-task-action-menu className="relative shrink-0 -mt-0.5 sm:-mt-1">
                         <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 opacity-100 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:h-7 sm:w-7 sm:rounded-md sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {openTaskMenuId === task.id && (
-                          <div className="absolute right-0 top-10 z-30 w-44 max-w-[calc(100vw-2rem)] rounded-xl sm:top-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
-                            <button type="button" onClick={() => { setOpenTaskMenuId(null); handleStartEdit(task); }} className="task-menu-item"><Pencil />Edit</button>
-                            <button type="button" disabled={copyingTaskIds.has(task.id)} onClick={() => { setOpenTaskMenuId(null); handleCopyToNextDay(task); }} className="task-menu-item"><ArrowRight />Move/copy to next day</button>
-                            <button type="button" onClick={() => { setOpenTaskMenuId(null); setDeletingTask(task); setDeleteError(null); }} className="task-menu-item text-rose-600 dark:text-rose-400"><Trash2 />Delete</button>
+                          <div className="absolute right-0 bottom-11 z-[80] w-48 max-w-[calc(100vw-1.5rem)] rounded-xl sm:bottom-auto sm:top-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
+                            <button type="button" onClick={() => { setOpenTaskMenuId(null); handleStartEdit(task); }} className="task-menu-item min-h-11 sm:min-h-0"><Pencil />Edit</button>
+                            <button type="button" disabled={copyingTaskIds.has(task.id)} onClick={() => { setOpenTaskMenuId(null); handleCopyToNextDay(task); }} className="task-menu-item min-h-11 sm:min-h-0"><ArrowRight />Move/copy to next day</button>
+                            <button type="button" onClick={() => { setOpenTaskMenuId(null); setDeletingTask(task); setDeleteError(null); }} className="task-menu-item min-h-11 sm:min-h-0 text-rose-600 dark:text-rose-400"><Trash2 />Delete</button>
                           </div>
                         )}
                       </div>
@@ -1005,7 +1023,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         setNewTaskQuadrant(event.target.value as MatrixQuadrant | '');
                         if (panelError) setPanelError(null);
                       }}
-                      className={`w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${
+                      className={`w-full h-11 sm:h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${
                         isDark
                           ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500'
                           : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'
@@ -1074,7 +1092,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="submit"
                     disabled={isAddingTask || !newTaskTitle.trim()}
-                    className={`inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-xl px-2.5 text-xs font-semibold transition shadow-xs sm:hidden ${
+                    className={`inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-xl px-2.5 text-xs font-semibold transition shadow-xs sm:hidden ${
                       isAddingTask || !newTaskTitle.trim()
                         ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500'
                         : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer'

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Sparkles } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
 
 interface DayProgressMomentProps {
@@ -50,13 +50,31 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
       <motion.div
         className={`relative mx-auto flex size-16 items-center justify-center rounded-2xl border shadow-lg ${
           isCompleted
-            ? 'border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300'
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-600 shadow-emerald-100/70 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300 dark:shadow-emerald-950/30'
             : 'border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-300'
         }`}
         initial={{ opacity: 0, y: 10, scale: 0.88 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ delay: 0.15, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ opacity: 1, y: 0, scale: isCompleted ? [0.88, 1.12, 1] : 1 }}
+        transition={{ delay: 0.15, duration: isCompleted ? 0.7 : 0.45, ease: [0.16, 1, 0.3, 1] }}
       >
+        {isCompleted && (
+          <>
+            <motion.span
+              aria-hidden="true"
+              className="absolute inset-[-10px] rounded-[22px] border border-emerald-300/70 dark:border-emerald-700/60"
+              initial={{ opacity: 0.8, scale: 0.72 }}
+              animate={{ opacity: 0, scale: 1.35 }}
+              transition={{ delay: 0.28, duration: 0.9, ease: 'easeOut' }}
+            />
+            <motion.span
+              aria-hidden="true"
+              className="absolute inset-[-3px] rounded-[18px] border border-emerald-400/50"
+              initial={{ opacity: 0.65, scale: 0.88 }}
+              animate={{ opacity: 0, scale: 1.18 }}
+              transition={{ delay: 0.42, duration: 0.75, ease: 'easeOut' }}
+            />
+          </>
+        )}
         {isCompleted ? <Check className="size-8" strokeWidth={2.6} /> : <ArrowUpRight className="size-8" strokeWidth={2.4} />}
 
         <motion.span
@@ -87,11 +105,11 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             ? 'text-emerald-600 dark:text-emerald-400'
             : 'text-blue-600 dark:text-blue-400'
         }`}>
-          {isCompleted ? 'Day Completed • Moving Forward' : 'Day Reviewed • Next Move Ready'}
+          {isCompleted ? 'Day Completed • Momentum Earned' : 'Day Reviewed • Next Move Ready'}
         </div>
 
         <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
-          {isCompleted ? 'Progress locked in.' : 'Reset. Refocus. Continue.'}
+          {isCompleted ? 'Today is secured. Keep building.' : 'Reset. Refocus. Continue.'}
         </h2>
 
         <motion.p
@@ -114,20 +132,81 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         </div>
 
         {isCompleted ? (
-          <div className="mx-auto mt-5 max-w-xs">
-            <div className="relative h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-              <motion.div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-emerald-500 to-emerald-400"
-                initial={{ width: '8%' }}
-                animate={{ width: '100%' }}
-                transition={{ delay: 0.2, duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
-              />
-            </div>
-            <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-[0.13em] text-slate-500 dark:text-slate-400">
-              <span>Today</span>
-              <ArrowRight className="size-3.5" />
-              <span>Next Step</span>
-            </div>
+          <div className="mx-auto mt-5 max-w-sm">
+            <motion.div
+              className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-3.5 shadow-sm dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/30"
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.5, duration: 0.45 }}
+            >
+              <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">
+                <Sparkles className="size-4" />
+                <span>Daily win secured</span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
+                {['Complete', 'Compound', 'Continue'].map((step, index) => (
+                  <React.Fragment key={step}>
+                    <motion.div
+                      className="flex min-w-0 flex-col items-center gap-1.5"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.68 + index * 0.18, duration: 0.35 }}
+                    >
+                      <motion.div
+                        className={`flex size-8 items-center justify-center rounded-full border text-[11px] font-black shadow-sm ${
+                          index === 0
+                            ? 'border-emerald-300 bg-emerald-500 text-white dark:border-emerald-600 dark:bg-emerald-500'
+                            : 'border-blue-200 bg-white text-blue-700 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300'
+                        }`}
+                        initial={{ scale: 0.72 }}
+                        animate={{ scale: [0.72, 1.08, 1] }}
+                        transition={{ delay: 0.72 + index * 0.18, duration: 0.42 }}
+                      >
+                        {index === 0 ? <Check className="size-4" strokeWidth={2.8} /> : index + 1}
+                      </motion.div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 dark:text-slate-300">
+                        {step}
+                      </span>
+                    </motion.div>
+                    {index < 2 && (
+                      <motion.div
+                        aria-hidden="true"
+                        className="h-px w-6 bg-gradient-to-r from-emerald-300 to-blue-300 dark:from-emerald-700 dark:to-blue-700"
+                        initial={{ scaleX: 0, opacity: 0 }}
+                        animate={{ scaleX: 1, opacity: 1 }}
+                        transition={{ delay: 0.84 + index * 0.18, duration: 0.35 }}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950/60">
+                <motion.div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-emerald-500 to-emerald-400"
+                  initial={{ width: '8%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ delay: 0.28, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute inset-y-0 w-12 -skew-x-12 bg-white/45"
+                  initial={{ left: '-18%' }}
+                  animate={{ left: '110%' }}
+                  transition={{ delay: 1.1, duration: 0.85, ease: 'easeInOut' }}
+                />
+              </div>
+
+              <motion.p
+                className="mt-3 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.15, duration: 0.4 }}
+              >
+                You completed what was in your control today. Carry that momentum into the next step.
+              </motion.p>
+            </motion.div>
           </div>
         ) : (
           <div className="mx-auto mt-5 max-w-sm">
@@ -186,7 +265,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.85, duration: 0.4 }}
         >
-          {isCompleted ? 'Continue Forward' : 'Move to the Next Step'}
+          {isCompleted ? 'Carry the Momentum Forward' : 'Move to the Next Step'}
           <ArrowRight className="size-4" />
         </motion.button>
       </motion.div>

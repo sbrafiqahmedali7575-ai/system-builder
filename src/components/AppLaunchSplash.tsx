@@ -27,12 +27,12 @@ export const AppLaunchSplash: React.FC = () => {
             transition={{duration: 0.5, ease: [0.16, 1, 0.3, 1]}}
           >
             <SystemBuilderLogo
-              className="size-16 text-2xl md:size-[72px]"
+              className="size-24 text-2xl md:size-28"
               animated
             />
 
             <motion.div
-              className="mt-5 flex flex-col items-center"
+              className="mt-6 flex flex-col items-center"
               initial={{opacity: 0, y: 8}}
               animate={{opacity: 1, y: 0}}
               transition={{delay: 0.42, duration: 0.38, ease: [0.16, 1, 0.3, 1]}}

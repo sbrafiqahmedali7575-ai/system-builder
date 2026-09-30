@@ -236,4 +236,39 @@ assert.ok(pomodoro.includes('fixed inset-0 z-[220]'), 'Pomodoro modal must sit a
 assert.ok(report.includes('fixed inset-0 z-[220]'), 'Countdown editor must sit above mobile navigation.');
 assert.ok(badge.includes('fixed inset-0 z-[230]'), 'Badge celebration must sit above other app chrome.');
 
+const taskTracker = read('src/components/TaskTracker.tsx');
+const calendarMonth = read('src/components/calendar/CalendarMonthView.tsx');
+const calendarDay = read('src/components/calendar/CalendarDayCell.tsx');
+const habitTracker = read('src/components/HabitTracker.tsx');
+const styles = read('src/index.css');
+
+assert.ok(
+  taskTracker.includes('min-h-[360px] sm:min-h-[480px]') &&
+    taskTracker.includes('lg:h-full lg:min-h-0'),
+  'Task Planner must fit short phones and fill tall desktop workspaces.'
+);
+assert.ok(
+  calendar.includes('min-h-[360px] sm:min-h-[480px] md:min-h-[640px]') &&
+    calendar.includes('pb-20 md:pb-4'),
+  'Calendar must fit short phones and clear the fixed mobile navigation.'
+);
+assert.ok(
+  calendarMonth.includes('min-h-[360px] sm:min-h-[560px]'),
+  'Month calendar must compact on short phones without changing tablet/desktop sizing.'
+);
+assert.ok(
+  calendarDay.includes('min-h-[54px] sm:min-h-[108px]'),
+  'Mobile calendar week rows must remain compact at narrow/short phone sizes.'
+);
+assert.ok(
+  habitTracker.includes('hidden sm:grid grid-cols-12') &&
+    habitTracker.includes('max-w-full overflow-x-auto overscroll-x-contain'),
+  'Habit heatmap must not force page-level horizontal overflow on 320px phones.'
+);
+assert.ok(
+  !styles.includes('.system-edition main { max-width:none !important; }'),
+  'Large desktop dashboard must preserve its explicit max-width instead of stretching edge-to-edge.'
+);
+
+
 console.log('UI contract checks passed.');

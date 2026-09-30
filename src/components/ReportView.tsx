@@ -96,8 +96,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const isDark = theme === 'dark';
   const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
   const [selectedFocusTaskId, setSelectedFocusTaskId] = useState<string>('');
-  const [focusedElapsedSeconds, setFocusedElapsedSeconds] = useState(0);
-  const [focusSessionStarted, setFocusSessionStarted] = useState(false);
   const [customCountdownDate, setCustomCountdownDate] = useState(() => {
     if (typeof window === 'undefined') return '';
     return window.localStorage.getItem(COUNTDOWN_TARGET_DATE_KEY) || '';
@@ -361,9 +359,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
               currentDayName={currentCadenceDay.fullDayName}
               isSyncing={isSyncing}
               focusMode={focusMode}
-              focusedTaskId={currentFocusTask?.id || ''}
-              focusedElapsedSeconds={focusedElapsedSeconds}
-              focusSessionStarted={focusSessionStarted}
             />
           </motion.div>
 
@@ -390,15 +385,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 title: task.taskOfTheDay,
                 isCompleted: task.isCompleted,
               }))}
-              onCurrentTaskChange={(taskId) => {
-                setSelectedFocusTaskId(taskId);
-                setFocusedElapsedSeconds(0);
-                setFocusSessionStarted(false);
-              }}
-              onFocusTimingChange={(elapsedSeconds, hasStarted) => {
-                setFocusedElapsedSeconds(elapsedSeconds);
-                setFocusSessionStarted(hasStarted);
-              }}
+              onCurrentTaskChange={setSelectedFocusTaskId}
               onOpenCountdown={openCountdownEditor}
               focusMode={focusMode}
             />

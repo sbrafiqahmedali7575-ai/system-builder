@@ -44,6 +44,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [customMinutes, setCustomMinutes] = useState(String(DEFAULT_MINUTES));
   const [mode, setMode] = useState<TimerMode>('focus');
+  const [isTaskLocked, setIsTaskLocked] = useState(false);
 
   const endAtRef = useRef<number | null>(null);
   const resetClickTimerRef = useRef<number | null>(null);
@@ -154,6 +155,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       if (nextRemaining <= 0) {
         endAtRef.current = null;
         setIsRunning(false);
+        setIsTaskLocked(false);
         startAlarm();
       }
     };
@@ -218,6 +220,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     }
 
     endAtRef.current = Date.now() + secondsToRun * 1000;
+    setIsTaskLocked(true);
     setIsRunning(true);
   };
 
@@ -225,6 +228,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     stopAlarm();
     endAtRef.current = null;
     setIsRunning(false);
+    setIsTaskLocked(false);
     setRemainingSeconds(durationSeconds);
   }, [durationSeconds, stopAlarm]);
 
@@ -333,12 +337,13 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                 Current Task
               </div>
               {todayTasks.length > 0 && (
-                <label className="relative inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-200/70 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400" title="Select today's task">
+                <label className="relative inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-200/70 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400" title={isTaskLocked ? "Task locked until focus session finishes or is reset" : "Select today's task"}>
                   <select
-                    className="absolute inset-0 cursor-pointer opacity-0"
+                    className={`absolute inset-0 opacity-0 ${isTaskLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     value={todayTasks.find((task) => task.title === currentTaskTitle)?.id || ''}
                     onChange={(event) => onCurrentTaskChange?.(event.target.value)}
-                    aria-label="Select current focus task from today's tasks"
+                    disabled={isTaskLocked}
+                    aria-label={isTaskLocked ? 'Current focus task is locked until this session finishes or is reset' : "Select current focus task from today's tasks"}
                   >
                     <option value="" disabled>Select task</option>
                     {todayTasks.map((task) => (

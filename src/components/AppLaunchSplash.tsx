@@ -32,7 +32,7 @@ export const AppLaunchSplash: React.FC = () => {
               transition={{duration: 0.58, ease: [0.16, 1, 0.3, 1]}}
             >
               <SystemBuilderLogo
-                className="size-16 rounded-[18px] text-2xl shadow-[0_14px_34px_rgba(79,70,229,0.16)] md:size-[72px] md:rounded-[20px]"
+                className="size-16 text-2xl md:size-[72px]"
                 animated
               />
             </motion.div>

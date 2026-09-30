@@ -116,9 +116,6 @@ interface TodayTasksCardProps {
   currentDayName: string;
   isSyncing?: boolean;
   focusMode?: boolean;
-  focusedTaskId?: string;
-  focusedElapsedSeconds?: number;
-  focusSessionStarted?: boolean;
 }
 
 export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
@@ -134,9 +131,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   currentDayName,
   isSyncing = false,
   focusMode = false,
-  focusedTaskId = '',
-  focusedElapsedSeconds = 0,
-  focusSessionStarted = false,
 }) => {
   const isDark = theme === 'dark';
 
@@ -429,14 +423,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             colors: ['#2563eb', '#ef4444', '#fbbf24'],
           });
         } catch (_) {}
-      }
-
-      if (willBeCompleted && focusSessionStarted && focusedTaskId === task.id && focusedElapsedSeconds > 0) {
-        const actualMinutes = Math.max(1, Math.round(focusedElapsedSeconds / 60));
-        await onUpdateTask({
-          ...task,
-          ActualTime: `${actualMinutes}m`,
-        });
       }
 
       await onToggleTaskStatus(task.id);

@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Timer,
   X,
+  ChevronDown,
 } from 'lucide-react';
 
 const DEFAULT_MINUTES = 30;
@@ -25,12 +26,16 @@ type TimerMode = 'focus' | 'custom';
 interface PomodoroTimerProps {
   className?: string;
   currentTaskTitle?: string;
+  todayTasks?: Array<{ id: string; title: string; isCompleted?: boolean }>;
+  onCurrentTaskChange?: (taskId: string) => void;
   integrated?: boolean;
 }
 
 export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   className = '',
   currentTaskTitle = 'No active task selected',
+  todayTasks = [],
+  onCurrentTaskChange,
   integrated = false,
 }) => {
   const [durationSeconds, setDurationSeconds] = useState(DEFAULT_MINUTES * 60);
@@ -390,15 +395,32 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           </div>
 
           <div className="hidden sm:block mt-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70 px-2.5 py-2">
-            <div className="text-[11px] uppercase tracking-wide font-semibold text-blue-600 dark:text-blue-400">
-              Current Task
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[11px] uppercase tracking-wide font-semibold text-blue-600 dark:text-blue-400">
+                Current Task
+              </div>
+              {todayTasks.length > 0 && (
+                <label className="relative inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-200/70 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400" title="Select today's task">
+                  <select
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    value={todayTasks.find((task) => task.title === currentTaskTitle)?.id || ''}
+                    onChange={(event) => onCurrentTaskChange?.(event.target.value)}
+                    aria-label="Select current focus task from today's tasks"
+                  >
+                    <option value="" disabled>Select task</option>
+                    {todayTasks.map((task) => (
+                      <option key={task.id} value={task.id}>
+                        {task.isCompleted ? '✓ ' : ''}{task.title}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="size-4" aria-hidden="true" />
+                </label>
+              )}
             </div>
             <div className="mt-1 flex items-start gap-1.5 min-w-0">
               <Circle className="mt-0.5 w-3.5 h-3.5 text-blue-500 shrink-0" />
-              <span
-                className="text-[11px] leading-snug font-semibold text-slate-800 dark:text-slate-100 break-words line-clamp-2"
-                title={currentTaskTitle}
-              >
+              <span className="text-[11px] leading-snug font-semibold text-slate-800 dark:text-slate-100 break-words line-clamp-2" title={currentTaskTitle}>
                 {currentTaskTitle}
               </span>
             </div>

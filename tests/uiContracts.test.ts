@@ -72,6 +72,17 @@ assert.ok(
     enterTasksPanel.includes('disabled={isAddingTask}'),
   'Enter Tasks close controls must not dismiss the dialog during an active save.'
 );
+assert.ok(
+  enterTasksPanel.includes('grid grid-cols-2 gap-2 pt-1.5') &&
+    enterTasksPanel.includes('sm:flex sm:items-center sm:justify-end'),
+  'Enter Tasks mobile footer must place Add and Done side by side while preserving the desktop footer layout.'
+);
+assert.ok(
+  enterTasksPanel.includes('sm:hidden') &&
+    enterTasksPanel.includes('<span>Add</span>') &&
+    enterTasksPanel.includes('>\n                    Done\n'),
+  'Enter Tasks must expose a mobile-only Add action beside Done.'
+);
 
 assert.ok(
   calendar.includes('fixed inset-0 z-[220]'),

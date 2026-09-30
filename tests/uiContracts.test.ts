@@ -86,6 +86,19 @@ assert.ok(
   'Today task checkbox must keep a large mobile tap target with a visible 20px square.'
 );
 assert.ok(
+  todayTasks.includes("aria-label={") &&
+    todayTasks.includes("'Mark incomplete'") &&
+    todayTasks.includes("'Mark completed'") &&
+    todayTasks.includes('task.taskOfTheDay'),
+  'Today task checkbox must expose an explicit accessible task label.'
+);
+assert.ok(
+  todayTasks.includes('const incompleteTasks = useMemo(') &&
+    todayTasks.includes('sortedTasks.filter((task) => !task.isCompleted)') &&
+    todayTasks.includes('sortedTasks.filter((task) => task.isCompleted)'),
+  'Today task list must preserve quadrant ordering while keeping incomplete tasks above completed tasks.'
+);
+assert.ok(
   todayTasks.includes('More actions for') &&
     todayTasks.includes('inline-flex h-10 w-10 shrink-0 items-center justify-center') &&
     todayTasks.includes('max-w-[calc(100vw-2rem)]'),

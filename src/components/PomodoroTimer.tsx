@@ -1,27 +1,18 @@
 import React, {
-  FormEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Circle,
   Pause,
   Play,
   RotateCcw,
-  Timer,
-  X,
+  Timer
   ChevronDown,
 } from 'lucide-react';
-
-const DEFAULT_MINUTES = 30;
-const MAX_CUSTOM_MINUTES = 180;
-const ALARM_SECONDS = 60;
-
-type TimerMode = 'focus' | 'custom';
 
 interface PomodoroTimerProps {
   className?: string;
@@ -38,267 +29,68 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   onCurrentTaskChange,
   integrated = false,
 }) => {
-  const [durationSeconds, setDurationSeconds] = useState(DEFAULT_MINUTES * 60);
-  const [remainingSeconds, setRemainingSeconds] = useState(DEFAULT_MINUTES * 60);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [customMinutes, setCustomMinutes] = useState(String(DEFAULT_MINUTES));
-  const [mode, setMode] = useState<TimerMode>('focus');
   const [isTaskLocked, setIsTaskLocked] = useState(false);
 
-  const endAtRef = useRef<number | null>(null);
-  const resetClickTimerRef = useRef<number | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const oscillatorsRef = useRef<OscillatorNode[]>([]);
-  const alarmStopTimerRef = useRef<number | null>(null);
-  const alarmStartedRef = useRef(false);
-
-  const stopAlarm = useCallback(() => {
-    if (alarmStopTimerRef.current) {
-      window.clearTimeout(alarmStopTimerRef.current);
-      alarmStopTimerRef.current = null;
-    }
-
-    oscillatorsRef.current.forEach((oscillator) => {
-      try {
-        oscillator.stop();
-      } catch (_) {}
-    });
-    oscillatorsRef.current = [];
-
-    const audioContext = audioContextRef.current;
-    audioContextRef.current = null;
-    if (audioContext && audioContext.state !== 'closed') {
-      void audioContext.close().catch(() => undefined);
-    }
-
-    alarmStartedRef.current = false;
-  }, []);
-
-  const startAlarm = useCallback(() => {
-    if (alarmStartedRef.current || typeof window === 'undefined') return;
-
-    const AudioContextConstructor =
-      window.AudioContext ||
-      (window as typeof window & {
-        webkitAudioContext?: typeof AudioContext;
-      }).webkitAudioContext;
-
-    if (!AudioContextConstructor) return;
-
-    stopAlarm();
-    alarmStartedRef.current = true;
-
-    const audioContext = new AudioContextConstructor();
-    audioContextRef.current = audioContext;
-
-    const scheduleBeeps = () => {
-      const baseTime = audioContext.currentTime + 0.05;
-      const nodes: OscillatorNode[] = [];
-
-      for (let second = 0; second < ALARM_SECONDS; second += 1) {
-        const startTime = baseTime + second;
-        const endTime = startTime + 0.28;
-        const progress =
-          ALARM_SECONDS <= 1 ? 1 : second / (ALARM_SECONDS - 1);
-        const volume = 0.03 + progress * 0.77;
-
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, startTime);
-
-        gain.gain.setValueAtTime(0.0001, startTime);
-        gain.gain.exponentialRampToValueAtTime(
-          Math.max(0.001, volume),
-          startTime + 0.04
-        );
-        gain.gain.exponentialRampToValueAtTime(0.0001, endTime);
-
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-
-        oscillator.start(startTime);
-        oscillator.stop(endTime + 0.02);
-        nodes.push(oscillator);
-      }
-
-      oscillatorsRef.current = nodes;
-      alarmStopTimerRef.current = window.setTimeout(() => {
-        stopAlarm();
-      }, (ALARM_SECONDS + 1) * 1000);
-    };
-
-    if (audioContext.state === 'suspended') {
-      void audioContext.resume().then(scheduleBeeps).catch(() => {
-        stopAlarm();
-      });
-    } else {
-      scheduleBeeps();
-    }
-  }, [stopAlarm]);
+  const startedAtRef = useRef<number | null>(null);
+  const accumulatedMsRef = useRef(0);
 
   useEffect(() => {
     if (!isRunning) return;
-
     const tick = () => {
-      if (!endAtRef.current) return;
-
-      const nextRemaining = Math.max(
-        0,
-        Math.ceil((endAtRef.current - Date.now()) / 1000)
-      );
-
-      setRemainingSeconds(nextRemaining);
-
-      if (nextRemaining <= 0) {
-        endAtRef.current = null;
-        setIsRunning(false);
-        setIsTaskLocked(false);
-        startAlarm();
-      }
+      const activeMs = startedAtRef.current ? Date.now() - startedAtRef.current : 0;
+      setElapsedSeconds(Math.floor((accumulatedMsRef.current + activeMs) / 1000));
     };
-
     tick();
     const interval = window.setInterval(tick, 250);
     return () => window.clearInterval(interval);
-  }, [isRunning, startAlarm]);
-
-  useEffect(() => {
-    return () => {
-      if (resetClickTimerRef.current) {
-        window.clearTimeout(resetClickTimerRef.current);
-      }
-      stopAlarm();
-    };
-  }, [stopAlarm]);
-
-  const elapsedPercent = useMemo(() => {
-    if (durationSeconds <= 0) return 0;
-    return Math.min(
-      100,
-      Math.max(
-        0,
-        ((durationSeconds - remainingSeconds) / durationSeconds) * 100
-      )
-    );
-  }, [durationSeconds, remainingSeconds]);
+  }, [isRunning]);
 
   const formattedTime = useMemo(() => {
-    const minutes = Math.floor(remainingSeconds / 60);
-    const seconds = remainingSeconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(
-      2,
-      '0'
-    )}`;
-  }, [remainingSeconds]);
-
-  const modeLabel = mode === 'focus' ? 'Focus Session' : 'Custom Session';
+    const hours = Math.floor(elapsedSeconds / 3600);
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+    const seconds = elapsedSeconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }, [elapsedSeconds]);
 
   const toggleTimer = () => {
-    stopAlarm();
-
     if (isRunning) {
-      if (endAtRef.current) {
-        setRemainingSeconds(
-          Math.max(
-            0,
-            Math.ceil((endAtRef.current - Date.now()) / 1000)
-          )
-        );
-      }
-      endAtRef.current = null;
+      if (startedAtRef.current) accumulatedMsRef.current += Date.now() - startedAtRef.current;
+      startedAtRef.current = null;
+      setElapsedSeconds(Math.floor(accumulatedMsRef.current / 1000));
       setIsRunning(false);
       return;
     }
-
-    let secondsToRun = remainingSeconds;
-    if (secondsToRun <= 0) {
-      secondsToRun = durationSeconds;
-      setRemainingSeconds(durationSeconds);
-    }
-
-    endAtRef.current = Date.now() + secondsToRun * 1000;
+    startedAtRef.current = Date.now();
     setIsTaskLocked(true);
     setIsRunning(true);
   };
 
   const resetTimer = useCallback(() => {
-    stopAlarm();
-    endAtRef.current = null;
+    startedAtRef.current = null;
+    accumulatedMsRef.current = 0;
+    setElapsedSeconds(0);
     setIsRunning(false);
     setIsTaskLocked(false);
-    setRemainingSeconds(durationSeconds);
-  }, [durationSeconds, stopAlarm]);
-
-  const openCustom = () => {
-    stopAlarm();
-    endAtRef.current = null;
-    setIsRunning(false);
-    setMode('custom');
-    setCustomMinutes(
-      String(Math.max(1, Math.round(durationSeconds / 60)))
-    );
-    setIsCustomOpen(true);
-  };
-
-  const handleResetClick = () => {
-    if (resetClickTimerRef.current) {
-      window.clearTimeout(resetClickTimerRef.current);
-    }
-
-    resetClickTimerRef.current = window.setTimeout(() => {
-      resetTimer();
-      resetClickTimerRef.current = null;
-    }, 260);
-  };
-
-  const handleResetDoubleClick = () => {
-    if (resetClickTimerRef.current) {
-      window.clearTimeout(resetClickTimerRef.current);
-      resetClickTimerRef.current = null;
-    }
-    openCustom();
-  };
-
-  const applyCustomTime = (event: FormEvent) => {
-    event.preventDefault();
-    const parsed = Math.round(Number(customMinutes));
-    if (!Number.isFinite(parsed)) return;
-
-    const minutes = Math.min(
-      MAX_CUSTOM_MINUTES,
-      Math.max(1, parsed)
-    );
-    const nextDuration = minutes * 60;
-
-    stopAlarm();
-    endAtRef.current = null;
-    setIsRunning(false);
-    setMode('custom');
-    setDurationSeconds(nextDuration);
-    setRemainingSeconds(nextDuration);
-    setCustomMinutes(String(minutes));
-    setIsCustomOpen(false);
-  };
+  }, []);
 
   const timerVisual = (
     <div
       className={`flex items-center justify-center rounded-xl border border-slate-200/80 bg-slate-950 px-4 shadow-inner dark:border-slate-700 ${integrated ? 'min-h-[92px] w-full' : 'min-h-[58px] min-w-[112px]'}`}
-      aria-label={`Focus timer ${formattedTime} remaining`}
+      aria-label={`Focus timer elapsed time ${formattedTime}`}
     >
       <div className="flex flex-col items-center justify-center">
         {integrated && (
           <span className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-            {modeLabel}
+            Actual Task Time
           </span>
         )}
         <span className={`font-mono font-bold tabular-nums leading-none tracking-[0.04em] text-white ${integrated ? 'text-4xl sm:text-[42px]' : 'text-xl'}`}>
           {formattedTime}
         </span>
         <span className={`mt-1.5 text-[10px] font-semibold uppercase tracking-wider ${isRunning ? 'text-blue-400' : 'text-slate-500'}`}>
-          {remainingSeconds <= 0 ? 'Complete' : isRunning ? 'Counting down' : 'Ready'}
+          {isRunning ? 'Tracking time' : elapsedSeconds > 0 ? 'Paused' : 'Ready'}
         </span>
       </div>
     </div>
@@ -368,17 +160,14 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             {timerVisual}
           </div>
 
-          <div className="mt-1 text-center text-[11px] font-medium text-slate-400">
-            {modeLabel}
-          </div>
+          <div className="mt-1 text-center text-[11px] font-medium text-slate-400">Elapsed task time</div>
 
           <div className="mt-2 flex items-center justify-center gap-2">
             <button
               type="button"
               onClick={handleResetClick}
-              onDoubleClick={handleResetDoubleClick}
-              title="Reset timer • Double-click to set custom minutes"
-              aria-label="Reset Pomodoro timer. Double-click to set custom minutes."
+              title="Reset elapsed time to zero"
+              aria-label="Reset elapsed focus time to zero."
               className="w-9 h-9 inline-flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
             >
               <RotateCcw className="w-4 h-4" />
@@ -425,7 +214,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             <button
               type="button"
               onClick={handleResetClick}
-              onDoubleClick={handleResetDoubleClick}
               title="Reset timer • Double-click to set custom minutes"
               aria-label="Reset Pomodoro timer. Double-click to set custom minutes."
               className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
@@ -436,85 +224,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         </div>
       )}
 
-      {isCustomOpen && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-4 bg-slate-950/35 backdrop-blur-[2px]"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Set custom Pomodoro time"
-              onMouseDown={(event) => {
-                if (event.target === event.currentTarget) {
-                  setIsCustomOpen(false);
-                }
-              }}
-            >
-              <div className="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Custom Focus Time
-                    </h3>
-                    <p className="mt-0.5 text-[10px] text-slate-400">
-                      Set a focus duration from 1 to {MAX_CUSTOM_MINUTES} minutes.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsCustomOpen(false)}
-                    className="w-7 h-7 inline-flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    aria-label="Close custom timer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <form onSubmit={applyCustomTime} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={MAX_CUSTOM_MINUTES}
-                      step={1}
-                      autoFocus
-                      value={customMinutes}
-                      onChange={(event) =>
-                        setCustomMinutes(event.target.value)
-                      }
-                      onKeyDown={(event) => {
-                        if (event.key === 'Escape') {
-                          setIsCustomOpen(false);
-                        }
-                      }}
-                      className="min-w-0 flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-sm font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
-                      aria-label="Custom focus minutes"
-                    />
-                    <span className="text-xs font-medium text-slate-400">
-                      minutes
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsCustomOpen(false)}
-                      className="h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="h-10 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold"
-                    >
-                      Set Timer
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>,
-            document.body
-          )
-        : null}
     </>
   );
 };

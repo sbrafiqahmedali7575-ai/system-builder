@@ -353,6 +353,10 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .command-item:hover,.task-menu-item:hover { background:rgb(248 250 252); }
 .dark .command-item:hover,.dark .task-menu-item:hover { background:rgb(30 41 59); }
 .command-item svg,.task-menu-item svg { width:16px; height:16px; }
+@media (max-width:47.999rem) {
+  .task-menu-item { min-height:44px; padding:.7rem .75rem; }
+}
+
 .command-item kbd { margin-left:auto; font-size:10px; color:rgb(148 163 184); }
 @media (max-width:47.999rem) { .system-app-shell main { padding-bottom:calc(5.75rem + env(safe-area-inset-bottom)); } }
 @media (max-width:23.5rem) { .mobile-nav-action { font-size:9px; } .mobile-nav-action svg { width:17px; height:17px; } }

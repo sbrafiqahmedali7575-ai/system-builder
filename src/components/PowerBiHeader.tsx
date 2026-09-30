@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Focus, Wrench } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
-import { DashboardTheme } from '../types';
-import { LongTermBadge } from '../utils/badgeSystem';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -18,27 +16,17 @@ const HEADER_QUOTES = [
 ] as const;
 
 interface PowerBiHeaderProps {
-  onOpenAddModal?: () => void;
   onOpenLibrary?: () => void;
   onOpenTools?: () => void;
-  onOpenQuickAdd?: () => void;
-  onOpenSearch?: () => void;
   onToggleFocus?: () => void;
   focusMode?: boolean;
-  theme?: DashboardTheme;
-  onThemeChange?: (theme: DashboardTheme) => void;
-  totalRecordsCount?: number;
-  currentBadge?: LongTermBadge | null;
   isSyncing?: boolean;
-  activeTab?: NavTab;
-  onTabChange?: (tab: NavTab) => void;
 }
+
 
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenLibrary,
   onOpenTools,
-  onOpenQuickAdd,
-  onOpenSearch,
   onToggleFocus,
   focusMode = false,
   isSyncing = false,

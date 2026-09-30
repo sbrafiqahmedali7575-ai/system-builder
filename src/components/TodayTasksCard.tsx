@@ -240,6 +240,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [panelDateTab, setPanelDateTab] = useState<'TODAY' | 'TOMORROW'>('TODAY');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskNotes, setNewTaskNotes] = useState('');
+  const [newEstimationTime, setNewEstimationTime] = useState('');
+  const [newActualTime, setNewActualTime] = useState('');
   const [newTaskQuadrant, setNewTaskQuadrant] = useState<MatrixQuadrant | ''>('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
@@ -250,6 +252,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editEstimationTime, setEditEstimationTime] = useState('');
+  const [editActualTime, setEditActualTime] = useState('');
   const [editCompleted, setEditCompleted] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -314,6 +318,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setPanelDateTab(tabToUse);
     setNewTaskTitle('');
     setNewTaskNotes('');
+    setNewEstimationTime('');
+    setNewActualTime('');
     setNewTaskQuadrant('');
     setPanelError(null);
     setRecentlyAddedInSession([]);
@@ -323,6 +329,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const handleCloseEnterPanel = () => {
     setNewTaskTitle('');
     setNewTaskNotes('');
+    setNewEstimationTime('');
+    setNewActualTime('');
     setNewTaskQuadrant('');
     setPanelError(null);
     setRecentlyAddedInSession([]);
@@ -385,6 +393,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         category: 'General',
         matrixQuadrant: newTaskQuadrant || undefined,
         notes: newTaskNotes.trim(),
+        EstimationTime: newEstimationTime.trim(),
+        ActualTime: newActualTime.trim(),
       });
 
       // Keep the panel open for rapid entry. The focused input naturally stays
@@ -392,6 +402,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       setRecentlyAddedInSession((prev) => [trimmedTitle, ...prev]);
       setNewTaskTitle('');
       setNewTaskNotes('');
+      setNewEstimationTime('');
+      setNewActualTime('');
     } catch (err: any) {
       console.error('Error adding task:', err);
       setPanelError(err?.message || 'Failed to add task. Please check connection and try again.');
@@ -477,6 +489,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         isCompleted: false,
         priority: task.priority || 'Normal',
         timeEstimate: task.timeEstimate,
+        EstimationTime: task.EstimationTime,
+        ActualTime: task.ActualTime,
         category: task.category,
         notes: task.notes,
         matrixQuadrant: task.matrixQuadrant,
@@ -504,6 +518,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setEditingTask(task);
     setEditTitle(task.taskOfTheDay);
     setEditNotes(task.notes || '');
+    setEditEstimationTime(task.EstimationTime || task.timeEstimate || '');
+    setEditActualTime(task.ActualTime || '');
     setEditCompleted(task.isCompleted);
     setEditError(null);
   };
@@ -528,6 +544,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         ...editingTask,
         taskOfTheDay: trimmedTitle,
         isCompleted: editCompleted,
+        EstimationTime: editEstimationTime.trim(),
+        ActualTime: editActualTime.trim(),
         updatedAt: new Date().toISOString(),
         completedAt: editCompleted ? editingTask.completedAt || new Date().toISOString() : undefined,
       };
@@ -935,6 +953,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-2 sm:col-span-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      EstimationTime
+                      <input type="text" value={newEstimationTime} onChange={(e) => setNewEstimationTime(e.target.value)} placeholder="e.g. 45m" className={`mt-1 w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
+                    </label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      ActualTime
+                      <input type="text" value={newActualTime} onChange={(e) => setNewActualTime(e.target.value)} placeholder="e.g. 50m" className={`mt-1 w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
+                    </label>
+                  </div>
+
                   <div>
                     <label
                       htmlFor="new-task-quadrant"
@@ -1147,6 +1176,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     placeholder="Add notes"
                     className={`w-full min-h-[48px] max-h-20 resize-y px-2 py-1 rounded-lg border text-xs leading-4 focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    EstimationTime
+                    <input type="text" value={editEstimationTime} onChange={(e) => setEditEstimationTime(e.target.value)} placeholder="e.g. 45m" className={`mt-1 w-full min-h-10 px-3 py-2 rounded-xl border text-sm outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
+                  </label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    ActualTime
+                    <input type="text" value={editActualTime} onChange={(e) => setEditActualTime(e.target.value)} placeholder="e.g. 50m" className={`mt-1 w-full min-h-10 px-3 py-2 rounded-xl border text-sm outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
+                  </label>
                 </div>
 
                 <div>

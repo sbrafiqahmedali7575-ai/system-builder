@@ -1002,7 +1002,7 @@ export default function App() {
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.42, ease: [0.16, 1, 0.3, 1]}}
           >
-            <SystemBuilderLogo className="size-11 rounded-[14px] text-sm" animated />
+            <SystemBuilderLogo className="size-11 text-sm" animated />
             <div className="min-w-0 flex-1">
               <div className="text-[16px] font-bold leading-tight tracking-[-0.015em] text-slate-950 dark:text-white">System Builder</div>
               <div className="mt-1 text-[10px] font-medium leading-none tracking-[0.035em] text-slate-500 dark:text-slate-400">Build today. Compound tomorrow.</div>

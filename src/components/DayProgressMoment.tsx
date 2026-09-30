@@ -126,9 +126,8 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         transition={{ duration: 1.35, ease: [0.22, 1, 0.36, 1] }}
       />
 
-      <div className="mx-auto max-w-sm sm:max-w-xl">
       <motion.div
-        className={`relative flex size-16 items-center justify-center rounded-2xl border shadow-lg ${
+        className={`relative mx-auto flex size-16 items-center justify-center rounded-2xl border shadow-lg ${
           isCompleted
             ? 'border-emerald-200 bg-emerald-50 text-emerald-600 shadow-emerald-100/70 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300 dark:shadow-emerald-950/30'
             : 'border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-300'
@@ -174,14 +173,12 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           transition={{ duration: 1.8, repeat: reduceMotion ? 0 : Infinity, repeatDelay: 0.3, delay: 0.25 }}
         />
       </motion.div>
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.45 }}
       >
-        <div className="mx-auto max-w-sm text-left sm:max-w-xl">
         <div className={`mt-4 text-[10px] font-black uppercase tracking-[0.18em] ${
           isCompleted
             ? 'text-emerald-600 dark:text-emerald-400'
@@ -193,7 +190,6 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
           {isCompleted ? 'Progress locked in.' : 'Use the obstacle.'}
         </h2>
-        </div>
 
         <motion.div
           className={`mx-auto mt-3 max-w-sm sm:max-w-xl rounded-2xl border px-4 py-4 shadow-sm ${

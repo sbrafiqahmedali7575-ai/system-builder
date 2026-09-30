@@ -190,7 +190,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         </h2>
 
         <motion.div
-          className={`mx-auto mt-4 max-w-sm rounded-2xl border px-4 py-4 shadow-sm ${
+          className={`mx-auto mt-3 max-w-sm sm:max-w-xl rounded-2xl border px-4 py-4 shadow-sm ${
             isCompleted
               ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/25'
               : 'border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/25'
@@ -244,7 +244,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         </div>
 
         {isCompleted ? (
-          <div className="mx-auto mt-5 max-w-sm">
+          <div className="mx-auto mt-4 max-w-sm sm:max-w-xl">
             <motion.div
               className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-3.5 shadow-sm dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/30"
               initial={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -269,7 +269,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
                   : 'Your completed day is now reflected in your long-term system.'}
               </motion.p>
 
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <AnimatedScore
                   label="Successful Days"
                   before={statsBefore.successfulDays}
@@ -365,7 +365,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             </motion.div>
           </div>
         ) : (
-          <div className="mx-auto mt-5 max-w-sm">
+          <div className="mx-auto mt-4 max-w-sm sm:max-w-xl">
             <motion.div
               className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3.5 shadow-sm dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/30"
               initial={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -591,10 +591,11 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           </div>
         )}
 
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <motion.button
           type="button"
           onClick={onUpdateAgain}
-          className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/80 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/80 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0, duration: 0.35 }}
@@ -606,7 +607,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         <motion.button
           type="button"
           onClick={onContinue}
-          className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-blue-500 active:scale-[0.99]"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-blue-500 active:scale-[0.99]"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.85, duration: 0.4 }}
@@ -614,6 +615,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           {isCompleted ? 'Carry the Momentum Forward' : nextTaskTitle ? 'Back to Dashboard' : 'Move to the Next Step'}
           <ArrowRight className="size-4" />
         </motion.button>
+        </div>
       </motion.div>
     </div>
   );

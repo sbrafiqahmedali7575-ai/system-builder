@@ -277,7 +277,7 @@ export const TaskTracker: React.FC<TaskTrackerProps> = ({
     <div
       className="tools-workspace-view lg:overflow-y-auto"
     >
-      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[calc(100dvh-7.25rem)] min-h-[520px] md:h-[680px] md:min-h-[640px] lg:h-[720px] overflow-hidden border-0 bg-white dark:bg-slate-950 flex flex-col">
+      <section id="task-planner-calendar" aria-label="Task planner calendar" className="system-planning-surface h-[calc(100dvh-9.5rem)] min-h-[320px] sm:h-[calc(100dvh-8.5rem)] sm:min-h-[420px] md:h-[calc(100dvh-7.5rem)] md:min-h-[480px] lg:h-[min(720px,calc(100dvh-7rem))] lg:min-h-[520px] overflow-hidden border-0 bg-white dark:bg-slate-950 flex flex-col">
         {!focusMode && <div className="tools-view-header">
           <div className="min-w-0"><h2 className="tools-view-title">Task Planner</h2><p className="tools-view-subtitle">{todayTasks.length} today · {completedToday} completed · {weekTasks.length} this week</p></div>
         </div>}

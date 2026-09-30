@@ -39,10 +39,13 @@ function taskContentMatches(a: TaskItem, b: TaskItem): boolean {
     a.isCompleted === b.isCompleted &&
     (a.priority || 'Normal') === (b.priority || 'Normal') &&
     (a.timeEstimate || '') === (b.timeEstimate || '') &&
+    (a.EstimationTime || '') === (b.EstimationTime || '') &&
+    (a.ActualTime || '') === (b.ActualTime || '') &&
     (a.category || '') === (b.category || '') &&
     (a.notes || '') === (b.notes || '') &&
     (a.completedAt || '') === (b.completedAt || '') &&
-    (a.matrixQuadrant || '') === (b.matrixQuadrant || '')
+    (a.matrixQuadrant || '') === (b.matrixQuadrant || '') &&
+    (a.taskOrder || 0) === (b.taskOrder || 0)
   );
 }
 

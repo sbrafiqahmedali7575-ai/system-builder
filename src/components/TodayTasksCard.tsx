@@ -267,6 +267,30 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const copyForwardLocksRef = useRef<Set<string>>(new Set());
   const [copyingTaskIds, setCopyingTaskIds] = useState<Set<string>>(() => new Set());
   const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const focusTask = (event: Event) => {
+      const taskId = (event as CustomEvent<{ taskId?: string }>).detail?.taskId;
+      if (!taskId) return;
+
+      setActiveDateTab('TODAY');
+      setFocusedTaskId(taskId);
+
+      window.setTimeout(() => {
+        document
+          .getElementById(`system-task-${taskId}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 180);
+
+      window.setTimeout(() => {
+        setFocusedTaskId((current) => (current === taskId ? null : current));
+      }, 3600);
+    };
+
+    window.addEventListener('system-builder:focus-task', focusTask);
+    return () => window.removeEventListener('system-builder:focus-task', focusTask);
+  }, []);
 
   useEffect(() => {
     setCopyForwardFeedback(null);
@@ -626,12 +650,17 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <React.Fragment key={task.id}>
                 {showCompletedHeading && <div className="pt-3 pb-1 px-1 text-[10px] uppercase tracking-[0.12em] font-semibold text-slate-400 dark:text-slate-500">Completed {completedTasks.length}</div>}
                 <motion.div
+                  id={`system-task-${task.id}`}
                   layout
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className="relative"
+                  className={`relative rounded-xl transition-[box-shadow,background-color] duration-500 ${
+                    focusedTaskId === task.id
+                      ? 'bg-blue-50/90 ring-2 ring-blue-500 ring-offset-2 ring-offset-white shadow-lg shadow-blue-100 dark:bg-blue-950/35 dark:ring-blue-400 dark:ring-offset-slate-900 dark:shadow-blue-950/30'
+                      : ''
+                  }`}
                 >
                   {/* Task row */}
                   <motion.div

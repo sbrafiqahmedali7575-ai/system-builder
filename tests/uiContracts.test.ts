@@ -87,6 +87,50 @@ assert.ok(
   'Browser back/forward must keep review modal state in sync with the URL.'
 );
 
+assert.ok(
+  app.includes('returnToDashboardForShortcut'),
+  'Global shortcuts from Books/Tools must return to the dashboard before opening dashboard-only UI.'
+);
+assert.ok(
+  app.includes("returnToDashboardForShortcut(() => setIsCommandPaletteOpen(true))"),
+  'Ctrl/Cmd+K must not create a hidden command palette from Books/Tools.'
+);
+assert.ok(
+  app.includes("returnToDashboardForShortcut(() => setIsTaskSearchOpen(true))"),
+  'Task search shortcut must not create hidden state from Books/Tools.'
+);
+assert.ok(
+  app.includes("returnToDashboardForShortcut(openEnterTasks)"),
+  'New-task shortcut must return to Today before dispatching Enter Tasks.'
+);
+
+const commandPalette = read('src/components/CommandPalette.tsx');
+assert.ok(
+  commandPalette.includes('onCalendar:()=>void'),
+  'Command Palette must expose a real Calendar navigation action.'
+);
+assert.ok(
+  commandPalette.includes('onClick={act(onCalendar)}'),
+  'Command Palette Calendar action must navigate instead of scrolling to a possibly unmounted element.'
+);
+assert.ok(
+  app.includes("onCalendar={() => handleOpenTools('tasks')}"),
+  'Open Calendar must navigate to Plan / Task Tracker.'
+);
+
+assert.ok(
+  calendar.includes('const [error, setError] = useState<string | null>(null);'),
+  'Calendar quick-add must keep a visible error state.'
+);
+assert.ok(
+  calendar.includes('catch (submitError)'),
+  'Calendar quick-add must catch save failures.'
+);
+assert.ok(
+  calendar.includes('role="alert"'),
+  'Calendar quick-add failures must be announced visibly and accessibly.'
+);
+
 // Completed and Not Completed result footers should retain the same compact two-column layout.
 assert.ok(
   dayProgress.includes('className="mt-4 grid grid-cols-2 gap-2 max-[360px]:gap-1.5"'),

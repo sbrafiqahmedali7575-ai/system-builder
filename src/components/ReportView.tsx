@@ -95,6 +95,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
+  const [selectedFocusTaskId, setSelectedFocusTaskId] = useState<string>('');
   const [customCountdownDate, setCustomCountdownDate] = useState(() => {
     if (typeof window === 'undefined') return '';
     return window.localStorage.getItem(COUNTDOWN_TARGET_DATE_KEY) || '';
@@ -173,12 +174,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
     [records, currentDateKey]
   );
 
+  const todayFocusTasks = useMemo(
+    () => tasks.filter((task) => task.taskKey === currentDateKey),
+    [tasks, currentDateKey]
+  );
+
   const currentFocusTask = useMemo(
     () =>
-      tasks.find(
-        (task) => task.taskKey === currentDateKey && !task.isCompleted
-      ) || null,
-    [tasks, currentDateKey]
+      todayFocusTasks.find((task) => task.id === selectedFocusTaskId) ||
+      todayFocusTasks.find((task) => !task.isCompleted) ||
+      todayFocusTasks[0] ||
+      null,
+    [todayFocusTasks, selectedFocusTaskId]
   );
 
   const currentCadenceDay = useMemo(() => {
@@ -373,6 +380,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
               countdownReason={longTermCountdown.reason}
               countdownTargetLabel={longTermCountdown.targetDateLabel}
               currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
+              todayTasks={todayFocusTasks.map((task) => ({
+                id: task.id,
+                title: task.taskOfTheDay,
+                isCompleted: task.isCompleted,
+              }))}
+              onCurrentTaskChange={setSelectedFocusTaskId}
               onOpenCountdown={openCountdownEditor}
               focusMode={focusMode}
             />

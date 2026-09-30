@@ -811,17 +811,25 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
   const [quadrant, setQuadrant] = useState<MatrixQuadrant | ''>('');
   const [saving, setSaving] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
     const clean = title.trim();
     if (!clean || saving) return;
     try {
       setSaving(true);
+      setError(null);
       await onSubmit(clean, notes, quadrant);
       setTitle('');
       setNotes('');
       setQuadrant('');
       setAddedCount((count) => count + 1);
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error
+          ? submitError.message
+          : 'Unable to add this task. Please try again.';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -845,18 +853,23 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_190px] gap-2 items-start">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Task Title / Objective</label>
-            <input autoFocus value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter')void submit();if(e.key==='Escape'&&!saving)onClose();}} placeholder="What needs to be done?" className="w-full h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm outline-none focus:border-blue-500" />
-            <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} placeholder="Notes" rows={2} className="mt-1 w-full min-h-[48px] resize-y px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs outline-none focus:border-blue-500" />
+            <input autoFocus value={title} onChange={(e)=>{setTitle(e.target.value);if(error)setError(null);}} onKeyDown={(e)=>{if(e.key==='Enter')void submit();if(e.key==='Escape'&&!saving)onClose();}} placeholder="What needs to be done?" className="w-full h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm outline-none focus:border-blue-500" />
+            <textarea value={notes} onChange={(e)=>{setNotes(e.target.value);if(error)setError(null);}} placeholder="Notes" rows={2} className="mt-1 w-full min-h-[48px] resize-y px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs outline-none focus:border-blue-500" />
           </div>
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Quadrant <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span></label>
-            <select value={quadrant} onChange={(e)=>setQuadrant(e.target.value as MatrixQuadrant|'')} className="w-full h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold outline-none focus:border-blue-500">
+            <select value={quadrant} onChange={(e)=>{setQuadrant(e.target.value as MatrixQuadrant|'');if(error)setError(null);}} className="w-full h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold outline-none focus:border-blue-500">
               <option value="">No quadrant</option>
               {TASK_QUADRANT_OPTIONS.map((item)=><option key={item.value} value={item.value}>{item.roman} — {item.label}</option>)}
             </select>
           </div>
         </div>
 
+        {error && (
+          <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs font-semibold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/35 dark:text-rose-300" role="alert">
+            {error}
+          </div>
+        )}
         {addedCount > 0 && <div className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-300">Added in this session: {addedCount}</div>}
         <div className="mt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-2">
           <button type="button" disabled={saving} onClick={onClose} className="px-3 h-9 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed">Done</button>

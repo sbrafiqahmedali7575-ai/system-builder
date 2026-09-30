@@ -543,7 +543,6 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     data: {
       userId: 'default-user',
       name: 'Rafiq Ahmed',
-      email: 'sbrafiqahmedali7575@gmail.com',
     },
   });
   result.users = 1;

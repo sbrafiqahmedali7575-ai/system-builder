@@ -860,3 +860,135 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
  .system-edition [class*="fixed"][class*="z-"] > [class*="rounded"],
  .system-edition [class*="absolute"][class*="z-"] > [class*="rounded"] { animation:none!important; }
 }
+
+
+/* Animation Heavy Edition — intentionally expressive motion across the full UI */
+.system-edition {
+  --heavy-spring:cubic-bezier(.16,1,.3,1);
+}
+.system-edition::after {
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.42;
+  background:
+    radial-gradient(circle at 8% 32%,rgba(59,130,246,.09),transparent 20%),
+    radial-gradient(circle at 92% 68%,rgba(139,92,246,.08),transparent 22%);
+  animation:heavy-atmosphere 10s ease-in-out infinite alternate;
+}
+
+/* Header/logo/navigation feel alive without disturbing layout. */
+.system-header,.system-edition header {
+  animation:heavy-header-drop 600ms var(--heavy-spring) both;
+}
+.system-mark,.system-edition header svg {
+  transition:transform 320ms var(--heavy-spring),filter 320ms ease;
+}
+@media (hover:hover) and (pointer:fine) {
+ .system-edition header button:hover svg,.system-edition header a:hover svg {
+   transform:translateY(-2px) scale(1.08) rotate(-3deg);
+   filter:drop-shadow(0 5px 7px rgba(71,114,250,.18));
+ }
+}
+
+/* Cascading sections and cards */
+.system-edition main > *,
+.system-edition section {
+  animation:heavy-section-rise 580ms var(--heavy-spring) both;
+}
+.system-edition main > :nth-child(2),.system-edition section:nth-of-type(2){animation-delay:70ms}
+.system-edition main > :nth-child(3),.system-edition section:nth-of-type(3){animation-delay:140ms}
+.system-edition main > :nth-child(4),.system-edition section:nth-of-type(4){animation-delay:210ms}
+.system-edition .rounded-xl,.system-edition .rounded-2xl,.system-edition .rounded-lg {
+  transition:transform 300ms var(--heavy-spring),box-shadow 300ms ease,border-color 260ms ease,filter 260ms ease;
+}
+@media (hover:hover) and (pointer:fine) {
+ .system-edition article:hover,.system-edition .ui-surface:hover,.system-edition .tools-panel:hover,
+ .system-edition .system-task-card:hover {
+   transform:translateY(-4px) scale(1.006);
+   box-shadow:0 18px 44px rgba(30,64,175,.11);
+ }
+}
+
+/* Buttons get springy physical feedback and a passing highlight. */
+.system-edition button:not(:disabled),.system-edition [role="button"] {
+  position:relative;
+}
+.system-edition button:not(:disabled)::before {
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.32) 48%,transparent 72%);
+  transform:translateX(-110%);
+}
+@media (hover:hover) and (pointer:fine) {
+ .system-edition button:hover:not(:disabled)::before {
+   opacity:1;animation:heavy-button-sheen 700ms ease forwards;
+ }
+ .system-edition button:hover:not(:disabled) { transform:translateY(-2px) scale(1.015); }
+}
+.system-edition button:active:not(:disabled) { transform:scale(.94)!important; }
+
+/* Task/habit completion has a stronger pulse. */
+.system-edition input[type="checkbox"]:checked {
+  animation:heavy-check-bounce 520ms var(--heavy-spring);
+  filter:drop-shadow(0 0 5px rgba(37,99,235,.34));
+}
+.system-edition [aria-checked="true"],.system-edition [data-completed="true"] {
+  animation:heavy-success-pulse 600ms var(--heavy-spring);
+}
+
+/* Tabs/navigation: active items breathe subtly. */
+.system-edition [role="tab"][aria-selected="true"],
+.mobile-nav-action[aria-current="page"] {
+  animation:heavy-active-tab 420ms var(--heavy-spring) both;
+}
+.mobile-nav-action svg { transition:transform 260ms var(--heavy-spring),filter 260ms ease; }
+.mobile-nav-action:active svg { transform:scale(.82) translateY(2px); }
+
+/* KPI/progress visuals */
+.command-kpi { animation:heavy-kpi-arrive 600ms var(--heavy-spring) both; }
+.command-kpi:nth-child(2){animation-delay:90ms}.command-kpi:nth-child(3){animation-delay:180ms}
+.command-kpi:hover svg { animation:heavy-kpi-float 900ms ease-in-out infinite alternate; }
+.system-edition [role="progressbar"] { animation:heavy-progress 900ms var(--heavy-spring) both; }
+
+/* Dialogs, menus and popovers use a pronounced spring reveal. */
+.system-edition [role="dialog"],
+.system-edition [class*="fixed"][class*="z-"] > [class*="rounded"],
+.system-edition [class*="absolute"][class*="z-"] > [class*="rounded"] {
+  transform-origin:50% 12%;
+  animation:heavy-overlay-pop 420ms var(--heavy-spring) both;
+}
+
+/* Reader: paragraphs/sections cascade in, then stay still for comfortable reading. */
+.system-edition article section {
+  animation:heavy-reader-rise 620ms var(--heavy-spring) both;
+}
+.system-edition article section:nth-of-type(2){animation-delay:60ms}
+.system-edition article section:nth-of-type(3){animation-delay:120ms}
+.system-edition article section:nth-of-type(4){animation-delay:180ms}
+
+/* Focus rings animate instead of snapping. */
+.system-edition :focus-visible { animation:heavy-focus-ring 360ms var(--heavy-spring); }
+
+@keyframes heavy-atmosphere { from{transform:translate3d(-2%,-1%,0) scale(1)}to{transform:translate3d(2%,2%,0) scale(1.08)} }
+@keyframes heavy-header-drop { from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none} }
+@keyframes heavy-section-rise { from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none} }
+@keyframes heavy-button-sheen { to{transform:translateX(110%)} }
+@keyframes heavy-check-bounce { 0%{transform:scale(.55) rotate(-12deg)}55%{transform:scale(1.3) rotate(4deg)}78%{transform:scale(.92)}100%{transform:scale(1)} }
+@keyframes heavy-success-pulse { 0%{transform:scale(.985)}45%{transform:scale(1.025);filter:brightness(1.04)}100%{transform:scale(1);filter:none} }
+@keyframes heavy-active-tab { 0%{transform:translateY(2px) scale(.96)}65%{transform:translateY(-1px) scale(1.035)}100%{transform:none} }
+@keyframes heavy-kpi-arrive { from{opacity:0;transform:translateY(12px) scale(.92)}70%{transform:translateY(-2px) scale(1.025)}to{opacity:1;transform:none} }
+@keyframes heavy-kpi-float { to{transform:translateY(-3px) scale(1.08)} }
+@keyframes heavy-progress { from{opacity:.25;transform:scaleX(.08)}70%{transform:scaleX(1.025)}to{opacity:1;transform:scaleX(1)} }
+@keyframes heavy-overlay-pop { from{opacity:0;transform:translateY(16px) scale(.93)}65%{transform:translateY(-2px) scale(1.012)}to{opacity:1;transform:none} }
+@keyframes heavy-reader-rise { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none} }
+@keyframes heavy-focus-ring { 0%{outline-offset:7px;filter:brightness(1.08)}100%{outline-offset:2px;filter:none} }
+
+@media (pointer:coarse) {
+ .system-edition button:active:not(:disabled),.system-edition [role="button"]:active { transform:scale(.93)!important; }
+ .system-task-card:active,.tools-list-row:active { transform:scale(.975)!important; }
+}
+@media (prefers-reduced-motion:reduce) {
+ .system-edition::after,.system-header,.system-edition header,.system-edition main > *,.system-edition section,
+ .system-edition input[type="checkbox"]:checked,.system-edition [aria-checked="true"],.system-edition [data-completed="true"],
+ .system-edition [role="tab"][aria-selected="true"],.mobile-nav-action[aria-current="page"],.command-kpi,
+ .system-edition [role="progressbar"],.system-edition [role="dialog"],.system-edition article section {
+   animation:none!important;
+ }
+}

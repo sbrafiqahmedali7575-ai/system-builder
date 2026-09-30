@@ -336,13 +336,20 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     return () => window.removeEventListener('system-builder:open-enter-tasks', openEnterTasks);
   }, []);
 
-  // Focus input when Enter panel opens
+  // Preserve keyboard-first desktop entry without forcing the mobile visual viewport
+  // to resize as soon as the Enter Tasks panel opens.
   useEffect(() => {
-    if (isEnterPanelOpen) {
-      setTimeout(() => {
-        taskInputRef.current?.focus();
-      }, 100);
-    }
+    if (!isEnterPanelOpen) return;
+    const canAutoFocus =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(min-width: 640px) and (pointer: fine)').matches;
+    if (!canAutoFocus) return;
+
+    const timeoutId = window.setTimeout(() => {
+      taskInputRef.current?.focus({ preventScroll: true });
+    }, 100);
+
+    return () => window.clearTimeout(timeoutId);
   }, [isEnterPanelOpen]);
 
   // Add Task inside "Enter Tasks" panel
@@ -380,13 +387,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         notes: newTaskNotes.trim(),
       });
 
-      // Keep panel open, add to session list, clear input and refocus!
+      // Keep the panel open for rapid entry. The focused input naturally stays
+      // focused on desktop/mobile; do not force another mobile viewport resize.
       setRecentlyAddedInSession((prev) => [trimmedTitle, ...prev]);
       setNewTaskTitle('');
       setNewTaskNotes('');
-      setTimeout(() => {
-        taskInputRef.current?.focus();
-      }, 50);
     } catch (err: any) {
       console.error('Error adding task:', err);
       setPanelError(err?.message || 'Failed to add task. Please check connection and try again.');
@@ -782,7 +787,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {isEnterPanelOpen && (
-          <div className="system-stable-modal fixed inset-0 z-[220] flex items-start justify-center overflow-y-auto overscroll-none bg-black/60 px-2 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xs sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Enter tasks">
+          <div className="system-stable-modal fixed inset-0 z-[220] flex items-start justify-center overflow-hidden overscroll-none bg-black/60 px-2 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xs sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Enter tasks">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

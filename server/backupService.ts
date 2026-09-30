@@ -59,19 +59,27 @@ export async function fetchAllProjectData(): Promise<BackupData> {
  */
 export function generateDaysCsv(days: any[]): string {
   const headers = [
-    'dateKey','tasksDone','tasks','tasksCompleted',
-    'habitsDone','Habits','habitsCompleted','IsdayCompleted'
+    'dateKey',
+    'tasksCompleted',
+    'taskTotal',
+    'taskCompletionRate',
+    'habitsCompleted',
+    'habitTotal',
+    'habitCompletionRate',
+    'IsdayCompleted',
   ];
+
   const rows = days.map((d) => [
     d.dateKey ?? d.id ?? '',
-    d.tasksDone ?? 0,
-    d.tasks ?? 0,
     d.tasksCompleted ?? 0,
-    d.habitsDone ?? 0,
-    d.Habits ?? 0,
+    d.taskTotal ?? 0,
+    d.taskCompletionRate ?? 0,
     d.habitsCompleted ?? 0,
+    d.habitTotal ?? 0,
+    d.habitCompletionRate ?? 0,
     d.IsdayCompleted === true ? 'TRUE' : 'FALSE',
   ]);
+
   return [formatCsvRow(headers), ...rows.map(formatCsvRow)].join('\r\n');
 }
 

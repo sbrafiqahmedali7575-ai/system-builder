@@ -262,6 +262,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   // UI state for Deleting a Task confirmation
   const [deletingTask, setDeletingTask] = useState<TaskItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const deleteInFlightRef = useRef(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -581,16 +582,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
   // Confirm Task Deletion
   const handleConfirmDelete = async () => {
-    if (!deletingTask) return;
+    if (!deletingTask || deleteInFlightRef.current) return;
+    deleteInFlightRef.current = true;
+    const taskId = deletingTask.id;
     try {
       setIsDeleting(true);
       setDeleteError(null);
-      await onDeleteTask(deletingTask.id);
+      await onDeleteTask(taskId);
       setDeletingTask(null);
     } catch (err: any) {
       console.error('Error deleting task:', err);
       setDeleteError(err?.message || 'Failed to delete task. Please try again.');
     } finally {
+      deleteInFlightRef.current = false;
       setIsDeleting(false);
     }
   };

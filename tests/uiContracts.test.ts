@@ -44,6 +44,27 @@ assert.ok(
   'Calendar quick-add must not leak a template placeholder into the UI.'
 );
 
+assert.ok(
+  calendar.includes('const CalendarFocusTopBar'),
+  'Calendar focus mode must keep a compact navigation header.'
+);
+assert.ok(
+  calendar.includes('<CalendarFocusTopBar'),
+  'Calendar focus mode must render its focus navigation header.'
+);
+assert.ok(
+  calendar.includes('periodLabel={periodLabel}'),
+  'Calendar focus header must show the current month/year period label.'
+);
+assert.ok(
+  calendar.includes('<CalendarViewSegmentedControl'),
+  'Calendar focus header must retain Month/Year switching.'
+);
+assert.ok(
+  calendar.includes('>\n          Today\n        </button>'),
+  'Calendar focus header must retain the Today action.'
+);
+
 // Tools navigation/focus must remain functional when the mobile bottom nav is visible.
 assert.ok(
   more.includes('useEffect(() => {\n    setActiveTab(initialTab);\n  }, [initialTab]);'),

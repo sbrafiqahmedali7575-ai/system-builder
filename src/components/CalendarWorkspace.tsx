@@ -367,7 +367,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
 
   return (
     <div
-      className={`relative h-full min-h-[520px] md:min-h-[640px] lg:min-h-0 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 dark:text-slate-100 flex flex-col overflow-hidden ${
+      className={`relative h-full min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 dark:text-slate-100 flex flex-col overflow-hidden ${
         compact ? 'text-sm' : ''
       }`}
     >

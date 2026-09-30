@@ -66,6 +66,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     totalTaskCount: number;
     completedHabitCount: number;
     totalHabitCount: number;
+    nextTaskId: string | null;
     nextTaskTitle: string | null;
   } | null>(null);
 
@@ -174,6 +175,8 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
           habit.checkIns.includes(todayDateKey)
         ).length,
         totalHabitCount: reviewedHabits.length,
+        nextTaskId:
+          reviewedTasks.find((task) => !task.isCompleted)?.id ?? null,
         nextTaskTitle:
           reviewedTasks.find((task) => !task.isCompleted)?.taskOfTheDay ?? null,
       });
@@ -398,6 +401,21 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 completedHabitCount={result.completedHabitCount}
                 totalHabitCount={result.totalHabitCount}
                 nextTaskTitle={result.nextTaskTitle}
+                onFocusTask={
+                  result.nextTaskId
+                    ? () => {
+                        const taskId = result.nextTaskId;
+                        onClose();
+                        window.setTimeout(() => {
+                          window.dispatchEvent(
+                            new CustomEvent('system-builder:focus-task', {
+                              detail: { taskId },
+                            })
+                          );
+                        }, 120);
+                      }
+                    : undefined
+                }
                 onContinue={exitReview}
               />
             )}

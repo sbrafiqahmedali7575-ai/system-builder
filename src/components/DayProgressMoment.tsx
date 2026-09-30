@@ -187,9 +187,11 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           {isCompleted ? 'Day Completed • Momentum Earned' : 'Day Reviewed • Next Move Ready'}
         </div>
 
-        <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
-          {isCompleted ? 'Progress locked in.' : 'Use the obstacle.'}
-        </h2>
+        {!isCompleted && (
+          <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
+            Use the obstacle.
+          </h2>
+        )}
 
         <motion.div
           className={`mx-auto mt-3 max-w-sm sm:max-w-xl rounded-2xl border px-4 py-4 shadow-sm ${
@@ -201,17 +203,11 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           animate={{ opacity: 1, y: 0, scale: [0.95, 1.025, 1] }}
           transition={{ delay: 0.46, duration: 0.56, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div
-            className={`text-[9px] font-black uppercase tracking-[0.16em] ${
-              isCompleted
-                ? 'text-emerald-600 dark:text-emerald-300'
-                : 'text-indigo-600 dark:text-indigo-300'
-            }`}
-          >
-            {isCompleted
-              ? 'Principles 9–10 • Five Essential Lessons'
-              : 'Principles 3–7'}
-          </div>
+          {!isCompleted && (
+            <div className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300">
+              Principles 3–7
+            </div>
+          )}
 
           <motion.p
             className="mt-2 text-[16px] font-extrabold leading-relaxed tracking-[-0.015em] text-slate-900 dark:text-white"
@@ -258,18 +254,18 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
                 <span>{isNewSuccess ? 'Progress updated' : 'Progress confirmed'}</span>
               </div>
 
-              <motion.p
-                className="mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.62, duration: 0.3 }}
-              >
-                {isNewSuccess
-                  ? 'Your real system stats increased from this completed day.'
-                  : previousStatus === 'COMPLETED'
-                  ? 'This day was already successful, so your totals stay accurate—no double counting.'
-                  : 'Your completed day is now reflected in your long-term system.'}
-              </motion.p>
+              {previousStatus !== 'COMPLETED' && (
+                <motion.p
+                  className="mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.62, duration: 0.3 }}
+                >
+                  {isNewSuccess
+                    ? 'Your real system stats increased from this completed day.'
+                    : 'Your completed day is now reflected in your long-term system.'}
+                </motion.p>
+              )}
 
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <AnimatedScore

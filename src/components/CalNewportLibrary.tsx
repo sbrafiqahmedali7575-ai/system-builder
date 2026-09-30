@@ -30,6 +30,7 @@ import {
 import { CAL_NEWPORT_FULL_STUDY } from '../data/calNewportFullStudy';
 import { RYAN_HOLIDAY_BOOKS, RYAN_HOLIDAY_LIBRARY_UPDATED } from '../data/ryanHolidayLibrary';
 import { RYAN_HOLIDAY_FULL_STUDY } from '../data/ryanHolidayFullStudy';
+import { buildResearchEdition } from '../data/bookResearchEdition';
 
 type ReaderTone = 'paper' | 'sepia' | 'night';
 type ReaderFont = 'serif' | 'sans';
@@ -76,7 +77,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [readerWidth, setReaderWidth] = useState<ReaderWidth>('wide');
   const [lineHeight, setLineHeight] = useState(1.9);
   const [readingProgress, setReadingProgress] = useState(0);
-  const [isFullStudy, setIsFullStudy] = useState(false);
+  const [studyMode, setStudyMode] = useState<'concise'|'full'|'research'>('concise');
+  const isFullStudy = studyMode === 'full';
+  const isResearch = studyMode === 'research';
   const [internalFocusReader, setInternalFocusReader] = useState(false);
   const isFocusReader = focusMode ?? internalFocusReader;
   const setIsFocusReader = (updater: boolean | ((value: boolean) => boolean)) => {
@@ -181,8 +184,11 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const addSectionNote=()=>{const section=getCurrentSection();const key=`${activeBookId}::${section}`;const note=window.prompt('Note for this section',notes[key]||'');if(note!==null)setNotes(p=>({...p,[key]:note}));};
   const remainingMinutes = Math.max(0, Math.ceil((100 - readingProgress) / 100 * Number(activeBook.readingTime.match(/\d+/)?.[0] || 20)));
 
-  const selectBook = (book: CalNewportBook) => { setActiveBookId(book.id); setIsFullStudy(false); };
-  const openFullStudy = (book: CalNewportBook) => { setActiveBookId(book.id); setIsFullStudy(true); requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'})); };
+  const selectBook = (book: CalNewportBook) => { setActiveBookId(book.id); setStudyMode('concise'); };
+  const openFullStudy = (book: CalNewportBook) => { setActiveBookId(book.id); setStudyMode('full'); requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'})); };
+  const openResearch = (book: CalNewportBook) => { setActiveBookId(book.id); setStudyMode('research'); requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'})); };
+  const researchEdition = useMemo(() => buildResearchEdition(activeBook, fullStudy[activeBook.id]), [activeBook, fullStudy]);
+  const handleBookClick = (book: CalNewportBook, detail:number) => { if(detail >= 3) openResearch(book); else if(detail === 2) openFullStudy(book); else selectBook(book); };
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${toneClasses}`}>
@@ -212,7 +218,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📚</span>
-                <h1 onDoubleClick={() => { const next = author === 'cal' ? 'ryan' : 'cal'; setAuthor(next); setActiveBookId(next === 'ryan' ? RYAN_HOLIDAY_BOOKS[0].id : CAL_NEWPORT_BOOKS[0].id); setIsFullStudy(false); }} title="Double-click to switch author" className="text-base font-semibold tracking-tight truncate cursor-pointer select-none">
+                <h1 onDoubleClick={() => { const next = author === 'cal' ? 'ryan' : 'cal'; setAuthor(next); setActiveBookId(next === 'ryan' ? RYAN_HOLIDAY_BOOKS[0].id : CAL_NEWPORT_BOOKS[0].id); setStudyMode('concise'); }} title="Double-click to switch author" className="text-base font-semibold tracking-tight truncate cursor-pointer select-none">
                   By {author === 'ryan' ? 'Ryan Holiday' : 'Cal Newport'}
                 </h1>
               </div>
@@ -274,8 +280,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 <button
                   key={book.id}
                   type="button"
-                  onClick={() => selectBook(book)}
-                  onDoubleClick={() => openFullStudy(book)}
+                  onClick={(event) => handleBookClick(book, event.detail)}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
                     activeBookId === book.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
@@ -323,7 +328,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   {activeBook.year}
                 </span>
                 <span className={`text-[11px] font-bold ${mutedText}`}>
-                  {isFullStudy ? fullStudy[activeBookId].readingMinutes : activeBook.readingTime}
+                  {isResearch ? 'Research edition · unlimited depth' : isFullStudy ? fullStudy[activeBookId].readingMinutes : activeBook.readingTime}
                 </span>
               </div>
 
@@ -340,13 +345,20 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               </p>
             </div>
 
+            {isResearch && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
+              <section className={`${widthClass} mx-auto`}>
+                <div className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · No fixed reading limit</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{researchEdition.access}</p></div>
+                <div className="space-y-10">{researchEdition.sections.map((section,i)=><section key={section.title} id={`research-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl sm:text-2xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.paragraphs.map((x,j)=><p key={j}>{x}</p>)}</div>{section.items && <ul className="mt-5 space-y-3">{section.items.map(x=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">• {x}</li>)}</ul>}</section>)}</div>
+              </section>
+            </div>}
+
             {isFullStudy && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
               <section className={`${widthClass} mx-auto`}><div className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {fullStudy[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{fullStudy[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
               <div className="space-y-8">{fullStudy[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
               <section className="mt-10 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{fullStudy[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
             </div>}
 
-            {!isFullStudy &&             <div
+            {!isFullStudy && !isResearch &&             <div
               className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10"
               onMouseUp={captureSelection}
               style={{ fontSize: `${fontScale}rem`, fontFamily, lineHeight }}

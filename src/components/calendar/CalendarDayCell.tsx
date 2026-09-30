@@ -63,7 +63,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 
   return (
     <div
-      className={`relative min-w-0 min-h-[76px] sm:min-h-[108px] border-r border-b border-slate-100 dark:border-slate-800 transition-colors ${
+      className={`relative min-w-0 min-h-[54px] sm:min-h-[108px] border-r border-b border-slate-100 dark:border-slate-800 transition-colors ${
         !inMonth
           ? 'bg-slate-50/40 dark:bg-slate-950/60'
           : isSelected
@@ -144,7 +144,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           )}
         </div>
 
-        <div className="sm:hidden mt-1 flex flex-wrap items-center gap-1">
+        <div className="sm:hidden mt-0.5 flex flex-wrap items-center gap-0.5">
           {tasks.length > 0 || habits.length > 0 ? (
             <button
               type="button"

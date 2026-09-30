@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { animate as animateValue, motion, useReducedMotion } from 'framer-motion';
-import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy, X } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
 import { DayProgressStats, DaySubmitResult } from '../types';
 
@@ -104,7 +104,20 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
 
   if (isCompleted) {
     return (
-      <div className="relative overflow-hidden p-5 text-center sm:p-6">
+      <div className="relative overflow-hidden p-5 sm:p-6 text-center">
+        <motion.button
+          type="button"
+          onClick={onContinue}
+          className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+          aria-label="Exit completed result"
+          title="Exit"
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.25 }}
+        >
+          <X className="size-4" />
+        </motion.button>
+
         <motion.div
           aria-hidden="true"
           className="absolute inset-x-8 top-16 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent"
@@ -167,39 +180,90 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         </motion.div>
 
         <motion.div
-          className="mx-auto mt-6 grid max-w-sm grid-cols-2 gap-2 sm:max-w-xl sm:grid-cols-4"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.42, duration: 0.4 }}
+          className="mx-auto mt-4 max-w-sm sm:max-w-xl"
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.4, duration: 0.42 }}
         >
-          <AnimatedScore
-            label="Successful Days"
-            before={statsBefore.successfulDays}
-            after={statsAfter.successfulDays}
-            delay={0.58}
-            icon={<Trophy className="size-4" />}
-          />
-          <AnimatedScore
-            label="Current Streak"
-            before={statsBefore.currentStreak}
-            after={statsAfter.currentStreak}
-            delay={0.72}
-            icon={<Flame className="size-4" />}
-          />
-          <AnimatedScore
-            label="Achieved Weeks"
-            before={statsBefore.achievedWeeks}
-            after={statsAfter.achievedWeeks}
-            delay={0.86}
-            icon={<CalendarCheck2 className="size-4" />}
-          />
-          <AnimatedScore
-            label="Best Streak"
-            before={statsBefore.bestStreak}
-            after={statsAfter.bestStreak}
-            delay={1.0}
-            icon={<Sparkles className="size-4" />}
-          />
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-3.5 shadow-sm dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/30">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <AnimatedScore
+                label="Successful Days"
+                before={statsBefore.successfulDays}
+                after={statsAfter.successfulDays}
+                delay={0.58}
+                icon={<Trophy className="size-4" />}
+              />
+              <AnimatedScore
+                label="Current Streak"
+                before={statsBefore.currentStreak}
+                after={statsAfter.currentStreak}
+                delay={0.72}
+                icon={<Flame className="size-4" />}
+              />
+              <AnimatedScore
+                label="Achieved Weeks"
+                before={statsBefore.achievedWeeks}
+                after={statsAfter.achievedWeeks}
+                delay={0.86}
+                icon={<CalendarCheck2 className="size-4" />}
+              />
+              <AnimatedScore
+                label="Best Streak"
+                before={statsBefore.bestStreak}
+                after={statsAfter.bestStreak}
+                delay={1.0}
+                icon={<Sparkles className="size-4" />}
+              />
+            </div>
+
+            <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
+              {['Complete', 'Compound', 'Continue'].map((step, index) => (
+                <React.Fragment key={step}>
+                  <motion.div
+                    className="flex min-w-0 flex-col items-center gap-1.5"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.68 + index * 0.18, duration: 0.35 }}
+                  >
+                    <motion.div
+                      className={`flex size-8 items-center justify-center rounded-full border text-[11px] font-black shadow-sm ${
+                        index === 0
+                          ? 'border-emerald-300 bg-emerald-500 text-white dark:border-emerald-600 dark:bg-emerald-500'
+                          : 'border-blue-200 bg-white text-blue-700 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300'
+                      }`}
+                      initial={{ scale: 0.72 }}
+                      animate={{ scale: [0.72, 1.08, 1] }}
+                      transition={{ delay: 0.72 + index * 0.18, duration: 0.42 }}
+                    >
+                      {index === 0 ? <Check className="size-4" strokeWidth={2.8} /> : index + 1}
+                    </motion.div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 dark:text-slate-300">
+                      {step}
+                    </span>
+                  </motion.div>
+                  {index < 2 && (
+                    <motion.div
+                      aria-hidden="true"
+                      className="h-px w-6 bg-gradient-to-r from-emerald-300 to-blue-300 dark:from-emerald-700 dark:to-blue-700"
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ delay: 0.84 + index * 0.18, duration: 0.35 }}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            <motion.p
+              className="mt-4 border-t border-emerald-100 pt-3 text-sm font-extrabold leading-relaxed text-slate-700 dark:border-emerald-900/60 dark:text-slate-200"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.08, duration: 0.4 }}
+            >
+              {line}
+            </motion.p>
+          </div>
         </motion.div>
       </div>
     );

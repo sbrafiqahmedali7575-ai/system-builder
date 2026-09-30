@@ -469,3 +469,13 @@ assert.ok(todayTasks.includes('event.target === event.currentTarget && !isDeleti
 assert.ok(todayTasks.includes('deleteInFlightRef.current'), 'Rapid repeated delete taps must be synchronously deduplicated.');
 assert.ok(todayTasks.includes("setDeleteError(err?.message || 'Failed to delete task. Please try again.')"), 'Delete failures must remain visible and retryable.');
 assert.ok(todayTasks.includes('min-h-12'), 'Mobile delete actions must provide 48px touch targets.');
+
+
+// Mobile dropdown, action-menu, and popover contracts.
+assert.ok(todayTasks.includes("data-task-action-menu"), 'Task action menu must expose an outside-tap boundary.');
+assert.ok(todayTasks.includes("document.addEventListener('pointerdown', onPointerDown)"), 'Task action menu must dismiss on outside tap.');
+assert.ok(todayTasks.includes("if (event.key === 'Escape') closeMenu()"), 'Task action menu must dismiss with Escape.');
+assert.ok(todayTasks.includes('bottom-11') && todayTasks.includes('sm:bottom-auto'), 'Mobile task action menu must open upward to reduce viewport clipping.');
+assert.ok(library.includes('data-highlight-palette'), 'Reader highlight popover must expose an outside-tap boundary.');
+assert.ok(library.includes("if (event.key === 'Escape') dismiss()"), 'Reader highlight popover must dismiss with Escape.');
+assert.ok(library.includes('h-11 w-11 rounded-full'), 'Reader highlight actions must use mobile-sized touch targets.');

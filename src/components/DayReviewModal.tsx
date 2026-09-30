@@ -280,7 +280,11 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm p-0 sm:p-4"
+          className={`fixed inset-0 z-[220] flex justify-center bg-slate-950/60 backdrop-blur-sm ${
+            result
+              ? 'items-center p-3'
+              : 'items-end p-0 sm:items-center sm:p-4'
+          }`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -298,7 +302,11 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className={`w-full ${result ? 'max-w-md sm:max-w-xl lg:max-w-2xl' : 'max-w-md'} max-h-[92dvh] rounded-t-2xl sm:rounded-2xl border shadow-2xl overflow-hidden ${
+            className={`w-full ${
+              result
+                ? 'max-w-md rounded-2xl max-h-[calc(100dvh-1.5rem)] sm:max-w-xl sm:max-h-[88dvh] lg:max-w-2xl'
+                : 'max-w-md max-h-[92dvh] rounded-t-2xl sm:rounded-2xl'
+            } border shadow-2xl overflow-hidden ${
               isDark
                 ? 'bg-slate-900 border-slate-700 text-slate-100'
                 : 'bg-white border-slate-200 text-slate-900'
@@ -457,7 +465,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 </div>
               </>
             ) : (
-              <div className="max-h-[92dvh] overflow-y-auto overscroll-contain [scrollbar-gutter:stable] sm:max-h-[88dvh]">
+              <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain [scrollbar-gutter:stable] sm:max-h-[88dvh]">
                 <DayProgressMoment
                 status={result.status}
                 completedTaskCount={result.completedTaskCount}

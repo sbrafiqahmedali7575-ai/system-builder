@@ -393,7 +393,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {isCountdownEditorOpen && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-[2px]"
+              className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-4 bg-slate-950/40 backdrop-blur-[2px]"
               role="dialog"
               aria-modal="true"
               aria-label="Edit countdown target"
@@ -401,7 +401,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 if (event.target === event.currentTarget) setIsCountdownEditorOpen(false);
               }}
             >
-              <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-4 sm:p-5">
+              <div className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <h3 className="text-base font-black text-slate-900 dark:text-slate-100">

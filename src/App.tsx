@@ -1007,10 +1007,26 @@ export default function App() {
               <div className="text-[16px] font-bold leading-tight tracking-[-0.015em] text-slate-950 dark:text-white">System Builder</div>
               <div className="mt-1 text-[10px] font-medium leading-none tracking-[0.035em] text-slate-500 dark:text-slate-400">Build today. Compound tomorrow.</div>
             </div>
-            <div className={`flex flex-none items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-bold shadow-sm ${isSyncing ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'}`}>
-              <span className={`size-2 rounded-full ring-2 ring-white dark:ring-slate-900 ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
-              <span>{isSyncing ? 'Syncing' : 'Developed by Rafiq Ahmed'}</span>
-            </div>
+            {isSyncing ? (
+              <div className="flex flex-none items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-bold text-amber-700 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                <span className="size-2 rounded-full bg-amber-400 ring-2 ring-white animate-pulse dark:ring-slate-900" />
+                <span>Syncing</span>
+              </div>
+            ) : (
+              <div className="flex flex-none items-center gap-2.5 border-l border-slate-200 pl-3 dark:border-slate-700">
+                <div className="text-right leading-none">
+                  <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                    Developed by
+                  </div>
+                  <div className="mt-1 text-[11px] font-extrabold tracking-[-0.01em] text-slate-800 dark:text-slate-100">
+                    Rafiq Ahmed
+                  </div>
+                </div>
+                <div className="flex size-7 items-center justify-center rounded-lg border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 text-[10px] font-black tracking-[-0.02em] text-indigo-600 shadow-sm dark:border-indigo-900/60 dark:from-indigo-950/50 dark:to-blue-950/40 dark:text-indigo-300">
+                  RA
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
         <ReportView

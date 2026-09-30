@@ -63,11 +63,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 </span>
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'
-                  }`}
-                />
+                {isSyncing && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
                 <span className="tracking-[0.01em]">
                   {isSyncing ? 'Syncing...' : 'Developed by Rafiq Ahmed'}
                 </span>

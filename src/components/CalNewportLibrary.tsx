@@ -833,25 +833,28 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               </p>
             </div>
 
-            {isResearch && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
+            {isResearch && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" data-reader-content="true" onPointerUp={captureSelection} onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 120)} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
               <section className={`${widthClass} mx-auto`}>
-                <div className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · {researchEdition.readingTime}</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{researchEdition.access}</p></div>
-                <div className="space-y-10">{researchEdition.sections.map((section,i)=><section key={section.title} id={`research-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl sm:text-2xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.paragraphs.map((x,j)=><p key={j}>{x}</p>)}</div>{section.items && <ul className="mt-5 space-y-3">{section.items.map(x=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">• {x}</li>)}</ul>}</section>)}</div>
+                <div id="research-intro" data-reader-section="true" className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · {researchEdition.readingTime}</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{researchEdition.access}</p></div>
+                <div className="space-y-10">{researchEdition.sections.map((section,i)=><section key={section.title} id={`research-${i}`} data-reader-section="true" className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl sm:text-2xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.paragraphs.map((x,j)=><p key={j}>{x}</p>)}</div>{section.items && <ul className="mt-5 space-y-3">{section.items.map(x=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">• {x}</li>)}</ul>}</section>)}</div>
               </section>
             </div>}
 
-            {isFullStudy && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
-              <section className={`${widthClass} mx-auto`}><div className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {fullStudy[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{fullStudy[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
-              <div className="space-y-8">{fullStudy[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
-              <section className="mt-10 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{fullStudy[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
+            {isFullStudy && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" data-reader-content="true" onPointerUp={captureSelection} onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 120)} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
+              <section className={`${widthClass} mx-auto`}><div id="full-intro" data-reader-section="true" className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {fullStudy[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{fullStudy[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
+              <div className="space-y-8">{fullStudy[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} data-reader-section="true" className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
+              <section id="full-final" data-reader-section="true" className="mt-10 scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{fullStudy[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
             </div>}
 
             {!isFullStudy && !isResearch &&             <div
               className="px-5 sm:px-8 lg:px-12 py-7 sm:py-10"
+              data-reader-content="true"
+              onPointerUp={captureSelection}
               onMouseUp={captureSelection}
+              onTouchEnd={() => window.setTimeout(captureSelection, 120)}
               style={{ fontSize: `${fontScale}rem`, fontFamily, lineHeight }}
             >
-              <section id="overview" className={`${widthClass} mx-auto scroll-mt-28`}>
+              <section id="overview" data-reader-section="true" className={`${widthClass} mx-auto scroll-mt-28`}>
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="w-5 h-5 text-blue-600" />
                   <h3
@@ -889,6 +892,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   {activeBook.themes.filter((themeItem) => !searchQuery || [themeItem.title, themeItem.shortIdea, ...themeItem.explanation].join(' ').toLowerCase().includes(searchQuery.toLowerCase())).map((themeItem) => { const themeIndex = activeBook.themes.indexOf(themeItem); return (
                     <details
                       id={`theme-${themeIndex}`}
+                      data-reader-section="true"
                       key={themeItem.title}
                       open={themeIndex === 0}
                       className={`group rounded-xl border overflow-hidden ${
@@ -1001,7 +1005,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 }`}
               />
 
-              <section id="summary" className={`${widthClass} mx-auto scroll-mt-28`}>
+              <section id="summary" data-reader-section="true" className={`${widthClass} mx-auto scroll-mt-28`}>
                 <div className="flex items-center gap-2 mb-4">
                   <BookMarked className="w-5 h-5 text-violet-600" />
                   <h3

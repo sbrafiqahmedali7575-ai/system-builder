@@ -332,6 +332,11 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     setNoteEditor(null);
   };
 
+  const updateSectionNote = (sectionId: string, value: string) => {
+    const key = `${activeBookId}::${sectionId}`;
+    setNotes((prev) => ({ ...prev, [key]: value }));
+  };
+
   const deleteSectionNote = (sectionId: string) => {
     const key = `${activeBookId}::${sectionId}`;
     setNotes((prev) => {
@@ -479,15 +484,324 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
           <button onClick={() => setReaderFont(v => v==='serif'?'sans':'serif')} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Type className="inline w-3.5 h-3.5 mr-1" />{readerFont}</button>
           <button onClick={() => setLineHeight(v => v >= 2.1 ? 1.6 : Number((v+.1).toFixed(1)))} className="px-2 h-7 rounded-md text-xs bg-slate-100"><AlignJustify className="inline w-3.5 h-3.5 mr-1" />Spacing</button>
           <button onClick={() => setReaderWidth(v => v==='narrow'?'medium':v==='medium'?'wide':'narrow')} className="px-2 h-7 rounded-md text-xs bg-slate-100">Width: {readerWidth}</button>
-          <button onClick={() => toggleBookmark(getCurrentSection())} className="px-2 h-7 rounded-md text-xs bg-slate-100"><Bookmark className="inline w-3.5 h-3.5 mr-1" />Bookmark</button>
-          <button onClick={addSectionNote} className="px-2 h-7 rounded-md text-xs bg-slate-100"><StickyNote className="inline w-3.5 h-3.5 mr-1" />Note</button>
-          <button onClick={()=>setIsHighlightsOpen(true)} className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100"><Highlighter className="w-3.5 h-3.5 mr-1" />Highlights {(highlights[activeBookId]||[]).length}</button>
+          <button
+            type="button"
+            onClick={() => toggleBookmark(activeReaderSection)}
+            aria-pressed={activeBookmarks.includes(activeReaderSection)}
+            className={`px-2 h-7 rounded-md text-xs inline-flex items-center whitespace-nowrap ${
+              activeBookmarks.includes(activeReaderSection)
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                : 'bg-slate-100 dark:bg-slate-800'
+            }`}
+          >
+            <Bookmark className="w-3.5 h-3.5 mr-1" fill={activeBookmarks.includes(activeReaderSection) ? 'currentColor' : 'none'} />
+            {activeBookmarks.includes(activeReaderSection) ? 'Bookmarked' : 'Bookmark'}
+          </button>
+          <button
+            type="button"
+            onClick={() => openSectionNote(activeReaderSection)}
+            className={`px-2 h-7 rounded-md text-xs inline-flex items-center whitespace-nowrap ${
+              notes[`${activeBookId}::${activeReaderSection}`]
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                : 'bg-slate-100 dark:bg-slate-800'
+            }`}
+          >
+            <StickyNote className="w-3.5 h-3.5 mr-1" />
+            {notes[`${activeBookId}::${activeReaderSection}`] ? 'Edit Note' : 'Note'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsHighlightsOpen(true)}
+            className="px-2 h-7 inline-flex items-center rounded-md text-xs bg-slate-100 dark:bg-slate-800 whitespace-nowrap"
+          >
+            <Highlighter className="w-3.5 h-3.5 mr-1" />
+            Annotations {activeBookmarks.length + activeSectionNotes.length + (highlights[activeBookId] || []).length}
+          </button>
         </div>}
       </header>
 
-      {pendingSelection && <div className="absolute z-[100] w-[210px] rounded-xl border border-slate-200 bg-white text-slate-900 shadow-xl p-2" style={{left:pendingSelection.x,top:pendingSelection.y}} onMouseDown={e=>e.preventDefault()}><div className="text-[11px] text-slate-500 truncate px-1 pb-2">{pendingSelection.text}</div><div className="flex justify-between">{(['yellow','blue','pink','green'] as HighlightColor[]).map(color=><button key={color} onClick={()=>createHighlight(color)} className={`w-8 h-8 rounded-full border border-black/10 ${color==='yellow'?'bg-yellow-300':color==='blue'?'bg-blue-300':color==='pink'?'bg-pink-300':'bg-green-300'}`} title={`Highlight ${color}`}/>)}<button onClick={()=>setPendingSelection(null)} className="w-8 h-8 flex items-center justify-center"><X className="w-4 h-4"/></button></div></div>}
-      {isHighlightsOpen && <aside className="fixed inset-y-0 right-0 z-[220] w-full sm:w-[390px] bg-white text-slate-900 border-l border-slate-200 shadow-xl flex flex-col pb-[env(safe-area-inset-bottom)]"><div className="h-14 px-4 border-b flex items-center justify-between"><div><div className="font-semibold text-sm">Highlights & Notes</div><div className="text-[11px] text-slate-500">{(highlights[activeBookId]||[]).length} highlights</div></div><button onClick={()=>setIsHighlightsOpen(false)} className="w-8 h-8 flex items-center justify-center"><X className="w-4 h-4"/></button></div><div className="flex-1 overflow-y-auto p-3 space-y-2">{(highlights[activeBookId]||[]).length===0?<div className="py-16 text-center text-sm text-slate-500">Select text to create a highlight.</div>:(highlights[activeBookId]||[]).slice().reverse().map(h=><div key={h.id} className="border rounded-lg p-3"><button className="w-full text-left" onClick={()=>{jumpTo(h.sectionId);setIsHighlightsOpen(false)}}><p className={`border-l-4 pl-2 text-sm leading-6 ${h.color==='yellow'?'border-yellow-400':h.color==='blue'?'border-blue-400':h.color==='pink'?'border-pink-400':'border-green-400'}`}>{h.text}</p></button><textarea value={h.note} onChange={e=>updateHighlightNote(h.id,e.target.value)} placeholder="Add note to highlight…" rows={2} className="mt-2 w-full rounded-md border px-2 py-1.5 text-xs"/><button onClick={()=>deleteHighlight(h.id)} className="mt-2 text-[11px] text-red-500">Delete</button></div>)}</div></aside>}
-      <div className={`w-full ${isFocusReader ? 'px-0 py-0' : 'px-3 sm:px-5 lg:px-7 py-4 lg:py-5'}`}>
+      {pendingSelection && (
+        <div
+          className="fixed z-[230] w-[210px] rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl"
+          style={{ left: pendingSelection.x, top: pendingSelection.y }}
+          onMouseDown={(event) => event.preventDefault()}
+          role="toolbar"
+          aria-label="Highlight selected text"
+        >
+          <div className="truncate px-1 pb-2 text-[11px] text-slate-500">
+            {pendingSelection.text}
+          </div>
+          <div className="flex justify-between">
+            {(['yellow', 'blue', 'pink', 'green'] as HighlightColor[]).map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => createHighlight(color)}
+                className={`h-8 w-8 rounded-full border border-black/10 ${
+                  color === 'yellow'
+                    ? 'bg-yellow-300'
+                    : color === 'blue'
+                    ? 'bg-blue-300'
+                    : color === 'pink'
+                    ? 'bg-pink-300'
+                    : 'bg-green-300'
+                }`}
+                title={`Highlight ${color}`}
+                aria-label={`Highlight selected text ${color}`}
+              />
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setPendingSelection(null);
+                window.getSelection()?.removeAllRanges();
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
+              aria-label="Cancel highlight"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isHighlightsOpen && (
+        <aside className="fixed inset-y-0 right-0 z-[220] flex w-full flex-col border-l border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] text-slate-900 shadow-2xl sm:w-[410px]">
+          <div className="flex min-h-14 items-center justify-between gap-3 border-b px-4 py-2">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold">Reader Annotations</div>
+              <div className="truncate text-[11px] text-slate-500">
+                {activeBookmarks.length} bookmarks · {activeSectionNotes.length} notes · {(highlights[activeBookId] || []).length} highlights
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsHighlightsOpen(false)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100"
+              aria-label="Close annotations"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 space-y-5 overflow-y-auto overscroll-contain p-3">
+            {activeBookmarks.length === 0 &&
+            activeSectionNotes.length === 0 &&
+            (highlights[activeBookId] || []).length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 px-4 py-14 text-center text-sm text-slate-500">
+                Add a bookmark, write a section note, or select text to create a highlight.
+              </div>
+            ) : null}
+
+            {activeBookmarks.length > 0 && (
+              <section>
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <Bookmark className="h-3.5 w-3.5" />
+                  Bookmarks
+                </div>
+                <div className="space-y-2">
+                  {activeBookmarks.map((sectionId) => (
+                    <div key={sectionId} className="flex items-center gap-2 rounded-xl border border-slate-200 p-2">
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 text-left text-sm font-semibold text-slate-800"
+                        onClick={() => {
+                          jumpTo(sectionId);
+                          setIsHighlightsOpen(false);
+                        }}
+                      >
+                        {getSectionLabel(sectionId)}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleBookmark(sectionId)}
+                        className="h-8 shrink-0 rounded-lg px-2 text-[11px] font-semibold text-rose-600 hover:bg-rose-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activeSectionNotes.length > 0 && (
+              <section>
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <StickyNote className="h-3.5 w-3.5" />
+                  Section Notes
+                </div>
+                <div className="space-y-3">
+                  {activeSectionNotes.map(({ sectionId, value }) => (
+                    <div key={sectionId} className="rounded-xl border border-slate-200 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          className="min-w-0 truncate text-left text-xs font-bold text-blue-700"
+                          onClick={() => {
+                            jumpTo(sectionId);
+                            setIsHighlightsOpen(false);
+                          }}
+                        >
+                          {getSectionLabel(sectionId)}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteSectionNote(sectionId)}
+                          className="shrink-0 text-[11px] font-semibold text-rose-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                      <textarea
+                        value={value}
+                        onChange={(event) => updateSectionNote(sectionId, event.target.value)}
+                        rows={3}
+                        className="mt-2 w-full resize-y rounded-lg border border-slate-200 px-2.5 py-2 text-xs outline-none focus:border-blue-500"
+                        aria-label={`Note for ${getSectionLabel(sectionId)}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {(highlights[activeBookId] || []).length > 0 && (
+              <section>
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <Highlighter className="h-3.5 w-3.5" />
+                  Highlights
+                </div>
+                <div className="space-y-3">
+                  {(highlights[activeBookId] || [])
+                    .slice()
+                    .reverse()
+                    .map((highlight) => (
+                      <div key={highlight.id} className="rounded-xl border border-slate-200 p-3">
+                        <button
+                          type="button"
+                          className="w-full text-left"
+                          onClick={() => {
+                            jumpTo(highlight.sectionId);
+                            setIsHighlightsOpen(false);
+                          }}
+                        >
+                          <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            {getSectionLabel(highlight.sectionId)}
+                          </div>
+                          <p
+                            className={`border-l-4 pl-2 text-sm leading-6 ${
+                              highlight.color === 'yellow'
+                                ? 'border-yellow-400'
+                                : highlight.color === 'blue'
+                                ? 'border-blue-400'
+                                : highlight.color === 'pink'
+                                ? 'border-pink-400'
+                                : 'border-green-400'
+                            }`}
+                          >
+                            {highlight.text}
+                          </p>
+                        </button>
+                        <textarea
+                          value={highlight.note}
+                          onChange={(event) => updateHighlightNote(highlight.id, event.target.value)}
+                          placeholder="Add note to highlight…"
+                          rows={2}
+                          className="mt-2 w-full rounded-lg border border-slate-200 px-2.5 py-2 text-xs outline-none focus:border-blue-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => deleteHighlight(highlight.id)}
+                          className="mt-2 text-[11px] font-semibold text-rose-600"
+                        >
+                          Delete highlight
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </aside>
+      )}
+
+      {noteEditor && (
+        <div
+          className="fixed inset-0 z-[230] flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Section note"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setNoteEditor(null);
+          }}
+        >
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">Section Note</div>
+                <div className="mt-0.5 truncate text-xs text-slate-500">
+                  {getSectionLabel(noteEditor.sectionId)}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNoteEditor(null)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100"
+                aria-label="Close note editor"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <textarea
+              autoFocus
+              value={noteEditor.value}
+              onChange={(event) =>
+                setNoteEditor((current) =>
+                  current ? { ...current, value: event.target.value } : current
+                )
+              }
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setNoteEditor(null);
+              }}
+              placeholder="Write your note for this section…"
+              rows={7}
+              className="mt-3 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+            />
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <div>
+                {notes[`${activeBookId}::${noteEditor.sectionId}`] && (
+                  <button
+                    type="button"
+                    onClick={() => deleteSectionNote(noteEditor.sectionId)}
+                    className="h-9 rounded-lg px-3 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNoteEditor(null)}
+                  className="h-9 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveSectionNote}
+                  className="h-9 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-500"
+                >
+                  Save Note
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+            <div className={`w-full ${isFocusReader ? 'px-0 py-0' : 'px-3 sm:px-5 lg:px-7 py-4 lg:py-5'}`}>
         <main className="min-w-0">
           <article
             className={`rounded-xl border overflow-hidden ${cardClasses}`}

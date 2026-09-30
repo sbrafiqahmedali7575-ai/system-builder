@@ -1,67 +1,40 @@
-export const COMPLETED_DAY_LINES = [
-  'You met resistance and moved through it.',
-  'Today’s discipline becomes tomorrow’s strength.',
-  'The work was hard; you did it anyway.',
-  'You controlled the effort and finished the day.',
-  'One completed day is another step forward.',
-  'Action turned today’s obstacles into progress.',
-  'You stayed with the process until the work was done.',
-  'Consistency is becoming part of who you are.',
-  'You answered difficulty with deliberate action.',
-  'Today’s effort strengthened tomorrow’s foundation.',
-  'You kept moving instead of waiting for perfect conditions.',
-  'You finished what was yours to control.',
-  'The obstacle became training, and you completed the work.',
-  'Small disciplined actions are compounding into real progress.',
-  'You chose execution over excuses today.',
-  'You made progress by dealing with reality as it was.',
-  'A strong day is built one completed action at a time.',
-  'You turned intention into finished work.',
-  'You stayed focused on the next useful action.',
-  'Today you proved that forward motion is repeatable.',
-  'You used pressure as a reason to become more deliberate.',
-  'Completion came from process, not perfect conditions.',
-  'You kept your attention on what you could control.',
-  'Today’s obstacle did not stop your movement.',
-  'You converted effort into evidence of progress.',
-  'You practiced persistence and earned another completed day.',
-  'You moved through friction instead of negotiating with it.',
-  'The path became clearer because you kept acting.',
-  'You finished today; now let the progress compound.',
-  'Forward is built from days completed like this one.',
+export const NOT_COMPLETED_DAY_LINES = [
+  // Principle 3 — Don’t waste the obstacle.
+  'Use what went wrong today as material for a better tomorrow.',
+  'The obstacle is useful when it teaches you what to change.',
+
+  // Principle 4 — Focus on the next action.
+  'Forget the whole mountain; take the next useful step.',
+  'Progress restarts with one clear action.',
+
+  // Principle 5 — Practice persistent action.
+  'Keep moving, but change the method when the method is not working.',
+  'Persistence means returning with a better approach.',
+
+  // Principle 6 — Turn problems into opportunities.
+  'Let today’s difficulty reveal the skill you need to strengthen.',
+  'A setback can become training when you use it deliberately.',
+
+  // Principle 7 — Use the process.
+  'Trust the process: review, correct, and continue.',
+  'Do the next part well; the larger result will follow.',
 ] as const;
 
-export const NOT_COMPLETED_DAY_LINES = [
-  'The day is unfinished, not wasted.',
-  'Missed tasks are feedback for tomorrow’s plan.',
-  'The obstacle showed you where to adjust.',
-  'Progress continues when you return deliberately.',
-  'A difficult day can still teach the next move.',
-  'You do not need a perfect day to keep moving.',
-  'Use today’s friction to improve tomorrow’s system.',
-  'The result is information; the next action is yours.',
-  'Pause the judgment and study what blocked the work.',
-  'One incomplete day does not stop the direction.',
-  'Adjust the process, then move forward again.',
-  'What remained undone can become tomorrow’s first priority.',
-  'The obstacle is pointing to the skill or system to improve.',
-  'Progress resumes with the next useful action.',
-  'Do not carry the whole day forward; carry the lesson.',
-  'Today revealed where your plan needs more strength.',
-  'You can accept the result without accepting stagnation.',
-  'A missed target can sharpen the next attempt.',
-  'Return to what you control and begin again.',
-  'Keep the lesson; release the frustration.',
-  'The path forward starts with one deliberate correction.',
-  'Incomplete is a status, not an identity.',
-  'Use the setback as data, not a verdict.',
-  'Tomorrow improves when today is reviewed clearly.',
-  'Do not fight the result; improve the response.',
-  'You are still moving when you learn and adjust.',
-  'The next step matters more than the missed step.',
-  'Reset the plan, protect the priority, continue forward.',
-  'Progress survives imperfect days when you return to action.',
-  'This day ends here; the direction remains forward.',
+export const COMPLETED_DAY_LINES = [
+  // Principle 9 — Prepare for difficulty.
+  'Preparation made today’s difficulty easier to carry.',
+  'You were ready enough to act when the day became difficult.',
+
+  // Principle 10 — Develop inner endurance.
+  'You strengthened the part of you that keeps going.',
+  'Endurance grows every time you finish despite resistance.',
+
+  // Five essential lessons.
+  'Control what you can control, and let your effort speak.',
+  'Your perception shaped your response; your response shaped the day.',
+  'Action beat overthinking today.',
+  'You turned an obstacle into useful training.',
+  'You persisted, learned, adjusted, and moved forward.',
 ] as const;
 
 export const getDayProgressLine = (status: 'COMPLETED' | 'NOT_COMPLETED') => {

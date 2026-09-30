@@ -18,6 +18,7 @@ interface CommandCenterSidebarProps {
   currentTaskTitle: string;
   todayTasks?: Array<{ id: string; title: string; isCompleted?: boolean }>;
   onCurrentTaskChange?: (taskId: string) => void;
+  onFocusTimingChange?: (elapsedSeconds: number, hasStarted: boolean) => void;
   onOpenCountdown?: () => void;
   focusMode?: boolean;
 }
@@ -36,6 +37,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   currentTaskTitle,
   todayTasks = [],
   onCurrentTaskChange,
+  onFocusTimingChange,
   onOpenCountdown,
   focusMode = false,
 }) => {
@@ -116,6 +118,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           currentTaskTitle={currentTaskTitle}
           todayTasks={todayTasks}
           onCurrentTaskChange={onCurrentTaskChange}
+          onFocusTimingChange={onFocusTimingChange}
           integrated
         />
       </div>

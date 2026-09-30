@@ -20,6 +20,7 @@ interface CommandCenterSidebarProps {
   onCurrentTaskChange?: (taskId: string) => void;
   focusElapsedSeconds?: number;
   onFocusElapsedCommit?: (elapsedSeconds: number) => void | Promise<void>;
+  onCompleteCurrentTask?: (elapsedSeconds: number) => void | Promise<void>;
   onOpenCountdown?: () => void;
   focusMode?: boolean;
 }
@@ -40,6 +41,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   onCurrentTaskChange,
   focusElapsedSeconds = 0,
   onFocusElapsedCommit,
+  onCompleteCurrentTask,
   onOpenCountdown,
   focusMode = false,
 }) => {
@@ -122,6 +124,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           onCurrentTaskChange={onCurrentTaskChange}
           initialElapsedSeconds={focusElapsedSeconds}
           onElapsedCommit={onFocusElapsedCommit}
+          onCompleteCurrentTask={onCompleteCurrentTask}
           integrated
         />
       </div>

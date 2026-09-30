@@ -72,6 +72,46 @@ assert.ok(
     enterTasksPanel.includes('disabled={isAddingTask}'),
   'Enter Tasks close controls must not dismiss the dialog during an active save.'
 );
+
+assert.ok(
+  todayTasks.includes('id="btn-add-task-card-header"') &&
+    todayTasks.includes('inline-flex h-10 w-10 shrink-0 items-center justify-center') &&
+    todayTasks.includes('id="btn-review-task-day"'),
+  'Today card Add and Review controls must keep mobile-sized touch targets.'
+);
+assert.ok(
+  todayTasks.includes('role="checkbox"') &&
+    todayTasks.includes('h-10 w-10 shrink-0 items-center justify-center') &&
+    todayTasks.includes('relative block size-5 shrink-0 rounded-[5px]'),
+  'Today task checkbox must keep a large mobile tap target with a visible 20px square.'
+);
+assert.ok(
+  todayTasks.includes('More actions for') &&
+    todayTasks.includes('inline-flex h-10 w-10 shrink-0 items-center justify-center') &&
+    todayTasks.includes('max-w-[calc(100vw-2rem)]'),
+  'Today task action menu must keep a mobile touch target and remain within narrow viewports.'
+);
+assert.ok(
+  todayTasks.includes('inline-flex min-h-10 items-center justify-center space-x-1') &&
+    todayTasks.includes('Add your first task'),
+  'Today empty-state Add action must remain touch-friendly.'
+);
+assert.ok(
+  todayTasks.includes('hidden sm:inline">Strongest:') &&
+    todayTasks.includes('hidden sm:inline">Needs attention:'),
+  'Weekly review must stay compact on mobile while retaining detailed desktop insights.'
+);
+assert.ok(
+  todayTasks.includes('aria-label="Edit task"') &&
+    todayTasks.includes('max-h-[calc(100svh-1.5rem)]') &&
+    todayTasks.includes('touch-pan-y'),
+  'Edit Task must remain stable when the mobile keyboard changes the visual viewport.'
+);
+assert.ok(
+  todayTasks.includes('grid grid-cols-2 gap-2 pt-1.5 border-t') &&
+    todayTasks.includes('grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end'),
+  'Edit and Delete task actions must remain side by side on mobile.'
+);
 assert.ok(
   enterTasksPanel.includes('grid grid-cols-2 gap-2 pt-1.5') &&
     enterTasksPanel.includes('sm:flex sm:items-center sm:justify-end'),
@@ -342,6 +382,10 @@ assert.ok(
     styles.includes('animation:none !important;') &&
     styles.includes('transform:none !important;'),
   'Stable mobile modals must not inherit global overlay transform animations.'
+);
+assert.ok(
+  styles.includes('.task-menu-item { min-height:44px; padding:.7rem .75rem; }'),
+  'Mobile task action menu items must retain comfortable touch targets.'
 );
 
 

@@ -14,7 +14,6 @@ import {
   Sparkles,
   ArrowRight,
   MoreHorizontal,
-  Flag,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
@@ -730,17 +729,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       <div className="min-w-0 flex-1 pt-px pr-1 sm:pr-0 overflow-hidden">
                         <div className="flex min-w-0 items-start gap-1.5">
                           <span
-                            className={`mt-[3px] inline-flex size-4 shrink-0 items-center justify-center rounded ${
-                              task.priority === 'High'
-                                ? 'text-rose-600 dark:text-rose-400'
-                                : task.priority === 'Medium'
-                                  ? 'text-amber-600 dark:text-amber-400'
-                                  : 'text-slate-400 dark:text-slate-500'
-                            }`}
-                            title={`${task.priority || 'Normal'} priority`}
-                            aria-label={`${task.priority || 'Normal'} priority`}
+                            className={`mt-[2px] inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-md border px-1 text-[9px] font-extrabold leading-none ${getTaskQuadrantMeta(task.matrixQuadrant).classes}`}
+                            title={`Quadrant ${getTaskQuadrantMeta(task.matrixQuadrant).roman} — ${getTaskQuadrantMeta(task.matrixQuadrant).label}`}
+                            aria-label={`Quadrant ${getTaskQuadrantMeta(task.matrixQuadrant).roman}: ${getTaskQuadrantMeta(task.matrixQuadrant).label}`}
                           >
-                            <Flag className={`size-3.5 ${task.priority === 'High' ? 'fill-current' : ''}`} />
+                            {getTaskQuadrantMeta(task.matrixQuadrant).roman}
                           </span>
                           <button
                             type="button"

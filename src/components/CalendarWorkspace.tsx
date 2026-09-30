@@ -858,7 +858,7 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
           </div>
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Quadrant <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span></label>
-            <select value={quadrant} onChange={(e)=>{setQuadrant(e.target.value as MatrixQuadrant|'');if(error)setError(null);}} className="w-full h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold outline-none focus:border-blue-500">
+            <select value={quadrant} onChange={(e)=>{setQuadrant(e.target.value as MatrixQuadrant|'');if(error)setError(null);}} className="w-full h-11 sm:h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold outline-none focus:border-blue-500">
               <option value="">No quadrant</option>
               {TASK_QUADRANT_OPTIONS.map((item)=><option key={item.value} value={item.value}>{item.roman} — {item.label}</option>)}
             </select>

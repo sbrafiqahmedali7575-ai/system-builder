@@ -1417,7 +1417,25 @@ export function subscribeToHabits(
 export async function addHabitToCloud(habit: HabitItem): Promise<void> {
   assertFirestoreWritesAvailable();
   try {
-    await setDoc(doc(db, HABITS_COLLECTION, habit.id), habitStoragePayload(habit));
+    const normalizedName = habit.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    if (!normalizedName) throw new Error('Habit name cannot be empty.');
+    const habitRef = doc(db, HABITS_COLLECTION, habit.id);
+    const snapshot = await getDocs(collection(db, HABITS_COLLECTION));
+    const duplicateName = snapshot.docs.some((stored) =>
+      stored.id !== habit.id &&
+      String(stored.data().name || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase() === normalizedName
+    );
+    if (duplicateName) {
+      throw new Error(`Duplicate habit rejected: A habit named "${habit.name.trim()}" already exists.`);
+    }
+    await runTransaction(db, async (transaction) => {
+      const existing = await transaction.get(habitRef);
+      if (existing.exists()) {
+        throw new Error(`Duplicate habit rejected: Habit ID ${habit.id} already exists.`);
+      }
+      transaction.set(habitRef, habitStoragePayload(habit));
+    });
+    recordFirestoreWrite('HabitTracker.addHabit', HABITS_COLLECTION, 'transaction');
     await syncHabitLogsFromHabit(habit);
     await rebuildAllDaySummaries();
   } catch (error) {

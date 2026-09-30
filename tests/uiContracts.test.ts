@@ -190,6 +190,48 @@ assert.ok(
   'Rendered reader highlights must remain visible and expose their saved note.'
 );
 
+
+const taskTracker = read('src/components/TaskTracker.tsx');
+const habitTracker = read('src/components/HabitTracker.tsx');
+const commandPaletteResponsive = read('src/components/CommandPalette.tsx');
+
+assert.ok(
+  taskTracker.includes('h-[calc(100dvh-9.5rem)] min-h-[320px]'),
+  'Task Planner must fit 320px-wide short-phone layouts without forcing a 520px minimum height.'
+);
+assert.ok(
+  taskTracker.includes('lg:h-[min(720px,calc(100dvh-7rem))]'),
+  'Task Planner must cap its height cleanly on large desktops.'
+);
+assert.ok(
+  calendar.includes('min-h-[300px] sm:min-h-[400px] md:min-h-0'),
+  'Calendar must be allowed to shrink inside short phone and tablet Task Planner layouts.'
+);
+assert.ok(
+  habitTracker.includes('min-w-[656px] sm:min-w-[720px] lg:min-w-[790px]'),
+  'Habit weekly grid must use a narrower phone/tablet footprint while preserving desktop density.'
+);
+assert.ok(
+  !habitTracker.includes('100vh-'),
+  'Habit Tracker viewport caps must use dynamic viewport height rather than legacy 100vh.'
+);
+assert.ok(
+  habitTracker.includes('100dvh-'),
+  'Habit Tracker must respond to mobile browser chrome and short dynamic viewports.'
+);
+assert.ok(
+  commandPaletteResponsive.includes('max-h-[calc(100dvh-1rem)] overflow-y-auto'),
+  'Command Palette must remain scrollable on short phone heights.'
+);
+assert.ok(
+  books.includes('max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain'),
+  'Reader note editor must remain fully reachable on short phone heights.'
+);
+assert.ok(
+  books.includes('max-h-[42dvh]'),
+  'Reader note textarea must not consume the entire short viewport.'
+);
+
 assert.ok(pomodoro.includes('fixed inset-0 z-[220]'), 'Pomodoro modal must sit above mobile navigation.');
 assert.ok(report.includes('fixed inset-0 z-[220]'), 'Countdown editor must sit above mobile navigation.');
 assert.ok(badge.includes('fixed inset-0 z-[230]'), 'Badge celebration must sit above other app chrome.');

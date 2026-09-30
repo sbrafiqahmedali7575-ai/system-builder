@@ -165,7 +165,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           <div className="mt-2 flex items-center justify-center gap-2">
             <button
               type="button"
-              onClick={handleResetClick}
+              onClick={resetTimer}
               title="Reset elapsed time to zero"
               aria-label="Reset elapsed focus time to zero."
               className="w-9 h-9 inline-flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
@@ -200,8 +200,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             <button
               type="button"
               onClick={toggleTimer}
-              title={isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
-              aria-label={isRunning ? 'Pause Pomodoro' : 'Start Pomodoro'}
+              title={isRunning ? 'Pause focus timer' : 'Start focus timer'}
+              aria-label={isRunning ? 'Pause focus timer' : 'Start focus timer'}
               className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors"
             >
               {isRunning ? (
@@ -213,9 +213,9 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
             <button
               type="button"
-              onClick={handleResetClick}
-              title="Reset timer • Double-click to set custom minutes"
-              aria-label="Reset Pomodoro timer. Double-click to set custom minutes."
+              onClick={resetTimer}
+              title="Reset elapsed time to zero"
+              aria-label="Reset elapsed focus time to zero."
               className="w-7 h-7 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />

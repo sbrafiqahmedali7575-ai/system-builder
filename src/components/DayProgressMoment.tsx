@@ -9,6 +9,7 @@ interface DayProgressMomentProps {
   totalTaskCount: number;
   completedHabitCount: number;
   totalHabitCount: number;
+  nextTaskTitle?: string | null;
   onContinue: () => void;
 }
 
@@ -18,6 +19,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   totalTaskCount,
   completedHabitCount,
   totalHabitCount,
+  nextTaskTitle,
   onContinue,
 }) => {
   const isCompleted = status === 'COMPLETED';
@@ -328,6 +330,31 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
               >
                 Review what blocked you, adjust one thing, then act on the next priority.
               </motion.p>
+
+              {nextTaskTitle && (
+                <motion.div
+                  className="mt-3 rounded-xl border border-indigo-200 bg-white/85 px-3 py-2.5 text-left shadow-sm dark:border-indigo-800/70 dark:bg-slate-900/85"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.28, duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300">
+                    Next action
+                  </div>
+                  <div className="mt-1 flex items-start gap-2">
+                    <motion.div
+                      className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white"
+                      animate={{ x: [0, 3, 0] }}
+                      transition={{ delay: 1.45, duration: 0.75, repeat: 2, ease: 'easeInOut' }}
+                    >
+                      <ArrowRight className="size-3.5" strokeWidth={2.6} />
+                    </motion.div>
+                    <p className="min-w-0 text-sm font-black leading-snug text-slate-900 dark:text-white">
+                      {nextTaskTitle}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           </div>
         )}

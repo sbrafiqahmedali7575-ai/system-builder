@@ -320,15 +320,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setIsEnterPanelOpen(true);
   };
 
-  const handleCancelEnterPanel = () => {
-    setNewTaskTitle('');
-    setNewTaskNotes('');
-    setNewTaskQuadrant('');
-    setPanelError(null);
-    setRecentlyAddedInSession([]);
-    setIsEnterPanelOpen(false);
-  };
-
   // Allow global quick-add controls (such as the mobile + button) to open this panel.
   useEffect(() => {
     const openEnterTasks = () => handleOpenEnterPanel();
@@ -991,15 +982,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 )}
 
                 {/* Bottom Footer Actions */}
-                <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-slate-200 dark:border-slate-800">
-                  <button
-                    type="button"
-                    onClick={handleCancelEnterPanel}
-                    disabled={isAddingTask}
-                    className="md:hidden px-2 py-1 rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 font-semibold text-[11px] cursor-pointer transition"
-                  >
-                    Cancel
-                  </button>
+                <div className="flex items-center justify-end pt-1.5 border-t border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => {

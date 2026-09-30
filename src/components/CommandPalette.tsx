@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { CalendarDays, Focus, Plus, Search, Wrench, X } from 'lucide-react';
-interface Props{onClose:()=>void;onAdd:()=>void;onSearch:()=>void;onFocus:()=>void;onTools:()=>void;}
-export const CommandPalette:React.FC<Props>=({onClose,onAdd,onSearch,onFocus,onTools})=>{
+interface Props{onClose:()=>void;onAdd:()=>void;onSearch:()=>void;onFocus:()=>void;onCalendar:()=>void;onTools:()=>void;}
+export const CommandPalette:React.FC<Props>=({onClose,onAdd,onSearch,onFocus,onCalendar,onTools})=>{
  useEffect(()=>{const h=(e:KeyboardEvent)=>e.key==='Escape'&&onClose();window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h)},[onClose]);
  const act=(fn:()=>void)=>()=>{onClose();fn()};
  return <div className="fixed inset-0 z-[210] bg-slate-950/45 p-3 flex items-start justify-center" role="dialog" aria-modal="true" aria-label="Command palette" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
@@ -11,7 +11,7 @@ export const CommandPalette:React.FC<Props>=({onClose,onAdd,onSearch,onFocus,onT
     <button onClick={act(onAdd)} className="command-item"><Plus/>Add task <kbd>N</kbd></button>
     <button onClick={act(onSearch)} className="command-item"><Search/>Search tasks <kbd>/</kbd></button>
     <button onClick={act(onFocus)} className="command-item"><Focus/>Toggle Focus <kbd>F</kbd></button>
-    <button onClick={act(()=>document.getElementById('task-planner-calendar')?.scrollIntoView({behavior:'smooth'}))} className="command-item"><CalendarDays/>Open calendar</button>
+    <button onClick={act(onCalendar)} className="command-item"><CalendarDays/>Open calendar</button>
     <button onClick={act(onTools)} className="command-item"><Wrench/>Open tools</button>
    </div>
   </div>

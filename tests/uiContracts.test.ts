@@ -143,6 +143,44 @@ assert.ok(
 
 // Other full-screen overlays must stay above the fixed mobile navigation.
 assert.ok(books.includes('fixed inset-y-0 right-0 z-[220]'), 'Reader highlights drawer must sit above mobile navigation.');
+
+assert.ok(
+  books.includes('const [readerStateLoaded, setReaderStateLoaded] = useState(false);'),
+  'Reader annotations must wait for stored state to load before persisting.'
+);
+assert.ok(
+  books.includes("id.startsWith('research-') ? 'research' : id.startsWith('full-') ? 'full' : 'concise'"),
+  'Reader annotation jumps must switch to the correct study mode.'
+);
+assert.ok(
+  books.includes('data-reader-content="true"'),
+  'Reader content must expose a selectable annotation surface.'
+);
+assert.ok(
+  books.includes('onTouchEnd={() => window.setTimeout(captureSelection, 120)}'),
+  'Reader highlight capture must support touch selection.'
+);
+assert.ok(
+  books.includes('data-reader-section="true"'),
+  'Reader sections must expose stable targets for bookmarks, notes, and highlights.'
+);
+assert.ok(
+  books.includes('Reader Annotations'),
+  'Reader must provide a persistent annotations drawer.'
+);
+assert.ok(
+  books.includes('Save Note'),
+  'Reader notes must use an in-app editor instead of browser prompts.'
+);
+assert.ok(
+  !books.includes("window.prompt('Note for this section'"),
+  'Legacy prompt-only section notes must remain removed.'
+);
+assert.ok(
+  books.includes('Bookmarked') && books.includes('Edit Note'),
+  'Bookmark and note controls must expose visible saved state.'
+);
+
 assert.ok(pomodoro.includes('fixed inset-0 z-[220]'), 'Pomodoro modal must sit above mobile navigation.');
 assert.ok(report.includes('fixed inset-0 z-[220]'), 'Countdown editor must sit above mobile navigation.');
 assert.ok(badge.includes('fixed inset-0 z-[230]'), 'Badge celebration must sit above other app chrome.');

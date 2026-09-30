@@ -138,18 +138,20 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
 
   return (
     <div className="relative overflow-hidden p-5 text-center sm:p-6">
-      <motion.button
-        type="button"
-        onClick={onContinue}
-        className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-        aria-label="Exit result"
-        title="Exit"
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, duration: 0.25 }}
-      >
-        <X className="size-4" />
-      </motion.button>
+      {!isCompleted && (
+        <motion.button
+          type="button"
+          onClick={onContinue}
+          className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+          aria-label="Exit result"
+          title="Exit"
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.25 }}
+        >
+          <X className="size-4" />
+        </motion.button>
+      )}
 
       <motion.div
         aria-hidden="true"

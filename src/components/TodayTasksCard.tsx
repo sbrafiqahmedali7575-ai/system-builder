@@ -782,12 +782,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {isEnterPanelOpen && (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks">
+          <div className="system-stable-modal fixed inset-0 z-[220] flex items-start justify-center overflow-y-auto overscroll-none bg-black/60 px-2 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xs sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Enter tasks">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className={`pointer-events-auto w-full max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border p-3 shadow-2xl transition-all ${
+              className={`pointer-events-auto w-full max-w-lg max-h-[calc(100svh-1.5rem)] overflow-y-auto overscroll-y-contain touch-pan-y rounded-3xl border p-3 shadow-2xl transition-colors sm:max-h-[calc(100dvh-2rem)] ${
                 isDark
                   ? 'bg-slate-900 border-slate-700 text-slate-100'
                   : 'bg-white border-slate-200 text-slate-900'
@@ -810,18 +810,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      if (!isAddingTask) handleCloseEnterPanel();
-                    }}
-                    disabled={isAddingTask}
-                    className="md:hidden inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                  >
-                    Cancel
-                  </button>
                   <button
                     type="button"
                     onClick={(event) => {

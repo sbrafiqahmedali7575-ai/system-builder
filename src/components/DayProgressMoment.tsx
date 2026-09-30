@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { animate as animateValue, motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
 import { DayProgressStats, DaySubmitResult } from '../types';
 
@@ -95,7 +95,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   statsBefore,
   statsAfter,
   onUpdateAgain,
-  onFocusTask: _onFocusTask,
+  onFocusTask,
   onContinue,
 }) => {
   const reduceMotion = useReducedMotion();
@@ -112,6 +112,12 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   const guidance = isCompleted
     ? 'Review what worked, preserve one thing, then carry it into the next day.'
     : 'Review what blocked you, adjust one thing, then act on the next priority.';
+  const nextMove = isCompleted
+    ? 'Carry today’s system into tomorrow.'
+    : nextTaskTitle || 'Choose one clear next action.';
+  const nextMoveHint = isCompleted
+    ? 'Keep the method that worked today and make tomorrow’s first action obvious.'
+    : 'Start here. One clear action is enough to restart momentum.';
   const flowSteps = isCompleted
     ? [
         { label: 'Complete', Icon: Check },
@@ -123,6 +129,12 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         { label: 'Adjust', Icon: SlidersHorizontal },
         { label: 'Act', Icon: Rocket },
       ];
+  const primaryAction = isCompleted ? onContinue : onFocusTask || onContinue;
+  const primaryLabel = isCompleted
+    ? 'Continue to Dashboard'
+    : nextTaskTitle && onFocusTask
+    ? 'Focus on this task'
+    : 'Back to Dashboard';
 
   return (
     <div className="relative overflow-hidden p-5 text-center sm:p-6">
@@ -477,7 +489,124 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
               {guidance}
             </motion.p>
 
+            <motion.div
+              className={`relative mt-4 overflow-hidden rounded-2xl border-2 p-4 text-left ${
+                isCompleted
+                  ? 'border-emerald-400 bg-gradient-to-br from-white via-emerald-50 to-blue-50 shadow-[0_18px_42px_rgba(16,185,129,0.18)] dark:border-emerald-600 dark:from-slate-900 dark:via-emerald-950/35 dark:to-blue-950/35'
+                  : 'border-indigo-400 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-[0_18px_42px_rgba(79,70,229,0.22)] dark:border-indigo-600 dark:from-slate-900 dark:via-indigo-950/35 dark:to-blue-950/35'
+              }`}
+              initial={{ opacity: 0, y: 24, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: [0.9, 1.035, 1] }}
+              transition={{ delay: 1.16, duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <motion.div
+                aria-hidden="true"
+                className={`pointer-events-none absolute inset-0 ${
+                  isCompleted
+                    ? 'bg-[radial-gradient(circle_at_50%_18%,rgba(16,185,129,0.18),transparent_58%)]'
+                    : 'bg-[radial-gradient(circle_at_50%_18%,rgba(99,102,241,0.22),transparent_58%)]'
+                }`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0.35] }}
+                transition={{ delay: 1.18, duration: 0.85 }}
+              />
 
+              <div className="relative">
+                <div
+                  className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] ${
+                    isCompleted
+                      ? 'text-emerald-600 dark:text-emerald-300'
+                      : 'text-indigo-600 dark:text-indigo-300'
+                  }`}
+                >
+                  <motion.span
+                    className={`size-2.5 rounded-full ${
+                      isCompleted ? 'bg-emerald-500' : 'bg-indigo-500'
+                    }`}
+                    animate={{ scale: [1, 1.45, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{
+                      duration: 1.05,
+                      repeat: reduceMotion ? 0 : Infinity,
+                    }}
+                  />
+                  Your next move
+                </div>
+
+                <motion.div
+                  className={`mt-2 flex min-h-[4.25rem] items-center rounded-xl border bg-white/80 px-3 py-3 shadow-sm dark:bg-slate-950/35 ${
+                    isCompleted
+                      ? 'border-emerald-200/80 dark:border-emerald-800/70'
+                      : 'border-indigo-200/80 dark:border-indigo-800/70'
+                  }`}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.34, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <motion.p
+                    className="text-[17px] font-black leading-snug tracking-tight text-slate-950 dark:text-white"
+                    initial={{ opacity: 0.35 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.46, duration: 0.3 }}
+                  >
+                    {nextMove}
+                  </motion.p>
+                </motion.div>
+
+                <p className="mt-2 flex min-h-[2.5rem] items-center text-[11px] font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
+                  {nextMoveHint}
+                </p>
+
+                <motion.div
+                  aria-hidden="true"
+                  className={`mx-auto mt-2 flex h-8 w-8 items-center justify-center ${
+                    isCompleted
+                      ? 'text-emerald-500 dark:text-emerald-300'
+                      : 'text-indigo-500 dark:text-indigo-300'
+                  }`}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.62, duration: 0.3 }}
+                >
+                  <motion.div
+                    className="flex flex-col items-center"
+                    animate={{ y: [0, 4, 0] }}
+                    transition={{
+                      delay: 1.72,
+                      duration: 0.8,
+                      repeat: reduceMotion ? 0 : Infinity,
+                      repeatDelay: 0.35,
+                    }}
+                  >
+                    <span
+                      className={`h-4 w-px ${
+                        isCompleted
+                          ? 'bg-gradient-to-b from-emerald-300 to-emerald-500 dark:from-emerald-700 dark:to-emerald-400'
+                          : 'bg-gradient-to-b from-indigo-300 to-indigo-500 dark:from-indigo-700 dark:to-indigo-400'
+                      }`}
+                    />
+                    <ArrowDown className="-mt-0.5 size-4" strokeWidth={2.8} />
+                  </motion.div>
+                </motion.div>
+
+                <motion.button
+                  type="button"
+                  onClick={primaryAction}
+                  className={`relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-sm font-black text-white shadow-lg transition active:scale-[0.99] ${
+                    isCompleted
+                      ? 'bg-gradient-to-r from-emerald-600 via-emerald-600 to-blue-600 shadow-emerald-200/70 hover:from-emerald-500 hover:via-emerald-500 hover:to-blue-500 dark:shadow-emerald-950/45'
+                      : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 shadow-indigo-200/70 hover:from-blue-500 hover:via-indigo-500 hover:to-indigo-600 dark:shadow-indigo-950/45'
+                  }`}
+                  initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 1.74, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <span className="relative">{primaryLabel}</span>
+                  <ArrowRight className="relative size-4" strokeWidth={2.8} />
+                </motion.button>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
 

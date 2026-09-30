@@ -2,13 +2,17 @@ import { CalNewportBook } from './calNewportLibrary';
 import { FullStudyBook } from './calNewportFullStudy';
 
 export interface ResearchSection { title:string; paragraphs:string[]; items?:string[]; }
-export interface ResearchEdition { access:string; sections:ResearchSection[]; question:string; }
+export interface ResearchEdition { access:string; readingMinutes:number; readingTime:string; sections:ResearchSection[]; question:string; }
 
 const make=(book:CalNewportBook, full:FullStudyBook):ResearchEdition=>{
  const vital=book.themes.map(x=>x.title);
  const concepts=book.themes.flatMap(x=>x.explanation);
  const actions=book.themes.flatMap(x=>x.actionPlan);
+ const baseMinutes = Math.max(180, Math.ceil((book.overview.join(' ').length + book.themes.flatMap(x=>[x.shortIdea,...x.explanation,...x.actionPlan]).join(' ').length + full.sections.flatMap(x=>[...x.reading,...x.applications,...x.exercises,...x.review]).join(' ').length) / 900) * 30);
+ const hours = Math.max(3, Math.ceil(baseMinutes / 60));
  return {
+  readingMinutes: baseMinutes,
+  readingTime: `~${hours} hr+ · Unlimited-depth research`,
   access:'System Builder research edition. This is an original analytical study companion built from the verified/curated book metadata already represented in this library and general knowledge of the work; it is not the full copyrighted text. Exact quotations, page-level claims, and unverified chapter details are intentionally excluded. Where the local library does not contain primary-source evidence for a claim, the edition treats it as analysis rather than independently verified fact.',
   sections:[
    {title:'1. Book orientation and main argument',paragraphs:[book.overview.join(' '),book.whyItMatters,'Problem and audience: the book addresses the practical difficulties described by its focus—'+book.focus.toLowerCase()+'. Its usefulness depends on applying the ideas with context rather than treating them as guarantees.']},

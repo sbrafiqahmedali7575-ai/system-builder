@@ -744,3 +744,119 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
  .command-kpi::after,.command-kpi svg { animation:none!important; }
  .command-kpi::after { transform:scaleX(1); }
 }
+
+
+/* Premium interaction pass — tasks, habits, planning, analytics, books and tools */
+.system-edition [class*="grid"] > .rounded-xl,
+.system-edition [class*="grid"] > .rounded-2xl,
+.system-edition [class*="grid"] > article {
+  animation:premium-stagger-card 420ms var(--motion-ease) both;
+}
+.system-edition [class*="grid"] > :nth-child(2){animation-delay:35ms}
+.system-edition [class*="grid"] > :nth-child(3){animation-delay:70ms}
+.system-edition [class*="grid"] > :nth-child(4){animation-delay:105ms}
+.system-edition [class*="grid"] > :nth-child(5){animation-delay:140ms}
+.system-edition [class*="grid"] > :nth-child(6){animation-delay:175ms}
+
+.system-task-card,
+.tools-list-row,
+[data-task-id],
+[data-habit-id] {
+  transition:transform 200ms var(--motion-ease),opacity 200ms ease,background-color 200ms ease,box-shadow 220ms ease,border-color 220ms ease;
+}
+@media (hover:hover) and (pointer:fine) {
+ .system-task-card:hover,.tools-list-row:hover,[data-task-id]:hover,[data-habit-id]:hover {
+   transform:translate3d(2px,-1px,0);
+ }
+}
+.system-edition input[type="checkbox"]:checked + *,
+.system-edition [aria-checked="true"] {
+  animation:premium-complete-feedback 420ms var(--motion-ease);
+}
+
+/* Tabs and segmented controls get a fast, physical active-state response. */
+.system-edition [role="tab"],
+.tools-segment > button {
+  position:relative;
+  overflow:hidden;
+}
+.system-edition [role="tab"][aria-selected="true"]::after,
+.tools-segment > button[aria-selected="true"]::after,
+.tools-segment > button[data-active="true"]::after {
+  content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;border-radius:999px;
+  background:currentColor;opacity:.35;
+  animation:premium-tab-line 260ms var(--motion-ease) both;
+}
+
+/* Calendar: quiet depth, day focus and event-chip feedback. */
+.system-edition [data-calendar-day],
+.system-edition [class*="calendar"] button {
+  transition:transform 180ms var(--motion-ease),background-color 180ms ease,box-shadow 220ms ease,border-color 220ms ease;
+}
+@media (hover:hover) and (pointer:fine) {
+ .system-edition [data-calendar-day]:hover { transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,23,42,.07); }
+}
+
+/* Analytics: reveal charts/progress surfaces without changing chart calculations. */
+.system-edition svg circle,
+.system-edition svg path {
+  transition:stroke-dashoffset 650ms var(--motion-ease),stroke 220ms ease,fill 220ms ease,opacity 220ms ease;
+}
+.system-edition [role="progressbar"] {
+  transform-origin:left center;
+  animation:premium-progress-reveal 680ms var(--motion-ease) both;
+}
+
+/* Books / long-form reader: premium but calm. */
+.system-edition article section {
+  animation:premium-reader-section 420ms var(--motion-ease) both;
+}
+.system-edition article section:nth-of-type(n+3){animation-delay:35ms}
+.system-edition blockquote {
+  transition:transform 220ms var(--motion-ease),box-shadow 220ms ease,border-color 220ms ease;
+}
+@media (hover:hover) and (pointer:fine) {
+ .system-edition blockquote:hover { transform:translateX(3px); }
+}
+
+/* Floating/overlay surfaces */
+.system-edition [class*="fixed"][class*="z-"] > [class*="rounded"],
+.system-edition [class*="absolute"][class*="z-"] > [class*="rounded"] {
+  animation:premium-popover-in 240ms var(--motion-ease) both;
+}
+
+/* Touch-first feedback on mobile: no hover dependence. */
+@media (pointer:coarse) {
+ .system-edition button:active,.system-edition [role="button"]:active,.mobile-nav-action:active {
+   transform:scale(.965);
+   filter:brightness(.98);
+ }
+ .system-task-card:active,.tools-list-row:active { transform:scale(.992); }
+}
+
+/* GPU only where motion is short-lived; avoid permanent will-change. */
+@keyframes premium-stagger-card {
+ from{opacity:0;transform:translate3d(0,9px,0) scale(.994)}
+ to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes premium-complete-feedback {
+ 0%{transform:scale(.985)}
+ 48%{transform:scale(1.018)}
+ 100%{transform:scale(1)}
+}
+@keyframes premium-tab-line { from{transform:scaleX(.15);opacity:0}to{transform:scaleX(1);opacity:.35} }
+@keyframes premium-progress-reveal { from{opacity:.35;transform:scaleX(.25)}to{opacity:1;transform:scaleX(1)} }
+@keyframes premium-reader-section { from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none} }
+@keyframes premium-popover-in { from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none} }
+
+@media (prefers-reduced-motion:reduce) {
+ .system-edition [class*="grid"] > .rounded-xl,
+ .system-edition [class*="grid"] > .rounded-2xl,
+ .system-edition [class*="grid"] > article,
+ .system-edition input[type="checkbox"]:checked + *,
+ .system-edition [aria-checked="true"],
+ .system-edition [role="progressbar"],
+ .system-edition article section,
+ .system-edition [class*="fixed"][class*="z-"] > [class*="rounded"],
+ .system-edition [class*="absolute"][class*="z-"] > [class*="rounded"] { animation:none!important; }
+}

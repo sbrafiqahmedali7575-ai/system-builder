@@ -102,22 +102,54 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   const isCompleted = status === 'COMPLETED';
   const line = useMemo(() => getDayProgressLine(status), [status]);
 
+  const statusLabel = isCompleted
+    ? 'Day Completed • Momentum Earned'
+    : 'Day Reviewed • Next Move Ready';
+  const headline = isCompleted ? 'Use the momentum.' : 'Use the obstacle.';
+  const principleLabel = isCompleted
+    ? 'Principles 9–10 • Five Essential Lessons'
+    : 'Principles 3–7';
+  const guidance = isCompleted
+    ? 'Review what worked, preserve one thing, then carry it into the next day.'
+    : 'Review what blocked you, adjust one thing, then act on the next priority.';
+  const nextMove = isCompleted
+    ? 'Carry today’s system into tomorrow.'
+    : nextTaskTitle || 'Choose one clear next action.';
+  const nextMoveHint = isCompleted
+    ? 'Keep the method that worked today and make tomorrow’s first action obvious.'
+    : 'Start here. One clear action is enough to restart momentum.';
+  const flowSteps = isCompleted
+    ? [
+        { label: 'Complete', Icon: Check },
+        { label: 'Compound', Icon: Sparkles },
+        { label: 'Continue', Icon: ArrowRight },
+      ]
+    : [
+        { label: 'Review', Icon: ScanSearch },
+        { label: 'Adjust', Icon: SlidersHorizontal },
+        { label: 'Act', Icon: Rocket },
+      ];
+  const primaryAction = isCompleted ? onContinue : onFocusTask || onContinue;
+  const primaryLabel = isCompleted
+    ? 'Continue to Dashboard'
+    : nextTaskTitle && onFocusTask
+    ? 'Focus on this task'
+    : 'Back to Dashboard';
+
   return (
     <div className="relative overflow-hidden p-5 text-center sm:p-6">
-      {isCompleted && (
-        <motion.button
-          type="button"
-          onClick={onContinue}
-          className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-          aria-label="Exit completed result"
-          title="Exit"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.25 }}
-        >
-          <X className="size-4" />
-        </motion.button>
-      )}
+      <motion.button
+        type="button"
+        onClick={onContinue}
+        className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        aria-label="Exit result"
+        title="Exit"
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2, duration: 0.25 }}
+      >
+        <X className="size-4" />
+      </motion.button>
 
       <motion.div
         aria-hidden="true"
@@ -216,482 +248,404 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.45 }}
       >
-        {!isCompleted && (
-          <>
-            <div className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
-              Day Reviewed • Next Move Ready
-            </div>
+        <div
+          className={`mt-4 text-[10px] font-black uppercase tracking-[0.18em] ${
+            isCompleted
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-blue-600 dark:text-blue-400'
+          }`}
+        >
+          {statusLabel}
+        </div>
 
-            <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
-              Use the obstacle.
-            </h2>
+        <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
+          {headline}
+        </h2>
 
-            <motion.div
-              className="mx-auto mt-3 max-w-sm rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4 py-4 shadow-sm sm:max-w-xl dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/25"
-              initial={{ opacity: 0, y: 18, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: [0.95, 1.025, 1] }}
-              transition={{ delay: 0.46, duration: 0.56, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300">
-                Principles 3–7
-              </div>
+        <motion.div
+          className={`mx-auto mt-3 max-w-sm rounded-2xl border px-4 py-4 shadow-sm sm:max-w-xl ${
+            isCompleted
+              ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/25'
+              : 'border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/25'
+          }`}
+          initial={{ opacity: 0, y: 18, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: [0.95, 1.025, 1] }}
+          transition={{ delay: 0.46, duration: 0.56, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div
+            className={`text-[9px] font-black uppercase tracking-[0.16em] ${
+              isCompleted
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-indigo-600 dark:text-indigo-300'
+            }`}
+          >
+            {principleLabel}
+          </div>
 
-              <motion.p
-                className="mt-2 text-[16px] font-extrabold leading-relaxed tracking-[-0.015em] text-slate-900 dark:text-white"
-                initial={{ opacity: 0, y: 7 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.62, duration: 0.42 }}
-              >
-                {line}
-              </motion.p>
+          <motion.p
+            className="mt-2 flex min-h-[3.75rem] items-center justify-center text-[16px] font-extrabold leading-relaxed tracking-[-0.015em] text-slate-900 dark:text-white"
+            initial={{ opacity: 0, y: 7 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.62, duration: 0.42 }}
+          >
+            {line}
+          </motion.p>
 
-              <motion.div
-                aria-hidden="true"
-                className="mx-auto mt-3 h-0.5 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"
-                initial={{ width: '10%', opacity: 0 }}
-                animate={{ width: '100%', opacity: 1 }}
-                transition={{ delay: 0.66, duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
-              />
-            </motion.div>
+          <motion.div
+            aria-hidden="true"
+            className={`mx-auto mt-3 h-0.5 rounded-full ${
+              isCompleted
+                ? 'bg-gradient-to-r from-emerald-500 via-blue-500 to-emerald-500'
+                : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500'
+            }`}
+            initial={{ width: '10%', opacity: 0 }}
+            animate={{ width: '100%', opacity: 1 }}
+            transition={{ delay: 0.66, duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+          />
+        </motion.div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <div className="mt-4 flex min-h-5 flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <span>
+            {isCompleted ? 'Completed today:' : 'Progress today:'}{' '}
+            {completedTaskCount}/{totalTaskCount} tasks
+          </span>
+          {totalHabitCount > 0 && (
+            <>
+              <span aria-hidden="true">•</span>
               <span>
-                Progress today: {completedTaskCount}/{totalTaskCount} tasks
+                {completedHabitCount}/{totalHabitCount} habits
               </span>
-              {totalHabitCount > 0 && (
-                <>
-                  <span aria-hidden="true">•</span>
-                  <span>
-                    {completedHabitCount}/{totalHabitCount} habits
-                  </span>
-                </>
-              )}
-            </div>
-          </>
-        )}
-
-        <div className="mx-auto mt-4 max-w-sm sm:max-w-xl">
-          {isCompleted ? (
-            <motion.div
-              className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-3.5 shadow-sm dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/30"
-              initial={{ opacity: 0, y: 8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.45, duration: 0.42 }}
-            >
-              <motion.div
-                aria-hidden="true"
-                className="absolute inset-y-0 w-20 -skew-x-12 bg-emerald-200/20 dark:bg-emerald-400/10"
-                initial={{ left: '-28%' }}
-                animate={{ left: '120%' }}
-                transition={{ delay: 0.55, duration: 1.35, ease: 'easeInOut' }}
-              />
-
-              <div className="relative grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <AnimatedScore
-                  label="Successful Days"
-                  before={statsBefore.successfulDays}
-                  after={statsAfter.successfulDays}
-                  delay={0.58}
-                  icon={<Trophy className="size-4" />}
-                />
-                <AnimatedScore
-                  label="Current Streak"
-                  before={statsBefore.currentStreak}
-                  after={statsAfter.currentStreak}
-                  delay={0.72}
-                  icon={<Flame className="size-4" />}
-                />
-                <AnimatedScore
-                  label="Achieved Weeks"
-                  before={statsBefore.achievedWeeks}
-                  after={statsAfter.achievedWeeks}
-                  delay={0.86}
-                  icon={<CalendarCheck2 className="size-4" />}
-                />
-                <AnimatedScore
-                  label="Best Streak"
-                  before={statsBefore.bestStreak}
-                  after={statsAfter.bestStreak}
-                  delay={1.0}
-                  icon={<Sparkles className="size-4" />}
-                />
-              </div>
-
-              <div className="relative mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1.5">
-                {['Complete', 'Compound', 'Continue'].map((step, index) => (
-                  <React.Fragment key={step}>
-                    <motion.div
-                      className="flex min-w-0 flex-col items-center gap-1.5"
-                      initial={{ opacity: 0, x: -16, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      transition={{
-                        delay: 0.5 + index * 0.2,
-                        duration: 0.42,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                    >
-                      <motion.div
-                        className={`relative flex size-9 items-center justify-center rounded-full border shadow-sm ${
-                          index === 2
-                            ? 'border-emerald-400 bg-gradient-to-br from-emerald-500 to-blue-600 text-white shadow-emerald-200/70 dark:border-emerald-500 dark:shadow-emerald-950/40'
-                            : index === 0
-                            ? 'border-emerald-300 bg-emerald-500 text-white dark:border-emerald-600'
-                            : 'border-emerald-200 bg-white text-emerald-700 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300'
-                        }`}
-                        initial={{ scale: 0.72 }}
-                        animate={{
-                          scale: index === 2 ? [0.72, 1.16, 1] : [0.72, 1.08, 1],
-                          y: index === 2 ? [0, -2, 0] : 0,
-                        }}
-                        transition={{ delay: 0.54 + index * 0.2, duration: 0.48 }}
-                      >
-                        {index === 0 ? (
-                          <Check className="size-4" strokeWidth={2.8} />
-                        ) : (
-                          index + 1
-                        )}
-                        {index === 2 && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="absolute inset-[-5px] rounded-full border border-emerald-400/60"
-                            initial={{ opacity: 0.8, scale: 0.75 }}
-                            animate={{ opacity: 0, scale: 1.45 }}
-                            transition={{ delay: 1.0, duration: 0.8, ease: 'easeOut' }}
-                          />
-                        )}
-                      </motion.div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">
-                        {step}
-                      </span>
-                    </motion.div>
-
-                    {index < 2 && (
-                      <motion.div
-                        aria-hidden="true"
-                        className="relative flex items-center justify-center text-emerald-400 dark:text-emerald-500"
-                        initial={{ opacity: 0, scaleX: 0.5 }}
-                        animate={{ opacity: 1, scaleX: 1 }}
-                        transition={{ delay: 0.68 + index * 0.2, duration: 0.3 }}
-                      >
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{
-                            delay: 0.9 + index * 0.18,
-                            duration: 0.75,
-                            repeat: 2,
-                            ease: 'easeInOut',
-                          }}
-                        >
-                          <ArrowRight className="size-4" strokeWidth={2.6} />
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-
-              <motion.div
-                className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950/60"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.72, duration: 0.25 }}
-              >
-                <motion.div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-500 via-blue-500 to-emerald-500"
-                  initial={{ width: '10%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ delay: 0.78, duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                />
-                <motion.span
-                  aria-hidden="true"
-                  className="absolute top-1/2 size-2.5 -translate-y-1/2 rounded-full bg-white shadow-md ring-2 ring-emerald-500"
-                  initial={{ left: '6%' }}
-                  animate={{ left: '96%' }}
-                  transition={{ delay: 0.82, duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
-                />
-              </motion.div>
-
-              <motion.p
-                className="mt-3 border-t border-emerald-100 pt-3 text-sm font-extrabold leading-relaxed text-slate-700 dark:border-emerald-900/60 dark:text-slate-200"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.15, duration: 0.38 }}
-              >
-                {line}
-              </motion.p>
-            </motion.div>
-          ) : (
-            <motion.div
-              className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3.5 shadow-sm dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/30"
-              initial={{ opacity: 0, y: 8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.45, duration: 0.42 }}
-            >
-              <motion.div
-                aria-hidden="true"
-                className="absolute inset-y-0 w-20 -skew-x-12 bg-blue-200/20 dark:bg-blue-400/10"
-                initial={{ left: '-28%' }}
-                animate={{ left: '120%' }}
-                transition={{ delay: 0.55, duration: 1.35, ease: 'easeInOut' }}
-              />
-
-              <div className="relative grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1.5">
-                {[
-                  { label: 'Review', Icon: ScanSearch },
-                  { label: 'Adjust', Icon: SlidersHorizontal },
-                  { label: 'Act', Icon: Rocket },
-                ].map(({ label, Icon }, index) => (
-                  <React.Fragment key={label}>
-                    <motion.div
-                      className="flex min-w-0 flex-col items-center gap-1.5"
-                      initial={{ opacity: 0, x: -16, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      transition={{
-                        delay: 0.5 + index * 0.2,
-                        duration: 0.42,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                    >
-                      <motion.div
-                        className={`relative flex size-9 items-center justify-center rounded-full border shadow-sm ${
-                          index === 2
-                            ? 'border-indigo-400 bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-blue-200/70 dark:border-indigo-500 dark:shadow-blue-950/40'
-                            : 'border-blue-200 bg-white text-blue-700 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300'
-                        }`}
-                        initial={{ scale: 0.72 }}
-                        animate={{
-                          scale: index === 2 ? [0.72, 1.16, 1] : [0.72, 1.08, 1],
-                          y: index === 2 ? [0, -2, 0] : 0,
-                        }}
-                        transition={{ delay: 0.54 + index * 0.2, duration: 0.48 }}
-                      >
-                        <Icon className="size-4" strokeWidth={index === 2 ? 2.5 : 2.2} />
-                        {index === 2 && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="absolute inset-[-5px] rounded-full border border-blue-400/60"
-                            initial={{ opacity: 0.8, scale: 0.75 }}
-                            animate={{ opacity: 0, scale: 1.45 }}
-                            transition={{ delay: 1.0, duration: 0.8, ease: 'easeOut' }}
-                          />
-                        )}
-                      </motion.div>
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-[0.12em] ${
-                          index === 2
-                            ? 'text-indigo-700 dark:text-indigo-300'
-                            : 'text-blue-700 dark:text-blue-300'
-                        }`}
-                      >
-                        {label}
-                      </span>
-                    </motion.div>
-
-                    {index < 2 && (
-                      <motion.div
-                        aria-hidden="true"
-                        className="relative flex items-center justify-center text-blue-400 dark:text-blue-500"
-                        initial={{ opacity: 0, scaleX: 0.5 }}
-                        animate={{ opacity: 1, scaleX: 1 }}
-                        transition={{ delay: 0.68 + index * 0.2, duration: 0.3 }}
-                      >
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{
-                            delay: 0.9 + index * 0.18,
-                            duration: 0.75,
-                            repeat: 2,
-                            ease: 'easeInOut',
-                          }}
-                        >
-                          <ArrowRight className="size-4" strokeWidth={2.6} />
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-
-              <motion.div
-                className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950/60"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.72, duration: 0.25 }}
-              >
-                <motion.div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"
-                  initial={{ width: '10%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ delay: 0.78, duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                />
-                <motion.span
-                  aria-hidden="true"
-                  className="absolute top-1/2 size-2.5 -translate-y-1/2 rounded-full bg-white shadow-md ring-2 ring-blue-500"
-                  initial={{ left: '6%' }}
-                  animate={{ left: '96%' }}
-                  transition={{ delay: 0.82, duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
-                />
-              </motion.div>
-
-              <motion.p
-                className="mt-3 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.15, duration: 0.38 }}
-              >
-                Review what blocked you, adjust one thing, then act on the next priority.
-              </motion.p>
-
-              {nextTaskTitle && (
-                <motion.div
-                  className="relative mt-4 overflow-hidden rounded-2xl border-2 border-indigo-400 bg-gradient-to-br from-white via-indigo-50 to-blue-50 p-4 text-left shadow-[0_18px_42px_rgba(79,70,229,0.22)] dark:border-indigo-600 dark:from-slate-900 dark:via-indigo-950/35 dark:to-blue-950/35"
-                  initial={{ opacity: 0, y: 24, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: [0.9, 1.035, 1] }}
-                  transition={{ delay: 1.16, duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <motion.div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(99,102,241,0.22),transparent_58%)]"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0.35] }}
-                    transition={{ delay: 1.18, duration: 0.85 }}
-                  />
-                  <motion.div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400 to-transparent"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 1.28, duration: 0.5, ease: 'easeOut' }}
-                  />
-
-                  <div className="relative">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-300">
-                      <motion.span
-                        className="size-2.5 rounded-full bg-indigo-500"
-                        animate={{ scale: [1, 1.45, 1], opacity: [0.6, 1, 0.6] }}
-                        transition={{
-                          duration: 1.05,
-                          repeat: reduceMotion ? 0 : Infinity,
-                        }}
-                      />
-                      Your next move
-                    </div>
-
-                    <motion.div
-                      className="mt-2 rounded-xl border border-indigo-200/80 bg-white/80 px-3 py-3 shadow-sm dark:border-indigo-800/70 dark:bg-slate-950/35"
-                      initial={{ opacity: 0, x: -16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.34, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      <motion.p
-                        className="text-[17px] font-black leading-snug tracking-tight text-slate-950 dark:text-white"
-                        initial={{ opacity: 0.35 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1.46, duration: 0.3 }}
-                      >
-                        {nextTaskTitle}
-                      </motion.p>
-                    </motion.div>
-
-                    <p className="mt-2 text-[11px] font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
-                      Start here. One clear action is enough to restart momentum.
-                    </p>
-
-                    {onFocusTask && (
-                      <>
-                        <motion.div
-                          aria-hidden="true"
-                          className="mx-auto mt-2 flex h-8 w-8 items-center justify-center text-indigo-500 dark:text-indigo-300"
-                          initial={{ opacity: 0, y: -6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 1.62, duration: 0.3 }}
-                        >
-                          <motion.div
-                            className="flex flex-col items-center"
-                            animate={{ y: [0, 4, 0] }}
-                            transition={{
-                              delay: 1.72,
-                              duration: 0.8,
-                              repeat: reduceMotion ? 0 : Infinity,
-                              repeatDelay: 0.35,
-                            }}
-                          >
-                            <span className="h-4 w-px bg-gradient-to-b from-indigo-300 to-indigo-500 dark:from-indigo-700 dark:to-indigo-400" />
-                            <ArrowDown className="-mt-0.5 size-4" strokeWidth={2.8} />
-                          </motion.div>
-                        </motion.div>
-
-                        <motion.button
-                          type="button"
-                          onClick={onFocusTask}
-                          className="relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 px-4 text-sm font-black text-white shadow-lg shadow-indigo-200/70 transition hover:from-blue-500 hover:via-indigo-500 hover:to-indigo-600 active:scale-[0.99] dark:shadow-indigo-950/45"
-                          initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          transition={{ delay: 1.74, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                          whileHover={{ y: -1 }}
-                          whileTap={{ scale: 0.99 }}
-                        >
-                          <motion.span
-                            aria-hidden="true"
-                            className="absolute inset-y-0 w-14 -skew-x-12 bg-white/18"
-                            initial={{ left: '-25%' }}
-                            animate={{ left: '120%' }}
-                            transition={{
-                              delay: 2.05,
-                              duration: 0.8,
-                              repeat: reduceMotion ? 0 : Infinity,
-                              repeatDelay: 2.2,
-                            }}
-                          />
-                          <span className="relative">Focus on this task</span>
-                          <motion.span
-                            className="relative"
-                            animate={{ x: [0, 4, 0] }}
-                            transition={{
-                              duration: 0.8,
-                              repeat: reduceMotion ? 0 : Infinity,
-                              repeatDelay: 0.4,
-                            }}
-                          >
-                            <ArrowRight className="size-4" strokeWidth={2.8} />
-                          </motion.span>
-                        </motion.button>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
+            </>
           )}
         </div>
 
-        {!isCompleted && (
-          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <motion.button
-              type="button"
-              onClick={onUpdateAgain}
-              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/80 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0, duration: 0.35 }}
-            >
-              <RefreshCw className="size-3.5" />
-              Update Day Again
-            </motion.button>
+        <div className="mx-auto mt-4 max-w-sm sm:max-w-xl">
+          <motion.div
+            className={`relative overflow-hidden rounded-2xl border p-3.5 shadow-sm ${
+              isCompleted
+                ? 'border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/30'
+                : 'border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/30'
+            }`}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.45, duration: 0.42 }}
+          >
+            <motion.div
+              aria-hidden="true"
+              className={`absolute inset-y-0 w-20 -skew-x-12 ${
+                isCompleted
+                  ? 'bg-emerald-200/20 dark:bg-emerald-400/10'
+                  : 'bg-blue-200/20 dark:bg-blue-400/10'
+              }`}
+              initial={{ left: '-28%' }}
+              animate={{ left: '120%' }}
+              transition={{ delay: 0.55, duration: 1.35, ease: 'easeInOut' }}
+            />
 
-            <motion.button
-              type="button"
-              onClick={onContinue}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-blue-500 active:scale-[0.99]"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.85, duration: 0.4 }}
+            <div className="relative grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <AnimatedScore
+                label="Successful Days"
+                before={statsBefore.successfulDays}
+                after={statsAfter.successfulDays}
+                delay={0.58}
+                icon={<Trophy className="size-4" />}
+              />
+              <AnimatedScore
+                label="Current Streak"
+                before={statsBefore.currentStreak}
+                after={statsAfter.currentStreak}
+                delay={0.72}
+                icon={<Flame className="size-4" />}
+              />
+              <AnimatedScore
+                label="Achieved Weeks"
+                before={statsBefore.achievedWeeks}
+                after={statsAfter.achievedWeeks}
+                delay={0.86}
+                icon={<CalendarCheck2 className="size-4" />}
+              />
+              <AnimatedScore
+                label="Best Streak"
+                before={statsBefore.bestStreak}
+                after={statsAfter.bestStreak}
+                delay={1.0}
+                icon={<Sparkles className="size-4" />}
+              />
+            </div>
+
+            <div className="relative mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1.5">
+              {flowSteps.map(({ label, Icon }, index) => (
+                <React.Fragment key={label}>
+                  <motion.div
+                    className="flex min-w-0 flex-col items-center gap-1.5"
+                    initial={{ opacity: 0, x: -16, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    transition={{
+                      delay: 0.5 + index * 0.2,
+                      duration: 0.42,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
+                    <motion.div
+                      className={`relative flex size-9 items-center justify-center rounded-full border shadow-sm ${
+                        isCompleted
+                          ? index === 2
+                            ? 'border-emerald-400 bg-gradient-to-br from-emerald-500 to-blue-600 text-white shadow-emerald-200/70 dark:border-emerald-500 dark:shadow-emerald-950/40'
+                            : 'border-emerald-200 bg-white text-emerald-700 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300'
+                          : index === 2
+                          ? 'border-indigo-400 bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-blue-200/70 dark:border-indigo-500 dark:shadow-blue-950/40'
+                          : 'border-blue-200 bg-white text-blue-700 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300'
+                      }`}
+                      initial={{ scale: 0.72 }}
+                      animate={{
+                        scale: index === 2 ? [0.72, 1.16, 1] : [0.72, 1.08, 1],
+                        y: index === 2 ? [0, -2, 0] : 0,
+                      }}
+                      transition={{ delay: 0.54 + index * 0.2, duration: 0.48 }}
+                    >
+                      <Icon className="size-4" strokeWidth={index === 2 ? 2.5 : 2.2} />
+                      {index === 2 && (
+                        <motion.span
+                          aria-hidden="true"
+                          className={`absolute inset-[-5px] rounded-full border ${
+                            isCompleted
+                              ? 'border-emerald-400/60'
+                              : 'border-blue-400/60'
+                          }`}
+                          initial={{ opacity: 0.8, scale: 0.75 }}
+                          animate={{ opacity: 0, scale: 1.45 }}
+                          transition={{ delay: 1.0, duration: 0.8, ease: 'easeOut' }}
+                        />
+                      )}
+                    </motion.div>
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-[0.12em] ${
+                        isCompleted
+                          ? 'text-emerald-700 dark:text-emerald-300'
+                          : index === 2
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-blue-700 dark:text-blue-300'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </motion.div>
+
+                  {index < 2 && (
+                    <motion.div
+                      aria-hidden="true"
+                      className={`relative flex items-center justify-center ${
+                        isCompleted
+                          ? 'text-emerald-400 dark:text-emerald-500'
+                          : 'text-blue-400 dark:text-blue-500'
+                      }`}
+                      initial={{ opacity: 0, scaleX: 0.5 }}
+                      animate={{ opacity: 1, scaleX: 1 }}
+                      transition={{ delay: 0.68 + index * 0.2, duration: 0.3 }}
+                    >
+                      <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          delay: 0.9 + index * 0.18,
+                          duration: 0.75,
+                          repeat: 2,
+                          ease: 'easeInOut',
+                        }}
+                      >
+                        <ArrowRight className="size-4" strokeWidth={2.6} />
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            <motion.div
+              className={`relative mt-3 h-1.5 overflow-hidden rounded-full ${
+                isCompleted
+                  ? 'bg-emerald-100 dark:bg-emerald-950/60'
+                  : 'bg-blue-100 dark:bg-blue-950/60'
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.72, duration: 0.25 }}
             >
-              {nextTaskTitle ? 'Back to Dashboard' : 'Move to the Next Step'}
-              <ArrowRight className="size-4" />
-            </motion.button>
-          </div>
-        )}
+              <motion.div
+                className={`absolute inset-y-0 left-0 rounded-full ${
+                  isCompleted
+                    ? 'bg-gradient-to-r from-emerald-500 via-blue-500 to-emerald-500'
+                    : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500'
+                }`}
+                initial={{ width: '10%' }}
+                animate={{ width: '100%' }}
+                transition={{ delay: 0.78, duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+              />
+              <motion.span
+                aria-hidden="true"
+                className={`absolute top-1/2 size-2.5 -translate-y-1/2 rounded-full bg-white shadow-md ring-2 ${
+                  isCompleted ? 'ring-emerald-500' : 'ring-blue-500'
+                }`}
+                initial={{ left: '6%' }}
+                animate={{ left: '96%' }}
+                transition={{ delay: 0.82, duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </motion.div>
+
+            <motion.p
+              className="mt-3 flex min-h-[2.5rem] items-center justify-center text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.15, duration: 0.38 }}
+            >
+              {guidance}
+            </motion.p>
+
+            <motion.div
+              className={`relative mt-4 overflow-hidden rounded-2xl border-2 p-4 text-left ${
+                isCompleted
+                  ? 'border-emerald-400 bg-gradient-to-br from-white via-emerald-50 to-blue-50 shadow-[0_18px_42px_rgba(16,185,129,0.18)] dark:border-emerald-600 dark:from-slate-900 dark:via-emerald-950/35 dark:to-blue-950/35'
+                  : 'border-indigo-400 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-[0_18px_42px_rgba(79,70,229,0.22)] dark:border-indigo-600 dark:from-slate-900 dark:via-indigo-950/35 dark:to-blue-950/35'
+              }`}
+              initial={{ opacity: 0, y: 24, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: [0.9, 1.035, 1] }}
+              transition={{ delay: 1.16, duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <motion.div
+                aria-hidden="true"
+                className={`pointer-events-none absolute inset-0 ${
+                  isCompleted
+                    ? 'bg-[radial-gradient(circle_at_50%_18%,rgba(16,185,129,0.18),transparent_58%)]'
+                    : 'bg-[radial-gradient(circle_at_50%_18%,rgba(99,102,241,0.22),transparent_58%)]'
+                }`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0.35] }}
+                transition={{ delay: 1.18, duration: 0.85 }}
+              />
+
+              <div className="relative">
+                <div
+                  className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] ${
+                    isCompleted
+                      ? 'text-emerald-600 dark:text-emerald-300'
+                      : 'text-indigo-600 dark:text-indigo-300'
+                  }`}
+                >
+                  <motion.span
+                    className={`size-2.5 rounded-full ${
+                      isCompleted ? 'bg-emerald-500' : 'bg-indigo-500'
+                    }`}
+                    animate={{ scale: [1, 1.45, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{
+                      duration: 1.05,
+                      repeat: reduceMotion ? 0 : Infinity,
+                    }}
+                  />
+                  Your next move
+                </div>
+
+                <motion.div
+                  className={`mt-2 flex min-h-[4.25rem] items-center rounded-xl border bg-white/80 px-3 py-3 shadow-sm dark:bg-slate-950/35 ${
+                    isCompleted
+                      ? 'border-emerald-200/80 dark:border-emerald-800/70'
+                      : 'border-indigo-200/80 dark:border-indigo-800/70'
+                  }`}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.34, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <motion.p
+                    className="text-[17px] font-black leading-snug tracking-tight text-slate-950 dark:text-white"
+                    initial={{ opacity: 0.35 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.46, duration: 0.3 }}
+                  >
+                    {nextMove}
+                  </motion.p>
+                </motion.div>
+
+                <p className="mt-2 flex min-h-[2.5rem] items-center text-[11px] font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
+                  {nextMoveHint}
+                </p>
+
+                <motion.div
+                  aria-hidden="true"
+                  className={`mx-auto mt-2 flex h-8 w-8 items-center justify-center ${
+                    isCompleted
+                      ? 'text-emerald-500 dark:text-emerald-300'
+                      : 'text-indigo-500 dark:text-indigo-300'
+                  }`}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.62, duration: 0.3 }}
+                >
+                  <motion.div
+                    className="flex flex-col items-center"
+                    animate={{ y: [0, 4, 0] }}
+                    transition={{
+                      delay: 1.72,
+                      duration: 0.8,
+                      repeat: reduceMotion ? 0 : Infinity,
+                      repeatDelay: 0.35,
+                    }}
+                  >
+                    <span
+                      className={`h-4 w-px ${
+                        isCompleted
+                          ? 'bg-gradient-to-b from-emerald-300 to-emerald-500 dark:from-emerald-700 dark:to-emerald-400'
+                          : 'bg-gradient-to-b from-indigo-300 to-indigo-500 dark:from-indigo-700 dark:to-indigo-400'
+                      }`}
+                    />
+                    <ArrowDown className="-mt-0.5 size-4" strokeWidth={2.8} />
+                  </motion.div>
+                </motion.div>
+
+                <motion.button
+                  type="button"
+                  onClick={primaryAction}
+                  className={`relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-sm font-black text-white shadow-lg transition active:scale-[0.99] ${
+                    isCompleted
+                      ? 'bg-gradient-to-r from-emerald-600 via-emerald-600 to-blue-600 shadow-emerald-200/70 hover:from-emerald-500 hover:via-emerald-500 hover:to-blue-500 dark:shadow-emerald-950/45'
+                      : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 shadow-indigo-200/70 hover:from-blue-500 hover:via-indigo-500 hover:to-indigo-600 dark:shadow-indigo-950/45'
+                  }`}
+                  initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 1.74, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <span className="relative">{primaryLabel}</span>
+                  <ArrowRight className="relative size-4" strokeWidth={2.8} />
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <motion.button
+            type="button"
+            onClick={onUpdateAgain}
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/80 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.35 }}
+          >
+            <RefreshCw className="size-3.5" />
+            Update Day Again
+          </motion.button>
+
+          <motion.button
+            type="button"
+            onClick={onContinue}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-blue-500 active:scale-[0.99]"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85, duration: 0.4 }}
+          >
+            {isCompleted ? 'Exit' : nextTaskTitle ? 'Back to Dashboard' : 'Move to the Next Step'}
+            <ArrowRight className="size-4" />
+          </motion.button>
+        </div>
       </motion.div>
     </div>
   );

@@ -479,7 +479,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       {isCustomOpen && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-slate-950/35 backdrop-blur-[2px]"
+              className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-4 bg-slate-950/35 backdrop-blur-[2px]"
               role="dialog"
               aria-modal="true"
               aria-label="Set custom Pomodoro time"

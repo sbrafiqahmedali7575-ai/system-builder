@@ -416,3 +416,14 @@ assert.ok(
 
 
 console.log('UI contract checks passed.');
+
+
+// Focus timer contract: elapsed time is task-bound and completion is a single atomic task update.
+assert.ok(pomodoro.includes('Date.now() - startedAtRef.current'), 'Focus timer must derive elapsed time from wall-clock deltas.');
+assert.ok(pomodoro.includes('onElapsedCommit?.(Math.floor(accumulatedMsRef.current / 1000))'), 'Pausing focus timer must persist elapsed seconds.');
+assert.ok(pomodoro.includes('void onElapsedCommit?.(0)'), 'Resetting focus timer must persist zero elapsed time.');
+assert.ok(pomodoro.includes('await onCompleteCurrentTask(finalSeconds)'), 'Completing Current Task must pass the final timer value.');
+assert.ok(report.includes('ActualTime: formatActualTime(elapsedSeconds)'), 'Focus completion must write the timer value to canonical ActualTime.');
+assert.ok(report.includes('isCompleted: true'), 'Focus completion must mark the same task completed in the atomic update.');
+assert.ok(report.includes('.filter((task) => !task.isCompleted)'), 'Completed tasks must not remain selectable as focus tasks.');
+assert.ok(report.includes("selected === completedTaskId ? '' : selected"), 'Completing a focus task must release its selection so the next incomplete task can become current.');

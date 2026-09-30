@@ -634,7 +634,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-slate-950/30 p-2 sm:p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-label={'Items for ' + longDate(dateKey)}
@@ -642,7 +642,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md max-h-[80vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+      <div className="w-full max-w-md max-h-[calc(100dvh-1rem)] sm:max-h-[80dvh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <div>
             <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -663,7 +663,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
           </button>
         </div>
 
-        <div className="max-h-[calc(80vh-64px)] overflow-y-auto p-3 space-y-3">
+        <div className="max-h-[calc(100dvh-5rem)] sm:max-h-[calc(80dvh-64px)] overflow-y-auto overscroll-contain p-3 space-y-3">
           {totalItems === 0 && (
             <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-xs font-semibold text-slate-500">
               No visible tasks or habits for this date.
@@ -779,14 +779,14 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-2 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-slate-900 dark:text-slate-100 shadow-2xl">
+    <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/60 p-2 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onClose(); }}>
+      <div className="w-full max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-slate-900 dark:text-slate-100 shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5 mb-2">
           <div className="flex items-center gap-1.5">
             <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400"><Plus className="w-4 h-4 stroke-[3]" /></div>
-            <div><h3 className="text-base font-semibold">Enter Tasks</h3><p className="text-xs text-slate-500 dark:text-slate-400">Add one or multiple tasks for ${longDate(selectedDate)}</p></div>
+            <div><h3 className="text-base font-semibold">Enter Tasks</h3><p className="text-xs text-slate-500 dark:text-slate-400">Add one or multiple tasks for {longDate(selectedDate)}</p></div>
           </div>
-          <button type="button" onClick={onClose} className="p-1 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close"><X className="w-4 h-4" /></button>
+          <button type="button" disabled={saving} onClick={onClose} className="inline-flex size-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed dark:hover:bg-slate-800" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="mb-2 px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between">
@@ -796,7 +796,7 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_190px] gap-2 items-start">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Task Title / Objective</label>
-            <input autoFocus value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter')void submit();if(e.key==='Escape')onClose();}} placeholder="What needs to be done?" className="w-full h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm outline-none focus:border-blue-500" />
+            <input autoFocus value={title} onChange={(e)=>setTitle(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter')void submit();if(e.key==='Escape'&&!saving)onClose();}} placeholder="What needs to be done?" className="w-full h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm outline-none focus:border-blue-500" />
             <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} placeholder="Notes" rows={2} className="mt-1 w-full min-h-[48px] resize-y px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs outline-none focus:border-blue-500" />
           </div>
           <div>
@@ -810,7 +810,7 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
 
         {addedCount > 0 && <div className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-300">Added in this session: {addedCount}</div>}
         <div className="mt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-2">
-          <button type="button" onClick={onClose} className="px-3 h-9 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-xs font-semibold">Done</button>
+          <button type="button" disabled={saving} onClick={onClose} className="px-3 h-9 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed">Done</button>
           <button type="button" disabled={!title.trim()||saving} onClick={()=>void submit()} className="h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 inline-flex items-center gap-1"><Plus className="w-4 h-4"/>{saving?'Adding...':'Add'}</button>
         </div>
       </div>

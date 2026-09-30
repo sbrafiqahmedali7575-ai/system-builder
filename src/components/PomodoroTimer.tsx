@@ -89,7 +89,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
   const timerVisual = (
     <div
-      className={`flex items-center justify-center rounded-xl border border-slate-200/80 bg-slate-950 px-4 shadow-inner dark:border-slate-700 ${integrated ? 'min-h-[92px] w-full' : 'min-h-[58px] min-w-[112px]'}`}
+      className={`flex items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 dark:border-slate-800 dark:bg-slate-900/70 ${integrated ? 'min-h-[92px] w-full' : 'min-h-[58px] min-w-[112px]'}`}
       aria-label={`Focus timer elapsed time ${formattedTime}`}
     >
       <div className="flex flex-col items-center justify-center">
@@ -98,7 +98,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             Actual Task Time
           </span>
         )}
-        <span className={`font-mono font-bold tabular-nums leading-none tracking-[0.04em] text-white ${integrated ? 'text-4xl sm:text-[42px]' : 'text-xl'}`}>
+        <span className={`font-mono font-bold tabular-nums leading-none tracking-[0.04em] text-slate-900 dark:text-slate-100 ${integrated ? 'text-4xl sm:text-[42px]' : 'text-xl'}`}>
           {formattedTime}
         </span>
         <span className={`mt-1.5 text-[10px] font-semibold uppercase tracking-wider ${isRunning ? 'text-blue-400' : 'text-slate-500'}`}>

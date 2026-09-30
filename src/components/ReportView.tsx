@@ -2,7 +2,7 @@ import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { RotateCcw, X } from 'lucide-react';
-import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from '../types';
+import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem, DaySubmitResult } from '../types';
 import { parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils';
 import { isHabitDue } from '../utils/habitUtils';
@@ -48,7 +48,7 @@ interface ReportViewProps {
   onSubmitTaskDay: (
     dateKey: string,
     dayTasks: TaskItem[]
-  ) => Promise<'COMPLETED' | 'NOT_COMPLETED'>;
+  ) => Promise<DaySubmitResult>;
   onOpenDayReview: () => void;
   isSyncing?: boolean;
   focusMode?: boolean;

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Check, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Rocket, ScanSearch, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
 
 interface DayProgressMomentProps {
@@ -210,50 +210,125 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           </div>
         ) : (
           <div className="mx-auto mt-5 max-w-sm">
-            <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 dark:border-blue-900/60 dark:bg-blue-950/25">
-              <div className="flex items-center justify-between gap-2">
-                {['Review', 'Adjust', 'Act'].map((step, index) => (
-                  <React.Fragment key={step}>
+            <motion.div
+              className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3.5 shadow-sm dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/30"
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.45, duration: 0.42 }}
+            >
+              <motion.div
+                aria-hidden="true"
+                className="absolute inset-y-0 w-20 -skew-x-12 bg-blue-200/20 dark:bg-blue-400/10"
+                initial={{ left: '-28%' }}
+                animate={{ left: '120%' }}
+                transition={{ delay: 0.55, duration: 1.35, ease: 'easeInOut' }}
+              />
+
+              <div className="relative grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1.5">
+                {[
+                  { label: 'Review', Icon: ScanSearch },
+                  { label: 'Adjust', Icon: SlidersHorizontal },
+                  { label: 'Act', Icon: Rocket },
+                ].map(({ label, Icon }, index) => (
+                  <React.Fragment key={label}>
                     <motion.div
-                      className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.45 + index * 0.22, duration: 0.35 }}
+                      className="flex min-w-0 flex-col items-center gap-1.5"
+                      initial={{ opacity: 0, x: -16, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      transition={{
+                        delay: 0.5 + index * 0.2,
+                        duration: 0.42,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
                     >
                       <motion.div
-                        className="flex size-8 items-center justify-center rounded-full border border-blue-200 bg-white text-[11px] font-black text-blue-700 shadow-sm dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
+                        className={`relative flex size-9 items-center justify-center rounded-full border shadow-sm ${
+                          index === 2
+                            ? 'border-indigo-400 bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-blue-200/70 dark:border-indigo-500 dark:shadow-blue-950/40'
+                            : 'border-blue-200 bg-white text-blue-700 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300'
+                        }`}
                         initial={{ scale: 0.72 }}
-                        animate={{ scale: [0.72, 1.08, 1] }}
-                        transition={{ delay: 0.5 + index * 0.22, duration: 0.45 }}
+                        animate={{
+                          scale: index === 2 ? [0.72, 1.16, 1] : [0.72, 1.08, 1],
+                          y: index === 2 ? [0, -2, 0] : 0,
+                        }}
+                        transition={{ delay: 0.54 + index * 0.2, duration: 0.48 }}
                       >
-                        {index + 1}
+                        <Icon className="size-4" strokeWidth={index === 2 ? 2.5 : 2.2} />
+                        {index === 2 && (
+                          <motion.span
+                            aria-hidden="true"
+                            className="absolute inset-[-5px] rounded-full border border-blue-400/60"
+                            initial={{ opacity: 0.8, scale: 0.75 }}
+                            animate={{ opacity: 0, scale: 1.45 }}
+                            transition={{ delay: 1.0, duration: 0.8, ease: 'easeOut' }}
+                          />
+                        )}
                       </motion.div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-blue-700 dark:text-blue-300">
-                        {step}
+                      <span className={`text-[10px] font-black uppercase tracking-[0.12em] ${
+                        index === 2
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-blue-700 dark:text-blue-300'
+                      }`}>
+                        {label}
                       </span>
                     </motion.div>
+
                     {index < 2 && (
                       <motion.div
                         aria-hidden="true"
-                        className="h-px flex-1 bg-gradient-to-r from-blue-300 to-indigo-300 dark:from-blue-700 dark:to-indigo-700"
-                        initial={{ scaleX: 0, opacity: 0 }}
-                        animate={{ scaleX: 1, opacity: 1 }}
-                        transition={{ delay: 0.65 + index * 0.22, duration: 0.35 }}
-                      />
+                        className="relative flex items-center justify-center text-blue-400 dark:text-blue-500"
+                        initial={{ opacity: 0, scaleX: 0.5 }}
+                        animate={{ opacity: 1, scaleX: 1 }}
+                        transition={{ delay: 0.68 + index * 0.2, duration: 0.3 }}
+                      >
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{
+                            delay: 0.9 + index * 0.18,
+                            duration: 0.75,
+                            repeat: 2,
+                            ease: 'easeInOut',
+                          }}
+                        >
+                          <ArrowRight className="size-4" strokeWidth={2.6} />
+                        </motion.div>
+                      </motion.div>
                     )}
                   </React.Fragment>
                 ))}
               </div>
 
-              <motion.p
-                className="mt-3 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300"
+              <motion.div
+                className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950/60"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.05, duration: 0.4 }}
+                transition={{ delay: 0.72, duration: 0.25 }}
               >
-                Next move: choose one unfinished task, make it the first priority, and start fresh.
+                <motion.div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"
+                  initial={{ width: '10%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ delay: 0.78, duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+                />
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute top-1/2 size-2.5 -translate-y-1/2 rounded-full bg-white shadow-md ring-2 ring-blue-500"
+                  initial={{ left: '6%' }}
+                  animate={{ left: '96%' }}
+                  transition={{ delay: 0.82, duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </motion.div>
+
+              <motion.p
+                className="mt-3 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.15, duration: 0.38 }}
+              >
+                Review what blocked you, adjust one thing, then act on the next priority.
               </motion.p>
-            </div>
+            </motion.div>
           </div>
         )}
 

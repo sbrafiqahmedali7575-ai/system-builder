@@ -28,7 +28,6 @@ interface PomodoroTimerProps {
   currentTaskTitle?: string;
   todayTasks?: Array<{ id: string; title: string; isCompleted?: boolean }>;
   onCurrentTaskChange?: (taskId: string) => void;
-  onFocusTimingChange?: (elapsedSeconds: number, hasStarted: boolean) => void;
   integrated?: boolean;
 }
 
@@ -37,7 +36,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   currentTaskTitle = 'No active task selected',
   todayTasks = [],
   onCurrentTaskChange,
-  onFocusTimingChange,
   integrated = false,
 }) => {
   const [durationSeconds, setDurationSeconds] = useState(DEFAULT_MINUTES * 60);
@@ -175,12 +173,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       stopAlarm();
     };
   }, [stopAlarm]);
-
-  const elapsedSeconds = Math.max(0, durationSeconds - remainingSeconds);
-
-  useEffect(() => {
-    onFocusTimingChange?.(elapsedSeconds, isTaskLocked);
-  }, [elapsedSeconds, isTaskLocked, onFocusTimingChange]);
 
   const elapsedPercent = useMemo(() => {
     if (durationSeconds <= 0) return 0;

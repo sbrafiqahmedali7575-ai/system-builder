@@ -2,13 +2,8 @@ import React, {useEffect, useState} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
-const CONTROL_LINES = [
-  'Focus on what you can control.',
-  'Choose your perception.',
-  'Direct your effort.',
-  'Own your response.',
-  'Take the next useful action.',
-] as const;
+const BOOK_SUMMARY =
+  'See clearly, act on what you control, endure what you cannot change, and turn every obstacle into a way forward.';
 
 export const AppLaunchSplash: React.FC = () => {
   const [visible, setVisible] = useState(true);
@@ -64,63 +59,49 @@ export const AppLaunchSplash: React.FC = () => {
               className="mt-6 w-full"
               initial={{opacity: 0, y: 8}}
               animate={{opacity: 1, y: 0}}
-              transition={{delay: 0.38, duration: 0.38}}
-              aria-label="Control-focused launch guidance"
+              transition={{delay: 0.38, duration: 0.4}}
+              aria-label="The Obstacle Is the Way one-line summary"
             >
               <div className="mb-2.5 text-[9px] font-black uppercase tracking-[0.18em] text-indigo-500/90 md:text-[10px]">
-                Within your control
+                The Obstacle Is the Way — in one line
               </div>
 
-              <div className="relative h-[110px] overflow-hidden rounded-2xl border border-indigo-100/90 bg-white/84 px-4 shadow-[0_14px_34px_rgba(79,70,229,0.08)] backdrop-blur-sm md:h-[118px]">
+              <motion.div
+                className="relative overflow-hidden rounded-2xl border border-indigo-100/90 bg-white/84 px-5 py-6 shadow-[0_16px_38px_rgba(79,70,229,0.10)] backdrop-blur-sm md:px-6 md:py-7"
+                initial={{opacity: 0, y: 14, scale: 0.97, filter: 'blur(3px)'}}
+                animate={{opacity: 1, y: 0, scale: [0.97, 1.015, 1], filter: 'blur(0px)'}}
+                transition={{delay: 0.72, duration: 0.85, ease: [0.16, 1, 0.3, 1]}}
+              >
                 <div
                   aria-hidden="true"
-                  className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(99,102,241,0.12),transparent_58%)]"
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(99,102,241,0.14),transparent_60%)]"
                 />
 
-                {CONTROL_LINES.map((line, index) => {
-                  const delay = 0.8 + index * 1.6;
-                  return (
-                    <motion.div
-                      key={line}
-                      className="absolute inset-0 flex items-center justify-center px-5"
-                      initial={{opacity: 0, y: 16, scale: 0.97, filter: 'blur(3px)'}}
-                      animate={{
-                        opacity: [0, 1, 1, 0],
-                        y: [16, 0, 0, -12],
-                        scale: [0.97, 1.015, 1, 0.99],
-                        filter: ['blur(3px)', 'blur(0px)', 'blur(0px)', 'blur(2px)'],
-                      }}
-                      transition={{
-                        delay,
-                        duration: 1.55,
-                        times: [0, 0.18, 0.78, 1],
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                    >
-                      <div className="text-center">
-                        <motion.div
-                          aria-hidden="true"
-                          className="mx-auto mb-2 h-px w-10 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"
-                          initial={{scaleX: 0}}
-                          animate={{scaleX: 1}}
-                          transition={{delay: delay + 0.08, duration: 0.28}}
-                        />
-                        <p className="text-[15px] font-extrabold leading-snug tracking-[-0.015em] text-slate-900 md:text-[17px]">
-                          {line}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                <motion.div
+                  aria-hidden="true"
+                  className="relative mx-auto mb-3 h-px w-12 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"
+                  initial={{scaleX: 0, opacity: 0}}
+                  animate={{scaleX: 1, opacity: 1}}
+                  transition={{delay: 0.92, duration: 0.42}}
+                />
+
+                <motion.p
+                  className="relative text-[17px] font-extrabold leading-relaxed tracking-[-0.018em] text-slate-900 md:text-[19px]"
+                  initial={{opacity: 0, y: 8}}
+                  animate={{opacity: 1, y: 0}}
+                  transition={{delay: 1.0, duration: 0.5, ease: [0.16, 1, 0.3, 1]}}
+                >
+                  {BOOK_SUMMARY}
+                </motion.p>
 
                 <motion.div
                   aria-hidden="true"
                   className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
                   initial={{width: '0%'}}
                   animate={{width: '100%'}}
-                  transition={{delay: 0.7, duration: 8.35, ease: 'linear'}}
+                  transition={{delay: 0.7, duration: 8.4, ease: 'linear'}}
                 />
-              </div>
+              </motion.div>
 
               <motion.p
                 className="mt-2.5 text-[9px] font-semibold tracking-[0.025em] text-slate-400 md:text-[10px]"

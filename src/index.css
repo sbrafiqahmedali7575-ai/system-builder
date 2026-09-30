@@ -360,7 +360,6 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 /* TickTick-inspired productivity shell */
 :root { --tt-blue:#4772fa; --tt-sidebar:#f5f6f8; --tt-canvas:#fff; --tt-border:#e8e8e8; --tt-text:#252525; --tt-muted:#8a8f98; }
 .system-edition { color:var(--tt-text); }
-.system-edition main { max-width:none !important; }
 .system-edition .rounded-2xl { border-radius:10px; }
 .system-edition .rounded-xl { border-radius:8px; }
 .system-edition .shadow-lg,.system-edition .shadow-xl,.system-edition .shadow-2xl { box-shadow:0 8px 24px rgba(0,0,0,.08); }

@@ -6,7 +6,7 @@ export const AppLaunchSplash: React.FC = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), 3600);
+    const timer = window.setTimeout(() => setVisible(false), 2800);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -29,7 +29,7 @@ export const AppLaunchSplash: React.FC = () => {
             <motion.div
               initial={{opacity: 0, scale: 0.88}}
               animate={{opacity: 1, scale: [0.88, 1.04, 1]}}
-              transition={{duration: 0.7, ease: [0.16, 1, 0.3, 1]}}
+              transition={{duration: 0.58, ease: [0.16, 1, 0.3, 1]}}
             >
               <SystemBuilderLogo
                 className="size-16 rounded-[18px] text-2xl shadow-[0_14px_34px_rgba(79,70,229,0.16)] md:size-[72px] md:rounded-[20px]"
@@ -41,7 +41,7 @@ export const AppLaunchSplash: React.FC = () => {
               className="mt-5 flex flex-col items-center"
               initial={{opacity: 0, y: 8}}
               animate={{opacity: 1, y: 0}}
-              transition={{delay: 0.55, duration: 0.45, ease: [0.16, 1, 0.3, 1]}}
+              transition={{delay: 0.42, duration: 0.38, ease: [0.16, 1, 0.3, 1]}}
               aria-label="Developed by Rafiq Ahmed"
             >
               <span className="text-[9px] font-bold uppercase leading-none tracking-[0.24em] text-slate-400 md:text-[10px]">

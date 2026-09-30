@@ -371,15 +371,24 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         compact ? 'text-sm' : ''
       }`}
     >
-      {!focusMode && <CalendarTopBar
-        view={view}
-        periodLabel={periodLabel}
-        onViewChange={changeView}
-        onPrevious={() => navigatePeriod(-1)}
-        onNext={() => navigatePeriod(1)}
-        onToday={jumpToday}
-        onAdd={() => setAddTaskOpen(true)}
-      />}
+      {focusMode ? (
+        <CalendarFocusTopBar
+          view={view}
+          periodLabel={periodLabel}
+          onViewChange={changeView}
+          onToday={jumpToday}
+        />
+      ) : (
+        <CalendarTopBar
+          view={view}
+          periodLabel={periodLabel}
+          onViewChange={changeView}
+          onPrevious={() => navigatePeriod(-1)}
+          onNext={() => navigatePeriod(1)}
+          onToday={jumpToday}
+          onAdd={() => setAddTaskOpen(true)}
+        />
+      )}
 
       {!focusMode && <div className="shrink-0 min-h-9 px-3 sm:px-5 flex items-center justify-end gap-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
         <label className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
@@ -468,6 +477,46 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
     </div>
   );
 };
+
+interface CalendarFocusTopBarProps {
+  view: CalendarView;
+  periodLabel: string;
+  onViewChange: (view: CalendarView) => void;
+  onToday: () => void;
+}
+
+const CalendarFocusTopBar: React.FC<CalendarFocusTopBarProps> = ({
+  view,
+  periodLabel,
+  onViewChange,
+  onToday,
+}) => (
+  <header className="relative z-30 shrink-0 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+    <div className="px-2.5 sm:px-5 py-2 sm:py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 flex items-center gap-2">
+        <CalendarDays className="w-5 h-5 shrink-0 text-slate-500" />
+        <h2 className="min-w-0 truncate text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100">
+          {periodLabel}
+        </h2>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 sm:justify-end">
+        <CalendarViewSegmentedControl
+          value={view}
+          onChange={onViewChange}
+        />
+
+        <button
+          type="button"
+          onClick={onToday}
+          className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+        >
+          Today
+        </button>
+      </div>
+    </div>
+  </header>
+);
 
 interface CalendarTopBarProps {
   view: CalendarView;

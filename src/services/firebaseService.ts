@@ -208,6 +208,8 @@ function taskStoragePayload(task: TaskItem): Record<string, unknown> {
       ? Number(task.taskOrder)
       : 1,
     notes: task.notes || '',
+    EstimationTime: task.EstimationTime ?? task.timeEstimate ?? '',
+    ActualTime: task.ActualTime ?? '',
     Iscompleted: task.isCompleted,
   };
 }
@@ -1073,7 +1075,9 @@ export function subscribeToTasks(
           taskOfTheDay: String(data.title ?? ''),
           isCompleted: data.Iscompleted === true,
           priority: data.priority ? (data.priority as 'High' | 'Medium' | 'Normal') : 'Normal',
-          timeEstimate: data.timeEstimate ? String(data.timeEstimate) : '',
+          timeEstimate: data.EstimationTime ? String(data.EstimationTime) : (data.timeEstimate ? String(data.timeEstimate) : ''),
+          EstimationTime: data.EstimationTime ? String(data.EstimationTime) : (data.timeEstimate ? String(data.timeEstimate) : ''),
+          ActualTime: data.ActualTime ? String(data.ActualTime) : '',
           category: data.category ? String(data.category) : '',
           notes: data.notes ? String(data.notes) : '',
           updatedAt: data.updatedAt ? String(data.updatedAt) : '',

@@ -799,22 +799,22 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               }`}
             >
               {/* Panel Header */}
-              <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800">
-                <div className="flex items-center space-x-1">
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <div className="flex items-start justify-between gap-2 pb-1.5 mb-2 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex min-w-0 flex-1 items-start space-x-1.5">
+                  <div className="w-8 h-8 shrink-0 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
                     <Plus className="w-4 h-4 stroke-[3]" />
                   </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
                       Enter Tasks
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs leading-4 text-slate-500 dark:text-slate-400 max-[360px]:line-clamp-2">
                       Add one or multiple tasks for your daily commitment
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center">
                   <button
                     type="button"
                     onClick={(event) => {

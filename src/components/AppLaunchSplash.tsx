@@ -43,17 +43,17 @@ const CONTROL_SECTIONS = [
 ] as const;
 
 const SECTION_TIMINGS = [
-  { delay: 0.55, duration: 2.15 },
-  { delay: 2.65, duration: 2.15 },
-  { delay: 4.75, duration: 1.65 },
-  { delay: 6.35, duration: 2.75 },
+  { delay: 0.65, duration: 3.55 },
+  { delay: 4.05, duration: 3.55 },
+  { delay: 7.45, duration: 2.85 },
+  { delay: 10.15, duration: 4.95 },
 ] as const;
 
 export const AppLaunchSplash: React.FC = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), 10000);
+    const timer = window.setTimeout(() => setVisible(false), 16000);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -123,7 +123,7 @@ export const AppLaunchSplash: React.FC = () => {
                       transition={{
                         delay: timing.delay,
                         duration: timing.duration,
-                        times: [0, 0.16, 0.82, 1],
+                        times: [0, 0.12, 0.88, 1],
                         ease: [0.16, 1, 0.3, 1],
                       }}
                     >
@@ -155,8 +155,8 @@ export const AppLaunchSplash: React.FC = () => {
                               initial={{opacity: 0, x: -8}}
                               animate={{opacity: 1, x: 0}}
                               transition={{
-                                delay: timing.delay + 0.12 + lineIndex * 0.07,
-                                duration: 0.26,
+                                delay: timing.delay + 0.16 + lineIndex * 0.11,
+                                duration: 0.34,
                                 ease: 'easeOut',
                               }}
                             >
@@ -174,7 +174,7 @@ export const AppLaunchSplash: React.FC = () => {
                   className="absolute bottom-0 left-0 h-1 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
                   initial={{width: '0%'}}
                   animate={{width: '100%'}}
-                  transition={{delay: 0.45, duration: 8.85, ease: 'linear'}}
+                  transition={{delay: 0.5, duration: 14.9, ease: 'linear'}}
                 />
               </div>
             </div>

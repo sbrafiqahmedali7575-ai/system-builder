@@ -21,12 +21,7 @@ export interface CalNewportChapterGuide {
 }
 
 export interface CalNewportBook {
-  id:
-    | 'so-good'
-    | 'deep-work'
-    | 'slow-productivity'
-    | 'digital-minimalism'
-    | 'time-block-planner';
+  id: string;
   title: string;
   shortTitle: string;
   year: number;

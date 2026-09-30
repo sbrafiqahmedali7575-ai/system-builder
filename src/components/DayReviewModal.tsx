@@ -8,7 +8,7 @@ import {
   Repeat2,
   X,
 } from 'lucide-react';
-import { DashboardTheme, HabitItem, TaskItem } from '../types';
+import { DashboardTheme, HabitItem, TaskItem, DaySubmitResult } from '../types';
 import {
   areDatesEqual,
   CONFIGURED_TIMEZONE,
@@ -31,7 +31,7 @@ interface DayReviewModalProps {
     dateKey: string,
     dayTasks: TaskItem[],
     dayHabits: HabitItem[]
-  ) => Promise<'COMPLETED' | 'NOT_COMPLETED'>;
+  ) => Promise<DaySubmitResult>;
 }
 
 export const DayReviewModal: React.FC<DayReviewModalProps> = ({
@@ -68,6 +68,10 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     totalHabitCount: number;
     nextTaskId: string | null;
     nextTaskTitle: string | null;
+    previousStatus: DaySubmitResult['previousStatus'];
+    isNewSuccess: boolean;
+    statsBefore: DaySubmitResult['statsBefore'];
+    statsAfter: DaySubmitResult['statsAfter'];
   } | null>(null);
 
   useEffect(() => {
@@ -166,9 +170,9 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
         reviewedHabits.push(reviewedHabit);
       }
 
-      const status = await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
+      const submitResult = await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
       setResult({
-        status,
+        status: submitResult.status,
         completedTaskCount: reviewedTasks.filter((task) => task.isCompleted).length,
         totalTaskCount: reviewedTasks.length,
         completedHabitCount: reviewedHabits.filter((habit) =>
@@ -179,6 +183,10 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
           reviewedTasks.find((task) => !task.isCompleted)?.id ?? null,
         nextTaskTitle:
           reviewedTasks.find((task) => !task.isCompleted)?.taskOfTheDay ?? null,
+        previousStatus: submitResult.previousStatus,
+        isNewSuccess: submitResult.isNewSuccess,
+        statsBefore: submitResult.statsBefore,
+        statsAfter: submitResult.statsAfter,
       });
     } catch (err: any) {
       setError(err?.message || 'Unable to mark the day. Please try again.');
@@ -385,11 +393,11 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                     ) : (
                       <ClipboardCheck className="w-4 h-4" />
                     )}
-                    Mark Day
+                    Mark / Update Day
                   </button>
 
                   <p className="mt-2 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                    All tasks checked = Completed Day. Habits are tracked separately.
+                    You can update the current day multiple times. The same day record is updated, never duplicated.
                   </p>
                 </div>
               </>
@@ -401,6 +409,11 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 completedHabitCount={result.completedHabitCount}
                 totalHabitCount={result.totalHabitCount}
                 nextTaskTitle={result.nextTaskTitle}
+                previousStatus={result.previousStatus}
+                isNewSuccess={result.isNewSuccess}
+                statsBefore={result.statsBefore}
+                statsAfter={result.statsAfter}
+                onUpdateAgain={() => setResult(null)}
                 onFocusTask={
                   result.nextTaskId
                     ? () => {

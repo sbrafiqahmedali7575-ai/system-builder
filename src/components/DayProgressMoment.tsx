@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { animate as animateValue, motion } from 'framer-motion';
+import { animate as animateValue, motion, useReducedMotion } from 'framer-motion';
 import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
 import { DayProgressStats, DaySubmitResult } from '../types';
@@ -27,14 +27,15 @@ const AnimatedScore: React.FC<{
   delay: number;
   icon: React.ReactNode;
 }> = ({ label, before, after, delay, icon }) => {
+  const reduceMotion = useReducedMotion();
   const [displayValue, setDisplayValue] = useState(before);
   const delta = after - before;
 
   useEffect(() => {
     setDisplayValue(before);
     const controls = animateValue(before, after, {
-      delay,
-      duration: delta === 0 ? 0.35 : 0.9,
+      delay: reduceMotion ? 0 : delay,
+      duration: reduceMotion ? 0 : delta === 0 ? 0.35 : 0.9,
       ease: [0.16, 1, 0.3, 1],
       onUpdate: (value) => setDisplayValue(Math.round(Number(value))),
     });
@@ -97,6 +98,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   onFocusTask,
   onContinue,
 }) => {
+  const reduceMotion = useReducedMotion();
   const isCompleted = status === 'COMPLETED';
   const line = useMemo(() => getDayProgressLine(status), [status]);
 
@@ -160,7 +162,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             isCompleted ? 'bg-emerald-400' : 'bg-blue-400'
           }`}
           animate={{ y: [0, -9, -14], opacity: [0, 1, 0], scale: [0.6, 1, 0.6] }}
-          transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 0.4 }}
+          transition={{ duration: 1.6, repeat: reduceMotion ? 0 : Infinity, repeatDelay: 0.4 }}
         />
         <motion.span
           aria-hidden="true"
@@ -168,7 +170,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             isCompleted ? 'bg-blue-400' : 'bg-indigo-400'
           }`}
           animate={{ x: [0, 8, 16], opacity: [0, 1, 0], scale: [0.6, 1, 0.7] }}
-          transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 0.3, delay: 0.25 }}
+          transition={{ duration: 1.8, repeat: reduceMotion ? 0 : Infinity, repeatDelay: 0.3, delay: 0.25 }}
         />
       </motion.div>
 
@@ -512,7 +514,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
                       <motion.span
                         className="size-2.5 rounded-full bg-indigo-500"
                         animate={{ scale: [1, 1.45, 1], opacity: [0.6, 1, 0.6] }}
-                        transition={{ duration: 1.05, repeat: Infinity }}
+                        transition={{ duration: 1.05, repeat: reduceMotion ? 0 : Infinity }}
                       />
                       Your next move
                     </div>
@@ -549,7 +551,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
                           <motion.div
                             className="flex flex-col items-center"
                             animate={{ y: [0, 4, 0] }}
-                            transition={{ delay: 1.72, duration: 0.8, repeat: Infinity, repeatDelay: 0.35 }}
+                            transition={{ delay: 1.72, duration: 0.8, repeat: reduceMotion ? 0 : Infinity, repeatDelay: 0.35 }}
                           >
                             <span className="h-4 w-px bg-gradient-to-b from-indigo-300 to-indigo-500 dark:from-indigo-700 dark:to-indigo-400" />
                             <ArrowDown className="-mt-0.5 size-4" strokeWidth={2.8} />
@@ -571,13 +573,13 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
                             className="absolute inset-y-0 w-14 -skew-x-12 bg-white/18"
                             initial={{ left: '-25%' }}
                             animate={{ left: '120%' }}
-                            transition={{ delay: 2.05, duration: 0.8, repeat: Infinity, repeatDelay: 2.2 }}
+                            transition={{ delay: 2.05, duration: 0.8, repeat: reduceMotion ? 0 : Infinity, repeatDelay: 2.2 }}
                           />
                           <span className="relative">Focus on this task</span>
                           <motion.span
                             className="relative"
                             animate={{ x: [0, 4, 0] }}
-                            transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 0.4 }}
+                            transition={{ duration: 0.8, repeat: reduceMotion ? 0 : Infinity, repeatDelay: 0.4 }}
                           >
                             <ArrowRight className="size-4" strokeWidth={2.8} />
                           </motion.span>

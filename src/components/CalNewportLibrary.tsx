@@ -613,7 +613,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             <button
               type="button"
               onClick={() => setIsHighlightsOpen(false)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100"
+              className="flex h-11 w-11 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100"
               aria-label="Close annotations"
             >
               <X className="h-4 w-4" />
@@ -764,7 +764,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
       {noteEditor && (
         <div
-          className="fixed inset-0 z-[230] flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-sm"
+          className="fixed inset-0 z-[230] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/50 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label="Section note"

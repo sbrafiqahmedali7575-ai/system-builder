@@ -1023,7 +1023,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-12 gap-1 mb-1 pl-8 min-w-[760px] text-[11px] font-semibold text-slate-500">
+              <div className="hidden sm:grid grid-cols-12 gap-1 mb-1 pl-8 min-w-[760px] text-[11px] font-semibold text-slate-500">
                 {Array.from({ length: 12 }, (_, index) => {
                   const date = parseHabitDateKey(
                     addHabitDays(today, -Math.round(((11 - index) * 365) / 12))
@@ -1039,7 +1039,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 })}
               </div>
 
-              <div className="overflow-x-auto pb-1">
+              <div className="sm:hidden mb-1 text-[10px] font-semibold text-slate-400">Scroll horizontally to view the full 12-month heatmap.</div>
+              <div className="max-w-full overflow-x-auto overscroll-x-contain pb-1">
                 <div className="flex gap-1 min-w-max">
                   <div className="grid grid-rows-7 gap-1 pr-1 text-[11px] font-medium text-slate-500">
                     {['Sun', '', 'Tue', '', 'Thu', '', 'Sat'].map((label, index) => (

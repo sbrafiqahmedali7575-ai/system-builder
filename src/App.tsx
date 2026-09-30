@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SystemBuilderLogo } from './components/SystemBuilderLogo';
-import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem, DayProgressStats, DaySubmitResult } from './types';
+import { DailyRecord, DashboardTheme, HabitItem, TaskItem, DayProgressStats, DaySubmitResult } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
 import { ReportView } from './components/ReportView';
-import { AddRecordModal } from './components/AddRecordModal';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
 import { MoreWorkspace, type MoreTab } from './components/MoreWorkspace';
@@ -14,15 +13,14 @@ import { TaskSearchDialog } from './components/TaskSearchDialog';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastProvider } from './components/ui/ToastProvider';
-import { isTodayDate, standardizeDate } from './utils/dateUtils';
+import { standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
-import { getBadgeProgress } from './utils/badgeSystem';
 import { calculateKPIStats } from './utils/daxMeasures';
+import { calculateAchievedWeeks } from './utils/progressAnalytics';
 import { isHabitDue } from './utils/habitUtils';
 import {
   addRecordToCloud,
   updateRecordInCloud,
-  deleteRecordFromCloud,
   addTaskToCloud,
   updateTaskInCloud,
   deleteTaskFromCloud,
@@ -47,67 +45,16 @@ const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
 
-const calculateAchievedWeeksForTasks = (
-  taskSnapshot: TaskItem[],
-  currentDateKey: string
-): number => {
-  if (taskSnapshot.length === 0) return 0;
-
-  const addDays = (dateKey: string, days: number) => {
-    const [year, month, day] = dateKey.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day + days));
-    return [
-      date.getUTCFullYear(),
-      String(date.getUTCMonth() + 1).padStart(2, '0'),
-      String(date.getUTCDate()).padStart(2, '0'),
-    ].join('-');
-  };
-
-  const getMonday = (dateKey: string) => {
-    const [year, month, day] = dateKey.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    const weekday = date.getUTCDay();
-    return addDays(dateKey, weekday === 0 ? -6 : 1 - weekday);
-  };
-
-  const dailyRate = (dateKey: string) => {
-    const dayTasks = taskSnapshot.filter((task) => task.taskKey === dateKey);
-    if (dayTasks.length === 0) return 0;
-    return (
-      dayTasks.filter((task) => task.isCompleted).length / dayTasks.length
-    ) * 100;
-  };
-
-  const firstTaskDate = taskSnapshot.map((task) => task.taskKey).sort()[0];
-  if (!firstTaskDate) return 0;
-
-  let weekStart = getMonday(firstTaskDate);
-  const currentWeekStart = getMonday(currentDateKey);
-  let achieved = 0;
-  let guard = 0;
-
-  while (weekStart < currentWeekStart && guard < 5200) {
-    const score =
-      Array.from({ length: 7 }, (_, index) => dailyRate(addDays(weekStart, index)))
-        .reduce((sum, rate) => sum + rate, 0) / 7;
-    if (score >= 80) achieved += 1;
-    weekStart = addDays(weekStart, 7);
-    guard += 1;
-  }
-
-  return achieved;
-};
-
 const buildDayProgressStats = (
   recordSnapshot: DailyRecord[],
   taskSnapshot: TaskItem[],
   currentDateKey: string
 ): DayProgressStats => {
-  const kpis = calculateKPIStats(recordSnapshot);
+  const kpis = calculateKPIStats(recordSnapshot, currentDateKey);
   return {
     successfulDays: kpis.completedDays,
     currentStreak: kpis.currentStreak,
-    achievedWeeks: calculateAchievedWeeksForTasks(taskSnapshot, currentDateKey),
+    achievedWeeks: calculateAchievedWeeks(taskSnapshot, currentDateKey),
     bestStreak: kpis.maxStreak,
   };
 };
@@ -171,7 +118,6 @@ export default function App() {
   const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
-  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isTaskSearchOpen, setIsTaskSearchOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [toolsFocusMode, setToolsFocusMode] = useState(false);
@@ -198,13 +144,6 @@ export default function App() {
     return () => window.removeEventListener('system-builder:quota-exceeded', onQuotaExceeded);
   }, []);
 
-  // Filter state for report view
-  const [filterState, setFilterState] = useState<FilterState>({
-    status: 'ALL',
-    searchQuery: '',
-    dateRange: 'ALL',
-  });
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -216,7 +155,6 @@ export default function App() {
       }
       if (event.key === 'Escape') {
         setIsTaskSearchOpen(false);
-        setIsAddModalOpen(false);
         return;
       }
       if (typing) return;
@@ -225,7 +163,7 @@ export default function App() {
         setIsTaskSearchOpen(true);
       } else if (event.key.toLowerCase() === 'n') {
         event.preventDefault();
-        setIsAddModalOpen(true);
+        window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'));
       } else if (event.key.toLowerCase() === 'f') {
         event.preventDefault();
         if (isLibraryOpen) setBooksFocusMode((value) => !value);
@@ -276,129 +214,6 @@ export default function App() {
   useEffect(() => {
     setCachedHabits(habits);
   }, [habits]);
-
-  // Handle record status toggle (Check / Uncheck) with cloud sync
-  const handleToggleRecordStatus = async (id: string) => {
-    const target = records.find((r) => r.id === id);
-    if (!target) return;
-
-    if (!isTodayDate(target.date)) {
-      console.warn("Only today's date commitment can be modified. Previous dates are locked.");
-      return;
-    }
-
-    const nextCompleted = !target.isCompleted;
-    const updated: DailyRecord = {
-      ...target,
-      isCompleted: nextCompleted,
-      result: nextCompleted ? 'TRUE' : 'FALSE',
-      change: 0,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const nextRecords = records.map((r) => (r.id === id ? updated : r));
-    setRecords(nextRecords);
-
-    try {
-      setIsSyncing(true);
-      await updateRecordInCloud(updated);
-    } catch (e) {
-      if (isNetworkOrOfflineError(e)) {
-        console.warn('Record status update saved locally in IndexedDB (offline):', e);
-        await queueMutation({
-          type: 'record_update',
-          payload: updated,
-          timestamp: Date.now(),
-        });
-      } else {
-        setRecords((prev) =>
-          prev.map((record) => (record.id === target.id ? target : record))
-        );
-        console.error('Error syncing status update to cloud:', e);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Update a single record
-  const handleUpdateRecord = async (updatedRecord: DailyRecord) => {
-    if (!isTodayDate(updatedRecord.date)) {
-      console.warn("Only today's date commitment can be modified. Previous dates are locked.");
-      return;
-    }
-
-    const previousRecord = records.find((record) => record.id === updatedRecord.id);
-    const withTimestamp = {
-      ...updatedRecord,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const nextRecords = records.map((r) =>
-      r.id === withTimestamp.id ? withTimestamp : r
-    );
-    setRecords(nextRecords);
-
-    try {
-      setIsSyncing(true);
-      await updateRecordInCloud(withTimestamp);
-    } catch (e) {
-      if (isNetworkOrOfflineError(e)) {
-        console.warn('Record update saved locally in IndexedDB (offline):', e);
-        await queueMutation({
-          type: 'record_update',
-          payload: withTimestamp,
-          timestamp: Date.now(),
-        });
-      } else {
-        if (previousRecord) {
-          setRecords((prev) =>
-            prev.map((record) =>
-              record.id === previousRecord.id ? previousRecord : record
-            )
-          );
-        }
-        console.error('Error syncing record update to cloud:', e);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Add a new record
-  const handleAddRecord = async (newRecord: Omit<DailyRecord, 'id'>) => {
-    const recordWithId: DailyRecord = {
-      ...newRecord,
-      id: `record-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      result: newRecord.isCompleted ? 'TRUE' : 'FALSE',
-      change: 0,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const nextRecords = [...records, recordWithId].sort((a, b) => a.day - b.day);
-    setRecords(nextRecords);
-
-    try {
-      setIsSyncing(true);
-      await addRecordToCloud(recordWithId);
-    } catch (e) {
-      if (isNetworkOrOfflineError(e)) {
-        console.warn('Record saved locally in IndexedDB (offline):', e);
-        await queueMutation({
-          type: 'record_add',
-          payload: recordWithId,
-          timestamp: Date.now(),
-        });
-      } else {
-        setRecords((prev) =>
-          prev.filter((record) => record.id !== recordWithId.id)
-        );
-        console.error('Error adding record to cloud:', e);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   // ─────────────────────────────────────────────────────────────
   // TASK MANAGEMENT HANDLERS
@@ -922,13 +737,6 @@ export default function App() {
   }
 
   const isDark = theme === 'dark';
-  const completedDaysForBadge = records.filter((record) => record.isCompleted).length;
-  const systemStartUtc = Date.UTC(2026, 7, 1);
-  const [currentYear, currentMonth, currentDay] = currentDateKey.split('-').map(Number);
-  const currentUtc = Date.UTC(currentYear, currentMonth - 1, currentDay);
-  const totalCalendarDays = Math.max(0, Math.floor((currentUtc - systemStartUtc) / 86400000) + 1);
-  const currentBadge = getBadgeProgress(completedDaysForBadge).current;
-
   return (
 <ToastProvider>
     <div
@@ -940,16 +748,9 @@ export default function App() {
     >
       {/* 1. Clean Navigation Header */}
       {!focusMode && <PowerBiHeader
-        onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenLibrary={handleOpenLibrary}
         onOpenTools={() => handleOpenTools()}
-        theme={theme}
-        onThemeChange={setTheme}
-        totalRecordsCount={totalCalendarDays}
-        currentBadge={currentBadge}
         isSyncing={isSyncing}
-        onOpenQuickAdd={() => setIsAddModalOpen(true)}
-        onOpenSearch={() => setIsTaskSearchOpen(true)}
         onToggleFocus={() => setFocusMode((value) => !value)}
         focusMode={focusMode}
       />}
@@ -1033,14 +834,7 @@ export default function App() {
           records={records}
           tasks={tasks}
           habits={habits}
-          filterState={filterState}
-          onFilterChange={(newFilters) =>
-            setFilterState((prev) => ({ ...prev, ...newFilters }))
-          }
           theme={theme}
-          onToggleRecordStatus={handleToggleRecordStatus}
-          onUpdateRecord={handleUpdateRecord}
-          onOpenAddModal={() => setIsAddModalOpen(true)}
           onAddTask={handleAddTask}
           onUpdateTask={handleUpdateTask}
           onDeleteTask={handleDeleteTask}
@@ -1054,17 +848,8 @@ export default function App() {
 
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
-      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => setIsAddModalOpen(true)} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
+      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onTools={() => handleOpenTools()} />}
       <MobileBottomNav activeSection="today" focusActive={focusMode} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
-
-      {/* 3. Add Record Modal */}
-      <AddRecordModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAddRecord={handleAddRecord}
-        theme={theme}
-        existingRecords={records}
-      />
 
       {/* 5. Header-triggered current-day review */}
       <DayReviewModal

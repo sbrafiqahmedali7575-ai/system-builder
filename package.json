@@ -8,7 +8,7 @@
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "lint": "tsc --noEmit",
-    "test": "tsx tests/progressAnalytics.test.ts",
+    "test": "tsx tests/progressAnalytics.test.ts && tsx tests/uiContracts.test.ts",
     "check": "bun run lint && bun run test && bun run build"
   },
   "dependencies": {

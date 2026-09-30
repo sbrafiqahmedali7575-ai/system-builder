@@ -10,7 +10,7 @@ import {
   Pause,
   Play,
   RotateCcw,
-  Timer
+  Timer,
   ChevronDown,
 } from 'lucide-react';
 

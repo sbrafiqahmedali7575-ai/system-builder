@@ -201,9 +201,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   const currentFocusTask = useMemo(
     () =>
-      todayFocusTasks.find((task) => task.id === selectedFocusTaskId) ||
+      todayFocusTasks.find((task) => task.id === selectedFocusTaskId && !task.isCompleted) ||
       todayFocusTasks.find((task) => !task.isCompleted) ||
-      todayFocusTasks[0] ||
       null,
     [todayFocusTasks, selectedFocusTaskId]
   );
@@ -400,11 +399,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
               countdownReason={longTermCountdown.reason}
               countdownTargetLabel={longTermCountdown.targetDateLabel}
               currentTaskTitle={currentFocusTask?.taskOfTheDay || 'No active task for today'}
-              todayTasks={todayFocusTasks.map((task) => ({
-                id: task.id,
-                title: task.taskOfTheDay,
-                isCompleted: task.isCompleted,
-              }))}
+              todayTasks={todayFocusTasks
+                .filter((task) => !task.isCompleted)
+                .map((task) => ({
+                  id: task.id,
+                  title: task.taskOfTheDay,
+                  isCompleted: task.isCompleted,
+                }))}
               onCurrentTaskChange={setSelectedFocusTaskId}
               focusElapsedSeconds={parseActualTimeSeconds(currentFocusTask?.ActualTime)}
               onFocusElapsedCommit={async (elapsedSeconds) => {
@@ -417,6 +418,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               onCompleteCurrentTask={async (elapsedSeconds) => {
                 if (!currentFocusTask || currentFocusTask.isCompleted) return;
                 const completedAt = new Date().toISOString();
+                const completedTaskId = currentFocusTask.id;
                 await onUpdateTask({
                   ...currentFocusTask,
                   ActualTime: formatActualTime(elapsedSeconds),
@@ -424,6 +426,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   completedAt,
                   updatedAt: completedAt,
                 });
+                setSelectedFocusTaskId((selected) =>
+                  selected === completedTaskId ? '' : selected
+                );
               }}
               onOpenCountdown={openCountdownEditor}
               focusMode={focusMode}

@@ -96,6 +96,26 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const isDark = theme === 'dark';
   const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
   const [selectedFocusTaskId, setSelectedFocusTaskId] = useState<string>('');
+  const parseActualTimeSeconds = (value?: string) => {
+    if (!value) return 0;
+    const trimmed = value.trim();
+    const clock = trimmed.match(/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/);
+    if (clock) {
+      if (clock[3] !== undefined) return Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3]);
+      return Number(clock[1]) * 60 + Number(clock[2]);
+    }
+    const hours = trimmed.match(/([\d.]+)\s*h/i);
+    const minutes = trimmed.match(/([\d.]+)\s*m/i);
+    const seconds = trimmed.match(/([\d.]+)\s*s/i);
+    return Math.round((Number(hours?.[1] || 0) * 3600) + (Number(minutes?.[1] || 0) * 60) + Number(seconds?.[1] || 0));
+  };
+  const formatActualTime = (seconds: number) => {
+    const safe = Math.max(0, Math.floor(seconds));
+    const hours = Math.floor(safe / 3600);
+    const minutes = Math.floor((safe % 3600) / 60);
+    const secs = safe % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
   const [customCountdownDate, setCustomCountdownDate] = useState(() => {
     if (typeof window === 'undefined') return '';
     return window.localStorage.getItem(COUNTDOWN_TARGET_DATE_KEY) || '';
@@ -386,6 +406,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 isCompleted: task.isCompleted,
               }))}
               onCurrentTaskChange={setSelectedFocusTaskId}
+              focusElapsedSeconds={parseActualTimeSeconds(currentFocusTask?.actualTime)}
+              onFocusElapsedCommit={async (elapsedSeconds) => {
+                if (!currentFocusTask) return;
+                await onUpdateTask({
+                  ...currentFocusTask,
+                  actualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
+                });
+              }}
               onOpenCountdown={openCountdownEditor}
               focusMode={focusMode}
             />

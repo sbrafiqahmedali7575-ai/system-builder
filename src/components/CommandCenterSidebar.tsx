@@ -16,6 +16,8 @@ interface CommandCenterSidebarProps {
   countdownReason: string;
   countdownTargetLabel: string;
   currentTaskTitle: string;
+  todayTasks?: Array<{ id: string; title: string; isCompleted?: boolean }>;
+  onCurrentTaskChange?: (taskId: string) => void;
   onOpenCountdown?: () => void;
   focusMode?: boolean;
 }
@@ -32,6 +34,8 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
   countdownReason,
   countdownTargetLabel,
   currentTaskTitle,
+  todayTasks = [],
+  onCurrentTaskChange,
   onOpenCountdown,
   focusMode = false,
 }) => {
@@ -110,6 +114,8 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
         <PomodoroTimer
           className="h-full"
           currentTaskTitle={currentTaskTitle}
+          todayTasks={todayTasks}
+          onCurrentTaskChange={onCurrentTaskChange}
           integrated
         />
       </div>

@@ -98,6 +98,15 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
   }, [isOpen, isSubmitting, result, todayTasks, todayHabits, todayDateKey]);
 
   useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen) return;
 
     previousFocusRef.current =
@@ -260,7 +269,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className={`fixed inset-0 z-[220] flex justify-center bg-slate-950/60 backdrop-blur-sm ${
+          className={`fixed inset-0 z-[220] flex justify-center overflow-y-auto overscroll-contain bg-slate-950/60 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-sm ${
             result
               ? 'items-center p-3'
               : 'items-end p-0 sm:items-center sm:p-4'

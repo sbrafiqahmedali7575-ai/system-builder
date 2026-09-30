@@ -304,7 +304,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
             transition={{ duration: 0.2 }}
             className={`w-full ${
               result
-                ? 'max-w-md rounded-2xl max-h-[calc(100dvh-1.5rem)] sm:max-w-xl sm:max-h-[88dvh] lg:max-w-2xl'
+                ? 'max-w-md rounded-2xl max-h-[calc(100dvh-1.5rem)]'
                 : 'max-w-md max-h-[92dvh] rounded-t-2xl sm:rounded-2xl'
             } border shadow-2xl overflow-hidden ${
               isDark
@@ -465,7 +465,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 </div>
               </>
             ) : (
-              <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain [scrollbar-gutter:stable] sm:max-h-[88dvh]">
+              <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
                 <DayProgressMoment
                 status={result.status}
                 completedTaskCount={result.completedTaskCount}
@@ -478,21 +478,6 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 statsBefore={result.statsBefore}
                 statsAfter={result.statsAfter}
                 onUpdateAgain={() => setResult(null)}
-                onFocusTask={
-                  result.nextTaskId
-                    ? () => {
-                        const taskId = result.nextTaskId;
-                        onClose();
-                        window.setTimeout(() => {
-                          window.dispatchEvent(
-                            new CustomEvent('system-builder:focus-task', {
-                              detail: { taskId },
-                            })
-                          );
-                        }, 120);
-                      }
-                    : undefined
-                }
                 onContinue={exitReview}
               />
               </div>

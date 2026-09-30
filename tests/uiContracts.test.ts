@@ -27,6 +27,52 @@ assert.equal(
   'Task dialogs must not use the legacy z-50 layer.'
 );
 
+const enterTasksStart = todayTasks.indexOf('5. "ENTER TASKS" PANEL');
+const enterTasksEnd = todayTasks.indexOf('6. EDIT TASK MODAL', enterTasksStart);
+const enterTasksPanel =
+  enterTasksStart >= 0 && enterTasksEnd > enterTasksStart
+    ? todayTasks.slice(enterTasksStart, enterTasksEnd)
+    : '';
+
+assert.ok(enterTasksPanel, 'Enter Tasks panel source must be present.');
+assert.ok(
+  enterTasksPanel.includes('system-stable-modal') &&
+    enterTasksPanel.includes('items-start') &&
+    enterTasksPanel.includes('sm:items-center'),
+  'Enter Tasks must stay top-anchored on mobile while remaining centered on desktop.'
+);
+assert.ok(
+  enterTasksPanel.includes('max-h-[calc(100svh-1.5rem)]') &&
+    enterTasksPanel.includes('touch-pan-y') &&
+    enterTasksPanel.includes('overscroll-y-contain'),
+  'Enter Tasks must use a stable mobile viewport and internal touch scrolling.'
+);
+assert.ok(
+  !enterTasksPanel.includes('transition-all'),
+  'Enter Tasks must not animate layout/size changes while the mobile viewport changes.'
+);
+assert.ok(
+  !enterTasksPanel.includes('>\n                    Cancel\n'),
+  'Enter Tasks mobile header must not contain a Cancel button.'
+);
+assert.ok(
+  todayTasks.includes("window.matchMedia('(min-width: 640px) and (pointer: fine)').matches"),
+  'Enter Tasks auto-focus must be limited to desktop/fine-pointer devices.'
+);
+assert.ok(
+  todayTasks.includes('taskInputRef.current?.focus({ preventScroll: true });'),
+  'Desktop Enter Tasks auto-focus must not scroll the page.'
+);
+assert.ok(
+  todayTasks.includes("}, [activeDateTab]);"),
+  'Global Enter Tasks quick-add must track the active Today/Tomorrow tab.'
+);
+assert.ok(
+  enterTasksPanel.includes("if (e.key === 'Escape' && !isAddingTask) handleCloseEnterPanel();") &&
+    enterTasksPanel.includes('disabled={isAddingTask}'),
+  'Enter Tasks close controls must not dismiss the dialog during an active save.'
+);
+
 assert.ok(
   calendar.includes('fixed inset-0 z-[220]'),
   'Calendar dialogs must render above mobile navigation.'
@@ -260,6 +306,12 @@ assert.ok(
 assert.ok(
   !styles.includes('.system-edition main { max-width:none !important; }'),
   'Large desktop dashboard must preserve its explicit max-width instead of stretching edge-to-edge.'
+);
+assert.ok(
+  styles.includes('.system-edition .system-stable-modal') &&
+    styles.includes('animation:none !important;') &&
+    styles.includes('transform:none !important;'),
+  'Stable mobile modals must not inherit global overlay transform animations.'
 );
 
 

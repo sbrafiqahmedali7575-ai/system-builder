@@ -328,7 +328,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   {activeBook.year}
                 </span>
                 <span className={`text-[11px] font-bold ${mutedText}`}>
-                  {isResearch ? 'Research edition · unlimited depth' : isFullStudy ? fullStudy[activeBookId].readingMinutes : activeBook.readingTime}
+                  {isResearch ? researchEdition.readingTime : isFullStudy ? fullStudy[activeBookId].readingMinutes : activeBook.readingTime}
                 </span>
               </div>
 
@@ -347,7 +347,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
             {isResearch && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
               <section className={`${widthClass} mx-auto`}>
-                <div className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · No fixed reading limit</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{researchEdition.access}</p></div>
+                <div className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · {researchEdition.readingTime}</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{researchEdition.access}</p></div>
                 <div className="space-y-10">{researchEdition.sections.map((section,i)=><section key={section.title} id={`research-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl sm:text-2xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.paragraphs.map((x,j)=><p key={j}>{x}</p>)}</div>{section.items && <ul className="mt-5 space-y-3">{section.items.map(x=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">• {x}</li>)}</ul>}</section>)}</div>
               </section>
             </div>}

@@ -100,7 +100,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.55 }}
         >
-          “{line}”
+          {line}
         </motion.p>
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">

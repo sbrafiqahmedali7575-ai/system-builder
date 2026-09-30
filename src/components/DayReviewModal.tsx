@@ -123,11 +123,14 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
 
       const dialog = dialogRef.current;
       if (!dialog) return;
-      const focusable = Array.from(
-        dialog.querySelectorAll<HTMLElement>(
+      const focusable: HTMLElement[] = Array.from(
+        dialog.querySelectorAll(
           'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         )
-      ).filter((element) => !element.hasAttribute('aria-hidden'));
+      ).filter(
+        (element): element is HTMLElement =>
+          element instanceof HTMLElement && !element.hasAttribute('aria-hidden')
+      );
 
       if (focusable.length === 0) {
         event.preventDefault();

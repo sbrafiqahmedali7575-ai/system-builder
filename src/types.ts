@@ -43,7 +43,9 @@ export interface TaskItem {
   taskOfTheDay: string; // Description or objective of the task
   isCompleted: boolean; // Completion status
   priority?: 'High' | 'Medium' | 'Normal';
-  timeEstimate?: string;
+  timeEstimate?: string; // legacy alias retained for compatibility
+  EstimationTime?: string; // Planned duration, e.g. 45m or 1h
+  ActualTime?: string; // Actual duration spent, e.g. 50m or 1h 10m
   category?: string;
   notes?: string;
   updatedAt?: string;

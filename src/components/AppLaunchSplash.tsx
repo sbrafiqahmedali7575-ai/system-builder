@@ -17,15 +17,15 @@ export const AppLaunchSplash: React.FC = () => {
         <motion.div
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(219,234,254,0.94),transparent_34%),radial-gradient(circle_at_82%_76%,rgba(237,233,254,0.9),transparent_38%),linear-gradient(145deg,#f8fbff_0%,#ffffff_48%,#faf7ff_100%)] text-slate-900"
           initial={{opacity:1}}
-          exit={reduceMotion ? {opacity:0} : {opacity:0,scale:1.035,filter:'blur(5px)'}}
-          transition={{duration:reduceMotion ? .18 : .52,ease:[.16,1,.3,1]}}
+          exit={reduceMotion ? {opacity:0} : {opacity:0,scale:1.018,filter:'blur(3px)'}}
+          transition={{duration:reduceMotion ? .18 : .72,ease:[.16,1,.3,1]}}
           aria-label="System Builder loading screen"
         >
           {!reduceMotion && (
             <>
               <motion.div className="absolute size-72 rounded-full bg-blue-400/10 blur-3xl md:size-96"
-                animate={{scale:[.82,1.12,.94],opacity:[.25,.6,.32]}}
-                transition={{duration:3.1,ease:'easeInOut'}} />
+                animate={{scale:[.82,1.12,.94,1.18],x:[0,-8,5,18],y:[0,5,-4,-14],opacity:[.25,.6,.32,.16]}}
+                transition={{duration:3.6,times:[0,.46,.78,1],ease:'easeInOut'}} />
               <motion.div className="absolute size-52 rounded-full border border-indigo-300/25"
                 initial={{scale:.55,opacity:0}} animate={{scale:[.55,1.35,1.6],opacity:[0,.5,0]}}
                 transition={{duration:2.3,ease:'easeOut'}} />
@@ -35,6 +35,7 @@ export const AppLaunchSplash: React.FC = () => {
           <motion.div className="relative flex flex-col items-center px-6 text-center"
             initial={reduceMotion ? {opacity:0} : {opacity:0,y:22,scale:.84,rotateX:18}}
             animate={{opacity:1,y:0,scale:1,rotateX:0}}
+            exit={reduceMotion ? {opacity:0} : {opacity:0,y:-8,scale:.975,filter:'blur(2px)'}}
             transition={{duration:reduceMotion ? .2 : .72,ease:[.16,1,.3,1]}}>
             <motion.div className="relative"
               animate={reduceMotion ? undefined : {y:[0,-5,0],rotateY:[0,7,0,-5,0]}}

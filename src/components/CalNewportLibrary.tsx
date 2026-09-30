@@ -95,12 +95,20 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [highlights, setHighlights] = useState<Record<string, ReaderHighlight[]>>({});
   const [pendingSelection, setPendingSelection] = useState<{text:string;sectionId:string;x:number;y:number}|null>(null);
   const [isHighlightsOpen, setIsHighlightsOpen] = useState(false);
+  const [noteEditor, setNoteEditor] = useState<{ sectionId: string; value: string } | null>(null);
+  const [readerStateLoaded, setReaderStateLoaded] = useState(false);
+  const [activeReaderSection, setActiveReaderSection] = useState('overview');
   const [completedBooks, setCompletedBooks] = useState<string[]>([]);
   const [favoriteBooks, setFavoriteBooks] = useState<string[]>(() => CAL_NEWPORT_BOOKS.filter((book) => book.favorite).map((book) => book.id));
 
   const activeBook = useMemo(
     () => books.find((book) => book.id === activeBookId) || books[0],
     [activeBookId, author]
+  );
+
+  const researchEdition = useMemo(
+    () => buildResearchEdition(activeBook, fullStudy[activeBook.id]),
+    [activeBook, fullStudy]
   );
 
   useEffect(() => {
@@ -131,6 +139,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
       setCompletedBooks(state.completedBooks || []); if (state.favoriteBooks) setFavoriteBooks(state.favoriteBooks);
       const y = Number(state.positions?.[activeBookId] || 0); if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
     } catch { /* keep defaults */ }
+    finally { setReaderStateLoaded(true); }
   }, []);
 
   useEffect(() => {
@@ -138,13 +147,14 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   }, [readerTone, readerFont, readerWidth, lineHeight]);
 
   useEffect(() => {
+    if (!readerStateLoaded) return;
     const save = () => {
       let previous: any = {}; try { previous = JSON.parse(window.localStorage.getItem(READER_STATE_KEY) || '{}'); } catch {}
       window.localStorage.setItem(READER_STATE_KEY, JSON.stringify({ ...previous, bookmarks, notes, highlights, completedBooks, favoriteBooks, positions: { ...(previous.positions || {}), [activeBookId]: window.scrollY } }));
     };
     const onScroll = () => save(); window.addEventListener('scroll', onScroll, { passive: true }); save();
     return () => { window.removeEventListener('scroll', onScroll); save(); };
-  }, [activeBookId, bookmarks, notes, highlights, completedBooks, favoriteBooks]);
+  }, [activeBookId, bookmarks, notes, highlights, completedBooks, favoriteBooks, readerStateLoaded]);
 
   useEffect(() => {
     const updateProgress = () => {
@@ -168,26 +178,190 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const mutedText = readerTone === 'night' ? 'text-slate-400' : readerTone === 'sepia' ? 'text-[#766653]' : 'text-slate-500';
   const widthClass = readerWidth === 'narrow' ? 'max-w-[680px]' : readerWidth === 'wide' ? 'max-w-[1080px]' : 'max-w-[820px]';
   const fontFamily = readerFont === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, ui-sans-serif, system-ui, sans-serif';
-  const currentSections = ['overview', ...activeBook.themes.map((_, i) => `theme-${i}`), 'summary'];
-  const jumpTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const getCurrentSection = () => {
-    const ids = ['overview', ...activeBook.themes.map((_,i)=>`theme-${i}`), 'summary'];
-    let current = 'overview'; for (const id of ids) { const el=document.getElementById(id); if(el && el.getBoundingClientRect().top <= 180) current=id; } return current;
+  const currentSections = useMemo(() => {
+    if (isResearch) {
+      return ['research-intro', ...researchEdition.sections.map((_, index) => `research-${index}`)];
+    }
+    if (isFullStudy) {
+      return ['full-intro', ...fullStudy[activeBookId].sections.map((_, index) => `full-${index}`), 'full-final'];
+    }
+    return ['overview', ...activeBook.themes.map((_, index) => `theme-${index}`), 'summary'];
+  }, [activeBook.themes, activeBookId, fullStudy, isFullStudy, isResearch, researchEdition.sections]);
+
+  const getSectionMode = (id: string): 'concise' | 'full' | 'research' =>
+    id.startsWith('research-') ? 'research' : id.startsWith('full-') ? 'full' : 'concise';
+
+  const jumpTo = (id: string) => {
+    const requiredMode = getSectionMode(id);
+    if (studyMode !== requiredMode) setStudyMode(requiredMode);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
   };
-  const toggleBookmark = (id: string) => setBookmarks((prev) => ({ ...prev, [activeBookId]: (prev[activeBookId] || []).includes(id) ? (prev[activeBookId] || []).filter((x) => x !== id) : [...(prev[activeBookId] || []), id] }));
+
+  const getCurrentSection = () => {
+    const availableSections = currentSections
+      .map((id) => ({ id, element: document.getElementById(id) }))
+      .filter((item): item is { id: string; element: HTMLElement } => Boolean(item.element));
+
+    if (availableSections.length === 0) return currentSections[0] || 'overview';
+
+    let current = availableSections[0].id;
+    for (const item of availableSections) {
+      if (item.element.getBoundingClientRect().top <= 190) current = item.id;
+      else break;
+    }
+    return current;
+  };
+
+  const getSectionLabel = (id: string) => {
+    if (id === 'overview') return 'Overview';
+    if (id === 'summary') return 'Summary';
+    if (id === 'research-intro') return 'Research Introduction';
+    if (id === 'full-intro') return 'Full Study Introduction';
+    if (id === 'full-final') return 'Final Review & 30-Day Transfer';
+
+    if (id.startsWith('theme-')) {
+      const index = Number(id.replace('theme-', ''));
+      return activeBook.themes[index]?.title || `Theme ${index + 1}`;
+    }
+    if (id.startsWith('research-')) {
+      const index = Number(id.replace('research-', ''));
+      return researchEdition.sections[index]?.title || `Research Section ${index + 1}`;
+    }
+    if (id.startsWith('full-')) {
+      const index = Number(id.replace('full-', ''));
+      return fullStudy[activeBookId].sections[index]?.title || `Full Study Section ${index + 1}`;
+    }
+    return id;
+  };
+
+  const toggleBookmark = (id: string) =>
+    setBookmarks((prev) => ({
+      ...prev,
+      [activeBookId]: (prev[activeBookId] || []).includes(id)
+        ? (prev[activeBookId] || []).filter((sectionId) => sectionId !== id)
+        : [...(prev[activeBookId] || []), id],
+    }));
+
   const toggleFavorite = () => setFavoriteBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
   const toggleComplete = () => setCompletedBooks((prev) => prev.includes(activeBookId) ? prev.filter((id) => id !== activeBookId) : [...prev, activeBookId]);
-  const captureSelection = () => { const s=window.getSelection(); const text=s?.toString().trim(); if(!s||!text||!s.rangeCount)return; const r=s.getRangeAt(0), rect=r.getBoundingClientRect(); const n=r.commonAncestorContainer.nodeType===Node.ELEMENT_NODE?r.commonAncestorContainer as Element:r.commonAncestorContainer.parentElement; const section=n?.closest('[id^="theme-"],#overview,#summary') as HTMLElement|null; setPendingSelection({text,sectionId:section?.id||getCurrentSection(),x:Math.max(12,Math.min(window.innerWidth-230,rect.left+rect.width/2-105)),y:rect.bottom+window.scrollY+8}); };
-  const createHighlight=(color:HighlightColor)=>{if(!pendingSelection)return;const h:ReaderHighlight={id:`hl-${Date.now()}`,text:pendingSelection.text,color,note:'',sectionId:pendingSelection.sectionId,createdAt:new Date().toISOString()};setHighlights(p=>({...p,[activeBookId]:[...(p[activeBookId]||[]),h]}));setPendingSelection(null);window.getSelection()?.removeAllRanges();};
-  const updateHighlightNote=(id:string,note:string)=>setHighlights(p=>({...p,[activeBookId]:(p[activeBookId]||[]).map(h=>h.id===id?{...h,note}:h)}));
-  const deleteHighlight=(id:string)=>setHighlights(p=>({...p,[activeBookId]:(p[activeBookId]||[]).filter(h=>h.id!==id)}));
-  const addSectionNote=()=>{const section=getCurrentSection();const key=`${activeBookId}::${section}`;const note=window.prompt('Note for this section',notes[key]||'');if(note!==null)setNotes(p=>({...p,[key]:note}));};
+
+  const captureSelection = () => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim();
+    if (!selection || !text || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const node =
+      range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? (range.commonAncestorContainer as Element)
+        : range.commonAncestorContainer.parentElement;
+    const readerContent = node?.closest('[data-reader-content="true"]');
+    if (!readerContent) return;
+
+    const section = node?.closest('[data-reader-section="true"]') as HTMLElement | null;
+    const rect = range.getBoundingClientRect();
+    if (!rect.width && !rect.height) return;
+
+    const paletteWidth = 210;
+    const paletteHeight = 68;
+    const x = Math.max(8, Math.min(window.innerWidth - paletteWidth - 8, rect.left + rect.width / 2 - paletteWidth / 2));
+    const y =
+      rect.bottom + paletteHeight + 12 <= window.innerHeight
+        ? rect.bottom + 8
+        : Math.max(8, rect.top - paletteHeight - 8);
+
+    setPendingSelection({
+      text,
+      sectionId: section?.id || getCurrentSection(),
+      x,
+      y,
+    });
+  };
+
+  const createHighlight = (color: HighlightColor) => {
+    if (!pendingSelection) return;
+    const highlight: ReaderHighlight = {
+      id: `hl-${Date.now()}`,
+      text: pendingSelection.text,
+      color,
+      note: '',
+      sectionId: pendingSelection.sectionId,
+      createdAt: new Date().toISOString(),
+    };
+    setHighlights((prev) => ({
+      ...prev,
+      [activeBookId]: [...(prev[activeBookId] || []), highlight],
+    }));
+    setPendingSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const updateHighlightNote = (id: string, note: string) =>
+    setHighlights((prev) => ({
+      ...prev,
+      [activeBookId]: (prev[activeBookId] || []).map((highlight) =>
+        highlight.id === id ? { ...highlight, note } : highlight
+      ),
+    }));
+
+  const deleteHighlight = (id: string) =>
+    setHighlights((prev) => ({
+      ...prev,
+      [activeBookId]: (prev[activeBookId] || []).filter((highlight) => highlight.id !== id),
+    }));
+
+  const openSectionNote = (sectionId = getCurrentSection()) => {
+    const key = `${activeBookId}::${sectionId}`;
+    setNoteEditor({ sectionId, value: notes[key] || '' });
+  };
+
+  const saveSectionNote = () => {
+    if (!noteEditor) return;
+    const key = `${activeBookId}::${noteEditor.sectionId}`;
+    const value = noteEditor.value.trim();
+    setNotes((prev) => {
+      const next = { ...prev };
+      if (value) next[key] = value;
+      else delete next[key];
+      return next;
+    });
+    setNoteEditor(null);
+  };
+
+  const deleteSectionNote = (sectionId: string) => {
+    const key = `${activeBookId}::${sectionId}`;
+    setNotes((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    if (noteEditor?.sectionId === sectionId) setNoteEditor(null);
+  };
+
+  const activeBookmarks = bookmarks[activeBookId] || [];
+  const activeSectionNotes = Object.entries(notes)
+    .filter(([key, value]) => key.startsWith(`${activeBookId}::`) && Boolean(value.trim()))
+    .map(([key, value]) => ({ sectionId: key.slice(activeBookId.length + 2), value }));
+
+  useEffect(() => {
+    const syncActiveSection = () => setActiveReaderSection(getCurrentSection());
+    syncActiveSection();
+    window.addEventListener('scroll', syncActiveSection, { passive: true });
+    window.addEventListener('resize', syncActiveSection);
+    return () => {
+      window.removeEventListener('scroll', syncActiveSection);
+      window.removeEventListener('resize', syncActiveSection);
+    };
+  }, [activeBookId, studyMode, currentSections]);
   const remainingMinutes = Math.max(0, Math.ceil((100 - readingProgress) / 100 * Number(activeBook.readingTime.match(/\d+/)?.[0] || 20)));
 
   const selectBook = (book: CalNewportBook) => { setActiveBookId(book.id); setStudyMode('concise'); };
   const openFullStudy = (book: CalNewportBook) => { setActiveBookId(book.id); setStudyMode('full'); requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'})); };
   const openResearch = (book: CalNewportBook) => { setActiveBookId(book.id); setStudyMode('research'); requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'})); };
-  const researchEdition = useMemo(() => buildResearchEdition(activeBook, fullStudy[activeBook.id]), [activeBook, fullStudy]);
   const handleBookClick = (book: CalNewportBook, detail:number) => { if(detail >= 3) openResearch(book); else if(detail === 2) openFullStudy(book); else selectBook(book); };
 
   return (

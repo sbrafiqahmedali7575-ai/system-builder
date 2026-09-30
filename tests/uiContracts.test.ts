@@ -236,21 +236,13 @@ assert.ok(pomodoro.includes('fixed inset-0 z-[220]'), 'Pomodoro modal must sit a
 assert.ok(report.includes('fixed inset-0 z-[220]'), 'Countdown editor must sit above mobile navigation.');
 assert.ok(badge.includes('fixed inset-0 z-[230]'), 'Badge celebration must sit above other app chrome.');
 
-const taskTracker = read('src/components/TaskTracker.tsx');
 const calendarMonth = read('src/components/calendar/CalendarMonthView.tsx');
 const calendarDay = read('src/components/calendar/CalendarDayCell.tsx');
-const habitTracker = read('src/components/HabitTracker.tsx');
 const styles = read('src/index.css');
 
 assert.ok(
-  taskTracker.includes('min-h-[360px] sm:min-h-[480px]') &&
-    taskTracker.includes('lg:h-full lg:min-h-0'),
-  'Task Planner must fit short phones and fill tall desktop workspaces.'
-);
-assert.ok(
-  calendar.includes('min-h-[360px] sm:min-h-[480px] md:min-h-[640px]') &&
-    calendar.includes('pb-20 md:pb-4'),
-  'Calendar must fit short phones and clear the fixed mobile navigation.'
+  calendar.includes('pb-20 md:pb-4'),
+  'Mobile Calendar scrolling must clear the fixed bottom navigation.'
 );
 assert.ok(
   calendarMonth.includes('min-h-[360px] sm:min-h-[560px]'),

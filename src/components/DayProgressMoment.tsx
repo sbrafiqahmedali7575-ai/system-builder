@@ -10,6 +10,7 @@ interface DayProgressMomentProps {
   completedHabitCount: number;
   totalHabitCount: number;
   nextTaskTitle?: string | null;
+  onFocusTask?: () => void;
   onContinue: () => void;
 }
 
@@ -20,6 +21,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   completedHabitCount,
   totalHabitCount,
   nextTaskTitle,
+  onFocusTask,
   onContinue,
 }) => {
   const isCompleted = status === 'COMPLETED';
@@ -333,26 +335,40 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
 
               {nextTaskTitle && (
                 <motion.div
-                  className="mt-3 rounded-xl border border-indigo-200 bg-white/85 px-3 py-2.5 text-left shadow-sm dark:border-indigo-800/70 dark:bg-slate-900/85"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.28, duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                  className="mt-4 rounded-2xl border-2 border-indigo-300 bg-gradient-to-br from-white via-indigo-50 to-blue-50 p-4 text-left shadow-[0_14px_34px_rgba(79,70,229,0.16)] dark:border-indigo-700 dark:from-slate-900 dark:via-indigo-950/30 dark:to-blue-950/30"
+                  initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 1.22, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <div className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300">
-                    Next action
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-300">
+                    <motion.span
+                      className="size-2.5 rounded-full bg-indigo-500"
+                      animate={{ scale: [1, 1.35, 1], opacity: [0.65, 1, 0.65] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                    />
+                    Your next move
                   </div>
-                  <div className="mt-1 flex items-start gap-2">
-                    <motion.div
-                      className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white"
-                      animate={{ x: [0, 3, 0] }}
-                      transition={{ delay: 1.45, duration: 0.75, repeat: 2, ease: 'easeInOut' }}
+
+                  <p className="mt-2 text-base font-black leading-snug tracking-tight text-slate-950 dark:text-white">
+                    {nextTaskTitle}
+                  </p>
+
+                  <p className="mt-1.5 text-[11px] font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
+                    Start here. One clear action is enough to restart momentum.
+                  </p>
+
+                  {onFocusTask && (
+                    <motion.button
+                      type="button"
+                      onClick={onFocusTask}
+                      className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-black text-white shadow-md shadow-blue-200/60 transition hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] dark:shadow-blue-950/40"
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.99 }}
                     >
-                      <ArrowRight className="size-3.5" strokeWidth={2.6} />
-                    </motion.div>
-                    <p className="min-w-0 text-sm font-black leading-snug text-slate-900 dark:text-white">
-                      {nextTaskTitle}
-                    </p>
-                  </div>
+                      Focus on this task
+                      <ArrowRight className="size-4" strokeWidth={2.6} />
+                    </motion.button>
+                  )}
                 </motion.div>
               )}
             </motion.div>
@@ -367,7 +383,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.85, duration: 0.4 }}
         >
-          {isCompleted ? 'Carry the Momentum Forward' : 'Move to the Next Step'}
+          {isCompleted ? 'Carry the Momentum Forward' : nextTaskTitle ? 'Back to Dashboard' : 'Move to the Next Step'}
           <ArrowRight className="size-4" />
         </motion.button>
       </motion.div>

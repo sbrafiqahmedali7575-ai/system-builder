@@ -28,6 +28,8 @@ import {
   CalNewportBook,
 } from '../data/calNewportLibrary';
 import { CAL_NEWPORT_FULL_STUDY } from '../data/calNewportFullStudy';
+import { RYAN_HOLIDAY_BOOKS, RYAN_HOLIDAY_LIBRARY_UPDATED } from '../data/ryanHolidayLibrary';
+import { RYAN_HOLIDAY_FULL_STUDY } from '../data/ryanHolidayFullStudy';
 
 type ReaderTone = 'paper' | 'sepia' | 'night';
 type ReaderFont = 'serif' | 'sans';
@@ -46,6 +48,7 @@ const ACTIVE_BOOK_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_ACTIVE_BOOK';
 const FONT_SCALE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_FONT_SCALE';
 const READER_SETTINGS_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_READER_SETTINGS';
 const READER_STATE_KEY = 'SYSTEM_BUILDER_CAL_NEWPORT_READER_STATE';
+const AUTHOR_KEY = 'SYSTEM_BUILDER_BOOKS_AUTHOR';
 
 export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   theme: _theme,
@@ -53,10 +56,13 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   focusMode,
   onFocusChange,
 }) => {
+  const [author, setAuthor] = useState<'cal' | 'ryan'>(() => typeof window !== 'undefined' && window.localStorage.getItem(AUTHOR_KEY) === 'ryan' ? 'ryan' : 'cal');
+  const books = author === 'ryan' ? RYAN_HOLIDAY_BOOKS : CAL_NEWPORT_BOOKS;
+  const fullStudy = author === 'ryan' ? RYAN_HOLIDAY_FULL_STUDY : CAL_NEWPORT_FULL_STUDY;
   const [activeBookId, setActiveBookId] = useState<CalNewportBook['id']>(() => {
     if (typeof window === 'undefined') return 'so-good';
     const stored = window.localStorage.getItem(ACTIVE_BOOK_KEY);
-    return CAL_NEWPORT_BOOKS.some((book) => book.id === stored)
+    return [...CAL_NEWPORT_BOOKS, ...RYAN_HOLIDAY_BOOKS].some((book) => book.id === stored)
       ? (stored as CalNewportBook['id'])
       : 'so-good';
   });
@@ -90,9 +96,14 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [favoriteBooks, setFavoriteBooks] = useState<string[]>(() => CAL_NEWPORT_BOOKS.filter((book) => book.favorite).map((book) => book.id));
 
   const activeBook = useMemo(
-    () => CAL_NEWPORT_BOOKS.find((book) => book.id === activeBookId) || CAL_NEWPORT_BOOKS[0],
-    [activeBookId]
+    () => books.find((book) => book.id === activeBookId) || books[0],
+    [activeBookId, author]
   );
+
+  useEffect(() => {
+    if (!books.some(book => book.id === activeBookId)) setActiveBookId(books[0].id);
+    window.localStorage.setItem(AUTHOR_KEY, author);
+  }, [author]);
 
   useEffect(() => {
     window.localStorage.setItem(ACTIVE_BOOK_KEY, activeBookId);
@@ -201,12 +212,12 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📚</span>
-                <h1 className="text-base font-semibold tracking-tight truncate">
-                  By Cal Newport
+                <h1 onDoubleClick={() => { const next = author === 'cal' ? 'ryan' : 'cal'; setAuthor(next); setActiveBookId(next === 'ryan' ? RYAN_HOLIDAY_BOOKS[0].id : CAL_NEWPORT_BOOKS[0].id); setIsFullStudy(false); }} title="Double-click to switch author" className="text-base font-semibold tracking-tight truncate cursor-pointer select-none">
+                  By {author === 'ryan' ? 'Ryan Holiday' : 'Cal Newport'}
                 </h1>
               </div>
               <p className={`text-[11px] sm:text-xs font-semibold ${mutedText}`}>
-                Practical reading library • Updated {CAL_NEWPORT_LIBRARY_UPDATED}
+                Practical reading library • Updated {author === 'ryan' ? RYAN_HOLIDAY_LIBRARY_UPDATED : CAL_NEWPORT_LIBRARY_UPDATED} · Double-click author to switch
               </p>
             </div>
           </div>
@@ -259,7 +270,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
         {!isFocusReader && (
           <div className="w-full px-3 sm:px-5 lg:px-7 pb-2 overflow-x-auto">
             <div className="flex items-center gap-1.5 min-w-max">
-              {CAL_NEWPORT_BOOKS.map((book, index) => (
+              {books.map((book, index) => (
                 <button
                   key={book.id}
                   type="button"
@@ -312,7 +323,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   {activeBook.year}
                 </span>
                 <span className={`text-[11px] font-bold ${mutedText}`}>
-                  {isFullStudy ? CAL_NEWPORT_FULL_STUDY[activeBookId].readingMinutes : activeBook.readingTime}
+                  {isFullStudy ? fullStudy[activeBookId].readingMinutes : activeBook.readingTime}
                 </span>
               </div>
 
@@ -330,9 +341,9 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             </div>
 
             {isFullStudy && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" onMouseUp={captureSelection} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
-              <section className={`${widthClass} mx-auto`}><div className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {CAL_NEWPORT_FULL_STUDY[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{CAL_NEWPORT_FULL_STUDY[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
-              <div className="space-y-8">{CAL_NEWPORT_FULL_STUDY[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
-              <section className="mt-10 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{CAL_NEWPORT_FULL_STUDY[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
+              <section className={`${widthClass} mx-auto`}><div className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {fullStudy[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{fullStudy[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
+              <div className="space-y-8">{fullStudy[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
+              <section className="mt-10 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{fullStudy[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
             </div>}
 
             {!isFullStudy &&             <div

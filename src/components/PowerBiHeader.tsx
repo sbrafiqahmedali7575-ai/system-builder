@@ -41,7 +41,6 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenSearch,
   onToggleFocus,
   focusMode = false,
-  totalRecordsCount = 0,
   isSyncing = false,
 }) => {
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -89,7 +88,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                   }`}
                 />
                 <span className="tracking-[0.01em]">
-                  {isSyncing ? 'Syncing...' : `${totalRecordsCount} days logged`}
+                  {isSyncing ? 'Syncing...' : 'Developed by Rafiq Ahmed'}
                 </span>
               </div>
             </div>

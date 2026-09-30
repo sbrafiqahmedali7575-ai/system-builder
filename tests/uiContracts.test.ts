@@ -12,6 +12,8 @@ const dayProgress = read('src/components/DayProgressMoment.tsx');
 const books = read('src/components/CalNewportLibrary.tsx');
 const pomodoro = read('src/components/PomodoroTimer.tsx');
 const report = read('src/components/ReportView.tsx');
+const lifecycle = read('src/hooks/useSystemDataLifecycle.ts');
+const dayReview = read('src/components/DayReviewModal.tsx');
 const badge = read('src/components/BadgeCelebration.tsx');
 
 // Mobile modal safety: interactive dialogs must render above the fixed bottom nav (z-[140])
@@ -432,3 +434,9 @@ assert.ok(pomodoro.includes("if (!hasCurrentTask || isSaving) return;"), 'Focus 
 assert.ok(pomodoro.includes("setTimerError('Unable to save focus time. Please try again.')"), 'Focus timer must surface elapsed-time persistence failures.');
 assert.ok(pomodoro.includes("setTimerError('Unable to complete task. Your elapsed time is still available.')"), 'Failed completion must preserve the elapsed session and surface an error.');
 assert.ok(pomodoro.includes('setIsTaskLocked(true);'), 'A failed focused-task completion must keep the task locked for a safe retry.');
+
+
+// Data-sync and single-user app contracts.
+assert.ok(lifecycle.includes("(a.ActualTime || '') === (b.ActualTime || '')"), 'Pending task sync must compare ActualTime before accepting cloud snapshots.');
+assert.ok(lifecycle.includes("(a.EstimationTime || '') === (b.EstimationTime || '')"), 'Pending task sync must compare EstimationTime before accepting cloud snapshots.');
+assert.equal(dayReview.includes('openedFromEmail'), false, 'Day review must not contain legacy email navigation behavior.');

@@ -780,7 +780,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             if (event.target === event.currentTarget) setNoteEditor(null);
           }}
         >
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl">
+          <div className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 text-slate-900 shadow-2xl">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-sm font-semibold">Section Note</div>
@@ -809,8 +809,8 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 if (event.key === 'Escape') setNoteEditor(null);
               }}
               placeholder="Write your note for this section…"
-              rows={7}
-              className="mt-3 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+              rows={6}
+              className="mt-3 max-h-[42dvh] w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
             />
             <div className="mt-3 flex items-center justify-between gap-2">
               <div>

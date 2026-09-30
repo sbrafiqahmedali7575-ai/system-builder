@@ -97,6 +97,27 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
   const [completedBooks, setCompletedBooks] = useState<string[]>([]);
   const [favoriteBooks, setFavoriteBooks] = useState<string[]>(() => CAL_NEWPORT_BOOKS.filter((book) => book.favorite).map((book) => book.id));
 
+  useEffect(() => {
+    if (!pendingSelection) return;
+    const dismiss = () => {
+      setPendingSelection(null);
+      window.getSelection()?.removeAllRanges();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') dismiss();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('[data-highlight-palette]')) dismiss();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [pendingSelection]);
+
   const activeBook = useMemo(
     () => books.find((book) => book.id === activeBookId) || books[0],
     [activeBookId, author]
@@ -558,7 +579,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
       {pendingSelection && (
         <div
-          className="fixed z-[230] w-[210px] rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl"
+          data-highlight-palette className="fixed z-[230] w-[min(260px,calc(100vw-1rem))] rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl"
           style={{ left: pendingSelection.x, top: pendingSelection.y }}
           onMouseDown={(event) => event.preventDefault()}
           role="toolbar"
@@ -573,7 +594,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 key={color}
                 type="button"
                 onClick={() => createHighlight(color)}
-                className={`h-8 w-8 rounded-full border border-black/10 ${
+                className={`h-11 w-11 rounded-full border border-black/10 ${
                   color === 'yellow'
                     ? 'bg-yellow-300'
                     : color === 'blue'
@@ -592,7 +613,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 setPendingSelection(null);
                 window.getSelection()?.removeAllRanges();
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
+              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-slate-100"
               aria-label="Cancel highlight"
             >
               <X className="h-4 w-4" />
@@ -783,7 +804,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
               <button
                 type="button"
                 onClick={() => setNoteEditor(null)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100"
+                className="flex h-11 w-11 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100"
                 aria-label="Close note editor"
               >
                 <X className="h-4 w-4" />

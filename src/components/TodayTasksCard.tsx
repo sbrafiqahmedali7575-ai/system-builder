@@ -939,20 +939,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'
                       }`}
                     />
-                    <textarea
-                      value={newTaskNotes}
-                      onChange={(e) => setNewTaskNotes(e.target.value)}
-                      placeholder="Notes"
-                      rows={2}
-                      className={`mt-1 w-full min-h-[48px] max-h-20 resize-y px-2 py-1 rounded-lg border text-xs leading-4 focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
-                    />
-                  </div>
-
-                  <div className="sm:col-span-1">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      EstimationTime
-                      <input type="text" value={newEstimationTime} onChange={(e) => setNewEstimationTime(e.target.value)} placeholder="e.g. 45m" className={`mt-1 w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
-                    </label>
+                    <div className="mt-1 grid grid-cols-1 gap-2 min-[420px]:grid-cols-[minmax(0,1fr)_112px]">
+                      <textarea
+                        value={newTaskNotes}
+                        onChange={(e) => setNewTaskNotes(e.target.value)}
+                        placeholder="Notes"
+                        rows={2}
+                        className={`w-full min-h-[48px] max-h-20 resize-y px-2 py-1 rounded-lg border text-xs leading-4 focus:outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white'}`}
+                      />
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        EstimationTime
+                        <input type="text" value={newEstimationTime} onChange={(e) => setNewEstimationTime(e.target.value)} placeholder="45m" className={`mt-1 w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
+                      </label>
+                    </div>
                   </div>
 
                   <div>

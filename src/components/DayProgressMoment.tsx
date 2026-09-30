@@ -610,22 +610,18 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           </motion.div>
         </div>
 
-        <div className={`mt-4 grid gap-2 max-[360px]:gap-1.5 ${
-          isCompleted ? 'grid-cols-1' : 'grid-cols-2'
-        }`}>
-          {!isCompleted && (
-            <motion.button
-              type="button"
-              onClick={onUpdateAgain}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white/80 px-2.5 text-[11px] font-black leading-tight text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] max-[360px]:px-2 max-[360px]:text-[10px] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0, duration: 0.35 }}
-            >
-              <RefreshCw className="size-3.5 shrink-0" />
-              <span className="text-center">Update Day Again</span>
-            </motion.button>
-          )}
+        <div className="mt-4 grid grid-cols-2 gap-2 max-[360px]:gap-1.5">
+          <motion.button
+            type="button"
+            onClick={onUpdateAgain}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white/80 px-2.5 text-[11px] font-black leading-tight text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] max-[360px]:px-2 max-[360px]:text-[10px] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.35 }}
+          >
+            <RefreshCw className="size-3.5 shrink-0" />
+            <span className="text-center">Update Day Again</span>
+          </motion.button>
 
           <motion.button
             type="button"

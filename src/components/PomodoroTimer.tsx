@@ -279,91 +279,24 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     setIsCustomOpen(false);
   };
 
-  const size = integrated ? 116 : 58;
-  const strokeWidth = integrated ? 7 : 4;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference * (1 - elapsedPercent / 100);
-
   const timerVisual = (
     <div
-      className={
-        integrated
-          ? 'relative w-[116px] h-[116px] flex items-center justify-center'
-          : 'relative w-[58px] h-[58px] flex items-center justify-center'
-      }
+      className={`flex items-center justify-center rounded-xl border border-slate-200/80 bg-slate-950 px-4 shadow-inner dark:border-slate-700 ${integrated ? 'min-h-[92px] w-full' : 'min-h-[58px] min-w-[112px]'}`}
+      aria-label={`Focus timer ${formattedTime} remaining`}
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="-rotate-90"
-        aria-hidden="true"
-      >
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className={
-            integrated
-              ? 'text-slate-200 dark:text-slate-800'
-              : 'text-slate-200 dark:text-slate-700'
-          }
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-          className={
-            integrated
-              ? 'text-blue-500 transition-[stroke-dashoffset] duration-300 ease-linear'
-              : 'text-blue-600 transition-[stroke-dashoffset] duration-300 ease-linear'
-          }
-        />
-      </svg>
-
-      <span
-        className="absolute inset-0 flex flex-col items-center justify-center text-slate-900 dark:text-slate-100"
-        aria-label={`Pomodoro timer ${formattedTime} remaining`}
-      >
-        {integrated ? (
-          <>
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-              {mode === 'focus' ? 'Focus' : 'Break'}
-            </span>
-            <span className="mt-0.5 text-2xl leading-none font-semibold font-mono tabular-nums">
-              {formattedTime}
-            </span>
-            <Timer
-              className="mt-1 w-3.5 h-3.5 text-blue-500"
-              aria-hidden="true"
-            />
-          </>
-        ) : (
-          <>
-            <Timer
-              className={`w-3.5 h-3.5 ${
-                isRunning
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
-              aria-hidden="true"
-            />
-            <span className="mt-0.5 text-[10px] leading-none font-semibold font-mono tabular-nums">
-              {formattedTime}
-            </span>
-          </>
+      <div className="flex flex-col items-center justify-center">
+        {integrated && (
+          <span className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            {modeLabel}
+          </span>
         )}
-      </span>
+        <span className={`font-mono font-bold tabular-nums leading-none tracking-[0.04em] text-white ${integrated ? 'text-4xl sm:text-[42px]' : 'text-xl'}`}>
+          {formattedTime}
+        </span>
+        <span className={`mt-1.5 text-[10px] font-semibold uppercase tracking-wider ${isRunning ? 'text-blue-400' : 'text-slate-500'}`}>
+          {remainingSeconds <= 0 ? 'Complete' : isRunning ? 'Counting down' : 'Ready'}
+        </span>
+      </div>
     </div>
   );
 

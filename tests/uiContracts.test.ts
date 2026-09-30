@@ -198,6 +198,11 @@ assert.ok(
   'Completed result must not fall back to a one-column footer.'
 );
 
+assert.ok(
+  dayProgress.includes('relative mt-4 hidden overflow-hidden rounded-2xl border-2 p-4 text-left md:block'),
+  'Your next move card must stay hidden on mobile and return at the desktop/tablet breakpoint.'
+);
+
 // Other full-screen overlays must stay above the fixed mobile navigation.
 assert.ok(books.includes('fixed inset-y-0 right-0 z-[220]'), 'Reader highlights drawer must sit above mobile navigation.');
 

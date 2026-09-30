@@ -67,14 +67,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             aria-label="Open System Builder dashboard"
             title="System Builder"
           >
-            <motion.div
-              whileHover={{y: -0.75, scale: 1.018}}
-              whileTap={{scale: 0.985}}
-              transition={{duration: 0.2, ease: [0.16, 1, 0.3, 1]}}
-              className="rounded-[11px] transition-shadow duration-200 group-hover:shadow-[0_8px_20px_rgba(79,70,229,0.16)] dark:group-hover:shadow-[0_8px_20px_rgba(79,70,229,0.12)]"
-            >
-              <SystemBuilderLogo className="size-9 text-sm" />
-            </motion.div>
+            <SystemBuilderLogo className="size-9 text-sm" animated />
             <div className="hidden sm:block min-w-0">
               <div className="flex items-center space-x-1">
                 <span className="text-[15px] font-bold leading-tight tracking-[-0.015em] text-slate-950 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">

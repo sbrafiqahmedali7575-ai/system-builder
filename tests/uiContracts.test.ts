@@ -458,3 +458,14 @@ assert.ok(commandPalette.includes("env(safe-area-inset-bottom)"), 'Command Palet
 assert.ok(calendarWorkspace.includes("env(safe-area-inset-bottom)"), 'Calendar dialogs must respect mobile safe areas.');
 assert.ok(library.includes("env(safe-area-inset-bottom)"), 'Books note dialog must respect mobile safe areas.');
 assert.ok(report.includes('onCompleteCurrentTask'), 'Focus completion contract must remain wired after modal changes.');
+
+
+// Mobile task-delete interaction contracts (iPhone/Android viewport-safe behavior).
+assert.ok(todayTasks.includes('createPortal(') && todayTasks.includes('document.body'), 'Task delete dialog must escape transformed card ancestors through a body portal.');
+assert.ok(todayTasks.includes('max-h-[calc(100dvh-1.5rem)]'), 'Task delete dialog must fit short dynamic mobile viewports.');
+assert.ok(todayTasks.includes('env(safe-area-inset-bottom)') && todayTasks.includes('env(safe-area-inset-top)'), 'Task delete dialog must respect iPhone/Android safe areas.');
+assert.ok(todayTasks.includes("event.key === 'Escape' && !isDeleting"), 'Escape must close only when deletion is idle.');
+assert.ok(todayTasks.includes('event.target === event.currentTarget && !isDeleting'), 'Backdrop tap must dismiss only when deletion is idle.');
+assert.ok(todayTasks.includes('deleteInFlightRef.current'), 'Rapid repeated delete taps must be synchronously deduplicated.');
+assert.ok(todayTasks.includes("setDeleteError(err?.message || 'Failed to delete task. Please try again.')"), 'Delete failures must remain visible and retryable.');
+assert.ok(todayTasks.includes('min-h-12'), 'Mobile delete actions must provide 48px touch targets.');

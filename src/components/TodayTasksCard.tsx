@@ -241,7 +241,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskNotes, setNewTaskNotes] = useState('');
   const [newEstimationTime, setNewEstimationTime] = useState('');
-  const [newActualTime, setNewActualTime] = useState('');
   const [newTaskQuadrant, setNewTaskQuadrant] = useState<MatrixQuadrant | ''>('');
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
@@ -319,7 +318,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setNewTaskTitle('');
     setNewTaskNotes('');
     setNewEstimationTime('');
-    setNewActualTime('');
     setNewTaskQuadrant('');
     setPanelError(null);
     setRecentlyAddedInSession([]);
@@ -330,7 +328,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setNewTaskTitle('');
     setNewTaskNotes('');
     setNewEstimationTime('');
-    setNewActualTime('');
     setNewTaskQuadrant('');
     setPanelError(null);
     setRecentlyAddedInSession([]);
@@ -394,7 +391,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
         matrixQuadrant: newTaskQuadrant || undefined,
         notes: newTaskNotes.trim(),
         EstimationTime: newEstimationTime.trim(),
-        ActualTime: newActualTime.trim(),
       });
 
       // Keep the panel open for rapid entry. The focused input naturally stays
@@ -403,8 +399,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       setNewTaskTitle('');
       setNewTaskNotes('');
       setNewEstimationTime('');
-      setNewActualTime('');
-    } catch (err: any) {
+      } catch (err: any) {
       console.error('Error adding task:', err);
       setPanelError(err?.message || 'Failed to add task. Please check connection and try again.');
     } finally {
@@ -953,14 +948,10 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:col-span-1">
+                  <div className="sm:col-span-1">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       EstimationTime
                       <input type="text" value={newEstimationTime} onChange={(e) => setNewEstimationTime(e.target.value)} placeholder="e.g. 45m" className={`mt-1 w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
-                    </label>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      ActualTime
-                      <input type="text" value={newActualTime} onChange={(e) => setNewActualTime(e.target.value)} placeholder="e.g. 50m" className={`mt-1 w-full h-[34px] px-2 rounded-xl border text-xs font-semibold outline-none transition ${isDark ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'}`} />
                     </label>
                   </div>
 

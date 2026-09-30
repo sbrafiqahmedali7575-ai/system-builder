@@ -663,6 +663,10 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 .system-edition [role="dialog"] {
   animation:premium-dialog-in 300ms var(--motion-ease) both;
 }
+.system-edition .system-stable-modal {
+  animation:none !important;
+  transform:none !important;
+}
 .system-edition input:focus,
 .system-edition textarea:focus,
 .system-edition select:focus {

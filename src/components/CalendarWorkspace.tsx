@@ -683,7 +683,7 @@ const CalendarDayDetailsDialog: React.FC<CalendarDayDetailsDialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[220] flex items-center justify-center bg-slate-950/30 p-2 sm:p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[220] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/30 px-2 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] sm:p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-label={'Items for ' + longDate(dateKey)}
@@ -836,8 +836,8 @@ const QuickAddTaskDialog: React.FC<QuickAddTaskDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/60 p-2 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onClose(); }}>
-      <div className="w-full max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-slate-900 dark:text-slate-100 shadow-2xl">
+    <div className="fixed inset-0 z-[220] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/60 px-2 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onClose(); }}>
+      <div className="w-full max-w-lg max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-slate-900 dark:text-slate-100 shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5 mb-2">
           <div className="flex items-center gap-1.5">
             <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400"><Plus className="w-4 h-4 stroke-[3]" /></div>

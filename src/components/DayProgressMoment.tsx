@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowDown, ArrowRight, ArrowUpRight, Check, Rocket, ScanSearch, SlidersHorizontal, Sparkles } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { animate as animateValue, motion } from 'framer-motion';
+import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
+import { DayProgressStats, DaySubmitResult } from '../types';
 
 interface DayProgressMomentProps {
   status: 'COMPLETED' | 'NOT_COMPLETED';
@@ -10,9 +11,76 @@ interface DayProgressMomentProps {
   completedHabitCount: number;
   totalHabitCount: number;
   nextTaskTitle?: string | null;
+  previousStatus: DaySubmitResult['previousStatus'];
+  isNewSuccess: boolean;
+  statsBefore: DayProgressStats;
+  statsAfter: DayProgressStats;
+  onUpdateAgain: () => void;
   onFocusTask?: () => void;
   onContinue: () => void;
 }
+
+const AnimatedScore: React.FC<{
+  label: string;
+  before: number;
+  after: number;
+  delay: number;
+  icon: React.ReactNode;
+}> = ({ label, before, after, delay, icon }) => {
+  const [displayValue, setDisplayValue] = useState(before);
+  const delta = after - before;
+
+  useEffect(() => {
+    setDisplayValue(before);
+    const controls = animateValue(before, after, {
+      delay,
+      duration: delta === 0 ? 0.35 : 0.9,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (value) => setDisplayValue(Math.round(value)),
+    });
+    return () => controls.stop();
+  }, [before, after, delay, delta]);
+
+  return (
+    <motion.div
+      className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-white/90 px-2.5 py-2.5 text-left shadow-sm dark:border-emerald-900/70 dark:bg-slate-900/85"
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {delta > 0 && (
+        <motion.span
+          aria-hidden="true"
+          className="absolute inset-0 bg-emerald-400/10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ delay: delay + 0.35, duration: 0.7 }}
+        />
+      )}
+      <div className="relative flex items-center justify-between gap-2">
+        <span className="text-emerald-600 dark:text-emerald-300">{icon}</span>
+        <motion.span
+          className={`rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide ${
+            delta > 0
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300'
+              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+          }`}
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: delta > 0 ? [0.7, 1.18, 1] : 1 }}
+          transition={{ delay: delay + 0.45, duration: 0.38 }}
+        >
+          {delta > 0 ? `+${delta}` : 'Current'}
+        </motion.span>
+      </div>
+      <div className="relative mt-1.5 text-2xl font-black tabular-nums tracking-tight text-slate-950 dark:text-white">
+        {displayValue}
+      </div>
+      <div className="relative mt-0.5 text-[9px] font-black uppercase tracking-[0.11em] text-slate-500 dark:text-slate-400">
+        {label}
+      </div>
+    </motion.div>
+  );
+};
 
 export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   status,
@@ -21,6 +89,11 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   completedHabitCount,
   totalHabitCount,
   nextTaskTitle,
+  previousStatus,
+  isNewSuccess,
+  statsBefore,
+  statsAfter,
+  onUpdateAgain,
   onFocusTask,
   onContinue,
 }) => {
@@ -145,7 +218,51 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             >
               <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">
                 <Sparkles className="size-4" />
-                <span>Daily win secured</span>
+                <span>{isNewSuccess ? 'Progress updated' : 'Progress confirmed'}</span>
+              </div>
+
+              <motion.p
+                className="mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.62, duration: 0.3 }}
+              >
+                {isNewSuccess
+                  ? 'Your real system stats increased from this completed day.'
+                  : previousStatus === 'COMPLETED'
+                  ? 'This day was already successful, so your totals stay accurate—no double counting.'
+                  : 'Your completed day is now reflected in your long-term system.'}
+              </motion.p>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <AnimatedScore
+                  label="Successful Days"
+                  before={statsBefore.successfulDays}
+                  after={statsAfter.successfulDays}
+                  delay={0.72}
+                  icon={<Trophy className="size-4" />}
+                />
+                <AnimatedScore
+                  label="Current Streak"
+                  before={statsBefore.currentStreak}
+                  after={statsAfter.currentStreak}
+                  delay={0.86}
+                  icon={<Flame className="size-4" />}
+                />
+                <AnimatedScore
+                  label="Achieved Weeks"
+                  before={statsBefore.achievedWeeks}
+                  after={statsAfter.achievedWeeks}
+                  delay={1.0}
+                  icon={<CalendarCheck2 className="size-4" />}
+                />
+                <AnimatedScore
+                  label="Best Streak"
+                  before={statsBefore.bestStreak}
+                  after={statsAfter.bestStreak}
+                  delay={1.14}
+                  icon={<Sparkles className="size-4" />}
+                />
               </div>
 
               <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
@@ -441,8 +558,20 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
 
         <motion.button
           type="button"
+          onClick={onUpdateAgain}
+          className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/80 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.35 }}
+        >
+          <RefreshCw className="size-3.5" />
+          Update Day Again
+        </motion.button>
+
+        <motion.button
+          type="button"
           onClick={onContinue}
-          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-blue-500 active:scale-[0.99]"
+          className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-black text-white shadow-sm transition hover:bg-blue-500 active:scale-[0.99]"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.85, duration: 0.4 }}

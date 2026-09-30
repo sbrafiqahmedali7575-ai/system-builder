@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { animate as animateValue, motion, useReducedMotion } from 'framer-motion';
-import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUpRight, CalendarCheck2, Check, Flame, RefreshCw, Rocket, ScanSearch, SlidersHorizontal, Sparkles, Trophy } from 'lucide-react';
 import { getDayProgressLine } from '../data/obstacleDayLines';
 import { DayProgressStats, DaySubmitResult } from '../types';
 
@@ -90,8 +90,8 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   completedHabitCount,
   totalHabitCount,
   nextTaskTitle,
-  previousStatus: _previousStatus,
-  isNewSuccess: _isNewSuccess,
+  previousStatus,
+  isNewSuccess,
   statsBefore,
   statsAfter,
   onUpdateAgain,
@@ -207,20 +207,6 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
 
   return (
     <div className="relative overflow-hidden p-5 sm:p-6 text-center">
-      {isCompleted && (
-        <motion.button
-          type="button"
-          onClick={onContinue}
-          className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-          aria-label="Exit completed result"
-          title="Exit"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.25, duration: 0.25 }}
-        >
-          <X className="size-4" />
-        </motion.button>
-      )}
       <motion.div
         aria-hidden="true"
         className={`absolute inset-x-8 top-16 h-px ${
@@ -296,11 +282,13 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.45 }}
       >
-        {!isCompleted && (
-          <div className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
-            Day Reviewed • Next Move Ready
-          </div>
-        )}
+        <div className={`mt-4 text-[10px] font-black uppercase tracking-[0.18em] ${
+          isCompleted
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-blue-600 dark:text-blue-400'
+        }`}>
+          {isCompleted ? 'Day Completed • Momentum Earned' : 'Day Reviewed • Next Move Ready'}
+        </div>
 
         {!isCompleted && (
           <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950 dark:text-white">
@@ -308,16 +296,21 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           </h2>
         )}
 
-        {!isCompleted && (
         <motion.div
-          className="mx-auto mt-3 max-w-sm sm:max-w-xl rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4 py-4 shadow-sm dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/25"
+          className={`mx-auto mt-3 max-w-sm sm:max-w-xl rounded-2xl border px-4 py-4 shadow-sm ${
+            isCompleted
+              ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:border-emerald-900/60 dark:from-emerald-950/35 dark:via-slate-900 dark:to-blue-950/25'
+              : 'border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:border-blue-900/60 dark:from-blue-950/35 dark:via-slate-900 dark:to-indigo-950/25'
+          }`}
           initial={{ opacity: 0, y: 18, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: [0.95, 1.025, 1] }}
           transition={{ delay: 0.46, duration: 0.56, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300">
-            Principles 3–7
-          </div>
+          {!isCompleted && (
+            <div className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-300">
+              Principles 3–7
+            </div>
+          )}
 
           <motion.p
             className="mt-2 text-[16px] font-extrabold leading-relaxed tracking-[-0.015em] text-slate-900 dark:text-white"
@@ -330,15 +323,17 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
 
           <motion.div
             aria-hidden="true"
-            className="mx-auto mt-3 h-0.5 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"
+            className={`mx-auto mt-3 h-0.5 rounded-full ${
+              isCompleted
+                ? 'bg-gradient-to-r from-emerald-400 via-blue-400 to-emerald-400'
+                : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500'
+            }`}
             initial={{ width: '10%', opacity: 0 }}
             animate={{ width: '100%', opacity: 1 }}
             transition={{ delay: 0.66, duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
           />
         </motion.div>
-        )}
 
-        {!isCompleted && (
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
           <span>{isCompleted ? 'Completed today:' : 'Progress today:'} {completedTaskCount}/{totalTaskCount} tasks</span>
           {totalHabitCount > 0 && (
@@ -348,7 +343,6 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             </>
           )}
         </div>
-        )}
 
         {isCompleted ? (
           <div className="mx-auto mt-4 max-w-sm sm:max-w-xl">
@@ -358,7 +352,25 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.5, duration: 0.45 }}
             >
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">
+                <Sparkles className="size-4" />
+                <span>{isNewSuccess ? 'Progress updated' : 'Progress confirmed'}</span>
+              </div>
+
+              {previousStatus !== 'COMPLETED' && (
+                <motion.p
+                  className="mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.62, duration: 0.3 }}
+                >
+                  {isNewSuccess
+                    ? 'Your real system stats increased from this completed day.'
+                    : 'Your completed day is now reflected in your long-term system.'}
+                </motion.p>
+              )}
+
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <AnimatedScore
                   label="Successful Days"
                   before={statsBefore.successfulDays}
@@ -427,13 +439,29 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
                 ))}
               </div>
 
+              <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950/60">
+                <motion.div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-emerald-500 to-emerald-400"
+                  initial={{ width: '8%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ delay: 0.28, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute inset-y-0 w-12 -skew-x-12 bg-white/45"
+                  initial={{ left: '-18%' }}
+                  animate={{ left: '110%' }}
+                  transition={{ delay: 1.1, duration: 0.85, ease: 'easeInOut' }}
+                />
+              </div>
+
               <motion.p
-                className="mt-4 border-t border-emerald-100 pt-3 text-sm font-extrabold leading-relaxed text-slate-700 dark:border-emerald-900/60 dark:text-slate-200"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1, duration: 0.4 }}
+                className="mt-3 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.15, duration: 0.4 }}
               >
-                {line}
+                You completed what was in your control today. Carry that momentum into the next step.
               </motion.p>
             </motion.div>
           </div>
@@ -664,7 +692,6 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           </div>
         )}
 
-        {!isCompleted && (
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <motion.button
           type="button"
@@ -690,7 +717,6 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
           <ArrowRight className="size-4" />
         </motion.button>
         </div>
-        )}
       </motion.div>
     </div>
   );

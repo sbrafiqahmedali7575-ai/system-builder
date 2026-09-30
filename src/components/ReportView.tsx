@@ -2,11 +2,12 @@ import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { RotateCcw, X } from 'lucide-react';
-import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem, DaySubmitResult } from '../types';
+import { DailyRecord, DashboardTheme, HabitItem, TaskItem, DaySubmitResult } from '../types';
 import { parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils';
 import { isHabitDue } from '../utils/habitUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
+import { calculateAchievedWeeks, calculateOverallCompletion } from '../utils/progressAnalytics';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
 import { PerformanceIntelligence } from './PerformanceIntelligence';
@@ -19,8 +20,6 @@ export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
 const COUNTDOWN_TARGET_DATE_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_DATE';
 const COUNTDOWN_TARGET_REASON_KEY = 'SYSTEM_BUILDER_COUNTDOWN_TARGET_REASON';
-const SYSTEM_BUILDER_START_DATE_KEY = '2026-08-01';
-
 const addDays = (dateKey: string, amount: number) => {
   const [year, month, day] = dateKey.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day + amount));
@@ -31,13 +30,7 @@ interface ReportViewProps {
   records: DailyRecord[];
   tasks: TaskItem[];
   habits: HabitItem[];
-  filterState: FilterState;
-  onFilterChange: (filters: Partial<FilterState>) => void;
   theme: DashboardTheme;
-  onToggleRecordStatus: (id: string) => void;
-  onSelectRecord?: (record: DailyRecord) => void;
-  onUpdateRecord?: (record: DailyRecord) => void;
-  onOpenAddModal?: () => void;
   activeTab?: NavTab;
   onTabChange?: (tab: NavTab) => void;
   // Task management handlers
@@ -90,9 +83,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   records,
   tasks,
   habits,
-  filterState,
   theme,
-  onToggleRecordStatus,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
@@ -169,79 +160,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return () => unsubscribe();
   }, []);
 
-  // Apply filters to daily records
-  const filteredRecords = useMemo(() => {
-    return records.filter((r) => {
-      // Status filter
-      if (filterState.status === 'COMPLETED' && !r.isCompleted) return false;
-      if (filterState.status === 'PENDING' && r.isCompleted) return false;
-
-      // Date range filter
-      if (filterState.dateRange === '7D' && r.day > 7) return false;
-      if (filterState.dateRange === '14D' && r.day > 14) return false;
-      if (filterState.dateRange === '30D' && r.day > 30) return false;
-
-      return true;
-    });
-  }, [records, filterState]);
-
   const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
 
-  const achievedWeeks = useMemo(() => {
-    if (tasks.length === 0) return 0;
-
-    const addDays = (dateKey: string, days: number) => {
-      const [year, month, day] = dateKey.split('-').map(Number);
-      const date = new Date(Date.UTC(year, month - 1, day + days));
-      return [
-        date.getUTCFullYear(),
-        String(date.getUTCMonth() + 1).padStart(2, '0'),
-        String(date.getUTCDate()).padStart(2, '0'),
-      ].join('-');
-    };
-    const getMonday = (dateKey: string) => {
-      const [year, month, day] = dateKey.split('-').map(Number);
-      const date = new Date(Date.UTC(year, month - 1, day));
-      const weekday = date.getUTCDay();
-      const diff = weekday === 0 ? -6 : 1 - weekday;
-      return addDays(dateKey, diff);
-    };
-    const dailyRate = (dateKey: string) => {
-      const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
-      if (dayTasks.length === 0) return 0;
-      return (dayTasks.filter((task) => task.isCompleted).length / dayTasks.length) * 100;
-    };
-
-    const firstTaskDate = tasks.map((task) => task.taskKey).sort()[0];
-    if (!firstTaskDate) return 0;
-
-    let weekStart = getMonday(firstTaskDate);
-    const currentWeekStart = getMonday(currentDateKey);
-    let achieved = 0;
-    let guard = 0;
-
-    while (weekStart < currentWeekStart && guard < 5200) {
-      const score =
-        Array.from({ length: 7 }, (_, index) => dailyRate(addDays(weekStart, index)))
-          .reduce((sum, rate) => sum + rate, 0) / 7;
-      if (score >= 80) achieved += 1;
-      weekStart = addDays(weekStart, 7);
-      guard += 1;
-    }
-    return achieved;
-  }, [tasks, currentDateKey]);
-
+  const achievedWeeks = useMemo(
+    () => calculateAchievedWeeks(tasks, currentDateKey),
+    [tasks, currentDateKey]
+  );
 
   // Overall = Successful Days / Total calendar days since 1 Aug 2026 × 100.
-  const commandCenterOverall = useMemo(() => {
-    const startUtc = Date.UTC(2026, 7, 1);
-    const [year, month, day] = currentDateKey.split('-').map(Number);
-    const todayUtc = Date.UTC(year, month - 1, day);
-    const totalDays = Math.max(0, Math.floor((todayUtc - startUtc) / (24 * 60 * 60 * 1000)) + 1);
-    const completedDays = records.reduce((sum, record) => sum + (record.isCompleted ? 1 : 0), 0);
-    const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
-    return { completedDays, totalDays, completionRate };
-  }, [records, currentDateKey]);
+  const commandCenterOverall = useMemo(
+    () => calculateOverallCompletion(records, currentDateKey),
+    [records, currentDateKey]
+  );
 
   const currentFocusTask = useMemo(
     () =>

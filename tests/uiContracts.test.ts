@@ -181,6 +181,15 @@ assert.ok(
   'Bookmark and note controls must expose visible saved state.'
 );
 
+assert.ok(
+  books.includes('const renderHighlightedText = (text: string, sectionId: string): React.ReactNode =>'),
+  'Saved reader highlights must render back into matching reader text.'
+);
+assert.ok(
+  books.includes('<mark') && books.includes("title={highlight.note || 'Saved highlight'}"),
+  'Rendered reader highlights must remain visible and expose their saved note.'
+);
+
 assert.ok(pomodoro.includes('fixed inset-0 z-[220]'), 'Pomodoro modal must sit above mobile navigation.');
 assert.ok(report.includes('fixed inset-0 z-[220]'), 'Countdown editor must sit above mobile navigation.');
 assert.ok(badge.includes('fixed inset-0 z-[230]'), 'Badge celebration must sit above other app chrome.');

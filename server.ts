@@ -17,8 +17,28 @@ async function startServer() {
     res.json({ status: 'ok' });
   });
 
+  const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const configuredToken = String(process.env.SYSTEM_BUILDER_ADMIN_TOKEN || '').trim();
+
+    if (!configuredToken) {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(503).json({
+          error: 'Administrative endpoints are disabled until SYSTEM_BUILDER_ADMIN_TOKEN is configured.',
+        });
+      }
+      return next();
+    }
+
+    const providedToken = String(req.header('x-system-builder-admin-token') || '').trim();
+    if (!providedToken || providedToken !== configuredToken) {
+      return res.status(401).json({ error: 'Unauthorized administrative request.' });
+    }
+
+    return next();
+  };
+
   // Read-only live migration reconciliation. Never writes or deletes Firestore data.
-  app.get('/api/migration/verify', async (_req, res) => {
+  app.get('/api/migration/verify', requireAdmin, async (_req, res) => {
     try {
       const [recordsSnap, tasksSnap, habitsSnap, daysSnap, logsSnap, countdownsSnap, usersSnap] =
         await Promise.all([
@@ -62,24 +82,58 @@ async function startServer() {
 
       daysSnap.forEach((d) => {
         const x = d.data();
-        const required = ['dateKey','tasksDone','tasks','tasksCompleted','habitsDone','Habits','habitsCompleted','dayCompleted','IsdayCompleted'];
+        const required = [
+          'dateKey',
+          'tasksCompleted',
+          'taskTotal',
+          'taskCompletionRate',
+          'habitsCompleted',
+          'habitTotal',
+          'habitCompletionRate',
+          'IsdayCompleted',
+        ];
         const missing = required.filter((k) => x[k] === undefined);
-        if (missing.length) issues.push(`Days/${d.id}: missing ${missing.join(', ')}.`);
+        if (missing.length) {
+          issues.push(`Days/${d.id}: missing ${missing.join(', ')}.`);
+          return;
+        }
+
+        if (String(x.dateKey) !== d.id) {
+          issues.push(`Days/${d.id}: document ID must match dateKey ${x.dateKey}.`);
+        }
+
+        const taskTotal = Number(x.taskTotal || 0);
+        const tasksCompleted = Number(x.tasksCompleted || 0);
+        const habitTotal = Number(x.habitTotal || 0);
+        const habitsCompleted = Number(x.habitsCompleted || 0);
+        const expectedTaskRate =
+          taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 100) : 0;
+        const expectedHabitRate =
+          habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 100) : 0;
         const expectedDayCompleted =
-          Math.round(
-            (
-              Number(x.tasksCompleted || 0) * 0.8 +
-              Number(x.habitsCompleted || 0) * 0.2
-            ) * 100
-          ) / 100;
-        if (Math.abs(Number(x.dayCompleted || 0) - expectedDayCompleted) > 0.001) {
+          taskTotal > 0 && expectedTaskRate === 100;
+
+        if (Number(x.taskCompletionRate) !== expectedTaskRate) {
           issues.push(
-            `Days/${d.id}: dayCompleted does not match the 80% task + 20% habit weighted percentage.`
+            `Days/${d.id}: taskCompletionRate must equal completed tasks / task total.`
           );
         }
-        if (x.IsdayCompleted !== (expectedDayCompleted >= 80)) {
+        if (Number(x.habitCompletionRate) !== expectedHabitRate) {
           issues.push(
-            `Days/${d.id}: IsdayCompleted does not match dayCompleted >= 80.`
+            `Days/${d.id}: habitCompletionRate must equal completed habits / habit total.`
+          );
+        }
+        if (x.IsdayCompleted !== expectedDayCompleted) {
+          issues.push(
+            `Days/${d.id}: IsdayCompleted must be true only when all scheduled tasks are complete.`
+          );
+        }
+
+        const legacyFields = ['tasksDone', 'tasks', 'habitsDone', 'Habits', 'dayCompleted'];
+        const presentLegacy = legacyFields.filter((key) => key in x);
+        if (presentLegacy.length) {
+          issues.push(
+            `Days/${d.id}: legacy fields still present: ${presentLegacy.join(', ')}.`
           );
         }
       });
@@ -116,7 +170,7 @@ async function startServer() {
   });
 
   // Canonical Days CSV backup/export.
-  app.get('/api/backup/export', async (req, res) => {
+  app.get('/api/backup/export', requireAdmin, async (req, res) => {
     try {
       const format = String(req.query.format || 'csv').toLowerCase();
       const data = await fetchAllProjectData();

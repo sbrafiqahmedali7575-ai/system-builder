@@ -8,7 +8,7 @@ interface SystemBuilderLogoProps {
 
 export const SystemBuilderLogo: React.FC<SystemBuilderLogoProps> = ({
   className = 'size-10 text-sm',
-  animated = false,
+  animated = true,
 }) => (
   <motion.div
     className={`relative flex flex-none items-center justify-center overflow-hidden rounded-[28%] bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 font-bold text-white ring-1 ring-white/75 shadow-[0_10px_26px_rgba(79,70,229,0.18)] dark:ring-white/15 dark:shadow-[0_10px_26px_rgba(49,46,129,0.34)] ${className}`}

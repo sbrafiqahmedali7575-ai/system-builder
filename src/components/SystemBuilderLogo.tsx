@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ListChecks } from 'lucide-react';
 
 interface SystemBuilderLogoProps {
   className?: string;
@@ -21,7 +22,7 @@ export const SystemBuilderLogo: React.FC<SystemBuilderLogoProps> = ({
     transition={animated ? {duration: 0.8, times: [0, 0.62, 1], ease: [0.16, 1, 0.3, 1]} : undefined}
     aria-hidden="true"
   >
-    S
+    <ListChecks className="h-[58%] w-[58%] stroke-[2.35] text-white drop-shadow-sm" />
     {animated && (
       <motion.span
         className="absolute inset-y-0 -left-8 w-5 rotate-12 bg-white/35 blur-[1px]"

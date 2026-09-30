@@ -814,7 +814,7 @@ export default function App() {
                 <span>Syncing</span>
               </div>
             ) : (
-              <div className="flex flex-none items-center gap-2.5 border-l border-slate-200 pl-3 dark:border-slate-700">
+              <div className="flex flex-none items-center border-l border-slate-200 pl-3 dark:border-slate-700">
                 <div className="text-right leading-none">
                   <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     Developed by
@@ -822,9 +822,6 @@ export default function App() {
                   <div className="mt-1 text-[11px] font-extrabold tracking-[-0.01em] text-slate-800 dark:text-slate-100">
                     Rafiq Ahmed
                   </div>
-                </div>
-                <div className="flex size-7 items-center justify-center rounded-lg border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 text-[10px] font-black tracking-[-0.02em] text-indigo-600 shadow-sm dark:border-indigo-900/60 dark:from-indigo-950/50 dark:to-blue-950/40 dark:text-indigo-300">
-                  RA
                 </div>
               </div>
             )}

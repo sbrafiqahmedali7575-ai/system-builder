@@ -38,6 +38,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = useState(initialElapsedSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [isTaskLocked, setIsTaskLocked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [timerError, setTimerError] = useState<string | null>(null);
 
   const startedAtRef = useRef<number | null>(null);
   const accumulatedMsRef = useRef(initialElapsedSeconds * 1000);
@@ -66,16 +68,34 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }, [elapsedSeconds]);
 
+  const hasCurrentTask = currentTaskTitle !== 'No active task selected' && currentTaskTitle !== 'No active task for today';
+
+  const commitElapsed = async (seconds: number) => {
+    if (!onElapsedCommit) return;
+    try {
+      setIsSaving(true);
+      setTimerError(null);
+      await onElapsedCommit(seconds);
+    } catch (error) {
+      console.error('Unable to save focus elapsed time:', error);
+      setTimerError('Unable to save focus time. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const toggleTimer = () => {
     if (isRunning) {
       if (startedAtRef.current) accumulatedMsRef.current += Date.now() - startedAtRef.current;
       startedAtRef.current = null;
       setElapsedSeconds(Math.floor(accumulatedMsRef.current / 1000));
       setIsRunning(false);
-      void onElapsedCommit?.(Math.floor(accumulatedMsRef.current / 1000));
+      void commitElapsed(Math.floor(accumulatedMsRef.current / 1000));
       return;
     }
+    if (!hasCurrentTask || isSaving) return;
     startedAtRef.current = Date.now();
+    setTimerError(null);
     setIsTaskLocked(true);
     setIsRunning(true);
   };
@@ -86,7 +106,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     setElapsedSeconds(0);
     setIsRunning(false);
     setIsTaskLocked(false);
-    void onElapsedCommit?.(0);
+    void commitElapsed(0);
   }, [onElapsedCommit]);
 
   const timerVisual = (
@@ -174,10 +194,20 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                   startedAtRef.current = null;
                   setElapsedSeconds(finalSeconds);
                   setIsRunning(false);
-                  setIsTaskLocked(false);
-                  await onCompleteCurrentTask(finalSeconds);
+                  try {
+                    setIsSaving(true);
+                    setTimerError(null);
+                    await onCompleteCurrentTask(finalSeconds);
+                    setIsTaskLocked(false);
+                  } catch (error) {
+                    console.error('Unable to complete focused task:', error);
+                    setTimerError('Unable to complete task. Your elapsed time is still available.');
+                    setIsTaskLocked(true);
+                  } finally {
+                    setIsSaving(false);
+                  }
                 }}
-                disabled={!onCompleteCurrentTask}
+                disabled={!onCompleteCurrentTask || !hasCurrentTask || isSaving}
                 className="mt-0.5 shrink-0 text-blue-500 disabled:cursor-default"
                 title="Mark current task completed and save actual time"
                 aria-label="Mark current task completed and save actual time"
@@ -195,11 +225,13 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           </div>
 
           <div className="mt-1 text-center text-[11px] font-medium text-slate-400">Elapsed task time</div>
+          {timerError && <div role="alert" className="mt-1 text-center text-[11px] font-medium text-red-600 dark:text-red-400">{timerError}</div>}
 
           <div className="mt-2 flex items-center justify-center gap-2">
             <button
               type="button"
               onClick={resetTimer}
+              disabled={isSaving}
               title="Reset elapsed time to zero"
               aria-label="Reset elapsed focus time to zero."
               className="w-9 h-9 inline-flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
@@ -210,6 +242,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             <button
               type="button"
               onClick={toggleTimer}
+              disabled={isSaving || (!isRunning && !hasCurrentTask)}
               title={isRunning ? 'Pause focus timer' : 'Start focus timer'}
               aria-label={isRunning ? 'Pause focus timer' : 'Start focus timer'}
               className="w-12 h-12 inline-flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white transition-colors shadow-md shadow-blue-600/20"

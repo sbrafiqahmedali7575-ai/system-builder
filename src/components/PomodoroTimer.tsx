@@ -19,6 +19,8 @@ interface PomodoroTimerProps {
   currentTaskTitle?: string;
   todayTasks?: Array<{ id: string; title: string; isCompleted?: boolean }>;
   onCurrentTaskChange?: (taskId: string) => void;
+  initialElapsedSeconds?: number;
+  onElapsedCommit?: (elapsedSeconds: number) => void | Promise<void>;
   integrated?: boolean;
 }
 
@@ -27,14 +29,22 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   currentTaskTitle = 'No active task selected',
   todayTasks = [],
   onCurrentTaskChange,
+  initialElapsedSeconds = 0,
+  onElapsedCommit,
   integrated = false,
 }) => {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(initialElapsedSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [isTaskLocked, setIsTaskLocked] = useState(false);
 
   const startedAtRef = useRef<number | null>(null);
-  const accumulatedMsRef = useRef(0);
+  const accumulatedMsRef = useRef(initialElapsedSeconds * 1000);
+
+  useEffect(() => {
+    if (isRunning) return;
+    accumulatedMsRef.current = initialElapsedSeconds * 1000;
+    setElapsedSeconds(initialElapsedSeconds);
+  }, [initialElapsedSeconds, isRunning]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -60,6 +70,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       startedAtRef.current = null;
       setElapsedSeconds(Math.floor(accumulatedMsRef.current / 1000));
       setIsRunning(false);
+      void onElapsedCommit?.(Math.floor(accumulatedMsRef.current / 1000));
       return;
     }
     startedAtRef.current = Date.now();
@@ -73,7 +84,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     setElapsedSeconds(0);
     setIsRunning(false);
     setIsTaskLocked(false);
-  }, []);
+    void onElapsedCommit?.(0);
+  }, [onElapsedCommit]);
 
   const timerVisual = (
     <div

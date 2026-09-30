@@ -21,6 +21,7 @@ interface PomodoroTimerProps {
   onCurrentTaskChange?: (taskId: string) => void;
   initialElapsedSeconds?: number;
   onElapsedCommit?: (elapsedSeconds: number) => void | Promise<void>;
+  onCompleteCurrentTask?: (elapsedSeconds: number) => void | Promise<void>;
   integrated?: boolean;
 }
 
@@ -31,6 +32,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   onCurrentTaskChange,
   initialElapsedSeconds = 0,
   onElapsedCommit,
+  onCompleteCurrentTask,
   integrated = false,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(initialElapsedSeconds);
@@ -161,7 +163,27 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
               )}
             </div>
             <div className="mt-1 flex items-start gap-1.5 min-w-0">
-              <Circle className="mt-0.5 w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!onCompleteCurrentTask || currentTaskTitle === 'No active task selected' || currentTaskTitle === 'No active task for today') return;
+                  let finalMs = accumulatedMsRef.current;
+                  if (isRunning && startedAtRef.current) finalMs += Date.now() - startedAtRef.current;
+                  const finalSeconds = Math.floor(finalMs / 1000);
+                  accumulatedMsRef.current = finalMs;
+                  startedAtRef.current = null;
+                  setElapsedSeconds(finalSeconds);
+                  setIsRunning(false);
+                  setIsTaskLocked(false);
+                  await onCompleteCurrentTask(finalSeconds);
+                }}
+                disabled={!onCompleteCurrentTask}
+                className="mt-0.5 shrink-0 text-blue-500 disabled:cursor-default"
+                title="Mark current task completed and save actual time"
+                aria-label="Mark current task completed and save actual time"
+              >
+                <Circle className="w-3.5 h-3.5" />
+              </button>
               <span className="text-[11px] leading-snug font-semibold text-slate-800 dark:text-slate-100 break-words line-clamp-2" title={currentTaskTitle}>
                 {currentTaskTitle}
               </span>

@@ -16,6 +16,7 @@ import {
 } from '../utils/taskDateUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { isHabitDue } from '../utils/habitUtils';
+import { DayProgressMoment } from './DayProgressMoment';
 
 interface DayReviewModalProps {
   isOpen: boolean;
@@ -163,10 +164,16 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
         reviewedHabits.push(reviewedHabit);
       }
 
-      await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
-      // Marking the day is the final step; close immediately instead of
-      // showing a second completion/result popup.
-      onClose();
+      const status = await onSubmitTaskDay(todayDateKey, reviewedTasks, reviewedHabits);
+      setResult({
+        status,
+        completedTaskCount: reviewedTasks.filter((task) => task.isCompleted).length,
+        totalTaskCount: reviewedTasks.length,
+        completedHabitCount: reviewedHabits.filter((habit) =>
+          habit.checkIns.includes(todayDateKey)
+        ).length,
+        totalHabitCount: reviewedHabits.length,
+      });
     } catch (err: any) {
       setError(err?.message || 'Unable to mark the day. Please try again.');
     } finally {
@@ -376,44 +383,19 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                   </button>
 
                   <p className="mt-2 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                    All tasks and due habits checked = Completed. Any unchecked item = Not Completed.
+                    All tasks checked = Completed Day. Habits are tracked separately.
                   </p>
                 </div>
               </>
             ) : (
-              <div className="p-5 text-center">
-                <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center ${
-                  result.status === 'COMPLETED'
-                    ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600'
-                    : 'bg-amber-100 dark:bg-amber-950/50 text-amber-600'
-                }`}>
-                  <CheckCircle2 className="w-7 h-7" />
-                </div>
-                <h2 className="mt-3 text-xl font-black">
-                  Day marked {result.status === 'COMPLETED' ? 'Completed' : 'Not Completed'}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  {result.completedTaskCount} of {result.totalTaskCount} tasks completed.{' '}
-                  {result.completedHabitCount} of {result.totalHabitCount} habits checked in.
-                </p>
-
-                <div className="grid grid-cols-2 gap-2 mt-5">
-                  <button
-                    type="button"
-                    onClick={exitReview}
-                    className="min-h-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-black text-sm"
-                  >
-                    Exit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goToDashboard}
-                    className="min-h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm"
-                  >
-                    Go to Dashboard
-                  </button>
-                </div>
-              </div>
+              <DayProgressMoment
+                status={result.status}
+                completedTaskCount={result.completedTaskCount}
+                totalTaskCount={result.totalTaskCount}
+                completedHabitCount={result.completedHabitCount}
+                totalHabitCount={result.totalHabitCount}
+                onContinue={exitReview}
+              />
             )}
           </motion.div>
         </motion.div>

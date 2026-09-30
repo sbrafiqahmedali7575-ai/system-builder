@@ -15,13 +15,18 @@ export const SystemBuilderLogo: React.FC<SystemBuilderLogoProps> = ({
 
   return (
     <motion.div
+      whileHover={shouldAnimate ? {scale:1.08, rotateX:-7, rotateY:9, y:-2} : undefined}
+      whileTap={shouldAnimate ? {scale:.94, rotateX:2, rotateY:-2} : undefined}
+      style={{transformPerspective: 700}}
       className={`relative flex flex-none items-center justify-center overflow-hidden rounded-[28%] ring-1 ring-white/75 shadow-[0_10px_26px_rgba(79,70,229,0.18)] dark:ring-white/15 dark:shadow-[0_10px_26px_rgba(49,46,129,0.34)] ${className}`}
-      initial={shouldAnimate ? {scale: 0.82, rotate: -7} : false}
+      initial={shouldAnimate ? {scale: 0.78, rotate: -8, rotateX: 10, rotateY: -12} : false}
       animate={
         shouldAnimate
           ? {
               scale: [0.82, 1.06, 1],
-              rotate: [-7, 2, 0],
+              rotate: [-8, 2, 0],
+              rotateX: [10, -4, 0],
+              rotateY: [-12, 5, 0],
               boxShadow: [
                 '0 10px 26px rgba(79,70,229,0.16)',
                 '0 14px 32px rgba(79,70,229,0.30)',

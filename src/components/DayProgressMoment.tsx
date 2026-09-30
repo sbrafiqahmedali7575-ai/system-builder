@@ -490,7 +490,7 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
             </motion.p>
 
             <motion.div
-              className={`relative mt-4 overflow-hidden rounded-2xl border-2 p-4 text-left ${
+              className={`relative mt-4 hidden overflow-hidden rounded-2xl border-2 p-4 text-left md:block ${
                 isCompleted
                   ? 'border-emerald-400 bg-gradient-to-br from-white via-emerald-50 to-blue-50 shadow-[0_18px_42px_rgba(16,185,129,0.18)] dark:border-emerald-600 dark:from-slate-900 dark:via-emerald-950/35 dark:to-blue-950/35'
                   : 'border-indigo-400 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-[0_18px_42px_rgba(79,70,229,0.22)] dark:border-indigo-600 dark:from-slate-900 dark:via-indigo-950/35 dark:to-blue-950/35'

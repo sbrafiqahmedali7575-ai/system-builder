@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
@@ -262,6 +263,20 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
   const [deletingTask, setDeletingTask] = useState<TaskItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!deletingTask || typeof document === 'undefined') return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isDeleting) setDeletingTask(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [deletingTask, isDeleting]);
 
   // General feedback status (e.g. "Saving...")
   const [savingStatusMsg, setSavingStatusMsg] = useState<string | null>(null);
@@ -1246,56 +1261,56 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           7. DELETE TASK CONFIRMATION MODAL
       ───────────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {deletingTask && (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Delete task">
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {deletingTask && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-sm max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border p-3 shadow-2xl transition-all ${
-                isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-              }`}
+              className="fixed inset-0 z-[500] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/60 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xs"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Delete task"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget && !isDeleting) setDeletingTask(null);
+              }}
             >
-              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-1.5">
-                <Trash2 className="w-5 h-5" />
-              </div>
-
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-0.5">
-                Delete Task?
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                Are you sure you want to delete <span className="font-semibold text-slate-700 dark:text-slate-200">&ldquo;{deletingTask.taskOfTheDay}&rdquo;</span>? This action cannot be undone.
-              </p>
-
-              {deleteError && (
-                <div className="mb-1.5 p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs">
-                  {deleteError}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                className={`my-auto w-full max-w-sm max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl border p-4 shadow-2xl ${
+                  isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+                }`}
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-2">
+                  <Trash2 className="w-5 h-5" />
                 </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={() => setDeletingTask(null)}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={handleConfirmDelete}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-rose-500 active:bg-rose-700 disabled:opacity-50 cursor-pointer"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete Task'}
-                </button>
-              </div>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-1">Delete Task?</h3>
+                <p className="text-sm leading-5 text-slate-500 dark:text-slate-400 mb-3">
+                  Are you sure you want to delete <span className="font-semibold text-slate-700 dark:text-slate-200">&ldquo;{deletingTask.taskOfTheDay}&rdquo;</span>? This action cannot be undone.
+                </p>
+                {deleteError && (
+                  <div className="mb-3 p-2 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs">
+                    {deleteError}
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" disabled={isDeleting} onClick={() => setDeletingTask(null)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 active:bg-slate-100 dark:active:bg-slate-800 disabled:opacity-50">
+                    Cancel
+                  </button>
+                  <button type="button" disabled={isDeleting} onClick={handleConfirmDelete} className="inline-flex min-h-12 items-center justify-center rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white active:bg-rose-700 disabled:opacity-50">
+                    {isDeleting ? 'Deleting...' : 'Delete Task'}
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 };

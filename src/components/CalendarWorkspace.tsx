@@ -410,7 +410,7 @@ export const CalendarWorkspace: React.FC<CalendarWorkspaceProps> = ({
         </label>
       </div>}
 
-      <div className="relative flex-1 min-h-0 overflow-auto pb-10 sm:pb-20">
+      <div className="relative flex-1 min-h-0 overflow-auto pb-20 md:pb-4">
         {view === 'year' && (
           <CalendarYearView
             year={cursor.getUTCFullYear()}

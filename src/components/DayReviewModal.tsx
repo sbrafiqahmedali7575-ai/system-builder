@@ -66,6 +66,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
     totalTaskCount: number;
     completedHabitCount: number;
     totalHabitCount: number;
+    nextTaskTitle: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -173,6 +174,8 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
           habit.checkIns.includes(todayDateKey)
         ).length,
         totalHabitCount: reviewedHabits.length,
+        nextTaskTitle:
+          reviewedTasks.find((task) => !task.isCompleted)?.taskOfTheDay ?? null,
       });
     } catch (err: any) {
       setError(err?.message || 'Unable to mark the day. Please try again.');
@@ -394,6 +397,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
                 totalTaskCount={result.totalTaskCount}
                 completedHabitCount={result.completedHabitCount}
                 totalHabitCount={result.totalHabitCount}
+                nextTaskTitle={result.nextTaskTitle}
                 onContinue={exitReview}
               />
             )}

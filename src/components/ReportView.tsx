@@ -414,6 +414,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   actualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
                 });
               }}
+              onCompleteCurrentTask={async (elapsedSeconds) => {
+                if (!currentFocusTask || currentFocusTask.isCompleted) return;
+                await onUpdateTask({
+                  ...currentFocusTask,
+                  actualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
+                });
+                await onToggleTaskStatus(currentFocusTask.id);
+              }}
               onOpenCountdown={openCountdownEditor}
               focusMode={focusMode}
             />

@@ -193,10 +193,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     return { taskScore, habitScore, strongest, weakest };
   }, [tasks, habits, currentDateKey]);
 
-  // Split for progress counts, then display in Eisenhower quadrant order:
-  // I → II → III → unassigned → IV. Within each group, incomplete tasks stay above completed tasks.
-  const incompleteTasks = useMemo(() => dateTasks.filter((t) => !t.isCompleted), [dateTasks]);
-  const completedTasks = useMemo(() => dateTasks.filter((t) => t.isCompleted), [dateTasks]);
+  // Sort each date by Eisenhower quadrant, then keep the execution view simple:
+  // incomplete tasks first, completed tasks below. Relative order stays stable within a quadrant.
   const sortedTasks = useMemo(
     () =>
       dateTasks
@@ -206,16 +204,18 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             taskQuadrantSortRank(a.task.matrixQuadrant) -
             taskQuadrantSortRank(b.task.matrixQuadrant);
 
-          if (quadrantDiff !== 0) return quadrantDiff;
-
-          if (a.task.isCompleted !== b.task.isCompleted) {
-            return a.task.isCompleted ? 1 : -1;
-          }
-
-          return a.index - b.index;
+          return quadrantDiff !== 0 ? quadrantDiff : a.index - b.index;
         })
         .map(({ task }) => task),
     [dateTasks]
+  );
+  const incompleteTasks = useMemo(
+    () => sortedTasks.filter((task) => !task.isCompleted),
+    [sortedTasks]
+  );
+  const completedTasks = useMemo(
+    () => sortedTasks.filter((task) => task.isCompleted),
+    [sortedTasks]
   );
 
   const totalTasksCount = dateTasks.length;
@@ -655,8 +655,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <AnimatePresence initial={false}>
             {[...incompleteTasks, ...completedTasks].map((task, taskIndex) => {
               const isTaskCompleted = task.isCompleted;
-              const quadrantMeta = getTaskQuadrantMeta(task.matrixQuadrant);
-              const priorityLabel = task.priority || 'Normal';
 
               const showCompletedHeading = taskIndex === incompleteTasks.length && completedTasks.length > 0;
 
@@ -690,6 +688,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         type="button"
                         role="checkbox"
                         aria-checked={isTaskCompleted}
+                        aria-label={`${isTaskCompleted ? 'Mark incomplete' : 'Mark completed'}: ${task.taskOfTheDay}`}
                         onClick={() => handleToggleTask(task)}
                         className="relative -mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-0 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:mt-0 sm:h-7 sm:w-7 sm:rounded-lg"
                         title={

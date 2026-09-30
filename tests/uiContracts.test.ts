@@ -311,6 +311,19 @@ assert.ok(
 );
 
 assert.ok(
+  !books.includes('>Spacing</button>') &&
+    !books.includes('Width: {readerWidth}') &&
+    !books.includes('setReaderWidth') &&
+    !books.includes('setLineHeight'),
+  'Books reader must not expose or retain spacing/width controls.'
+);
+assert.ok(
+  books.includes("const widthClass = 'max-w-[1080px]';") &&
+    books.includes('lineHeight:1.9'),
+  'Books reader must keep a fixed wide layout with normal reading spacing.'
+);
+
+assert.ok(
   books.includes('const renderHighlightedText = (text: string, sectionId: string): React.ReactNode =>'),
   'Saved reader highlights must render back into matching reader text.'
 );

@@ -1,4 +1,5 @@
 import { DailyRecord, KPIStats } from '../types';
+import { calculateCalendarStreakStats } from './progressAnalytics';
 
 export interface DaxMeasure {
   id: string;
@@ -76,7 +77,7 @@ export const DAX_MEASURES: DaxMeasure[] = [
   }
 ];
 
-export function calculateKPIStats(records: DailyRecord[]): KPIStats {
+export function calculateKPIStats(records: DailyRecord[], currentDateKey?: string): KPIStats {
   if (records.length === 0) {
     return {
       totalDays: 0,
@@ -102,49 +103,9 @@ export function calculateKPIStats(records: DailyRecord[]): KPIStats {
   const netChange = records.reduce((sum, r) => sum + (Number(r.change) || 0), 0);
   const avgChange = totalDays > 0 ? netChange / totalDays : 0;
 
-  // Default streak calculation (No rules: consecutive completed days)
-  const sorted = [...records].sort((a, b) => a.day - b.day);
-  let currentStreak = 0;
-  if (sorted.length > 0) {
-    const lastIdx = sorted.length - 1;
-    let startIdx = lastIdx;
+  const { currentStreak, maxStreak } =
+    calculateCalendarStreakStats(records, currentDateKey);
 
-    if (sorted[lastIdx].isCompleted) {
-      startIdx = lastIdx;
-    } else if (lastIdx > 0 && sorted[lastIdx - 1].isCompleted) {
-      // If current latest day is pending, streak from previous day is active
-      startIdx = lastIdx - 1;
-    } else {
-      startIdx = -1;
-    }
-
-    if (startIdx >= 0) {
-      for (let i = startIdx; i >= 0; i--) {
-        if (sorted[i].isCompleted) {
-          currentStreak++;
-        } else {
-          break;
-        }
-      }
-    }
-  }
-
-  // Max streak: longest unbroken run of completed days
-  let maxStreak = 0;
-  let running = 0;
-  for (const r of sorted) {
-    if (r.isCompleted) {
-      running++;
-      if (running > maxStreak) {
-        maxStreak = running;
-      }
-    } else {
-      running = 0;
-    }
-  }
-  if (currentStreak > maxStreak) {
-    maxStreak = currentStreak;
-  }
 
   // Skills breakdown
   const skillCounts: Record<string, number> = {};

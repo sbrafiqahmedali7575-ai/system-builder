@@ -14,6 +14,8 @@ const pomodoro = read('src/components/PomodoroTimer.tsx');
 const report = read('src/components/ReportView.tsx');
 const lifecycle = read('src/hooks/useSystemDataLifecycle.ts');
 const dayReview = read('src/components/DayReviewModal.tsx');
+const migration = read('src/services/dataModelMigration.ts');
+const firebaseService = read('src/services/firebaseService.ts');
 const badge = read('src/components/BadgeCelebration.tsx');
 
 // Mobile modal safety: interactive dialogs must render above the fixed bottom nav (z-[140])
@@ -440,3 +442,10 @@ assert.ok(pomodoro.includes('setIsTaskLocked(true);'), 'A failed focused-task co
 assert.ok(lifecycle.includes("(a.ActualTime || '') === (b.ActualTime || '')"), 'Pending task sync must compare ActualTime before accepting cloud snapshots.');
 assert.ok(lifecycle.includes("(a.EstimationTime || '') === (b.EstimationTime || '')"), 'Pending task sync must compare EstimationTime before accepting cloud snapshots.');
 assert.equal(dayReview.includes('openedFromEmail'), false, 'Day review must not contain legacy email navigation behavior.');
+
+
+// End-to-end data integrity contracts.
+assert.equal(migration.includes("email:"), false, 'Single-user migration must not recreate removed email data.');
+assert.ok(firebaseService.includes('Duplicate habit rejected'), 'Firestore habit creation must reject duplicate habit records.');
+assert.ok(firebaseService.includes("transaction.get(habitRef)"), 'Habit creation must guard duplicate IDs transactionally.');
+assert.ok(firebaseService.includes('Duplicate task rejected'), 'Task creation must retain duplicate task rejection.');

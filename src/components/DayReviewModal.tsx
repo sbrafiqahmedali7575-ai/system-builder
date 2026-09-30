@@ -249,27 +249,7 @@ export const DayReviewModal: React.FC<DayReviewModalProps> = ({
   };
 
   const exitReview = () => {
-    const openedFromEmail =
-      typeof window !== 'undefined' &&
-      new URLSearchParams(window.location.search).get('review') === '1';
-
-    if (!openedFromEmail) {
-      onClose();
-      return;
-    }
-
-    // Email review links open in the same browsing context when possible,
-    // so Back returns to the message that launched the review.
-    if (window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-
-    // Fallback for email clients that opened the review in a separate tab/window.
-    window.close();
-    window.setTimeout(() => {
-      if (!window.closed) onClose();
-    }, 150);
+    onClose();
   };
 
   const goToDashboard = () => {

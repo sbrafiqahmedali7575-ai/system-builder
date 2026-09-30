@@ -199,8 +199,22 @@ assert.ok(
 );
 
 assert.ok(
-  dayProgress.includes('relative mt-4 hidden overflow-hidden rounded-2xl border-2 p-4 text-left md:block'),
-  'Your next move card must stay hidden on mobile and return at the desktop/tablet breakpoint.'
+  !dayProgress.includes('Your next move'),
+  'Day result popups must not render the next-move card on any screen size.'
+);
+assert.ok(
+  !dayProgress.includes('sm:max-w-xl') &&
+    !dayProgress.includes('sm:grid-cols-4') &&
+    !dayProgress.includes('sm:p-6') &&
+    !dayProgress.includes('md:block'),
+  'Completed and Not Completed result content must keep the same compact mobile layout on desktop.'
+);
+const dayReviewModal = read('src/components/DayReviewModal.tsx');
+assert.ok(
+  dayReviewModal.includes("? 'max-w-md rounded-2xl max-h-[calc(100dvh-1.5rem)]'") &&
+    !dayReviewModal.includes('sm:max-w-xl') &&
+    !dayReviewModal.includes('lg:max-w-2xl'),
+  'Day result modal width and height must remain identical across mobile and desktop.'
 );
 
 // Other full-screen overlays must stay above the fixed mobile navigation.

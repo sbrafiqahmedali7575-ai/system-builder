@@ -102,6 +102,109 @@ export const DayProgressMoment: React.FC<DayProgressMomentProps> = ({
   const isCompleted = status === 'COMPLETED';
   const line = useMemo(() => getDayProgressLine(status), [status]);
 
+  if (isCompleted) {
+    return (
+      <div className="relative overflow-hidden p-5 text-center sm:p-6">
+        <motion.div
+          aria-hidden="true"
+          className="absolute inset-x-8 top-16 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent"
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        />
+
+        <motion.div
+          aria-hidden="true"
+          className="absolute top-[61px] size-3 rounded-full bg-emerald-500 shadow-lg"
+          initial={{ left: '12%', opacity: 0, scale: 0.6 }}
+          animate={{ left: '86%', opacity: [0, 1, 1], scale: [0.6, 1, 0.9] }}
+          transition={{ duration: 1.35, ease: [0.22, 1, 0.36, 1] }}
+        />
+
+        <motion.div
+          className="relative mx-auto flex size-16 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-lg shadow-emerald-100/70 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300 dark:shadow-emerald-950/30"
+          initial={{ opacity: 0, y: 10, scale: 0.88 }}
+          animate={{ opacity: 1, y: 0, scale: [0.88, 1.12, 1] }}
+          transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-[-10px] rounded-[22px] border border-emerald-300/70 dark:border-emerald-700/60"
+            initial={{ opacity: 0.8, scale: 0.72 }}
+            animate={{ opacity: 0, scale: 1.35 }}
+            transition={{ delay: 0.28, duration: 0.9, ease: 'easeOut' }}
+          />
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-[-3px] rounded-[18px] border border-emerald-400/50"
+            initial={{ opacity: 0.65, scale: 0.88 }}
+            animate={{ opacity: 0, scale: 1.18 }}
+            transition={{ delay: 0.42, duration: 0.75, ease: 'easeOut' }}
+          />
+          <Check className="size-8" strokeWidth={2.6} />
+
+          <motion.span
+            aria-hidden="true"
+            className="absolute -right-2 -top-2 size-3 rounded-full bg-emerald-400"
+            animate={{ y: [0, -9, -14], opacity: [0, 1, 0], scale: [0.6, 1, 0.6] }}
+            transition={{
+              duration: 1.6,
+              repeat: reduceMotion ? 0 : Infinity,
+              repeatDelay: 0.4,
+            }}
+          />
+          <motion.span
+            aria-hidden="true"
+            className="absolute -left-3 top-4 size-2 rounded-full bg-blue-400"
+            animate={{ x: [0, 8, 16], opacity: [0, 1, 0], scale: [0.6, 1, 0.7] }}
+            transition={{
+              duration: 1.8,
+              repeat: reduceMotion ? 0 : Infinity,
+              repeatDelay: 0.3,
+              delay: 0.25,
+            }}
+          />
+        </motion.div>
+
+        <motion.div
+          className="mx-auto mt-6 grid max-w-sm grid-cols-2 gap-2 sm:max-w-xl sm:grid-cols-4"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.42, duration: 0.4 }}
+        >
+          <AnimatedScore
+            label="Successful Days"
+            before={statsBefore.successfulDays}
+            after={statsAfter.successfulDays}
+            delay={0.58}
+            icon={<Trophy className="size-4" />}
+          />
+          <AnimatedScore
+            label="Current Streak"
+            before={statsBefore.currentStreak}
+            after={statsAfter.currentStreak}
+            delay={0.72}
+            icon={<Flame className="size-4" />}
+          />
+          <AnimatedScore
+            label="Achieved Weeks"
+            before={statsBefore.achievedWeeks}
+            after={statsAfter.achievedWeeks}
+            delay={0.86}
+            icon={<CalendarCheck2 className="size-4" />}
+          />
+          <AnimatedScore
+            label="Best Streak"
+            before={statsBefore.bestStreak}
+            after={statsAfter.bestStreak}
+            delay={1.0}
+            icon={<Sparkles className="size-4" />}
+          />
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden p-5 sm:p-6 text-center">
       <motion.div

@@ -114,6 +114,7 @@ export default function App() {
     new Map()
   );
   const pendingTaskCreateKeysRef = useRef<Set<string>>(new Set());
+  const pendingHabitCreateNamesRef = useRef<Set<string>>(new Set());
   const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [theme, setTheme] = useState<DashboardTheme>('modern');
@@ -448,8 +449,18 @@ export default function App() {
   };
 
   const handleAddHabit = async (habitData: Omit<HabitItem, 'id'>) => {
+    const normalizedName = habitData.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    if (!normalizedName) throw new Error('Habit name cannot be empty.');
+    const duplicateInState = habits.some(
+      (item) => item.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase() === normalizedName
+    );
+    if (duplicateInState || pendingHabitCreateNamesRef.current.has(normalizedName)) {
+      throw new Error(`Duplicate habit rejected: A habit named "${habitData.name.trim()}" already exists.`);
+    }
+    pendingHabitCreateNamesRef.current.add(normalizedName);
     const habit: HabitItem = {
       ...habitData,
+      name: habitData.name.trim().replace(/\s+/g, ' '),
       id: String(Math.max(0, ...habits.map((item) => Number.parseInt(item.id, 10)).filter(Number.isFinite)) + 1),
       updatedAt: new Date().toISOString(),
     };
@@ -466,12 +477,11 @@ export default function App() {
           timestamp: Date.now(),
         });
       } else {
-        setHabits((current) =>
-          current.filter((item) => item.id !== habit.id)
-        );
-        console.error('Error adding habit to cloud:', err);
+        setHabits((current) => current.filter((item) => item.id !== habit.id));
+        throw err;
       }
     } finally {
+      pendingHabitCreateNamesRef.current.delete(normalizedName);
       setIsSyncing(false);
     }
   };

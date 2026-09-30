@@ -52,6 +52,21 @@ export interface TaskItem {
   taskOrder?: number; // Canonical contiguous order within scheduledDate
 }
 
+export interface DayProgressStats {
+  successfulDays: number;
+  currentStreak: number;
+  achievedWeeks: number;
+  bestStreak: number;
+}
+
+export interface DaySubmitResult {
+  status: 'COMPLETED' | 'NOT_COMPLETED';
+  previousStatus: 'COMPLETED' | 'NOT_COMPLETED' | null;
+  isNewSuccess: boolean;
+  statsBefore: DayProgressStats;
+  statsAfter: DayProgressStats;
+}
+
 export type ToolsDensity = 'compact' | 'comfortable';
 
 export type DashboardTheme = 'powerbi' | 'dark' | 'executive' | 'modern';

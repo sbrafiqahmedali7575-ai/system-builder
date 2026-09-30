@@ -334,7 +334,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     const openEnterTasks = () => handleOpenEnterPanel();
     window.addEventListener('system-builder:open-enter-tasks', openEnterTasks);
     return () => window.removeEventListener('system-builder:open-enter-tasks', openEnterTasks);
-  }, []);
+  }, [activeDateTab]);
 
   // Preserve keyboard-first desktop entry without forcing the mobile visual viewport
   // to resize as soon as the Enter Tasks panel opens.
@@ -898,7 +898,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         if (panelError) setPanelError(null);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Escape') handleCloseEnterPanel();
+                        if (e.key === 'Escape' && !isAddingTask) handleCloseEnterPanel();
                       }}
                       className={`w-full h-8 px-2 rounded-lg border text-sm focus:outline-none transition ${
                         isDark
@@ -997,12 +997,13 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <div className="flex items-center justify-end pt-1.5 border-t border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
+                    disabled={isAddingTask}
                     onClick={() => {
-                      setIsEnterPanelOpen(false);
-                      // Switch main view to the target date so user sees the newly added tasks!
+                      // Switch main view to the target date so the user sees newly added tasks.
                       setActiveDateTab(panelDateTab);
+                      handleCloseEnterPanel();
                     }}
-                    className="px-2 py-1 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 text-white font-semibold text-xs cursor-pointer transition"
+                    className="px-2 py-1 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 text-white font-semibold text-xs cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Done
                   </button>

@@ -635,7 +635,8 @@ export default function App() {
   };
 
   // Submit the current-day review into the records table.
-  // All tasks and all habits due today checked => Completed.
+  // IsdayCompleted is task-driven: all scheduled tasks checked => Completed.
+  // Habits are still reviewed and stored, but do not decide the day result.
   const handleSubmitTaskDay = async (
     dateKey: string,
     dayTasks: TaskItem[],
@@ -658,10 +659,8 @@ export default function App() {
       habit.checkIns.includes(dateKey)
     ).length;
     const allTasksCompleted =
-      dayTasks.length === 0 || completedTaskCount === dayTasks.length;
-    const allHabitsCompleted =
-      dayHabits.length === 0 || completedHabitCount === dayHabits.length;
-    const allCompleted = allTasksCompleted && allHabitsCompleted;
+      dayTasks.length > 0 && completedTaskCount === dayTasks.length;
+    const allCompleted = allTasksCompleted;
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
     const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;

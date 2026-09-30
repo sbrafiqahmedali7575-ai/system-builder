@@ -238,6 +238,50 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
     return id;
   };
 
+  const renderHighlightedText = (text: string, sectionId: string): React.ReactNode => {
+    const matches = (highlights[activeBookId] || [])
+      .map((highlight) => ({
+        highlight,
+        start: highlight.text ? text.indexOf(highlight.text) : -1,
+      }))
+      .filter(({ highlight, start }) => highlight.sectionId === sectionId && start >= 0)
+      .sort((a, b) => a.start - b.start || b.highlight.text.length - a.highlight.text.length);
+
+    if (matches.length === 0) return text;
+
+    const nodes: React.ReactNode[] = [];
+    let cursor = 0;
+
+    for (const { highlight, start } of matches) {
+      if (start < cursor) continue;
+      if (start > cursor) nodes.push(text.slice(cursor, start));
+
+      const end = start + highlight.text.length;
+      const colorClass =
+        highlight.color === 'yellow'
+          ? 'bg-yellow-200/90 dark:bg-yellow-500/35'
+          : highlight.color === 'blue'
+          ? 'bg-blue-200/90 dark:bg-blue-500/35'
+          : highlight.color === 'pink'
+          ? 'bg-pink-200/90 dark:bg-pink-500/35'
+          : 'bg-green-200/90 dark:bg-green-500/35';
+
+      nodes.push(
+        <mark
+          key={`${highlight.id}-${start}`}
+          className={`rounded px-0.5 text-inherit ${colorClass}`}
+          title={highlight.note || 'Saved highlight'}
+        >
+          {text.slice(start, end)}
+        </mark>
+      );
+      cursor = end;
+    }
+
+    if (cursor < text.length) nodes.push(text.slice(cursor));
+    return <>{nodes}</>;
+  };
+
   const toggleBookmark = (id: string) =>
     setBookmarks((prev) => ({
       ...prev,
@@ -835,15 +879,15 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
             {isResearch && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" data-reader-content="true" onPointerUp={captureSelection} onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 120)} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
               <section className={`${widthClass} mx-auto`}>
-                <div id="research-intro" data-reader-section="true" className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · {researchEdition.readingTime}</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{researchEdition.access}</p></div>
-                <div className="space-y-10">{researchEdition.sections.map((section,i)=><section key={section.title} id={`research-${i}`} data-reader-section="true" className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl sm:text-2xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.paragraphs.map((x,j)=><p key={j}>{x}</p>)}</div>{section.items && <ul className="mt-5 space-y-3">{section.items.map(x=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">• {x}</li>)}</ul>}</section>)}</div>
+                <div id="research-intro" data-reader-section="true" className="mb-8"><span className="inline-flex rounded-full bg-violet-600 text-white px-3 py-1 text-xs font-semibold">Research Version · {researchEdition.readingTime}</span><h3 className="mt-4 text-2xl font-semibold">Deep Research Companion</h3><p className={`mt-4 text-sm leading-7 ${mutedText}`}>{renderHighlightedText(researchEdition.access, 'research-intro')}</p></div>
+                <div className="space-y-10">{researchEdition.sections.map((section,i)=><section key={section.title} id={`research-${i}`} data-reader-section="true" className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl sm:text-2xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.paragraphs.map((x,j)=><p key={j}>{renderHighlightedText(x, `research-${i}`)}</p>)}</div>{section.items && <ul className="mt-5 space-y-3">{section.items.map(x=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">• {renderHighlightedText(x, `research-${i}`)}</li>)}</ul>}</section>)}</div>
               </section>
             </div>}
 
             {isFullStudy && <div className="px-4 sm:px-8 lg:px-12 py-6 sm:py-10" data-reader-content="true" onPointerUp={captureSelection} onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 120)} style={{fontSize:`${fontScale}rem`,fontFamily,lineHeight}}>
-              <section className={`${widthClass} mx-auto`}><div id="full-intro" data-reader-section="true" className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {fullStudy[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{fullStudy[activeBookId].introduction.map((x,i)=><p key={i}>{x}</p>)}</div></div>
-              <div className="space-y-8">{fullStudy[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} data-reader-section="true" className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{x}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {x}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {x}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {x}</li>)}</ol></section>)}</div>
-              <section id="full-final" data-reader-section="true" className="mt-10 scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{fullStudy[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {x}</li>)}</ol></section></section>
+              <section className={`${widthClass} mx-auto`}><div id="full-intro" data-reader-section="true" className="mb-8"><span className="inline-flex rounded-full bg-blue-600 text-white px-3 py-1 text-xs font-semibold">Full Study Version · {fullStudy[activeBookId].readingMinutes}</span><h3 className="mt-4 text-2xl font-semibold">Extended Reading Companion</h3><div className="mt-4 space-y-4">{fullStudy[activeBookId].introduction.map((x,i)=><p key={i}>{renderHighlightedText(x, 'full-intro')}</p>)}</div></div>
+              <div className="space-y-8">{fullStudy[activeBookId].sections.map((section,i)=><section key={section.title} id={`full-${i}`} data-reader-section="true" className="scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">{section.title}</h3><div className="mt-4 space-y-4">{section.reading.map((x,j)=><p key={j}>{renderHighlightedText(x, `full-${i}`)}</p>)}</div><h4 className="mt-6 text-sm font-semibold">Applications</h4><ul className="mt-2 space-y-2 text-sm">{section.applications.map(x=><li key={x}>• {renderHighlightedText(x, `full-${i}`)}</li>)}</ul><h4 className="mt-6 text-sm font-semibold">Practice & Action</h4><ol className="mt-2 space-y-2 text-sm">{section.exercises.map((x,j)=><li key={x}>{j+1}. {renderHighlightedText(x, `full-${i}`)}</li>)}</ol><h4 className="mt-6 text-sm font-semibold">Review Questions</h4><ol className="mt-2 space-y-2 text-sm">{section.review.map((x,j)=><li key={x} className="rounded-lg bg-black/[0.03] px-3 py-2">{j+1}. {renderHighlightedText(x, `full-${i}`)}</li>)}</ol></section>)}</div>
+              <section id="full-final" data-reader-section="true" className="mt-10 scroll-mt-32 border-t border-black/10 pt-7"><h3 className="text-xl font-semibold">Final Review & 30-Day Transfer</h3><ol className="mt-4 space-y-3">{fullStudy[activeBookId].finalReview.map((x,i)=><li key={x}>{i+1}. {renderHighlightedText(x, 'full-final')}</li>)}</ol></section></section>
             </div>}
 
             {!isFullStudy && !isResearch &&             <div
@@ -866,7 +910,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 </div>
                 <div className="space-y-5 leading-[1.9]">
                   {activeBook.overview.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
+                    <p key={index}>{renderHighlightedText(paragraph, 'overview')}</p>
                   ))}
                 </div>
               </section>
@@ -931,7 +975,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                       >
                         <div className="space-y-4 leading-[1.9] pt-4">
                           {themeItem.explanation.map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
+                            <p key={index}>{renderHighlightedText(paragraph, `theme-${themeIndex}`)}</p>
                           ))}
                         </div>
 
@@ -958,7 +1002,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                                 {example.title}
                               </h5>
                               <p className={`mt-2 text-sm leading-7 ${mutedText}`}>
-                                {example.body}
+                                {renderHighlightedText(example.body, `theme-${themeIndex}`)}
                               </p>
                             </div>
                           ))}
@@ -987,7 +1031,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                                 >
                                   {index + 1}
                                 </span>
-                                <span className="text-sm leading-7">{step}</span>
+                                <span className="text-sm leading-7">{renderHighlightedText(step, `theme-${themeIndex}`)}</span>
                               </div>
                             ))}
                           </div>
@@ -1017,7 +1061,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                 </div>
                 <div className="space-y-5 leading-[1.9]">
                   {activeBook.summary.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
+                    <p key={index}>{renderHighlightedText(paragraph, 'summary')}</p>
                   ))}
                 </div>
 
@@ -1051,7 +1095,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                         >
                           {index + 1}
                         </span>
-                        <span className="text-sm leading-6">{step}</span>
+                        <span className="text-sm leading-6">{renderHighlightedText(step, 'summary')}</span>
                       </div>
                     ))}
                   </div>

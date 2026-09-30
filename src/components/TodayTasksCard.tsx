@@ -782,12 +782,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {isEnterPanelOpen && (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Enter tasks">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className={`pointer-events-auto w-full max-w-lg rounded-3xl border p-3 shadow-2xl transition-all ${
+              className={`pointer-events-auto w-full max-w-lg max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border p-3 shadow-2xl transition-all ${
                 isDark
                   ? 'bg-slate-900 border-slate-700 text-slate-100'
                   : 'bg-white border-slate-200 text-slate-900'
@@ -815,8 +815,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-                      handleCloseEnterPanel();
+                      if (!isAddingTask) handleCloseEnterPanel();
                     }}
+                    disabled={isAddingTask}
                     className="md:hidden inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     Cancel
@@ -826,8 +827,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-                      handleCloseEnterPanel();
+                      if (!isAddingTask) handleCloseEnterPanel();
                     }}
+                    disabled={isAddingTask}
                     className="inline-flex size-8 items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                     aria-label="Exit Enter Tasks"
                     title="Exit"
@@ -1024,12 +1026,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {editingTask && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Edit task">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-md rounded-3xl border p-3 shadow-2xl transition-all ${
+              className={`w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border p-3 shadow-2xl transition-all ${
                 isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
               }`}
             >
@@ -1169,12 +1171,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {deletingTask && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Delete task">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-sm rounded-3xl border p-3 shadow-2xl transition-all ${
+              className={`w-full max-w-sm max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border p-3 shadow-2xl transition-all ${
                 isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
               }`}
             >

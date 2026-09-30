@@ -19,7 +19,7 @@ const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> 
 };
 
 const TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
-  users: ['userId', 'name', 'email'],
+  users: ['userId', 'name'],
   days: [
     'dateKey',
     'tasksCompleted',

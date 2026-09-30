@@ -406,19 +406,19 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 isCompleted: task.isCompleted,
               }))}
               onCurrentTaskChange={setSelectedFocusTaskId}
-              focusElapsedSeconds={parseActualTimeSeconds(currentFocusTask?.actualTime)}
+              focusElapsedSeconds={parseActualTimeSeconds(currentFocusTask?.ActualTime)}
               onFocusElapsedCommit={async (elapsedSeconds) => {
                 if (!currentFocusTask) return;
                 await onUpdateTask({
                   ...currentFocusTask,
-                  actualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
+                  ActualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
                 });
               }}
               onCompleteCurrentTask={async (elapsedSeconds) => {
                 if (!currentFocusTask || currentFocusTask.isCompleted) return;
                 await onUpdateTask({
                   ...currentFocusTask,
-                  actualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
+                  ActualTime: elapsedSeconds > 0 ? formatActualTime(elapsedSeconds) : '',
                 });
                 await onToggleTaskStatus(currentFocusTask.id);
               }}

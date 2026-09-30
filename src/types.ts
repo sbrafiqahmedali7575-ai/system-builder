@@ -71,12 +71,6 @@ export type ToolsDensity = 'compact' | 'comfortable';
 
 export type DashboardTheme = 'powerbi' | 'dark' | 'executive' | 'modern';
 
-export interface FilterState {
-  status: 'ALL' | 'COMPLETED' | 'PENDING';
-  searchQuery: string;
-  dateRange: 'ALL' | '7D' | '14D' | '30D';
-}
-
 export interface KPIStats {
   totalDays: number;
   completedDays: number;

@@ -17,17 +17,7 @@ export function getTodayDateFormatted(): string {
   return `${day}-${month}-${year}`; // e.g. "10-Sep-2026"
 }
 
-export const INITIAL_RECORDS: DailyRecord[] = [
-  {
-    id: 'rec-1',
-    day: 1,
-    date: getTodayDateFormatted(),
-    isCompleted: false,
-    result: 'FALSE',
-    change: 0,
-    notes: '',
-  },
-];
+export const INITIAL_RECORDS: DailyRecord[] = [];
 
 export const SKILL_OPTIONS = [
   'Excel',

@@ -449,3 +449,12 @@ assert.equal(migration.includes("email:"), false, 'Single-user migration must no
 assert.ok(firebaseService.includes('Duplicate habit rejected'), 'Firestore habit creation must reject duplicate habit records.');
 assert.ok(firebaseService.includes("transaction.get(habitRef)"), 'Habit creation must guard duplicate IDs transactionally.');
 assert.ok(firebaseService.includes('Duplicate task rejected'), 'Task creation must retain duplicate task rejection.');
+
+
+// Mobile overlay safety contracts.
+assert.ok(dayReview.includes("document.body.style.overflow = 'hidden'"), 'Day Review must lock background scrolling while open.');
+assert.ok(commandPalette.includes("document.body.style.overflow='hidden'"), 'Command Palette must lock background scrolling while open.');
+assert.ok(commandPalette.includes("env(safe-area-inset-bottom)"), 'Command Palette must respect mobile safe areas.');
+assert.ok(calendarWorkspace.includes("env(safe-area-inset-bottom)"), 'Calendar dialogs must respect mobile safe areas.');
+assert.ok(library.includes("env(safe-area-inset-bottom)"), 'Books note dialog must respect mobile safe areas.');
+assert.ok(report.includes('onCompleteCurrentTask'), 'Focus completion contract must remain wired after modal changes.');

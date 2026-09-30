@@ -573,8 +573,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     >
       {/* Primary execution header */}
       <div className={`${focusMode ? 'hidden' : 'block'} shrink-0 pb-2 mb-1 border-b border-slate-200/80 dark:border-slate-800`}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="min-w-0 flex-1 pr-1">
             <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
             </h2>
@@ -584,15 +584,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           </div>
           <div className="flex items-center gap-1">
             {isSyncing && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />}
-            <button id="btn-add-task-card-header" type="button" onClick={() => handleOpenEnterPanel()} className="h-8 px-2.5 inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold" aria-label="Add Task"><Plus className="w-3.5 h-3.5"/><span className="hidden sm:inline">Add</span></button>
-            <button id="btn-review-task-day" type="button" onClick={onOpenDayReview} disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing} className="h-8 px-2.5 inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Review today's tasks"><CheckCircle2 className="w-3.5 h-3.5"/><span className="hidden sm:inline">Review</span></button>
+            <button id="btn-add-task-card-header" type="button" onClick={() => handleOpenEnterPanel()} className="inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-blue-600 p-0 text-xs font-semibold text-white hover:bg-blue-500 sm:h-8 sm:w-auto sm:rounded-lg sm:px-2.5" aria-label="Add Task"><Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5"/><span className="hidden sm:inline">Add</span></button>
+            <button id="btn-review-task-day" type="button" onClick={onOpenDayReview} disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing} className="inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-xl border border-slate-200 p-0 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-200 sm:h-8 sm:w-auto sm:rounded-lg sm:px-2.5" aria-label="Review today's tasks"><CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5"/><span className="hidden sm:inline">Review</span></button>
           </div>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
           <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5" role="tablist" aria-label="Task date">
-            {(['TODAY','TOMORROW'] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeDateTab===tab} onClick={() => setActiveDateTab(tab)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${activeDateTab===tab?'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm':'text-slate-500 dark:text-slate-400'}`}>{tab==='TODAY'?'Today':'Tomorrow'}</button>)}
+            {(['TODAY','TOMORROW'] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeDateTab===tab} onClick={() => setActiveDateTab(tab)} className={`min-h-9 px-3 py-1 rounded-md text-[11px] font-semibold transition sm:min-h-0 sm:px-2.5 ${activeDateTab===tab?'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm':'text-slate-500 dark:text-slate-400'}`}>{tab==='TODAY'?'Today':'Tomorrow'}</button>)}
           </div>
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">{completedCount} of {totalTasksCount} completed</span>
+          <span className="shrink-0 text-right text-[11px] font-medium tabular-nums text-slate-500 dark:text-slate-400 max-[360px]:text-[10px]">{completedCount} of {totalTasksCount} completed</span>
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" title={`Task completion ${Math.round(taskCompletionPercent)}%`}>
           <div className="h-full rounded-full bg-blue-600 transition-[width] duration-300" style={{ width: `${Math.round(taskCompletionPercent)}%` }} />
@@ -603,7 +603,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       {cardError && (
         <div className="mb-2 p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between">
           <span>{cardError}</span>
-          <button onClick={() => setCardError(null)} className="p-0.5 cursor-pointer">
+          <button type="button" onClick={() => setCardError(null)} className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/40" aria-label="Dismiss task error">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -644,7 +644,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <button
             type="button"
             onClick={() => handleOpenEnterPanel()}
-            className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl font-semibold text-xs shadow-xs transition cursor-pointer"
+            className="inline-flex min-h-10 items-center justify-center space-x-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-500 active:bg-blue-700 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first task</span>
@@ -685,28 +685,33 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'
                     }`}
                   >
-                    <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="flex items-start gap-1.5 sm:gap-3">
                       <button
                         type="button"
                         role="checkbox"
                         aria-checked={isTaskCompleted}
                         onClick={() => handleToggleTask(task)}
-                        className={`mt-[3px] sm:mt-[2px] relative block !h-4 !w-4 min-h-4 min-w-4 max-h-4 max-w-4 aspect-square flex-none self-start p-0 rounded-[4px] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                          isTaskCompleted
-                            ? 'bg-blue-600 text-white shadow-2xs'
-                            : isDark
-                            ? 'border-2 border-slate-600 hover:border-blue-400 bg-slate-900'
-                            : 'border-2 border-slate-300 hover:border-blue-500 bg-white'
-                        }`}
+                        className="relative -mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-0 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:mt-0 sm:h-7 sm:w-7 sm:rounded-lg"
                         title={
                           isTaskCompleted
                             ? 'Mark task as Not completed'
                             : 'Mark task as Completed'
                         }
                       >
-                        {isTaskCompleted && (
-                          <Check className="absolute inset-0 m-auto size-2.5 stroke-[3]" />
-                        )}
+                        <span
+                          className={`relative block size-5 shrink-0 rounded-[5px] transition ${
+                            isTaskCompleted
+                              ? 'bg-blue-600 text-white shadow-2xs'
+                              : isDark
+                              ? 'border-2 border-slate-600 bg-slate-900'
+                              : 'border-2 border-slate-300 bg-white'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {isTaskCompleted && (
+                            <Check className="absolute inset-0 m-auto size-3 stroke-[3]" />
+                          )}
+                        </span>
                       </button>
 
                       <div className="min-w-0 flex-1 pt-px pr-1 sm:pr-0 overflow-hidden">
@@ -736,7 +741,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                                   else next.add(task.id);
                                   return next;
                                 })}
-                                className="mt-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                                className="mt-0.5 inline-flex min-h-8 items-center rounded-lg px-2 text-[10px] font-bold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/30 sm:min-h-0 sm:px-0 sm:hover:bg-transparent sm:hover:underline"
                               >
                                 {expandedNotes.has(task.id) ? 'Less' : 'More'}
                               </button>
@@ -746,11 +751,11 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                       </div>
 
                       <div className="relative shrink-0 -mt-0.5 sm:-mt-1">
-                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="w-8 h-8 sm:w-7 sm:h-7 rounded-md text-slate-400 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center justify-center" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
+                        <button type="button" onClick={() => setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 opacity-100 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:h-7 sm:w-7 sm:rounded-md sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100" aria-label={`More actions for ${task.taskOfTheDay}`} aria-expanded={openTaskMenuId === task.id}>
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {openTaskMenuId === task.id && (
-                          <div className="absolute right-0 top-9 z-30 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
+                          <div className="absolute right-0 top-10 z-30 w-44 max-w-[calc(100vw-2rem)] rounded-xl sm:top-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
                             <button type="button" onClick={() => { setOpenTaskMenuId(null); handleStartEdit(task); }} className="task-menu-item"><Pencil />Edit</button>
                             <button type="button" disabled={copyingTaskIds.has(task.id)} onClick={() => { setOpenTaskMenuId(null); handleCopyToNextDay(task); }} className="task-menu-item"><ArrowRight />Move/copy to next day</button>
                             <button type="button" onClick={() => { setOpenTaskMenuId(null); setDeletingTask(task); setDeleteError(null); }} className="task-menu-item text-rose-600 dark:text-rose-400"><Trash2 />Delete</button>
@@ -776,8 +781,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <span className="font-semibold text-slate-700 dark:text-slate-200">Weekly Review</span>
           <span>Tasks {weeklyReview.taskScore.toFixed(1)}%</span>
           <span>Habits {weeklyReview.habitScore.toFixed(1)}%</span>
-          {weeklyReview.strongest && <span>Strongest: {weeklyReview.strongest.label} {weeklyReview.strongest.rate}%</span>}
-          {weeklyReview.weakest && <span>Needs attention: {weeklyReview.weakest.label} {weeklyReview.weakest.rate}%</span>}
+          {weeklyReview.strongest && <span className="hidden sm:inline">Strongest: {weeklyReview.strongest.label} {weeklyReview.strongest.rate}%</span>}
+          {weeklyReview.weakest && <span className="hidden sm:inline">Needs attention: {weeklyReview.weakest.label} {weeklyReview.weakest.rate}%</span>}
         </div>
       )}
 
@@ -1042,12 +1047,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {editingTask && (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Edit task">
+          <div className="system-stable-modal fixed inset-0 z-[220] flex items-start justify-center overflow-hidden bg-black/60 px-2 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xs sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Edit task">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-3xl border p-3 shadow-2xl transition-all ${
+              className={`w-full max-w-md max-h-[calc(100svh-1.5rem)] overflow-y-auto overscroll-y-contain touch-pan-y rounded-3xl border p-3 shadow-2xl transition-colors sm:max-h-[calc(100dvh-2rem)] ${
                 isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
               }`}
             >
@@ -1057,8 +1062,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </h3>
                 <button
                   type="button"
-                  onClick={() => setEditingTask(null)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  onClick={() => { if (!isSavingEdit) setEditingTask(null); }}
+                  disabled={isSavingEdit}
+                  className="inline-flex size-9 items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1107,7 +1113,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                     type="text"
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    className={`w-full p-1.5 rounded-xl border text-sm focus:outline-none transition ${
+                    className={`w-full min-h-10 px-3 py-2 rounded-xl border text-sm focus:outline-none transition ${
                       isDark
                         ? 'bg-slate-800/80 border-slate-700 text-white focus:border-blue-500'
                         : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-blue-500 focus:bg-white'
@@ -1135,7 +1141,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setEditCompleted(!editCompleted)}
-                    className={`flex items-center space-x-1 w-full p-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                    className={`flex min-h-10 items-center space-x-2 w-full px-3 py-2 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                       editCompleted
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200'
                         : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
@@ -1158,18 +1164,19 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   </div>
                 )}
 
-                <div className="flex items-center justify-end space-x-1 pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-slate-200 dark:border-slate-800 sm:flex sm:items-center sm:justify-end">
                   <button
                     type="button"
-                    onClick={() => setEditingTask(null)}
-                    className="px-2 py-1 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer"
+                    onClick={() => { if (!isSavingEdit) setEditingTask(null); }}
+                    disabled={isSavingEdit}
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl px-3 py-2 text-slate-600 disabled:opacity-50 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingEdit || !editTitle.trim()}
-                    className={`px-2 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer ${
+                    className={`inline-flex min-h-10 items-center justify-center rounded-xl bg-blue-600 px-3 py-2 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer ${
                       isSavingEdit ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   >
@@ -1187,7 +1194,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {deletingTask && (
-          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Delete task">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Delete task">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1213,12 +1220,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center justify-end space-x-1">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
                 <button
                   type="button"
                   disabled={isDeleting}
                   onClick={() => setDeletingTask(null)}
-                  className="px-2 py-1 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer"
+                  className="inline-flex min-h-10 items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1226,7 +1233,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   type="button"
                   disabled={isDeleting}
                   onClick={handleConfirmDelete}
-                  className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-semibold transition cursor-pointer shadow-xs"
+                  className="inline-flex min-h-10 items-center justify-center rounded-xl bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-rose-500 active:bg-rose-700 disabled:opacity-50 cursor-pointer"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete Task'}
                 </button>

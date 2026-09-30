@@ -320,6 +320,15 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
     setIsEnterPanelOpen(true);
   };
 
+  const handleCloseEnterPanel = () => {
+    setNewTaskTitle('');
+    setNewTaskNotes('');
+    setNewTaskQuadrant('');
+    setPanelError(null);
+    setRecentlyAddedInSession([]);
+    setIsEnterPanelOpen(false);
+  };
+
   // Allow global quick-add controls (such as the mobile + button) to open this panel.
   useEffect(() => {
     const openEnterTasks = () => handleOpenEnterPanel();
@@ -773,12 +782,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       ───────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {isEnterPanelOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-2 bg-black/60 backdrop-blur-xs">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className={`w-full max-w-lg rounded-3xl border p-3 shadow-2xl transition-all ${
+              className={`pointer-events-auto w-full max-w-lg rounded-3xl border p-3 shadow-2xl transition-all ${
                 isDark
                   ? 'bg-slate-900 border-slate-700 text-slate-100'
                   : 'bg-white border-slate-200 text-slate-900'
@@ -803,15 +812,23 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => setIsEnterPanelOpen(false)}
-                    className="md:hidden inline-flex h-7 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleCloseEnterPanel();
+                    }}
+                    className="md:hidden inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsEnterPanelOpen(false)}
-                    className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleCloseEnterPanel();
+                    }}
+                    className="inline-flex size-8 items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                     aria-label="Exit Enter Tasks"
                     title="Exit"
                   >
@@ -886,7 +903,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                         if (panelError) setPanelError(null);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Escape') setIsEnterPanelOpen(false);
+                        if (e.key === 'Escape') handleCloseEnterPanel();
                       }}
                       className={`w-full h-8 px-2 rounded-lg border text-sm focus:outline-none transition ${
                         isDark

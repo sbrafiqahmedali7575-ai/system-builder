@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SystemBuilderLogo } from './components/SystemBuilderLogo';
-import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem } from './types';
+import { DailyRecord, FilterState, DashboardTheme, HabitItem, TaskItem, DayProgressStats, DaySubmitResult } from './types';
 import { INITIAL_RECORDS } from './data/initialData';
 import { PowerBiHeader } from './components/PowerBiHeader';
 import { ReportView } from './components/ReportView';
@@ -17,6 +17,7 @@ import { ToastProvider } from './components/ui/ToastProvider';
 import { isTodayDate, standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { getBadgeProgress } from './utils/badgeSystem';
+import { calculateKPIStats } from './utils/daxMeasures';
 import { isHabitDue } from './utils/habitUtils';
 import {
   addRecordToCloud,
@@ -45,6 +46,72 @@ const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
 const TASKS_LEGACY_STORAGE_KEY = 'COMMITDAILY_TASKS_CACHE_V2';
 const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
+
+const calculateAchievedWeeksForTasks = (
+  taskSnapshot: TaskItem[],
+  currentDateKey: string
+): number => {
+  if (taskSnapshot.length === 0) return 0;
+
+  const addDays = (dateKey: string, days: number) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day + days));
+    return [
+      date.getUTCFullYear(),
+      String(date.getUTCMonth() + 1).padStart(2, '0'),
+      String(date.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+  };
+
+  const getMonday = (dateKey: string) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const weekday = date.getUTCDay();
+    return addDays(dateKey, weekday === 0 ? -6 : 1 - weekday);
+  };
+
+  const dailyRate = (dateKey: string) => {
+    const dayTasks = taskSnapshot.filter((task) => task.taskKey === dateKey);
+    if (dayTasks.length === 0) return 0;
+    return (
+      dayTasks.filter((task) => task.isCompleted).length / dayTasks.length
+    ) * 100;
+  };
+
+  const firstTaskDate = taskSnapshot.map((task) => task.taskKey).sort()[0];
+  if (!firstTaskDate) return 0;
+
+  let weekStart = getMonday(firstTaskDate);
+  const currentWeekStart = getMonday(currentDateKey);
+  let achieved = 0;
+  let guard = 0;
+
+  while (weekStart < currentWeekStart && guard < 5200) {
+    const score =
+      Array.from({ length: 7 }, (_, index) => dailyRate(addDays(weekStart, index)))
+        .reduce((sum, rate) => sum + rate, 0) / 7;
+    if (score >= 80) achieved += 1;
+    weekStart = addDays(weekStart, 7);
+    guard += 1;
+  }
+
+  return achieved;
+};
+
+const buildDayProgressStats = (
+  recordSnapshot: DailyRecord[],
+  taskSnapshot: TaskItem[],
+  currentDateKey: string
+): DayProgressStats => {
+  const kpis = calculateKPIStats(recordSnapshot);
+  return {
+    successfulDays: kpis.completedDays,
+    currentStreak: kpis.currentStreak,
+    achievedWeeks: calculateAchievedWeeksForTasks(taskSnapshot, currentDateKey),
+    bestStreak: kpis.maxStreak,
+  };
+};
+
 export default function App() {
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
@@ -641,7 +708,7 @@ export default function App() {
     dateKey: string,
     dayTasks: TaskItem[],
     reviewedHabits?: HabitItem[]
-  ): Promise<'COMPLETED' | 'NOT_COMPLETED'> => {
+  ): Promise<DaySubmitResult> => {
     const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
     if (!areDatesEqual(dateKey, todayDateKey)) {
       throw new Error('Only the current day can be submitted.');
@@ -658,15 +725,28 @@ export default function App() {
     const completedHabitCount = dayHabits.filter((habit) =>
       habit.checkIns.includes(dateKey)
     ).length;
-    const allTasksCompleted =
+    const allCompleted =
       dayTasks.length > 0 && completedTaskCount === dayTasks.length;
-    const allCompleted = allTasksCompleted;
+
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
     const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
     const existingRecord = records.find((record) =>
       areDatesEqual(record.date, formattedDate)
     );
+
+    const previousStatus: DaySubmitResult['previousStatus'] = existingRecord
+      ? existingRecord.isCompleted
+        ? 'COMPLETED'
+        : 'NOT_COMPLETED'
+      : null;
+
+    const statsBefore = buildDayProgressStats(records, tasks, todayDateKey);
+
+    const reviewedTaskMap = new Map(dayTasks.map((task) => [task.id, task]));
+    const tasksAfter = tasks.map((task) => reviewedTaskMap.get(task.id) ?? task);
+
+    let recordsAfter: DailyRecord[];
 
     if (existingRecord) {
       const updatedRecord: DailyRecord = {
@@ -679,10 +759,11 @@ export default function App() {
         updatedAt: nowIso,
       };
 
-      const previousRecords = [...records];
-      setRecords((prev) =>
-        prev.map((record) => (record.id === updatedRecord.id ? updatedRecord : record))
+      recordsAfter = records.map((record) =>
+        record.id === updatedRecord.id ? updatedRecord : record
       );
+      const previousRecords = [...records];
+      setRecords(recordsAfter);
 
       try {
         setIsSyncing(true);
@@ -718,8 +799,9 @@ export default function App() {
         updatedAt: nowIso,
       };
 
+      recordsAfter = [...records, newRecord].sort((a, b) => a.day - b.day);
       const previousRecords = [...records];
-      setRecords((prev) => [...prev, newRecord].sort((a, b) => a.day - b.day));
+      setRecords(recordsAfter);
 
       try {
         setIsSyncing(true);
@@ -741,7 +823,22 @@ export default function App() {
       }
     }
 
-    return allCompleted ? 'COMPLETED' : 'NOT_COMPLETED';
+    const status: DaySubmitResult['status'] = allCompleted
+      ? 'COMPLETED'
+      : 'NOT_COMPLETED';
+    const statsAfter = buildDayProgressStats(
+      recordsAfter,
+      tasksAfter,
+      todayDateKey
+    );
+
+    return {
+      status,
+      previousStatus,
+      isNewSuccess: status === 'COMPLETED' && previousStatus !== 'COMPLETED',
+      statsBefore,
+      statsAfter,
+    };
   };
 
   const handleOpenLibrary = () => {

@@ -668,9 +668,9 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           </div>
         </div>
 
-        <div className="overflow-auto lg:max-h-[calc(100vh-225px)]">
-          <div className="min-w-[790px]">
-            <div className="grid grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200 dark:border-slate-800/80 bg-slate-50">
+        <div className="overflow-auto lg:max-h-[calc(100dvh-225px)]">
+          <div className="min-w-[656px] sm:min-w-[720px] lg:min-w-[790px]">
+            <div className="grid grid-cols-[200px_repeat(7,56px)_64px] sm:grid-cols-[248px_repeat(7,58px)_66px] lg:grid-cols-[300px_repeat(7,1fr)_72px] border-b border-slate-200 dark:border-slate-800/80 bg-slate-50">
               <div className="p-3 text-[10px] uppercase tracking-wider font-semibold text-slate-500">
                 Habit
               </div>
@@ -715,7 +715,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
-                    className={`grid grid-cols-[300px_repeat(7,1fr)_72px] border-b last:border-b-0 border-slate-200 dark:border-slate-800/80 ${
+                    className={`grid grid-cols-[200px_repeat(7,56px)_64px] sm:grid-cols-[248px_repeat(7,58px)_66px] lg:grid-cols-[300px_repeat(7,1fr)_72px] border-b last:border-b-0 border-slate-200 dark:border-slate-800/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
                     }`}
                   >
@@ -851,7 +851,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
             </button>
           </div>
 
-          <div className={`${compact ? 'p-3 space-y-3 lg:max-h-[calc(100vh-195px)]' : 'p-4 space-y-4 lg:max-h-[calc(100vh-220px)]'} lg:overflow-y-auto`}>
+          <div className={`${compact ? 'p-3 space-y-3 lg:max-h-[calc(100dvh-195px)]' : 'p-4 space-y-4 lg:max-h-[calc(100dvh-220px)]'} lg:overflow-y-auto`}>
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
                 <Flame className="w-4 h-4 text-orange-500" />

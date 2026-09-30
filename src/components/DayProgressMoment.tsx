@@ -36,7 +36,7 @@ const AnimatedScore: React.FC<{
       delay,
       duration: delta === 0 ? 0.35 : 0.9,
       ease: [0.16, 1, 0.3, 1],
-      onUpdate: (value) => setDisplayValue(Math.round(value)),
+      onUpdate: (value) => setDisplayValue(Math.round(Number(value))),
     });
     return () => controls.stop();
   }, [before, after, delay, delta]);

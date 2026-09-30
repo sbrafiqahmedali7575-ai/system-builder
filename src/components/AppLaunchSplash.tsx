@@ -2,58 +2,19 @@ import React, {useEffect, useState} from 'react';
 import {motion, AnimatePresence} from 'framer-motion';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
-const CONTROL_SECTIONS = [
-  {
-    eyebrow: 'Some things are under your control:',
-    lines: [
-      'your effort,',
-      'preparation,',
-      'attitude,',
-      'response,',
-      'habits,',
-      'decisions,',
-      'persistence.',
-    ],
-  },
-  {
-    eyebrow: 'Other things are not:',
-    lines: [
-      "other people's opinions,",
-      'economic conditions,',
-      'whether someone likes you,',
-      'company decisions,',
-      'competition,',
-      'unexpected events,',
-      'the past.',
-    ],
-  },
-  {
-    eyebrow: '',
-    lines: [
-      'You suffer unnecessarily when you try to control the second category.',
-    ],
-  },
-  {
-    eyebrow: 'Why it matters',
-    lines: [
-      'Your mental energy is limited.',
-      'Every minute spent worrying about something uncontrollable is energy unavailable for something you can influence.',
-    ],
-  },
-] as const;
-
-const SECTION_TIMINGS = [
-  { delay: 0.65, duration: 3.55 },
-  { delay: 4.05, duration: 3.55 },
-  { delay: 7.45, duration: 2.85 },
-  { delay: 10.15, duration: 4.95 },
+const CONTROL_LINES = [
+  'Focus on what you can control.',
+  'Choose your perception.',
+  'Direct your effort.',
+  'Own your response.',
+  'Take the next useful action.',
 ] as const;
 
 export const AppLaunchSplash: React.FC = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(false), 16000);
+    const timer = window.setTimeout(() => setVisible(false), 10000);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -63,107 +24,90 @@ export const AppLaunchSplash: React.FC = () => {
         <motion.div
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(219,234,254,0.9),transparent_34%),radial-gradient(circle_at_82%_76%,rgba(237,233,254,0.85),transparent_38%),linear-gradient(145deg,#f8fbff_0%,#ffffff_48%,#faf7ff_100%)] text-slate-900"
           initial={{opacity: 1}}
-          exit={{opacity: 0, scale: 1.018}}
+          exit={{opacity: 0, scale: 1.02}}
           transition={{duration: 0.42, ease: [0.16, 1, 0.3, 1]}}
           aria-label="System Builder launch screen"
         >
           <motion.div
-            className="flex h-full w-full max-w-sm flex-col items-center px-5 pb-6 pt-8 text-center md:max-w-md md:px-8 md:pb-8 md:pt-10"
-            initial={{opacity: 0, y: 10, scale: 0.985}}
+            className="flex w-full max-w-xs flex-col items-center px-6 text-center md:max-w-sm md:px-8"
+            initial={{opacity: 0, y: 12, scale: 0.98}}
             animate={{opacity: 1, y: 0, scale: 1}}
             transition={{duration: 0.45, ease: [0.16, 1, 0.3, 1]}}
           >
-            <div className="flex shrink-0 flex-col items-center">
-              <SystemBuilderLogo className="size-12 rounded-2xl text-lg md:size-14 md:text-xl" animated />
-              <motion.h1
-                className="mt-2 text-xl font-semibold tracking-tight md:text-2xl"
-                initial={{opacity: 0, y: 4}}
-                animate={{opacity: 1, y: 0}}
-                transition={{delay: 0.08, duration: 0.3}}
-              >
-                System Builder
-              </motion.h1>
+            <SystemBuilderLogo className="size-14 rounded-2xl text-xl md:size-16 md:text-2xl" animated />
 
-              <motion.div
-                className="mt-2 flex flex-col items-center"
-                initial={{opacity: 0}}
-                animate={{opacity: 1}}
-                transition={{duration: 0.3}}
-                aria-label="Developed by Rafiq Ahmed"
-              >
-                <span className="text-[8px] font-bold uppercase leading-none tracking-[0.22em] text-slate-400 md:text-[9px]">
-                  DEVELOPED BY
-                </span>
-                <span className="mt-1 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-clip-text text-[12px] font-extrabold leading-none tracking-[0.09em] text-transparent md:text-[13px]">
-                  RAFIQ AHMED
-                </span>
-              </motion.div>
-            </div>
+            <motion.h1
+              className="mt-3 text-2xl font-semibold tracking-tight md:text-[28px]"
+              initial={{opacity: 0}}
+              animate={{opacity: 1}}
+              transition={{delay: 0.12, duration: 0.3}}
+            >
+              System Builder
+            </motion.h1>
 
-            <div className="relative mt-5 min-h-0 w-full flex-1">
-              <div className="absolute inset-0 overflow-hidden rounded-3xl border border-indigo-100/90 bg-white/86 shadow-[0_18px_48px_rgba(79,70,229,0.10)] backdrop-blur-sm">
+            <motion.div
+              className="mt-2 flex flex-col items-center"
+              initial={{opacity: 0}}
+              animate={{opacity: 1}}
+              transition={{duration: 0.3}}
+              aria-label="Developed by Rafiq Ahmed"
+            >
+              <span className="text-[8px] font-bold uppercase leading-none tracking-[0.22em] text-slate-400 md:text-[9px]">
+                DEVELOPED BY
+              </span>
+              <span className="mt-1 bg-gradient-to-r from-blue-600 via-violet-600 to-indigo-600 bg-clip-text text-[12px] font-extrabold leading-none tracking-[0.09em] text-transparent md:text-[13px]">
+                RAFIQ AHMED
+              </span>
+            </motion.div>
+
+            <motion.div
+              className="mt-6 w-full"
+              initial={{opacity: 0, y: 8}}
+              animate={{opacity: 1, y: 0}}
+              transition={{delay: 0.38, duration: 0.38}}
+              aria-label="Control-focused launch guidance"
+            >
+              <div className="mb-2.5 text-[9px] font-black uppercase tracking-[0.18em] text-indigo-500/90 md:text-[10px]">
+                Within your control
+              </div>
+
+              <div className="relative h-[110px] overflow-hidden rounded-2xl border border-indigo-100/90 bg-white/84 px-4 shadow-[0_14px_34px_rgba(79,70,229,0.08)] backdrop-blur-sm md:h-[118px]">
                 <div
                   aria-hidden="true"
-                  className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(99,102,241,0.14),transparent_54%)]"
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(99,102,241,0.12),transparent_58%)]"
                 />
 
-                {CONTROL_SECTIONS.map((section, index) => {
-                  const timing = SECTION_TIMINGS[index];
+                {CONTROL_LINES.map((line, index) => {
+                  const delay = 0.8 + index * 1.6;
                   return (
                     <motion.div
-                      key={index}
-                      className="absolute inset-0 flex items-center justify-center px-5 py-5 md:px-7 md:py-6"
-                      initial={{opacity: 0, y: 18, scale: 0.975, filter: 'blur(3px)'}}
+                      key={line}
+                      className="absolute inset-0 flex items-center justify-center px-5"
+                      initial={{opacity: 0, y: 16, scale: 0.97, filter: 'blur(3px)'}}
                       animate={{
                         opacity: [0, 1, 1, 0],
-                        y: [18, 0, 0, -14],
-                        scale: [0.975, 1, 1, 0.99],
+                        y: [16, 0, 0, -12],
+                        scale: [0.97, 1.015, 1, 0.99],
                         filter: ['blur(3px)', 'blur(0px)', 'blur(0px)', 'blur(2px)'],
                       }}
                       transition={{
-                        delay: timing.delay,
-                        duration: timing.duration,
-                        times: [0, 0.12, 0.88, 1],
+                        delay,
+                        duration: 1.55,
+                        times: [0, 0.18, 0.78, 1],
                         ease: [0.16, 1, 0.3, 1],
                       }}
                     >
-                      <div className="w-full">
-                        {section.eyebrow && (
-                          <motion.div
-                            className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-indigo-600 md:text-[11px]"
-                            initial={{opacity: 0, y: 4}}
-                            animate={{opacity: 1, y: 0}}
-                            transition={{delay: timing.delay + 0.08, duration: 0.28}}
-                          >
-                            {section.eyebrow}
-                          </motion.div>
-                        )}
-
-                        <div className="space-y-1.5 md:space-y-2">
-                          {section.lines.map((line, lineIndex) => (
-                            <motion.p
-                              key={line}
-                              className={
-                                index <= 1
-                                  ? 'text-[14px] font-extrabold leading-tight tracking-[-0.01em] text-slate-900 md:text-[16px]'
-                                  : index === 2
-                                  ? 'text-[16px] font-extrabold leading-relaxed tracking-[-0.015em] text-slate-900 md:text-[18px]'
-                                  : lineIndex === 0
-                                  ? 'text-[16px] font-extrabold leading-relaxed tracking-[-0.015em] text-slate-900 md:text-[18px]'
-                                  : 'text-[13px] font-bold leading-relaxed text-slate-600 md:text-[15px]'
-                              }
-                              initial={{opacity: 0, x: -8}}
-                              animate={{opacity: 1, x: 0}}
-                              transition={{
-                                delay: timing.delay + 0.16 + lineIndex * 0.11,
-                                duration: 0.34,
-                                ease: 'easeOut',
-                              }}
-                            >
-                              {line}
-                            </motion.p>
-                          ))}
-                        </div>
+                      <div className="text-center">
+                        <motion.div
+                          aria-hidden="true"
+                          className="mx-auto mb-2 h-px w-10 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"
+                          initial={{scaleX: 0}}
+                          animate={{scaleX: 1}}
+                          transition={{delay: delay + 0.08, duration: 0.28}}
+                        />
+                        <p className="text-[15px] font-extrabold leading-snug tracking-[-0.015em] text-slate-900 md:text-[17px]">
+                          {line}
+                        </p>
                       </div>
                     </motion.div>
                   );
@@ -171,21 +115,21 @@ export const AppLaunchSplash: React.FC = () => {
 
                 <motion.div
                   aria-hidden="true"
-                  className="absolute bottom-0 left-0 h-1 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
+                  className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500"
                   initial={{width: '0%'}}
                   animate={{width: '100%'}}
-                  transition={{delay: 0.5, duration: 14.9, ease: 'linear'}}
+                  transition={{delay: 0.7, duration: 8.35, ease: 'linear'}}
                 />
               </div>
-            </div>
 
-            <motion.div
-              className="mt-4 text-[9px] font-semibold tracking-[0.02em] text-slate-400 md:text-[10px]"
-              initial={{opacity: 0}}
-              animate={{opacity: 1}}
-              transition={{delay: 0.2, duration: 0.3}}
-            >
-              Focus energy where action is possible.
+              <motion.p
+                className="mt-2.5 text-[9px] font-semibold tracking-[0.025em] text-slate-400 md:text-[10px]"
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                transition={{delay: 0.5, duration: 0.3}}
+              >
+                Inspired by The Obstacle Is the Way
+              </motion.p>
             </motion.div>
           </motion.div>
         </motion.div>

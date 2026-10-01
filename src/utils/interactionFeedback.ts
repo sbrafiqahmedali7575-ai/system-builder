@@ -9,7 +9,7 @@ export type FeedbackKind =
   | 'warning'
   | 'error';
 
-const SETTINGS_KEY = 'system-builder:interaction-feedback:v1';
+const SETTINGS_KEY = 'system-builder:interaction-feedback:v2';
 
 interface FeedbackSettings {
   sound: boolean;
@@ -20,7 +20,7 @@ interface FeedbackSettings {
 const DEFAULT_SETTINGS: FeedbackSettings = {
   sound: true,
   haptics: true,
-  volume: 0.22,
+  volume: 0.58,
 };
 
 let audioContext: AudioContext | null = null;
@@ -165,7 +165,7 @@ function tone(
     startAt + duration
   );
 
-  const peak = Math.min(0.14, settings.volume * 0.24 * gainScale);
+  const peak = Math.min(0.30, settings.volume * 0.45 * gainScale);
   gain.gain.setValueAtTime(0.0001, startAt);
   gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), startAt + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);

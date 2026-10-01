@@ -16,6 +16,54 @@ import {
   VolumeX,
 } from 'lucide-react';
 
+
+const TIMER_ALERT_SETTINGS_KEY = 'system-builder:timer-alert-settings:v1';
+const LEGACY_TIMER_VOLUME_KEY = 'system-builder:timer-alert-volume';
+const LEGACY_TIMER_MUTED_KEY = 'system-builder:timer-alert-muted';
+
+interface TimerAlertSettings {
+  version: 1;
+  volume: number;
+  muted: boolean;
+}
+
+const normalizeAlertVolume = (value: unknown): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : 70;
+};
+
+const readTimerAlertSettings = (): TimerAlertSettings => {
+  const fallback: TimerAlertSettings = { version: 1, volume: 70, muted: false };
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const stored = window.localStorage.getItem(TIMER_ALERT_SETTINGS_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<TimerAlertSettings>;
+      return {
+        version: 1,
+        volume: normalizeAlertVolume(parsed.volume),
+        muted: parsed.muted === true,
+      };
+    }
+    return {
+      version: 1,
+      volume: normalizeAlertVolume(window.localStorage.getItem(LEGACY_TIMER_VOLUME_KEY)),
+      muted: window.localStorage.getItem(LEGACY_TIMER_MUTED_KEY) === 'true',
+    };
+  } catch {
+    return fallback;
+  }
+};
+
+const writeTimerAlertSettings = (settings: TimerAlertSettings): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(TIMER_ALERT_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.warn('Unable to persist timer alert settings:', error);
+  }
+};
+
 interface PomodoroTimerProps {
   className?: string;
   currentTaskTitle?: string;
@@ -42,14 +90,10 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const [isTaskLocked, setIsTaskLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [timerError, setTimerError] = useState<string | null>(null);
-  const [alertVolume, setAlertVolume] = useState<number>(() => {
-    if (typeof window === 'undefined') return 70;
-    const stored = Number(window.localStorage.getItem('system-builder:timer-alert-volume'));
-    return Number.isFinite(stored) ? Math.min(100, Math.max(0, stored)) : 70;
-  });
-  const [alertsMuted, setAlertsMuted] = useState<boolean>(() =>
-    typeof window !== 'undefined' && window.localStorage.getItem('system-builder:timer-alert-muted') === 'true'
-  );
+  const initialAlertSettingsRef = useRef<TimerAlertSettings | null>(null);
+  if (!initialAlertSettingsRef.current) initialAlertSettingsRef.current = readTimerAlertSettings();
+  const [alertVolume, setAlertVolume] = useState<number>(initialAlertSettingsRef.current.volume);
+  const [alertsMuted, setAlertsMuted] = useState<boolean>(initialAlertSettingsRef.current.muted);
 
   const startedAtRef = useRef<number | null>(null);
   const accumulatedMsRef = useRef(initialElapsedSeconds * 1000);
@@ -88,14 +132,24 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   }, [alertVolume, alertsMuted]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem('system-builder:timer-alert-volume', String(alertVolume));
-  }, [alertVolume]);
+    writeTimerAlertSettings({ version: 1, volume: alertVolume, muted: alertsMuted });
+  }, [alertVolume, alertsMuted]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('system-builder:timer-alert-muted', String(alertsMuted));
-  }, [alertsMuted]);
+    const syncSettings = (event: StorageEvent) => {
+      if (event.key !== TIMER_ALERT_SETTINGS_KEY || !event.newValue) return;
+      try {
+        const parsed = JSON.parse(event.newValue) as Partial<TimerAlertSettings>;
+        setAlertVolume(normalizeAlertVolume(parsed.volume));
+        setAlertsMuted(parsed.muted === true);
+      } catch {
+        // Ignore malformed external storage updates and retain current settings.
+      }
+    };
+    window.addEventListener('storage', syncSettings);
+    return () => window.removeEventListener('storage', syncSettings);
+  }, []);
 
   useEffect(() => {
     if (isRunning) return;

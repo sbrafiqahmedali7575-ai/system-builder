@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
 
 const todayTasks = read('src/components/TodayTasksCard.tsx');
+const pomodoroTimer = read('src/components/PomodoroTimer.tsx');
 const calendar = read('src/components/CalendarWorkspace.tsx');
 const more = read('src/components/MoreWorkspace.tsx');
 const app = read('src/App.tsx');
@@ -479,3 +480,10 @@ assert.ok(todayTasks.includes('bottom-11') && todayTasks.includes('sm:bottom-aut
 assert.ok(library.includes('data-highlight-palette'), 'Reader highlight popover must expose an outside-tap boundary.');
 assert.ok(library.includes("if (event.key === 'Escape') dismiss()"), 'Reader highlight popover must dismiss with Escape.');
 assert.ok(library.includes('h-11 w-11 rounded-full'), 'Reader highlight actions must use mobile-sized touch targets.');
+
+
+// Focus timer 15-minute alternating alert contracts.
+assert.ok(pomodoroTimer.includes('Math.floor(elapsedSeconds / 900)'), 'Focus timer alerts must evaluate 15-minute milestones.');
+assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), '15/45/75-minute milestones must beep once and 30/60/90-minute milestones three times.');
+assert.ok(pomodoroTimer.includes('lastAlertMilestoneRef.current = currentMilestone'), 'Each elapsed milestone must alert only once.');
+assert.ok(pomodoroTimer.includes("oscillator.type = 'square'") && pomodoroTimer.includes('1320'), 'Focus timer must use a high-alert beep tone.');

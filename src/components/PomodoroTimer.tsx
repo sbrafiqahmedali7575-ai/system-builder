@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Volume2,
   VolumeX,
+  MoreHorizontal,
 } from 'lucide-react';
 
 
@@ -90,6 +91,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const [isTaskLocked, setIsTaskLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [timerError, setTimerError] = useState<string | null>(null);
+  const [isAlertMenuOpen, setIsAlertMenuOpen] = useState(false);
   const initialAlertSettingsRef = useRef<TimerAlertSettings | null>(null);
   if (!initialAlertSettingsRef.current) initialAlertSettingsRef.current = readTimerAlertSettings();
   const [alertVolume, setAlertVolume] = useState<number>(initialAlertSettingsRef.current.volume);
@@ -262,16 +264,6 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
               Focus Timer
             </div>
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setAlertsMuted((muted) => !muted)}
-                className="inline-flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 active:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                aria-label={alertsMuted ? 'Unmute timer alerts' : 'Mute timer alerts'}
-                aria-pressed={alertsMuted}
-                title={alertsMuted ? 'Unmute timer alerts' : 'Mute timer alerts'}
-              >
-                {alertsMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
               <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 isRunning
@@ -286,6 +278,17 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
               />
               {isRunning ? 'Running' : 'Ready'}
               </span>
+              <button
+                type="button"
+                onClick={() => setIsAlertMenuOpen((open) => !open)}
+                className="inline-flex h-9 w-9 sm:h-7 sm:w-7 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
+                aria-label="Timer alert settings"
+                aria-expanded={isAlertMenuOpen}
+                aria-controls="timer-alert-settings"
+                title="Timer alert settings"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
@@ -388,10 +391,9 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
           </div>
 
-          <details className="mt-2 rounded-xl border border-slate-200/80 bg-slate-50/70 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/60">
-            <summary className="cursor-pointer select-none text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-              Test Alerts
-            </summary>
+          {isAlertMenuOpen && (
+          <div id="timer-alert-settings" className="mt-2 rounded-xl border border-slate-200/80 bg-slate-50/70 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="mb-2 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">Alert Settings</div>
             <div className="mb-2 flex items-center gap-2">
               <button
                 type="button"
@@ -436,7 +438,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                 3 Beeps
               </button>
             </div>
-          </details>
+          </div>
+          )}
 
         </div>
       ) : (

@@ -11,7 +11,7 @@ export const MobileBrandHeader: React.FC<MobileBrandHeaderProps> = ({
 }) => (
   <div className="md:hidden px-2 pt-[max(.625rem,env(safe-area-inset-top))] sm:px-3">
     <motion.div
-      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[18px] border border-blue-100/90 bg-white/90 px-3 py-2.5 shadow-[0_8px_24px_rgba(37,99,235,0.07)] backdrop-blur-xl max-[360px]:gap-2 max-[360px]:px-2.5 max-[360px]:py-2 dark:border-slate-800 dark:bg-slate-900/90"
+      className="today-mobile-header grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-[22px] border border-white/70 bg-white/88 px-3 py-2.5 shadow-[0_14px_38px_rgba(37,99,235,0.12)] backdrop-blur-2xl max-[360px]:gap-2 max-[360px]:px-2.5 max-[360px]:py-2 dark:border-slate-800 dark:bg-slate-900/90"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}

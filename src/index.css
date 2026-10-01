@@ -1255,3 +1255,25 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
 @media (prefers-reduced-motion:reduce){
   .today-task-row::before,.today-task-meta{transition:none!important;transform:none!important;}
 }
+
+/* Phone regression fixes */
+.mobile-nav-action{
+  min-width:0;
+  width:100%;
+  overflow:hidden;
+}
+.mobile-nav-action span{
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.today-kpi-grid > *{
+  min-width:0;
+}
+@media (max-width:360px){
+  .today-mobile-nav{overflow-x:hidden;}
+  .today-mobile-nav .mobile-nav-action{font-size:8.5px;}
+  .today-mobile-nav .mobile-nav-action svg{width:16px;height:16px;}
+}

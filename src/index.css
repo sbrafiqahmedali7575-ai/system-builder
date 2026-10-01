@@ -999,3 +999,158 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
    animation:none!important;
  }
 }
+
+
+/* === Today screen: rich modern responsive visual system === */
+.today-screen-shell{
+  position:relative;
+}
+.today-screen-shell::before{
+  content:"";
+  position:absolute;
+  inset:-24px -16px auto;
+  height:280px;
+  pointer-events:none;
+  z-index:-1;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(59,130,246,.10), transparent 34%),
+    radial-gradient(circle at 82% 4%, rgba(99,102,241,.09), transparent 30%),
+    radial-gradient(circle at 58% 42%, rgba(34,211,238,.06), transparent 34%);
+  filter:blur(4px);
+}
+.dark .today-screen-shell::before{
+  background:
+    radial-gradient(circle at 12% 12%, rgba(59,130,246,.13), transparent 34%),
+    radial-gradient(circle at 82% 4%, rgba(99,102,241,.12), transparent 30%);
+}
+.today-command-grid{
+  align-items:stretch;
+}
+.today-primary-card,
+.today-command-card{
+  position:relative;
+  isolation:isolate;
+  box-shadow:
+    0 1px 2px rgba(15,23,42,.03),
+    0 14px 42px rgba(15,23,42,.07),
+    inset 0 1px 0 rgba(255,255,255,.75) !important;
+  backdrop-filter:blur(18px);
+}
+.today-primary-card::after,
+.today-command-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.55),transparent 32%,transparent 70%,rgba(99,102,241,.035));
+  z-index:-1;
+}
+.dark .today-primary-card,
+.dark .today-command-card{
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.28),
+    0 18px 48px rgba(2,6,23,.34),
+    inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.today-task-header{
+  position:relative;
+}
+.today-task-header::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:88px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#2563eb,#6366f1,#22d3ee);
+}
+.today-segmented-control button{
+  transition:transform 160ms cubic-bezier(.2,.8,.2,1),background-color 160ms ease,color 160ms ease,box-shadow 160ms ease;
+}
+.today-segmented-control button:active{
+  transform:scale(.97);
+}
+.today-progress-track{
+  box-shadow:inset 0 1px 2px rgba(15,23,42,.08);
+}
+.today-progress-fill{
+  box-shadow:0 0 18px rgba(59,130,246,.26);
+}
+.today-task-list{
+  scrollbar-gutter:stable;
+}
+.today-task-row{
+  margin:2px 0;
+}
+.today-task-row:hover{
+  transform:translateY(-1px);
+  border-color:rgba(148,163,184,.22);
+  box-shadow:0 8px 22px rgba(15,23,42,.055);
+}
+.dark .today-task-row:hover{
+  border-color:rgba(100,116,139,.30);
+  box-shadow:0 8px 22px rgba(2,6,23,.22);
+}
+.today-empty-state{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75);
+}
+.today-kpi-grid .command-kpi{
+  transition:background-color 180ms ease,transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+.today-kpi-grid .command-kpi:hover{
+  background:rgba(248,250,252,.9);
+  transform:translateY(-1px);
+}
+.dark .today-kpi-grid .command-kpi:hover{
+  background:rgba(30,41,59,.62);
+}
+.today-mobile-header{
+  overflow:hidden;
+  position:relative;
+}
+.today-mobile-header::after{
+  content:"";
+  position:absolute;
+  inset:auto -10% -70% 36%;
+  height:110px;
+  pointer-events:none;
+  background:radial-gradient(circle,rgba(99,102,241,.18),transparent 64%);
+}
+.today-mobile-nav .mobile-nav-action{
+  min-height:44px;
+  border-radius:14px;
+  transition:background-color 160ms ease,color 160ms ease,transform 160ms cubic-bezier(.2,.8,.2,1);
+}
+.today-mobile-nav .mobile-nav-action:active{
+  transform:scale(.96);
+}
+.today-mobile-nav .mobile-nav-action[aria-current="page"],
+.today-mobile-nav .mobile-nav-action[aria-pressed="true"]{
+  background:rgba(37,99,235,.08);
+}
+.dark .today-mobile-nav .mobile-nav-action[aria-current="page"],
+.dark .today-mobile-nav .mobile-nav-action[aria-pressed="true"]{
+  background:rgba(59,130,246,.12);
+}
+@media (max-width:639px){
+  .today-screen-shell{padding-inline:1px;}
+  .today-primary-card,
+  .today-command-card{border-radius:20px;}
+  .today-primary-card{padding:12px;}
+  .today-task-row:hover{transform:none;box-shadow:none;}
+}
+@media (min-width:1280px){
+  .today-command-grid{
+    min-height:500px;
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .today-task-row,
+  .today-segmented-control button,
+  .today-mobile-nav .mobile-nav-action{
+    transition:none!important;
+    transform:none!important;
+  }
+}

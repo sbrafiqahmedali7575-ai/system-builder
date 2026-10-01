@@ -256,7 +256,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     <>
       {integrated ? (
         <div
-          className={`w-full rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2.5 flex flex-col ${className}`}
+          className={`relative w-full rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/50 p-2.5 flex flex-col ${className}`}
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide font-semibold text-slate-500 dark:text-slate-400">
@@ -392,53 +392,55 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
           </div>
 
           {isAlertMenuOpen && (
-          <div id="timer-alert-settings" className="mt-2 rounded-xl border border-slate-200/80 bg-slate-50/70 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/60">
-            <div className="mb-2 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">Alert Settings</div>
-            <div className="mb-2 flex items-center gap-2">
+            <div
+              id="timer-alert-settings"
+              role="menu"
+              aria-label="Timer alert settings"
+              className="absolute right-2 top-11 z-[90] w-[min(260px,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => setAlertsMuted((muted) => !muted)}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
-                aria-label={alertsMuted ? 'Unmute timer alerts' : 'Mute timer alerts'}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
                 aria-pressed={alertsMuted}
-                title={alertsMuted ? 'Unmute alerts' : 'Mute alerts'}
               >
-                {alertsMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                {alertsMuted ? <VolumeX className="h-4 w-4 shrink-0" /> : <Volume2 className="h-4 w-4 shrink-0" />}
+                <span>{alertsMuted ? 'Unmute alerts' : 'Mute alerts'}</span>
               </button>
-              <label className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                <span className="shrink-0">Volume</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={alertVolume}
-                  onChange={(event) => setAlertVolume(Number(event.target.value))}
-                  className="min-w-0 flex-1"
-                  aria-label="Timer alert volume"
-                />
-                <span className="w-8 text-right tabular-nums">{alertVolume}%</span>
-              </label>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="border-t border-slate-100 px-3 py-2 dark:border-slate-800" role="none">
+                <label className="flex items-center gap-2 text-xs font-semibold">
+                  <span className="shrink-0">Volume</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={alertVolume}
+                    onChange={(event) => setAlertVolume(Number(event.target.value))}
+                    className="min-w-0 flex-1"
+                    aria-label="Timer alert volume"
+                  />
+                  <span className="w-8 text-right tabular-nums">{alertVolume}%</span>
+                </label>
+              </div>
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => playHighAlertBeeps(1)}
-                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition active:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:active:bg-slate-800"
-                aria-label="Preview one high-alert beep"
+                className="flex min-h-11 w-full items-center rounded-lg border-t border-slate-100 px-3 text-left text-xs font-semibold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
               >
-                1 Beep
+                Test 1 Beep
               </button>
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => playHighAlertBeeps(3)}
-                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition active:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:active:bg-slate-800"
-                aria-label="Preview three high-alert beeps"
+                className="flex min-h-11 w-full items-center rounded-lg px-3 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                3 Beeps
+                Test 3 Beeps
               </button>
             </div>
-          </div>
           )}
 
         </div>

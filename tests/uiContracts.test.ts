@@ -493,3 +493,11 @@ assert.ok(pomodoroTimer.includes("oscillator.type = 'square'") && pomodoroTimer.
 assert.ok(pomodoroTimer.includes('Test Alerts'), 'Focus timer must expose an alert preview mode.');
 assert.ok(pomodoroTimer.includes('onClick={() => playHighAlertBeeps(1)}'), 'Alert preview must test the one-beep milestone sound.');
 assert.ok(pomodoroTimer.includes('onClick={() => playHighAlertBeeps(3)}'), 'Alert preview must test the three-beep milestone sound.');
+
+
+// Focus timer sound settings must not change the milestone cadence.
+assert.ok(pomodoroTimer.includes("system-builder:timer-alert-volume"), 'Timer alert volume must persist locally.');
+assert.ok(pomodoroTimer.includes("system-builder:timer-alert-muted"), 'Timer alert mute state must persist locally.');
+assert.ok(pomodoroTimer.includes('alertsMuted || alertVolume <= 0'), 'Muted/zero-volume alerts must remain silent.');
+assert.ok(pomodoroTimer.includes('0.42 * (alertVolume / 100)'), 'Alert gain must follow the configured volume.');
+assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Volume settings must preserve the alternating one/three-beep cadence.');

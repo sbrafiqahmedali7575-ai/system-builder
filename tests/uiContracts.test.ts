@@ -506,3 +506,12 @@ assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Volume 
 // Running timer must expose the same persisted one-tap mute state.
 assert.ok((pomodoroTimer.match(/setAlertsMuted\(\(muted\) => !muted\)/g) || []).length >= 2, 'Timer must expose mute both beside status and in alert settings.');
 assert.ok(pomodoroTimer.includes("currentMilestone % 2 === 0 ? 3 : 1"), 'Mute shortcut must not alter milestone beep cadence.');
+
+
+// Timer alert settings must survive browser/PWA restarts and migrate legacy values.
+assert.ok(pomodoroTimer.includes("system-builder:timer-alert-settings:v1"), 'Timer sound settings must use a versioned persistent record.');
+assert.ok(pomodoroTimer.includes('readTimerAlertSettings'), 'Timer sound settings must hydrate from persistent storage on launch.');
+assert.ok(pomodoroTimer.includes('writeTimerAlertSettings'), 'Timer sound settings must persist atomically.');
+assert.ok(pomodoroTimer.includes('LEGACY_TIMER_VOLUME_KEY') && pomodoroTimer.includes('LEGACY_TIMER_MUTED_KEY'), 'Existing timer sound preferences must migrate from legacy keys.');
+assert.ok(pomodoroTimer.includes("window.addEventListener('storage', syncSettings)"), 'Browser and installed-app windows must synchronize timer sound settings when sharing the same origin.');
+assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Persistence changes must preserve the timer alert cadence.');

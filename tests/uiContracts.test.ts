@@ -515,3 +515,11 @@ assert.ok(pomodoroTimer.includes('writeTimerAlertSettings'), 'Timer sound settin
 assert.ok(pomodoroTimer.includes('LEGACY_TIMER_VOLUME_KEY') && pomodoroTimer.includes('LEGACY_TIMER_MUTED_KEY'), 'Existing timer sound preferences must migrate from legacy keys.');
 assert.ok(pomodoroTimer.includes("window.addEventListener('storage', syncSettings)"), 'Browser and installed-app windows must synchronize timer sound settings when sharing the same origin.');
 assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Persistence changes must preserve the timer alert cadence.');
+
+
+// Timer alert controls must remain hidden behind the three-dot settings menu.
+assert.ok(pomodoroTimer.includes('MoreHorizontal'), 'Focus timer must expose a three-dot alert settings trigger.');
+assert.ok(pomodoroTimer.includes('isAlertMenuOpen'), 'Timer alert settings must be hidden by default behind explicit menu state.');
+assert.ok(pomodoroTimer.includes('aria-controls="timer-alert-settings"'), 'Three-dot trigger must be associated with the alert settings panel.');
+assert.ok(pomodoroTimer.includes('{isAlertMenuOpen && ('), 'Alert volume, mute, and preview controls must render only after opening the menu.');
+assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Hiding alert controls must not alter milestone cadence.');

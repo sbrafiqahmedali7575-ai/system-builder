@@ -886,7 +886,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {openTaskMenuId === task.id && (
-                          <div className="absolute right-0 bottom-11 z-[80] w-48 max-w-[calc(100vw-1.5rem)] rounded-xl sm:bottom-auto sm:top-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
+                          <div className="absolute right-0 bottom-11 z-[80] w-48 max-w-[calc(100vw-2rem)] rounded-xl sm:bottom-auto sm:top-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-1 text-xs">
                             <button type="button" onClick={() => { setOpenTaskMenuId(null); handleStartEdit(task); }} className="task-menu-item min-h-11 sm:min-h-0"><Pencil />Edit</button>
                             <button type="button" disabled={copyingTaskIds.has(task.id)} onClick={() => { setOpenTaskMenuId(null); handleCopyToNextDay(task); }} className="task-menu-item min-h-11 sm:min-h-0"><ArrowRight />Move/copy to next day</button>
                             <button type="button" onClick={() => { setOpenTaskMenuId(null); setDeletingTask(task); setDeleteError(null); }} className="task-menu-item min-h-11 sm:min-h-0 text-rose-600 dark:text-rose-400"><Trash2 />Delete</button>
@@ -928,7 +928,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className={`pointer-events-auto w-full max-w-lg max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-y-contain touch-pan-y rounded-3xl border p-3 shadow-2xl transition-colors sm:max-h-[calc(100dvh-2rem)] ${
+              className={`pointer-events-auto w-full max-w-lg max-h-[calc(100svh-1.5rem)] overflow-y-auto overscroll-y-contain touch-pan-y rounded-3xl border p-3 shadow-2xl transition-colors sm:max-h-[calc(100dvh-2rem)] ${
                 isDark
                   ? 'bg-slate-900 border-slate-700 text-slate-100'
                   : 'bg-white border-slate-200 text-slate-900'
@@ -1189,7 +1189,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-y-contain touch-pan-y rounded-3xl border p-3 shadow-2xl transition-colors sm:max-h-[calc(100dvh-2rem)] ${
+              className={`w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain overscroll-y-contain touch-pan-y rounded-3xl border p-3 shadow-2xl transition-colors sm:max-h-[calc(100dvh-2rem)] ${
                 isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
               }`}
             >

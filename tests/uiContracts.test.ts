@@ -487,3 +487,9 @@ assert.ok(pomodoroTimer.includes('Math.floor(elapsedSeconds / 900)'), 'Focus tim
 assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), '15/45/75-minute milestones must beep once and 30/60/90-minute milestones three times.');
 assert.ok(pomodoroTimer.includes('lastAlertMilestoneRef.current = currentMilestone'), 'Each elapsed milestone must alert only once.');
 assert.ok(pomodoroTimer.includes("oscillator.type = 'square'") && pomodoroTimer.includes('1320'), 'Focus timer must use a high-alert beep tone.');
+
+
+// Focus timer alert preview controls must exercise the production alert generator.
+assert.ok(pomodoroTimer.includes('Test Alerts'), 'Focus timer must expose an alert preview mode.');
+assert.ok(pomodoroTimer.includes('onClick={() => playHighAlertBeeps(1)}'), 'Alert preview must test the one-beep milestone sound.');
+assert.ok(pomodoroTimer.includes('onClick={() => playHighAlertBeeps(3)}'), 'Alert preview must test the three-beep milestone sound.');

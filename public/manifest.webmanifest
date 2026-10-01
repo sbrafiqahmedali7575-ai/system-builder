@@ -1,17 +1,25 @@
 {
+  "id": "/?system-builder-pwa=v2",
   "name": "System Builder",
   "short_name": "System Builder",
   "description": "Single-user tasks, habits, calendar and progress system.",
-  "start_url": "/",
+  "start_url": "/?source=pwa-v2",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f8fbff",
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "/system-builder-logo.svg",
-      "sizes": "any",
+      "src": "/system-builder-logo.svg?v=2",
+      "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/system-builder-logo.svg?v=2",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

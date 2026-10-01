@@ -38,6 +38,7 @@ import {
 } from './services/offlineStorage';
 import { useSystemDataLifecycle, type PendingTaskMutation } from './hooks/useSystemDataLifecycle';
 import { useCurrentDateKey } from './hooks/useCurrentDateKey';
+import { playInteractionFeedback } from './utils/interactionFeedback';
 
 const STORAGE_KEY = 'RAFIQ_DAILY_COMMITMENT_RECORDS_V2';
 const TASKS_STORAGE_KEY = 'SYSTEM_BUILDER_TASKS_CACHE_V2';
@@ -263,6 +264,7 @@ export default function App() {
     );
 
     if (duplicateInState || pendingTaskCreateKeysRef.current.has(logicalCreateKey)) {
+      playInteractionFeedback('error');
       throw new Error(
         `Duplicate task rejected: A task named "${taskData.taskOfTheDay.trim()}" already exists for this date.`
       );
@@ -290,6 +292,7 @@ export default function App() {
 
     // Optimistic update: dashboard and Matrix read this same state immediately.
     setTasks((prev) => [newTask, ...prev]);
+    playInteractionFeedback('success');
 
     try {
       setIsSyncing(true);
@@ -376,6 +379,7 @@ export default function App() {
     };
     setTasks((prev) => normalizeAfterDelete(prev));
     setCachedTasks(normalizeAfterDelete(tasks));
+    playInteractionFeedback('delete');
 
     try {
       setIsSyncing(true);
@@ -424,6 +428,7 @@ export default function App() {
     setTasks((prev) =>
       prev.map((task) => (task.id === taskId ? updatedTask : task))
     );
+    playInteractionFeedback(nextCompleted ? 'complete' : 'toggleOff');
 
     try {
       setIsSyncing(true);
@@ -455,6 +460,7 @@ export default function App() {
       (item) => item.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase() === normalizedName
     );
     if (duplicateInState || pendingHabitCreateNamesRef.current.has(normalizedName)) {
+      playInteractionFeedback('error');
       throw new Error(`Duplicate habit rejected: A habit named "${habitData.name.trim()}" already exists.`);
     }
     pendingHabitCreateNamesRef.current.add(normalizedName);
@@ -465,6 +471,7 @@ export default function App() {
       updatedAt: new Date().toISOString(),
     };
     setHabits((current) => [...current, habit]);
+    playInteractionFeedback('success');
     try {
       setIsSyncing(true);
       await addHabitToCloud(habit);
@@ -519,6 +526,7 @@ export default function App() {
     try {
       setIsSyncing(true);
       await setTodayHabitCheckIn(habit, isCompleted);
+      playInteractionFeedback(isCompleted ? 'complete' : 'toggleOff');
     } finally {
       setIsSyncing(false);
     }
@@ -527,6 +535,7 @@ export default function App() {
   const handleDeleteHabit = async (habitId: string) => {
     const previousHabit = habits.find((item) => item.id === habitId);
     setHabits((current) => current.filter((item) => item.id !== habitId));
+    playInteractionFeedback('delete');
     try {
       setIsSyncing(true);
       await deleteHabitFromCloud(habitId);
@@ -563,6 +572,7 @@ export default function App() {
   ): Promise<DaySubmitResult> => {
     const todayDateKey = getIsoDateKeyInTimezone(0, CONFIGURED_TIMEZONE);
     if (!areDatesEqual(dateKey, todayDateKey)) {
+      playInteractionFeedback('error');
       throw new Error('Only the current day can be submitted.');
     }
 
@@ -570,6 +580,7 @@ export default function App() {
       reviewedHabits ?? habits.filter((habit) => isHabitDue(habit, dateKey));
 
     if (dayTasks.length === 0 && dayHabits.length === 0) {
+      playInteractionFeedback('warning');
       throw new Error('No tasks or habits are scheduled for today.');
     }
 
@@ -683,6 +694,8 @@ export default function App() {
       tasksAfter,
       todayDateKey
     );
+
+    playInteractionFeedback(allCompleted ? 'complete' : 'warning');
 
     return {
       status,

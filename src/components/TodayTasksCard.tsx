@@ -15,6 +15,9 @@ import {
   Sparkles,
   ArrowRight,
   MoreHorizontal,
+  Flag,
+  Clock3,
+  CalendarClock,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, MatrixQuadrant, TaskItem } from '../types';
 import { AnimatedProgressRing } from './AnimatedProgressRing';
@@ -103,6 +106,30 @@ function getTaskQuadrantMeta(quadrant?: MatrixQuadrant) {
       };
   }
 }
+
+function getTaskPriorityMeta(priority?: TaskItem['priority']) {
+  switch (priority) {
+    case 'High':
+      return {
+        label: 'High',
+        classes: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300',
+        dot: 'bg-rose-500',
+      };
+    case 'Medium':
+      return {
+        label: 'Medium',
+        classes: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300',
+        dot: 'bg-amber-500',
+      };
+    default:
+      return {
+        label: 'Normal',
+        classes: 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
+        dot: 'bg-slate-400',
+      };
+  }
+}
+
 
 interface TodayTasksCardProps {
   tasks: TaskItem[];
@@ -714,6 +741,8 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           <AnimatePresence initial={false}>
             {[...incompleteTasks, ...completedTasks].map((task, taskIndex) => {
               const isTaskCompleted = task.isCompleted;
+              const priorityMeta = getTaskPriorityMeta(task.priority);
+              const scheduledLabel = activeDateTab === 'TODAY' ? 'Today' : 'Tomorrow';
 
               const showCompletedHeading = taskIndex === incompleteTasks.length && completedTasks.length > 0;
 
@@ -727,10 +756,12 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className={`today-task-row relative rounded-2xl transition-[box-shadow,background-color,transform,border-color] duration-300 border border-transparent ${
+                  className={`today-task-row relative rounded-2xl transition-[box-shadow,background-color,transform,border-color,opacity] duration-300 border ${
                     focusedTaskId === task.id
-                      ? 'bg-blue-50/90 ring-2 ring-blue-500 ring-offset-2 ring-offset-white shadow-lg shadow-blue-100 dark:bg-blue-950/35 dark:ring-blue-400 dark:ring-offset-slate-900 dark:shadow-blue-950/30'
-                      : ''
+                      ? 'bg-blue-50/90 border-blue-200 ring-2 ring-blue-500 ring-offset-2 ring-offset-white shadow-lg shadow-blue-100 dark:bg-blue-950/35 dark:border-blue-800 dark:ring-blue-400 dark:ring-offset-slate-900 dark:shadow-blue-950/30'
+                      : isTaskCompleted
+                        ? 'today-task-row-complete border-emerald-100/80 dark:border-emerald-900/30 bg-emerald-50/25 dark:bg-emerald-950/10'
+                        : 'border-slate-200/55 dark:border-slate-800/80 bg-white/55 dark:bg-slate-900/35'
                   }`}
                 >
                   {/* Task row */}
@@ -774,13 +805,6 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
 
                       <div className="min-w-0 flex-1 pt-px pr-1 sm:pr-0 overflow-hidden">
                         <div className="flex min-w-0 items-start gap-1.5">
-                          <span
-                            className={`mt-[2px] inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-md border px-1 text-[9px] font-extrabold leading-none ${getTaskQuadrantMeta(task.matrixQuadrant).classes}`}
-                            title={`Quadrant ${getTaskQuadrantMeta(task.matrixQuadrant).roman} — ${getTaskQuadrantMeta(task.matrixQuadrant).label}`}
-                            aria-label={`Quadrant ${getTaskQuadrantMeta(task.matrixQuadrant).roman}: ${getTaskQuadrantMeta(task.matrixQuadrant).label}`}
-                          >
-                            {getTaskQuadrantMeta(task.matrixQuadrant).roman}
-                          </span>
                           <button
                             type="button"
                             onClick={() => handleToggleTask(task)}
@@ -794,21 +818,45 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                           </button>
                         </div>
 
-                        {(task.EstimationTime?.trim() || task.ActualTime?.trim()) && (
-                          <div
-                            className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200/80 bg-white/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400"
-                            aria-label={`Planned ${task.EstimationTime?.trim() || 'not set'}, actual ${task.ActualTime?.trim() || 'not set'}`}
-                            title="Planned time vs actual time"
+                        <div className="today-task-meta mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`inline-flex min-h-6 items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold ${priorityMeta.classes}`}
+                            title={`${priorityMeta.label} priority`}
                           >
-                            <span className="text-slate-400 dark:text-slate-500">Plan</span>
-                            <span className="text-slate-700 dark:text-slate-200">{task.EstimationTime?.trim() || '—'}</span>
-                            <span className="text-slate-300 dark:text-slate-600">→</span>
-                            <span className="text-slate-400 dark:text-slate-500">Actual</span>
-                            <span className={task.ActualTime?.trim() ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}>
-                              {task.ActualTime?.trim() || '—'}
+                            <span className={`size-1.5 rounded-full ${priorityMeta.dot}`} aria-hidden="true" />
+                            <Flag className="size-3" />
+                            {priorityMeta.label}
+                          </span>
+                          <span
+                            className={`inline-flex min-h-6 items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold ${getTaskQuadrantMeta(task.matrixQuadrant).classes}`}
+                            title={`Quadrant ${getTaskQuadrantMeta(task.matrixQuadrant).roman} — ${getTaskQuadrantMeta(task.matrixQuadrant).label}`}
+                          >
+                            Q{getTaskQuadrantMeta(task.matrixQuadrant).roman}
+                          </span>
+                          <span className="inline-flex min-h-6 items-center gap-1 rounded-lg border border-slate-200/80 bg-white/75 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                            <CalendarClock className="size-3 text-blue-500" />
+                            {scheduledLabel}
+                          </span>
+                          {(task.EstimationTime?.trim() || task.timeEstimate?.trim()) && (
+                            <span className="inline-flex min-h-6 items-center gap-1 rounded-lg border border-blue-100 bg-blue-50/70 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300" title="Planned time">
+                              <Clock3 className="size-3" />
+                              Plan {task.EstimationTime?.trim() || task.timeEstimate?.trim()}
                             </span>
-                          </div>
-                        )}
+                          )}
+                          {task.ActualTime?.trim() && (
+                            <span className="inline-flex min-h-6 items-center gap-1 rounded-lg border border-violet-100 bg-violet-50/70 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/30 dark:text-violet-300" title="Actual time">
+                              Actual {task.ActualTime.trim()}
+                            </span>
+                          )}
+                          <span className={`inline-flex min-h-6 items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                            isTaskCompleted
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            {isTaskCompleted ? <CheckCircle2 className="size-3" /> : <Circle className="size-3" />}
+                            {isTaskCompleted ? 'Completed' : 'Pending'}
+                          </span>
+                        </div>
 
                         {task.notes?.trim() && (
                           <div className="mt-1.5">

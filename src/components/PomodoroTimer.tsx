@@ -301,6 +301,30 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
           </div>
 
+          <details className="mt-2 rounded-xl border border-slate-200/80 bg-slate-50/70 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+            <summary className="cursor-pointer select-none text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              Test Alerts
+            </summary>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => playHighAlertBeeps(1)}
+                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition active:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:active:bg-slate-800"
+                aria-label="Preview one high-alert beep"
+              >
+                1 Beep
+              </button>
+              <button
+                type="button"
+                onClick={() => playHighAlertBeeps(3)}
+                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition active:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:active:bg-slate-800"
+                aria-label="Preview three high-alert beeps"
+              >
+                3 Beeps
+              </button>
+            </div>
+          </details>
+
         </div>
       ) : (
         <div

@@ -27,6 +27,45 @@ let audioContext: AudioContext | null = null;
 let installed = false;
 let lastGenericAt = 0;
 
+export interface FeedbackDiagnostics {
+  supported: boolean;
+  visible: boolean;
+  hasBeenActive: boolean | null;
+  isActive: boolean | null;
+  enabled: boolean;
+  lastPattern: number | number[] | null;
+  lastAccepted: boolean | null;
+  lastKind: FeedbackKind | null;
+  lastAt: number | null;
+}
+
+const diagnostics: FeedbackDiagnostics = {
+  supported: typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function',
+  visible: typeof document === 'undefined' ? true : document.visibilityState === 'visible',
+  hasBeenActive:
+    typeof navigator !== 'undefined' && navigator.userActivation
+      ? navigator.userActivation.hasBeenActive
+      : null,
+  isActive:
+    typeof navigator !== 'undefined' && navigator.userActivation
+      ? navigator.userActivation.isActive
+      : null,
+  enabled: true,
+  lastPattern: null,
+  lastAccepted: null,
+  lastKind: null,
+  lastAt: null,
+};
+
+function emitDiagnostics() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent('system-builder:feedback-diagnostics', {
+      detail: { ...diagnostics },
+    })
+  );
+}
+
 function readSettings(): FeedbackSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   try {
@@ -60,13 +99,45 @@ function getAudioContext(): AudioContext | null {
   return audioContext;
 }
 
-function vibrate(pattern: number | number[]) {
+function vibrate(pattern: number | number[], kind?: FeedbackKind): boolean {
   const { haptics } = readSettings();
-  if (!haptics || typeof navigator === 'undefined' || !navigator.vibrate) return;
+  diagnostics.supported =
+    typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  diagnostics.visible =
+    typeof document === 'undefined' || document.visibilityState === 'visible';
+  diagnostics.hasBeenActive =
+    typeof navigator !== 'undefined' && navigator.userActivation
+      ? navigator.userActivation.hasBeenActive
+      : null;
+  diagnostics.isActive =
+    typeof navigator !== 'undefined' && navigator.userActivation
+      ? navigator.userActivation.isActive
+      : null;
+  diagnostics.enabled = haptics;
+  diagnostics.lastPattern = pattern;
+  diagnostics.lastKind = kind ?? null;
+  diagnostics.lastAt = Date.now();
+
+  if (
+    !haptics ||
+    !diagnostics.supported ||
+    !diagnostics.visible ||
+    typeof navigator === 'undefined'
+  ) {
+    diagnostics.lastAccepted = false;
+    emitDiagnostics();
+    return false;
+  }
+
   try {
-    navigator.vibrate(pattern);
+    const accepted = navigator.vibrate(pattern);
+    diagnostics.lastAccepted = accepted;
+    emitDiagnostics();
+    return accepted;
   } catch {
-    // Vibration is optional and unsupported on some browsers.
+    diagnostics.lastAccepted = false;
+    emitDiagnostics();
+    return false;
   }
 }
 
@@ -108,43 +179,43 @@ function tone(
 export function playInteractionFeedback(kind: FeedbackKind) {
   switch (kind) {
     case 'tap':
-      vibrate(7);
+      vibrate(22, kind);
       tone(620, 760, 0.045, 0, 0.45);
       break;
     case 'navigate':
-      vibrate(9);
+      vibrate(26, kind);
       tone(520, 680, 0.06, 0, 0.5);
       break;
     case 'toggleOn':
-      vibrate(11);
+      vibrate(32, kind);
       tone(660, 900, 0.075, 0, 0.62);
       break;
     case 'toggleOff':
-      vibrate(6);
+      vibrate(20, kind);
       tone(560, 460, 0.055, 0, 0.42);
       break;
     case 'success':
-      vibrate([14, 24, 18]);
+      vibrate([36, 34, 48], kind);
       tone(660, 760, 0.09, 0, 0.72);
       tone(830, 940, 0.1, 0.07, 0.64);
       break;
     case 'complete':
-      vibrate([16, 18, 30]);
+      vibrate([38, 30, 58], kind);
       tone(587, 700, 0.09, 0, 0.82);
       tone(740, 880, 0.1, 0.065, 0.78);
       tone(988, 1175, 0.13, 0.13, 0.72);
       break;
     case 'delete':
-      vibrate(22);
+      vibrate(46, kind);
       tone(220, 130, 0.11, 0, 0.62, 'triangle');
       break;
     case 'warning':
-      vibrate([18, 28, 18]);
+      vibrate([42, 38, 42], kind);
       tone(440, 520, 0.09, 0, 0.62, 'triangle');
       tone(440, 520, 0.09, 0.13, 0.62, 'triangle');
       break;
     case 'error':
-      vibrate([26, 34, 26]);
+      vibrate([56, 44, 68], kind);
       tone(330, 210, 0.13, 0, 0.72, 'square');
       tone(260, 170, 0.14, 0.11, 0.56, 'square');
       break;
@@ -219,4 +290,27 @@ export function updateInteractionFeedbackSettings(
   if (typeof window === 'undefined') return;
   const next = { ...readSettings(), ...patch };
   window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+}
+
+
+export function getInteractionFeedbackDiagnostics(): FeedbackDiagnostics {
+  diagnostics.supported =
+    typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  diagnostics.visible =
+    typeof document === 'undefined' || document.visibilityState === 'visible';
+  diagnostics.hasBeenActive =
+    typeof navigator !== 'undefined' && navigator.userActivation
+      ? navigator.userActivation.hasBeenActive
+      : null;
+  diagnostics.isActive =
+    typeof navigator !== 'undefined' && navigator.userActivation
+      ? navigator.userActivation.isActive
+      : null;
+  diagnostics.enabled = readSettings().haptics;
+  return { ...diagnostics };
+}
+
+export function runHapticDiagnostic(): FeedbackDiagnostics {
+  vibrate([80, 60, 120], 'complete');
+  return getInteractionFeedbackDiagnostics();
 }

@@ -624,20 +624,20 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
       initial={{ opacity: 0, y: 14, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className={`system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-2.5 sm:p-3 rounded-2xl border flex-1 flex flex-col transition-all ${
+      className={`today-primary-card system-task-card system-primary-focus h-full min-h-0 overflow-hidden p-3 sm:p-4 lg:p-5 rounded-[24px] border flex-1 flex flex-col transition-all ${
         isDark
-          ? 'bg-slate-900/80 border-slate-800'
-          : 'bg-slate-50/70 border-slate-200/80'
+          ? 'bg-slate-900/92 border-slate-700/80'
+          : 'bg-white/95 border-white/80'
       }`}
     >
       {/* Primary execution header */}
-      <div className={`${focusMode ? 'hidden' : 'block'} shrink-0 pb-2 mb-1 border-b border-slate-200/80 dark:border-slate-800`}>
+      <div className={`${focusMode ? 'hidden' : 'block'} today-task-header shrink-0 pb-3 mb-2 border-b border-slate-200/70 dark:border-slate-800/80`}>
         <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1 pr-1">
-            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-xl sm:text-2xl font-black tracking-[-0.03em] text-slate-950 dark:text-white">
               {activeDateTab === 'TODAY' ? "Today's Tasks" : "Tomorrow's Tasks"}
             </h2>
-            <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+            <div className="mt-1 text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
               {activeDateTab === 'TODAY' ? `${currentDayName} · ${currentDayFormatted}` : tomorrowOption.label}
             </div>
           </div>
@@ -647,14 +647,14 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
             <button id="btn-review-task-day" type="button" onClick={onOpenDayReview} disabled={activeDateTab !== 'TODAY' || totalTasksCount === 0 || isSyncing} className="inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-xl border border-slate-200 p-0 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-200 sm:h-8 sm:w-auto sm:rounded-lg sm:px-2.5" aria-label="Review today's tasks"><CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5"/><span className="hidden sm:inline">Review</span></button>
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5" role="tablist" aria-label="Task date">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="today-segmented-control inline-flex rounded-xl bg-slate-100/90 dark:bg-slate-800/90 p-1 shadow-inner" role="tablist" aria-label="Task date">
             {(['TODAY','TOMORROW'] as const).map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeDateTab===tab} onClick={() => setActiveDateTab(tab)} className={`min-h-9 px-3 py-1 rounded-md text-[11px] font-semibold transition sm:min-h-0 sm:px-2.5 ${activeDateTab===tab?'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm':'text-slate-500 dark:text-slate-400'}`}>{tab==='TODAY'?'Today':'Tomorrow'}</button>)}
           </div>
           <span className="shrink-0 text-right text-[11px] font-medium tabular-nums text-slate-500 dark:text-slate-400 max-[360px]:text-[10px]">{completedCount} of {totalTasksCount} completed</span>
         </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" title={`Task completion ${Math.round(taskCompletionPercent)}%`}>
-          <div className="h-full rounded-full bg-blue-600 transition-[width] duration-300" style={{ width: `${Math.round(taskCompletionPercent)}%` }} />
+        <div className="today-progress-track mt-3 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" title={`Task completion ${Math.round(taskCompletionPercent)}%`}>
+          <div className="today-progress-fill h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400 transition-[width] duration-500 ease-out" style={{ width: `${Math.round(taskCompletionPercent)}%` }} />
         </div>
       </div>
 
@@ -688,9 +688,9 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
           4. TASK LIST (Incomplete tasks first, Completed tasks below)
              Or Empty State when no tasks planned
       ───────────────────────────────────────────────────────────── */}
-      <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
+      <div className="today-task-list min-h-0 flex-1 overflow-y-auto pr-0.5">
       {totalTasksCount === 0 ? (
-        <div className="py-6 px-3 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/30">
+        <div className="today-empty-state py-8 sm:py-10 px-4 text-center rounded-2xl border border-dashed border-slate-200/90 dark:border-slate-700 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-950/40 dark:to-slate-900/70">
           <div className="w-10 h-10 mx-auto mb-1.5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
             <CalendarDays className="w-5 h-5" />
           </div>
@@ -727,7 +727,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
-                  className={`relative rounded-xl transition-[box-shadow,background-color] duration-500 ${
+                  className={`today-task-row relative rounded-2xl transition-[box-shadow,background-color,transform,border-color] duration-300 border border-transparent ${
                     focusedTaskId === task.id
                       ? 'bg-blue-50/90 ring-2 ring-blue-500 ring-offset-2 ring-offset-white shadow-lg shadow-blue-100 dark:bg-blue-950/35 dark:ring-blue-400 dark:ring-offset-slate-900 dark:shadow-blue-950/30'
                       : ''
@@ -736,7 +736,7 @@ export const TodayTasksCard: React.FC<TodayTasksCardProps> = ({
                   {/* Task row */}
                   <motion.div
                     
-                    className={`group relative min-w-0 px-1 py-2 sm:px-1.5 sm:py-2.5 transition-colors ${
+                    className={`group relative min-w-0 px-2 py-2.5 sm:px-3 sm:py-3 transition-colors ${
                       isTaskCompleted
                         ? 'bg-slate-50/45 dark:bg-slate-950/20'
                         : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'

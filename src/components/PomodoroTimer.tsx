@@ -43,6 +43,38 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
 
   const startedAtRef = useRef<number | null>(null);
   const accumulatedMsRef = useRef(initialElapsedSeconds * 1000);
+  const lastAlertMilestoneRef = useRef(Math.floor(initialElapsedSeconds / 900));
+
+  const playHighAlertBeeps = useCallback((count: 1 | 3) => {
+    try {
+      const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) return;
+      const audioContext = new AudioContextCtor();
+      const startAt = audioContext.currentTime + 0.02;
+
+      for (let index = 0; index < count; index += 1) {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const beepStart = startAt + index * 0.24;
+        const beepEnd = beepStart + 0.14;
+
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(1320, beepStart);
+        gain.gain.setValueAtTime(0.0001, beepStart);
+        gain.gain.exponentialRampToValueAtTime(0.42, beepStart + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, beepEnd);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(beepStart);
+        oscillator.stop(beepEnd);
+      }
+
+      window.setTimeout(() => void audioContext.close(), count === 3 ? 1100 : 500);
+    } catch (error) {
+      console.warn('Unable to play focus timer alert:', error);
+    }
+  }, []);
 
   useEffect(() => {
     if (isRunning) return;
@@ -60,6 +92,17 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     const interval = window.setInterval(tick, 250);
     return () => window.clearInterval(interval);
   }, [isRunning]);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const currentMilestone = Math.floor(elapsedSeconds / 900);
+    if (currentMilestone <= lastAlertMilestoneRef.current) return;
+
+    // If a throttled/backgrounded tab crosses more than one boundary, alert only
+    // for the latest reached 15-minute milestone instead of playing a backlog.
+    lastAlertMilestoneRef.current = currentMilestone;
+    playHighAlertBeeps(currentMilestone % 2 === 0 ? 3 : 1);
+  }, [elapsedSeconds, isRunning, playHighAlertBeeps]);
 
   const formattedTime = useMemo(() => {
     const hours = Math.floor(elapsedSeconds / 3600);
@@ -94,6 +137,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
       return;
     }
     if (!hasCurrentTask || isSaving) return;
+    lastAlertMilestoneRef.current = Math.floor(elapsedSeconds / 900);
     startedAtRef.current = Date.now();
     setTimerError(null);
     setIsTaskLocked(true);
@@ -103,6 +147,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const resetTimer = useCallback(() => {
     startedAtRef.current = null;
     accumulatedMsRef.current = 0;
+    lastAlertMilestoneRef.current = 0;
     setElapsedSeconds(0);
     setIsRunning(false);
     setIsTaskLocked(false);

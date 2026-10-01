@@ -501,3 +501,8 @@ assert.ok(pomodoroTimer.includes("system-builder:timer-alert-muted"), 'Timer ale
 assert.ok(pomodoroTimer.includes('alertsMuted || alertVolume <= 0'), 'Muted/zero-volume alerts must remain silent.');
 assert.ok(pomodoroTimer.includes('0.42 * (alertVolume / 100)'), 'Alert gain must follow the configured volume.');
 assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Volume settings must preserve the alternating one/three-beep cadence.');
+
+
+// Running timer must expose the same persisted one-tap mute state.
+assert.ok((pomodoroTimer.match(/setAlertsMuted\(\(muted\) => !muted\)/g) || []).length >= 2, 'Timer must expose mute both beside status and in alert settings.');
+assert.ok(pomodoroTimer.includes("currentMilestone % 2 === 0 ? 3 : 1"), 'Mute shortcut must not alter milestone beep cadence.');

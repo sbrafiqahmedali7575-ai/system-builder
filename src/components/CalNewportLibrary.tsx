@@ -460,9 +460,6 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
                   By {author === 'ryan' ? 'Ryan Holiday' : 'Cal Newport'}
                 </h1>
               </div>
-              <p className={`text-[11px] sm:text-xs font-semibold ${mutedText}`}>
-                Practical reading library • Updated {author === 'ryan' ? RYAN_HOLIDAY_LIBRARY_UPDATED : CAL_NEWPORT_LIBRARY_UPDATED} · Double-click author to switch
-              </p>
             </div>
           </div>
 

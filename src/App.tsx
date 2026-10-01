@@ -12,6 +12,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { MobileBrandHeader } from './components/MobileBrandHeader';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastProvider } from './components/ui/ToastProvider';
+import { FeedbackDiagnosticsPanel } from './components/FeedbackDiagnosticsPanel';
 import { standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { calculateKPIStats } from './utils/daxMeasures';
@@ -896,6 +897,7 @@ export default function App() {
         onSubmitTaskDay={handleSubmitTaskDay}
       />
     </div>
+          <FeedbackDiagnosticsPanel />
     </ToastProvider>
   );
 }

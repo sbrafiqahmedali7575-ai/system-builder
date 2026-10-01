@@ -12,6 +12,8 @@ import {
   RotateCcw,
   Timer,
   ChevronDown,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface PomodoroTimerProps {
@@ -40,12 +42,21 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const [isTaskLocked, setIsTaskLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [timerError, setTimerError] = useState<string | null>(null);
+  const [alertVolume, setAlertVolume] = useState<number>(() => {
+    if (typeof window === 'undefined') return 70;
+    const stored = Number(window.localStorage.getItem('system-builder:timer-alert-volume'));
+    return Number.isFinite(stored) ? Math.min(100, Math.max(0, stored)) : 70;
+  });
+  const [alertsMuted, setAlertsMuted] = useState<boolean>(() =>
+    typeof window !== 'undefined' && window.localStorage.getItem('system-builder:timer-alert-muted') === 'true'
+  );
 
   const startedAtRef = useRef<number | null>(null);
   const accumulatedMsRef = useRef(initialElapsedSeconds * 1000);
   const lastAlertMilestoneRef = useRef(Math.floor(initialElapsedSeconds / 900));
 
   const playHighAlertBeeps = useCallback((count: 1 | 3) => {
+    if (alertsMuted || alertVolume <= 0) return;
     try {
       const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextCtor) return;
@@ -61,7 +72,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         oscillator.type = 'square';
         oscillator.frequency.setValueAtTime(1320, beepStart);
         gain.gain.setValueAtTime(0.0001, beepStart);
-        gain.gain.exponentialRampToValueAtTime(0.42, beepStart + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.42 * (alertVolume / 100), beepStart + 0.012);
         gain.gain.exponentialRampToValueAtTime(0.0001, beepEnd);
 
         oscillator.connect(gain);
@@ -74,7 +85,17 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     } catch (error) {
       console.warn('Unable to play focus timer alert:', error);
     }
-  }, []);
+  }, [alertVolume, alertsMuted]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('system-builder:timer-alert-volume', String(alertVolume));
+  }, [alertVolume]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('system-builder:timer-alert-muted', String(alertsMuted));
+  }, [alertsMuted]);
 
   useEffect(() => {
     if (isRunning) return;
@@ -305,6 +326,32 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             <summary className="cursor-pointer select-none text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400">
               Test Alerts
             </summary>
+            <div className="mb-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAlertsMuted((muted) => !muted)}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+                aria-label={alertsMuted ? 'Unmute timer alerts' : 'Mute timer alerts'}
+                aria-pressed={alertsMuted}
+                title={alertsMuted ? 'Unmute alerts' : 'Mute alerts'}
+              >
+                {alertsMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+              <label className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                <span className="shrink-0">Volume</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={alertVolume}
+                  onChange={(event) => setAlertVolume(Number(event.target.value))}
+                  className="min-w-0 flex-1"
+                  aria-label="Timer alert volume"
+                />
+                <span className="w-8 text-right tabular-nums">{alertVolume}%</span>
+              </label>
+            </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <button
                 type="button"

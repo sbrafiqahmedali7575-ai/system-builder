@@ -351,14 +351,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="w-full space-y-4 sm:space-y-5"
+      className="today-screen-shell w-full space-y-5 sm:space-y-6"
     >
       <section
         id="today-focus-section"
         aria-label="Today Command Center"
         className="space-y-2"
       >
-        <div className="grid grid-cols-1 gap-3 items-stretch xl:grid-cols-[minmax(0,1fr)_320px] xl:h-[430px]">
+        <div className="today-command-grid grid grid-cols-1 gap-4 sm:gap-5 items-stretch xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_390px]">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

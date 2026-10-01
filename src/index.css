@@ -1154,3 +1154,42 @@ body { margin:0; min-width:320px; min-height:100vh; color:#252525; }
     transform:none!important;
   }
 }
+
+.today-performance-card{
+  box-shadow:
+    0 1px 2px rgba(15,23,42,.03),
+    0 16px 46px rgba(15,23,42,.065),
+    inset 0 1px 0 rgba(255,255,255,.72);
+}
+.dark .today-performance-card{
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.25),
+    0 18px 50px rgba(2,6,23,.3),
+    inset 0 1px 0 rgba(255,255,255,.035);
+}
+.today-performance-tabs button{
+  transition:transform 160ms cubic-bezier(.2,.8,.2,1),background-color 160ms ease,color 160ms ease,box-shadow 160ms ease;
+}
+.today-performance-tabs button:active{transform:scale(.97);}
+.today-performance-hero{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 30px rgba(59,130,246,.08);
+}
+.today-insight-card{
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1),box-shadow 180ms ease,border-color 180ms ease;
+}
+.today-insight-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(148,163,184,.4);
+  box-shadow:0 10px 26px rgba(15,23,42,.055);
+}
+.dark .today-insight-card:hover{
+  border-color:rgba(100,116,139,.4);
+  box-shadow:0 10px 26px rgba(2,6,23,.22);
+}
+.today-insight-callout{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65);
+}
+@media(max-width:639px){
+  .today-performance-card{border-radius:20px;}
+  .today-insight-card:hover{transform:none;box-shadow:none;}
+}

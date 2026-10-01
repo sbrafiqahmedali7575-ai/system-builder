@@ -10,16 +10,16 @@
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "/system-builder-logo.svg?v=2",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
+      "src": "/system-builder-icon-192.png?v=3",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/system-builder-logo.svg?v=2",
+      "src": "/system-builder-icon-512.png?v=3",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

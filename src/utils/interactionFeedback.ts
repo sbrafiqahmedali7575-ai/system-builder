@@ -20,7 +20,7 @@ interface FeedbackSettings {
 const DEFAULT_SETTINGS: FeedbackSettings = {
   sound: true,
   haptics: true,
-  volume: 0.58,
+  volume: 1,
 };
 
 let audioContext: AudioContext | null = null;
@@ -165,7 +165,7 @@ function tone(
     startAt + duration
   );
 
-  const peak = Math.min(0.30, settings.volume * 0.45 * gainScale);
+  const peak = Math.min(0.45, settings.volume * 0.65 * gainScale);
   gain.gain.setValueAtTime(0.0001, startAt);
   gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), startAt + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);

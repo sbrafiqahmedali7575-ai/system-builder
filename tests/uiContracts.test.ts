@@ -575,3 +575,10 @@ assert.ok(
   performanceIntelligence.includes("Show 12-week performance"),
   'Performance trend switch should toggle back to the 12-week view'
 );
+
+
+assert.ok(
+  performanceIntelligence.includes("title={\`7 Day Average \${sevenDayAverage}%\`}") &&
+    performanceIntelligence.includes("bottom:\`\${Math.max(0,Math.min(100,sevenDayAverage))}%\`"),
+  '7-day DayCompletion trend should render a horizontal average line at the 7-day average'
+);

@@ -10,7 +10,7 @@ import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { calculateAchievedWeeks, calculateOverallCompletion } from '../utils/progressAnalytics';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
-import { PerformanceIntelligence } from './PerformanceIntelligence';
+import { PerformanceIntelligence, Period } from './PerformanceIntelligence';
 import {
   saveCountdownSettings,
   subscribeToCountdownSettings,
@@ -96,6 +96,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const isDark = theme === 'dark';
   const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
   const [selectedFocusTaskId, setSelectedFocusTaskId] = useState<string>('');
+  const [performancePeriod, setPerformancePeriod] = useState<Period>('1w');
   const parseActualTimeSeconds = (value?: string) => {
     if (!value) return 0;
     const trimmed = value.trim();
@@ -188,11 +189,54 @@ export const ReportView: React.FC<ReportViewProps> = ({
     [tasks, currentDateKey]
   );
 
-  // Overall = Successful Days / Total calendar days since 1 Aug 2026 × 100.
-  const commandCenterOverall = useMemo(
-    () => calculateOverallCompletion(records, currentDateKey),
-    [records, currentDateKey]
-  );
+  const commandCenterOverall = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const systemStart = Date.UTC(2026, 7, 1);
+    const [year, month, day] = currentDateKey.split('-').map(Number);
+    const today = Date.UTC(year, month - 1, day);
+    const days =
+      performancePeriod === '1w' ? 7 :
+      performancePeriod === '2w' ? 14 :
+      performancePeriod === '1m' ? 30 :
+      performancePeriod === 'quarter' ? 90 :
+      performancePeriod === '6m' ? 180 :
+      performancePeriod === '1y' ? 365 :
+      Math.max(1, Math.floor((today - systemStart) / DAY_MS) + 1);
+    const from = performancePeriod === 'all' ? systemStart : today - (days - 1) * DAY_MS;
+    const recordMap = new Map(records.map((record) => [record.date, record]));
+    const values: number[] = [];
+
+    for (let ms = from; ms <= today; ms += DAY_MS) {
+      const dateKey = new Date(ms).toISOString().slice(0, 10);
+      const stored = recordMap.get(dateKey)?.dayCompletion;
+      if (typeof stored === 'number') {
+        values.push(stored);
+        continue;
+      }
+
+      const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
+      const dueHabits = habits.filter((habit) => isHabitDue(habit, dateKey));
+      if (dayTasks.length === 0 && dueHabits.length === 0) continue;
+
+      const taskRate = dayTasks.length
+        ? (dayTasks.filter((task) => task.isCompleted).length / dayTasks.length) * 100
+        : 0;
+      const habitRate = dueHabits.length
+        ? (dueHabits.filter((habit) => habit.checkIns.includes(dateKey)).length / dueHabits.length) * 100
+        : 0;
+      values.push(Math.round((taskRate * 0.8 + habitRate * 0.2) * 10) / 10);
+    }
+
+    const completionRate = values.length
+      ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
+      : 0;
+
+    return {
+      completionRate,
+      completedDays: records.filter((record) => record.isCompleted).length,
+      totalDays: values.length,
+    };
+  }, [records, tasks, habits, currentDateKey, performancePeriod]);
 
   const todayFocusTasks = useMemo(
     () => tasks.filter((task) => task.taskKey === currentDateKey),
@@ -444,6 +488,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
           records={records}
           currentDateKey={currentDateKey}
           achievedWeeks={achievedWeeks}
+          period={performancePeriod}
+          onPeriodChange={setPerformancePeriod}
         />
       )}
 

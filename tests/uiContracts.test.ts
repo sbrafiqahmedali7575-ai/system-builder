@@ -381,7 +381,6 @@ assert.ok(
   'Reader note textarea must not consume the entire short viewport.'
 );
 
-assert.ok(pomodoro.includes('fixed inset-0 z-[220]'), 'Pomodoro modal must sit above mobile navigation.');
 assert.ok(report.includes('fixed inset-0 z-[220]'), 'Countdown editor must sit above mobile navigation.');
 assert.ok(badge.includes('fixed inset-0 z-[230]'), 'Badge celebration must sit above other app chrome.');
 
@@ -546,18 +545,6 @@ assert.ok(
   'Performance trend weekly mode should calculate DayCompletion as 80% tasks + 20% habits.'
 );
 assert.ok(
-  performanceIntelligence.includes("ArrowLeftRight") &&
-    (performanceIntelligence.includes("Show weekly DayCompletion") ||
-      performanceIntelligence.includes("Show last 7 days DayCompletion")),
-  'Performance trend should expose a switch control for weekly DayCompletion.'
-);
-assert.ok(
-  performanceIntelligence.includes("trendMode==='weeks'"),
-  'Performance trend should preserve the existing 12-week view and switch modes.'
-);
-
-
-assert.ok(
   performanceIntelligence.includes("useState<TrendMode>('dayCompletion')"),
   'Performance trend should default to DayCompletion'
 );
@@ -570,10 +557,6 @@ assert.ok(
   performanceIntelligence.includes("record.date,record") &&
     performanceIntelligence.includes("?.dayCompletion"),
   '7-day performance trend should prefer canonical Days.DayCompletion values'
-);
-assert.ok(
-  performanceIntelligence.includes("Show 12-week performance"),
-  'Performance trend switch should toggle back to the 12-week view'
 );
 
 

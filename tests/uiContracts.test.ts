@@ -554,3 +554,24 @@ assert.ok(
   performanceIntelligence.includes("trendMode==='weeks'"),
   'Performance trend should preserve the existing 12-week view and switch modes.'
 );
+
+
+const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
+assert.ok(
+  performanceIntelligence.includes("useState<TrendMode>('dayCompletion')"),
+  'Performance trend should default to DayCompletion'
+);
+assert.ok(
+  performanceIntelligence.includes("length:7") &&
+    performanceIntelligence.includes("today-(6-i)*DAY"),
+  'DayCompletion performance trend should show the rolling last 7 days'
+);
+assert.ok(
+  performanceIntelligence.includes("record.date,record") &&
+    performanceIntelligence.includes("?.dayCompletion"),
+  '7-day performance trend should prefer canonical Days.DayCompletion values'
+);
+assert.ok(
+  performanceIntelligence.includes("Show 12-week performance"),
+  'Performance trend switch should toggle back to the 12-week view'
+);

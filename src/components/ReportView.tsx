@@ -189,24 +189,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
     [records, currentDateKey]
   );
 
+  // Command Center Overall is always all-time and is independent of the
+  // Performance Intelligence period selector.
   const commandCenterOverall = useMemo(() => {
     const DAY_MS = 24 * 60 * 60 * 1000;
     const systemStart = Date.UTC(2026, 7, 1);
     const [year, month, day] = currentDateKey.split('-').map(Number);
     const today = Date.UTC(year, month - 1, day);
-    const days =
-      performancePeriod === '1w' ? 7 :
-      performancePeriod === '2w' ? 14 :
-      performancePeriod === '1m' ? 30 :
-      performancePeriod === 'quarter' ? 90 :
-      performancePeriod === '6m' ? 180 :
-      performancePeriod === '1y' ? 365 :
-      Math.max(1, Math.floor((today - systemStart) / DAY_MS) + 1);
-    const from = performancePeriod === 'all' ? systemStart : today - (days - 1) * DAY_MS;
     const recordMap = new Map(records.map((record) => [record.date, record]));
     const values: number[] = [];
 
-    for (let ms = from; ms <= today; ms += DAY_MS) {
+    for (let ms = systemStart; ms <= today; ms += DAY_MS) {
       const dateKey = new Date(ms).toISOString().slice(0, 10);
       const stored = recordMap.get(dateKey)?.dayCompletion;
       if (typeof stored === 'number') {
@@ -236,7 +229,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       completedDays: records.filter((record) => record.isCompleted).length,
       totalDays: values.length,
     };
-  }, [records, tasks, habits, currentDateKey, performancePeriod]);
+  }, [records, tasks, habits, currentDateKey]);
 
   const todayFocusTasks = useMemo(
     () => tasks.filter((task) => task.taskKey === currentDateKey),

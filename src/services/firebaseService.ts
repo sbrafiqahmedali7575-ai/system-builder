@@ -819,7 +819,7 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
       habitTotal: Habits,
       habitCompletionRate,
       DayCompletion,
-      IsdayCompleted: tasks > 0 && taskCompletionRate === 100,
+      IsdayCompleted: DayCompletion >= 80,
     };
     const existingData = existingDay.exists()
       ? (existingDay.data() as Record<string, unknown>)
@@ -1007,8 +1007,8 @@ export function subscribeToRecords(
         id: dateKey,
         day: index + 1,
         date: dateKey,
-        isCompleted: data.IsdayCompleted === true,
-        result: data.IsdayCompleted === true ? 'TRUE' : 'FALSE',
+        isCompleted: Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10 >= 80,
+        result: Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10 >= 80 ? 'TRUE' : 'FALSE',
         change: 0,
         skill: 'Daily Review',
         summary: `${Number(data.tasksCompleted ?? data.tasksDone ?? 0)}/${Number(data.taskTotal ?? data.tasks ?? 0)} tasks • ${Number(data.habitsCompleted ?? data.habitsDone ?? 0)}/${Number(data.habitTotal ?? data.Habits ?? 0)} habits`,

@@ -542,26 +542,36 @@ assert.ok(
 
 assert.ok(
   performanceIntelligence.includes("taskRate*.8+habitRate*.2"),
-  'Performance trend weekly mode should calculate DayCompletion as 80% tasks + 20% habits.'
+  'Performance trend should calculate DayCompletion as 80% tasks + 20% habits.'
 );
 assert.ok(
   performanceIntelligence.includes("useState<TrendMode>('dayCompletion')"),
-  'Performance trend should default to DayCompletion'
+  'Performance trend should preserve trendMode and default to DayCompletion.'
 );
 assert.ok(
-  performanceIntelligence.includes("length:7") &&
-    performanceIntelligence.includes("today-(6-i)*DAY"),
-  'DayCompletion performance trend should show the rolling last 7 days'
+  performanceIntelligence.includes("useState<Period>('1w')"),
+  'Performance range should default to 1W.'
+);
+assert.ok(
+  performanceIntelligence.includes("period==='1w'?7") &&
+    performanceIntelligence.includes("period==='2w'?14") &&
+    performanceIntelligence.includes("period==='1m'?30") &&
+    performanceIntelligence.includes("period==='quarter'?90") &&
+    performanceIntelligence.includes("period==='6m'?180") &&
+    performanceIntelligence.includes("period==='1y'?365"),
+  'Performance trend range buttons must drive the expected lookback windows.'
+);
+assert.ok(
+  performanceIntelligence.includes("const bucket=period==='1y'||period==='all'?'month':'week'"),
+  '1M/3M/6M should aggregate weekly while 1Y/All aggregate monthly.'
 );
 assert.ok(
   performanceIntelligence.includes("record.date,record") &&
     performanceIntelligence.includes("?.dayCompletion"),
-  '7-day performance trend should prefer canonical Days.DayCompletion values'
+  'Performance trend should prefer canonical Days.DayCompletion values.'
 );
-
-
 assert.ok(
-  performanceIntelligence.includes("title={\`7 Day Average \${sevenDayAverage}%\`}") &&
-    performanceIntelligence.includes("bottom:\`\${Math.max(0,Math.min(100,sevenDayAverage))}%\`"),
-  '7-day DayCompletion trend should render a horizontal average line at the 7-day average'
+  performanceIntelligence.includes("performanceTrendAverage") &&
+    performanceIntelligence.includes("hasPerformanceTrendData"),
+  'Dynamic performance trend should calculate an average and hide it when no values exist.'
 );

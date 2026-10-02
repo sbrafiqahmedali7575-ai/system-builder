@@ -19,6 +19,7 @@ const migration = read('src/services/dataModelMigration.ts');
 const firebaseService = read('src/services/firebaseService.ts');
 const dataWorkspace = read('src/components/DataWorkspace.tsx');
 const badge = read('src/components/BadgeCelebration.tsx');
+const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
 
 // Mobile modal safety: interactive dialogs must render above the fixed bottom nav (z-[140])
 // and remain reachable on short/narrow phone viewports.
@@ -537,4 +538,19 @@ assert.ok(
 assert.ok(
   firebaseService.includes('taskCompletionRate * 0.8 + habitCompletionRate * 0.2'),
   'DayCompletion should use 80% task completion and 20% habit completion'
+);
+
+
+assert.ok(
+  performanceIntelligence.includes("taskRate*.8+habitRate*.2"),
+  'Performance trend weekly mode should calculate DayCompletion as 80% tasks + 20% habits.'
+);
+assert.ok(
+  performanceIntelligence.includes("ArrowLeftRight") &&
+    performanceIntelligence.includes("Show weekly DayCompletion"),
+  'Performance trend should expose a switch control for weekly DayCompletion.'
+);
+assert.ok(
+  performanceIntelligence.includes("trendMode==='weeks'"),
+  'Performance trend should preserve the existing 12-week view and switch modes.'
 );

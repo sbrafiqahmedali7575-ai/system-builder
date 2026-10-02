@@ -1,4 +1,4 @@
-import type { DailyRecord, TaskItem } from '../types';
+import type { DailyRecord } from '../types';
 import { toInputDateValue } from './taskDateUtils';
 
 export const SYSTEM_BUILDER_START_DATE_KEY = '2026-08-01';
@@ -77,10 +77,10 @@ export function calculateCalendarStreakStats(
 }
 
 export function calculateAchievedWeeks(
-  tasks: TaskItem[],
+  records: DailyRecord[],
   currentDateKey: string
 ): number {
-  if (tasks.length === 0) return 0;
+  if (records.length === 0) return 0;
 
   const getMonday = (dateKey: string) => {
     const [year, month, day] = dateKey.split('-').map(Number);
@@ -89,33 +89,31 @@ export function calculateAchievedWeeks(
     return addDateKeyDays(dateKey, weekday === 0 ? -6 : 1 - weekday);
   };
 
-  const dailyRate = (dateKey: string) => {
-    const dayTasks = tasks.filter((task) => task.taskKey === dateKey);
-    if (dayTasks.length === 0) return 0;
-    return (
-      dayTasks.filter((task) => task.isCompleted).length / dayTasks.length
-    ) * 100;
-  };
+  const dayCompletionByDate = new Map(
+    records.map((record) => [
+      recordDateKey(record),
+      typeof record.dayCompletion === 'number' ? record.dayCompletion : 0,
+    ])
+  );
 
-  const firstTaskDate = tasks
-    .map((task) => task.taskKey)
+  const firstRecordDate = [...dayCompletionByDate.keys()]
     .filter(Boolean)
     .sort()[0];
 
-  if (!firstTaskDate) return 0;
+  if (!firstRecordDate) return 0;
 
-  let weekStart = getMonday(firstTaskDate);
+  let weekStart = getMonday(firstRecordDate);
   const currentWeekStart = getMonday(currentDateKey);
   let achieved = 0;
   let guard = 0;
 
   while (weekStart < currentWeekStart && guard < 5200) {
-    const score =
+    const weeklyAverage =
       Array.from({ length: 7 }, (_, index) =>
-        dailyRate(addDateKeyDays(weekStart, index))
-      ).reduce((sum, rate) => sum + rate, 0) / 7;
+        dayCompletionByDate.get(addDateKeyDays(weekStart, index)) ?? 0
+      ).reduce((sum, value) => sum + value, 0) / 7;
 
-    if (score >= 80) achieved += 1;
+    if (weeklyAverage > 80) achieved += 1;
     weekStart = addDateKeyDays(weekStart, 7);
     guard += 1;
   }

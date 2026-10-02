@@ -83,6 +83,9 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
             <Award className="w-3 h-3 text-blue-500" />
             Overall
           </div>
+          <div className="mt-0.5 text-[9px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            All time
+          </div>
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
             <AnimatedNumber value={overallCompletionPercentage} suffix="%" precision={1} />
           </div>
@@ -92,6 +95,9 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
           <div className="flex items-center justify-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
             <Trophy className="w-3 h-3 text-blue-500" />
             Weeks
+          </div>
+          <div className="mt-0.5 text-[9px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            All time
           </div>
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
             <AnimatedNumber value={achievedWeeks} />

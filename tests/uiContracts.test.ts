@@ -523,3 +523,17 @@ assert.ok(pomodoroTimer.includes('isAlertMenuOpen'), 'Timer alert settings must 
 assert.ok(pomodoroTimer.includes('aria-controls="timer-alert-settings"'), 'Three-dot trigger must be associated with the alert settings panel.');
 assert.ok(pomodoroTimer.includes('{isAlertMenuOpen && ('), 'Alert volume, mute, and preview controls must render only after opening the menu.');
 assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Hiding alert controls must not alter milestone cadence.');
+
+
+assert.ok(
+  dataWorkspaceSource.includes("'DayCompletion'"),
+  'Days data table should expose DayCompletion'
+);
+assert.ok(
+  dataWorkspaceSource.indexOf("'DayCompletion'") < dataWorkspaceSource.indexOf("'IsdayCompleted'"),
+  'DayCompletion should appear before IsdayCompleted in Days'
+);
+assert.ok(
+  firebaseServiceSource.includes('taskCompletionRate * 0.8 + habitCompletionRate * 0.2'),
+  'DayCompletion should use 80% task completion and 20% habit completion'
+);

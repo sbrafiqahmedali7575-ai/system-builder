@@ -538,6 +538,10 @@ assert.ok(
   firebaseService.includes('taskCompletionRate * 0.67 + habitCompletionRate * 0.33'),
   'DayCompletion should use 67% task completion and 33% habit completion'
 );
+assert.ok(
+  firebaseService.includes('IsdayCompleted: DayCompletion >= 80'),
+  'IsdayCompleted should be true when DayCompletion is at least 80%'
+);
 
 
 assert.ok(

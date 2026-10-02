@@ -2,7 +2,7 @@ import React,{useMemo,useState}from'react';
 import{Activity,Award,CalendarDays,CheckCircle2,Flame,Target,Trophy}from'lucide-react';
 import{DailyRecord,HabitItem,TaskItem}from'../types';
 import{isHabitDue}from'../utils/habitUtils';
-export type Period='1w'|'2w'|'1m'|'quarter'|'6m'|'1y'|'all';
+type Period='1w'|'2w'|'1m'|'quarter'|'6m'|'1y'|'all';
 type TrendMode='weeks'|'dayCompletion';
 const PERIOD_TABS: { id: Period; label: string; title: string }[] = [
   { id: '1w', label: '1W', title: '1 Week (7 days)' },
@@ -13,15 +13,13 @@ const PERIOD_TABS: { id: Period; label: string; title: string }[] = [
   { id: '1y', label: '1Y', title: '1 Year (365 days)' },
   { id: 'all', label: 'All', title: 'All Time' },
 ];
-interface Props{tasks:TaskItem[];habits:HabitItem[];records:DailyRecord[];currentDateKey:string;achievedWeeks:number;period?:Period;onPeriodChange?:(period:Period)=>void}
+interface Props{tasks:TaskItem[];habits:HabitItem[];records:DailyRecord[];currentDateKey:string;achievedWeeks:number}
 const DAY=86400000;
 const utc=(s:string)=>{const a=s.split('-').map(Number);if(a.length!==3||a.some(v=>!Number.isFinite(v)))return NaN;return Date.UTC(a[0],a[1]-1,a[2])};
 const key=(ms:number)=>{const d=new Date(ms);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')};
 const pct=(a:number,b:number)=>b?Math.round(a/b*100):0;
-export const PerformanceIntelligence:React.FC<Props>=({tasks,habits,records,currentDateKey,achievedWeeks,period:controlledPeriod,onPeriodChange})=>{
- const[internalPeriod,setInternalPeriod]=useState<Period>('1w');
- const period=controlledPeriod??internalPeriod;
- const setPeriod=(next:Period)=>{setInternalPeriod(next);onPeriodChange?.(next);};
+export const PerformanceIntelligence:React.FC<Props>=({tasks,habits,records,currentDateKey,achievedWeeks})=>{
+ const[period,setPeriod]=useState<Period>('1w');
  const[trendMode,setTrendMode]=useState<TrendMode>('dayCompletion');
  const m=useMemo(()=>{const parsedToday=utc(currentDateKey);const today=Number.isFinite(parsedToday)?parsedToday:Date.now();const allStart=utc('2026-08-01');const dates=[...tasks.map(t=>t.taskKey),...habits.map(h=>h.activeFrom||h.createdAt?.slice(0,10)||'')].filter(Boolean).sort();const parsedFirst=utc(dates[0]||currentDateKey);const first=Number.isFinite(parsedFirst)?parsedFirst:today;const n=period==='1w'?7:period==='2w'?14:period==='1m'?30:period==='quarter'?90:period==='6m'?180:period==='1y'?365:Math.max(1,Math.floor((today-allStart)/DAY)+1);const start=period==='all'?allStart:today-(n-1)*DAY;
  const recordMs=(r:DailyRecord)=>{const ms=Date.parse(r.date+' UTC');return Number.isFinite(ms)?ms:NaN};

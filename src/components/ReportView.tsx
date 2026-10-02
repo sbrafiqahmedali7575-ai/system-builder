@@ -185,8 +185,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const currentDateKey = useCurrentDateKey(CONFIGURED_TIMEZONE);
 
   const achievedWeeks = useMemo(
-    () => calculateAchievedWeeks(tasks, currentDateKey),
-    [tasks, currentDateKey]
+    () => calculateAchievedWeeks(records, currentDateKey),
+    [records, currentDateKey]
   );
 
   const commandCenterOverall = useMemo(() => {

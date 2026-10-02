@@ -804,6 +804,8 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
     Habits > 0 ? Math.round((habitsDone / Habits) * 100) : 0;
   const taskCompletionRate = tasksCompleted;
   const habitCompletionRate = habitsCompleted;
+  const DayCompletion =
+    Math.round((taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 10) / 10;
 
   try {
     const dayRef = doc(db, DAYS_COLLECTION, dateKey);
@@ -816,6 +818,7 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
       habitsCompleted: habitsDone,
       habitTotal: Habits,
       habitCompletionRate,
+      DayCompletion,
       IsdayCompleted: tasks > 0 && taskCompletionRate === 100,
     };
     const existingData = existingDay.exists()
@@ -941,10 +944,19 @@ export function subscribeToCanonicalData(
   const unsubs = names.map((name) => onSnapshot(
     collection(db, name),
     (snapshot) => {
-      const rows: CanonicalDataRow[] = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Record<string, unknown>),
-      }));
+      const rows: CanonicalDataRow[] = snapshot.docs.map((d) => {
+        const row: CanonicalDataRow = {
+          id: d.id,
+          ...(d.data() as Record<string, unknown>),
+        };
+        if (name === 'days' && typeof row.DayCompletion !== 'number') {
+          const taskRate = Number(row.taskCompletionRate ?? 0);
+          const habitRate = Number(row.habitCompletionRate ?? 0);
+          row.DayCompletion =
+            Math.round((taskRate * 0.8 + habitRate * 0.2) * 10) / 10;
+        }
+        return row;
+      });
       if (name === 'tasks') {
         const byDate = new Map<string, CanonicalDataRow[]>();
         rows.forEach((row) => {

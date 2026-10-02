@@ -217,7 +217,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       const habitRate = dueHabits.length
         ? (dueHabits.filter((habit) => habit.checkIns.includes(dateKey)).length / dueHabits.length) * 100
         : 0;
-      values.push(Math.round((taskRate * 0.8 + habitRate * 0.2) * 10) / 10);
+      values.push(Math.round((taskRate * 0.67 + habitRate * 0.33) * 10) / 10);
     }
 
     const completionRate = values.length

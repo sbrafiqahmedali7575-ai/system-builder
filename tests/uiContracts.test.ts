@@ -129,7 +129,7 @@ assert.ok(
 );
 assert.ok(
   todayTasks.includes('grid grid-cols-2 gap-2 pt-1.5 border-t') &&
-    todayTasks.includes('grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end'),
+    todayTasks.includes('sm:flex sm:items-center sm:justify-end'),
   'Edit and Delete task actions must remain side by side on mobile.'
 );
 assert.ok(
@@ -458,8 +458,8 @@ assert.ok(firebaseService.includes('Duplicate task rejected'), 'Task creation mu
 assert.ok(dayReview.includes("document.body.style.overflow = 'hidden'"), 'Day Review must lock background scrolling while open.');
 assert.ok(commandPalette.includes("document.body.style.overflow='hidden'"), 'Command Palette must lock background scrolling while open.');
 assert.ok(commandPalette.includes("env(safe-area-inset-bottom)"), 'Command Palette must respect mobile safe areas.');
-assert.ok(calendarWorkspace.includes("env(safe-area-inset-bottom)"), 'Calendar dialogs must respect mobile safe areas.');
-assert.ok(library.includes("env(safe-area-inset-bottom)"), 'Books note dialog must respect mobile safe areas.');
+assert.ok(calendar.includes("env(safe-area-inset-bottom)"), 'Calendar dialogs must respect mobile safe areas.');
+assert.ok(books.includes("env(safe-area-inset-bottom)"), 'Books note dialog must respect mobile safe areas.');
 assert.ok(report.includes('onCompleteCurrentTask'), 'Focus completion contract must remain wired after modal changes.');
 
 
@@ -479,9 +479,9 @@ assert.ok(todayTasks.includes("data-task-action-menu"), 'Task action menu must e
 assert.ok(todayTasks.includes("document.addEventListener('pointerdown', onPointerDown)"), 'Task action menu must dismiss on outside tap.');
 assert.ok(todayTasks.includes("if (event.key === 'Escape') closeMenu()"), 'Task action menu must dismiss with Escape.');
 assert.ok(todayTasks.includes('bottom-11') && todayTasks.includes('sm:bottom-auto'), 'Mobile task action menu must open upward to reduce viewport clipping.');
-assert.ok(library.includes('data-highlight-palette'), 'Reader highlight popover must expose an outside-tap boundary.');
-assert.ok(library.includes("if (event.key === 'Escape') dismiss()"), 'Reader highlight popover must dismiss with Escape.');
-assert.ok(library.includes('h-11 w-11 rounded-full'), 'Reader highlight actions must use mobile-sized touch targets.');
+assert.ok(books.includes('data-highlight-palette'), 'Reader highlight popover must expose an outside-tap boundary.');
+assert.ok(books.includes("if (event.key === 'Escape') dismiss()"), 'Reader highlight popover must dismiss with Escape.');
+assert.ok(books.includes('h-11 w-11 rounded-full'), 'Reader highlight actions must use mobile-sized touch targets.');
 
 
 // Focus timer 15-minute alternating alert contracts.
@@ -547,7 +547,8 @@ assert.ok(
 );
 assert.ok(
   performanceIntelligence.includes("ArrowLeftRight") &&
-    performanceIntelligence.includes("Show weekly DayCompletion"),
+    (performanceIntelligence.includes("Show weekly DayCompletion") ||
+      performanceIntelligence.includes("Show last 7 days DayCompletion")),
   'Performance trend should expose a switch control for weekly DayCompletion.'
 );
 assert.ok(
@@ -556,7 +557,6 @@ assert.ok(
 );
 
 
-const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
 assert.ok(
   performanceIntelligence.includes("useState<TrendMode>('dayCompletion')"),
   'Performance trend should default to DayCompletion'

@@ -8,7 +8,7 @@ export interface DailyRecord {
   skill?: string;
   summary?: string;
   notes?: string;
-  dayCompletion?: number; // Weighted daily score: 80% task completion + 20% habit completion
+  dayCompletion?: number; // Weighted daily score: 67% task completion + 33% habit completion
   updatedAt?: string; // ISO 8601 UTC timestamp
 }
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import type { DailyRecord, TaskItem } from '../src/types';
+import type { DailyRecord } from '../src/types';
 import {
   calculateAchievedWeeks,
   calculateCalendarStreakStats,
@@ -54,18 +54,33 @@ const record = (date: string, isCompleted: boolean, day: number): DailyRecord =>
 }
 
 {
-  const tasks: TaskItem[] = Array.from({ length: 7 }, (_, index) => {
+  const records: DailyRecord[] = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(Date.UTC(2026, 8, 21 + index));
     const dateKey = date.toISOString().slice(0, 10);
     return {
-      id: `T${index + 1}`,
-      taskKey: dateKey,
-      taskOfTheDay: `Task ${index + 1}`,
-      isCompleted: true,
+      ...record(dateKey, true, index + 1),
+      dayCompletion: index === 0 ? 81 : 100,
     };
   });
 
-  assert.equal(calculateAchievedWeeks(tasks, '2026-09-28'), 1);
+  assert.equal(calculateAchievedWeeks(records, '2026-09-28'), 1);
+}
+
+{
+  const records: DailyRecord[] = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(Date.UTC(2026, 8, 21 + index));
+    const dateKey = date.toISOString().slice(0, 10);
+    return {
+      ...record(dateKey, true, index + 1),
+      dayCompletion: 80,
+    };
+  });
+
+  assert.equal(
+    calculateAchievedWeeks(records, '2026-09-28'),
+    0,
+    'A weekly DayCompletion average of exactly 80% must not count as achieved.'
+  );
 }
 
 {

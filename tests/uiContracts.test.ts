@@ -535,14 +535,14 @@ assert.ok(
   'DayCompletion should appear before IsdayCompleted in Days'
 );
 assert.ok(
-  firebaseService.includes('taskCompletionRate * 0.8 + habitCompletionRate * 0.2'),
-  'DayCompletion should use 80% task completion and 20% habit completion'
+  firebaseService.includes('taskCompletionRate * 0.67 + habitCompletionRate * 0.33'),
+  'DayCompletion should use 67% task completion and 33% habit completion'
 );
 
 
 assert.ok(
-  performanceIntelligence.includes("taskRate*.8+habitRate*.2"),
-  'Performance trend should calculate DayCompletion as 80% tasks + 20% habits.'
+  performanceIntelligence.includes("taskRate*.67+habitRate*.33"),
+  'Performance trend should calculate DayCompletion as 67% tasks + 33% habits.'
 );
 assert.ok(
   performanceIntelligence.includes("useState<TrendMode>('dayCompletion')"),

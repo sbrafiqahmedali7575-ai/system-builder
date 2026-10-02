@@ -805,7 +805,7 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
   const taskCompletionRate = tasksCompleted;
   const habitCompletionRate = habitsCompleted;
   const DayCompletion =
-    Math.round((taskCompletionRate * 0.8 + habitCompletionRate * 0.2) * 10) / 10;
+    Math.round((taskCompletionRate * 0.67 + habitCompletionRate * 0.33) * 10) / 10;
 
   try {
     const dayRef = doc(db, DAYS_COLLECTION, dateKey);
@@ -953,7 +953,7 @@ export function subscribeToCanonicalData(
           const taskRate = Number(row.taskCompletionRate ?? 0);
           const habitRate = Number(row.habitCompletionRate ?? 0);
           row.DayCompletion =
-            Math.round((taskRate * 0.8 + habitRate * 0.2) * 10) / 10;
+            Math.round((taskRate * 0.67 + habitRate * 0.33) * 10) / 10;
         }
         return row;
       });
@@ -1016,7 +1016,7 @@ export function subscribeToRecords(
         dayCompletion:
           typeof data.DayCompletion === 'number'
             ? data.DayCompletion
-            : Math.round((Number(data.taskCompletionRate ?? 0) * 0.8 + Number(data.habitCompletionRate ?? 0) * 0.2) * 10) / 10,
+            : Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10,
       }));
       onUpdate(records);
     },

@@ -17,6 +17,7 @@ const lifecycle = read('src/hooks/useSystemDataLifecycle.ts');
 const dayReview = read('src/components/DayReviewModal.tsx');
 const migration = read('src/services/dataModelMigration.ts');
 const firebaseService = read('src/services/firebaseService.ts');
+const dataWorkspace = read('src/components/DataWorkspace.tsx');
 const badge = read('src/components/BadgeCelebration.tsx');
 
 // Mobile modal safety: interactive dialogs must render above the fixed bottom nav (z-[140])
@@ -526,14 +527,14 @@ assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Hiding 
 
 
 assert.ok(
-  dataWorkspaceSource.includes("'DayCompletion'"),
+  dataWorkspace.includes("'DayCompletion'"),
   'Days data table should expose DayCompletion'
 );
 assert.ok(
-  dataWorkspaceSource.indexOf("'DayCompletion'") < dataWorkspaceSource.indexOf("'IsdayCompleted'"),
+  dataWorkspace.indexOf("'DayCompletion'") < dataWorkspace.indexOf("'IsdayCompleted'"),
   'DayCompletion should appear before IsdayCompleted in Days'
 );
 assert.ok(
-  firebaseServiceSource.includes('taskCompletionRate * 0.8 + habitCompletionRate * 0.2'),
+  firebaseService.includes('taskCompletionRate * 0.8 + habitCompletionRate * 0.2'),
   'DayCompletion should use 80% task completion and 20% habit completion'
 );

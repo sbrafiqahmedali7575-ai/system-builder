@@ -47,15 +47,15 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const reduceMotion = useReducedMotion();
-  const AnimatedNumber = ({ value, suffix = '' }: { value: number; suffix?: string }) => {
+  const AnimatedNumber = ({ value, suffix = '', precision = 0 }: { value: number; suffix?: string; precision?: number }) => {
     const [shown, setShown] = useState(reduceMotion ? value : 0);
     useEffect(() => {
       if (reduceMotion) { setShown(value); return; }
       const from = shown, delta = value - from, started = performance.now(), duration = 650;
       let frame = 0;
-      const tick = (now:number) => { const p=Math.min(1,(now-started)/duration); const eased=1-Math.pow(1-p,3); setShown(Math.round(from+delta*eased)); if(p<1) frame=requestAnimationFrame(tick); };
+      const tick = (now:number) => { const p=Math.min(1,(now-started)/duration); const eased=1-Math.pow(1-p,3); const factor=Math.pow(10,precision); setShown(Math.round((from+delta*eased)*factor)/factor); if(p<1) frame=requestAnimationFrame(tick); };
       frame=requestAnimationFrame(tick); return()=>cancelAnimationFrame(frame);
-    }, [value, reduceMotion]);
+    }, [value, reduceMotion, precision]);
     return <>{shown}{suffix}</>;
   };
 
@@ -84,7 +84,7 @@ export const CommandCenterSidebar: React.FC<CommandCenterSidebarProps> = ({
             Overall
           </div>
           <div className="mt-1 text-base leading-none font-semibold tabular-nums text-slate-800 dark:text-slate-100">
-            <AnimatedNumber value={Math.round(overallCompletionPercentage)} suffix="%" />
+            <AnimatedNumber value={overallCompletionPercentage} suffix="%" precision={1} />
           </div>
         </div>
 

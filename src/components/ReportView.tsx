@@ -7,7 +7,7 @@ import { parseDateToTimestamp } from '../utils/dateUtils';
 import { CONFIGURED_TIMEZONE, formatCalendarDate } from '../utils/taskDateUtils';
 import { isHabitDue } from '../utils/habitUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
-import { calculateAchievedWeeks, calculateOverallCompletion } from '../utils/progressAnalytics';
+import { calculateAchievedWeeks } from '../utils/progressAnalytics';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
 import { PerformanceIntelligence, Period } from './PerformanceIntelligence';

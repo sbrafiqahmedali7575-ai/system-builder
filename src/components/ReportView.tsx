@@ -10,7 +10,7 @@ import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
 import { calculateAchievedWeeks } from '../utils/progressAnalytics';
 import { TodayTasksCard } from './TodayTasksCard';
 import { CommandCenterSidebar } from './CommandCenterSidebar';
-import { PerformanceIntelligence, Period } from './PerformanceIntelligence';
+import { PerformanceIntelligence } from './PerformanceIntelligence';
 import {
   saveCountdownSettings,
   subscribeToCountdownSettings,
@@ -96,7 +96,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const isDark = theme === 'dark';
   const [isCountdownEditorOpen, setIsCountdownEditorOpen] = useState(false);
   const [selectedFocusTaskId, setSelectedFocusTaskId] = useState<string>('');
-  const [performancePeriod, setPerformancePeriod] = useState<Period>('1w');
   const parseActualTimeSeconds = (value?: string) => {
     if (!value) return 0;
     const trimmed = value.trim();
@@ -481,8 +480,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
           records={records}
           currentDateKey={currentDateKey}
           achievedWeeks={achievedWeeks}
-          period={performancePeriod}
-          onPeriodChange={setPerformancePeriod}
         />
       )}
 

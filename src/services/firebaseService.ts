@@ -949,7 +949,7 @@ export function subscribeToCanonicalData(
           id: d.id,
           ...(d.data() as Record<string, unknown>),
         };
-        if (name === 'days' && typeof row.DayCompletion !== 'number') {
+        if (name === 'days') {
           const taskRate = Number(row.taskCompletionRate ?? 0);
           const habitRate = Number(row.habitCompletionRate ?? 0);
           row.DayCompletion =
@@ -1014,9 +1014,7 @@ export function subscribeToRecords(
         summary: `${Number(data.tasksCompleted ?? data.tasksDone ?? 0)}/${Number(data.taskTotal ?? data.tasks ?? 0)} tasks • ${Number(data.habitsCompleted ?? data.habitsDone ?? 0)}/${Number(data.habitTotal ?? data.Habits ?? 0)} habits`,
         notes: '',
         dayCompletion:
-          typeof data.DayCompletion === 'number'
-            ? data.DayCompletion
-            : Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10,
+          Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10,
       }));
       onUpdate(records);
     },

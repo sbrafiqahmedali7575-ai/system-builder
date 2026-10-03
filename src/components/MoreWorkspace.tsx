@@ -6,6 +6,7 @@ import {
   Repeat2,
   Database,
   Focus,
+  Wrench,
   X,
 } from 'lucide-react';
 import { DashboardTheme, HabitItem, TaskItem } from '../types';
@@ -84,9 +85,53 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
   return (
     <div
       data-tools-density="compact"
-      className="min-h-screen lg:h-screen bg-[#f7f7f7] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col"
+      className="min-h-[calc(100vh-3.5rem)] bg-[#f6f8ff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col"
     >
-      <header className={`${focusMode ? 'hidden' : 'sticky'} top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950`}>
+      {!focusMode && (
+        <div className="hidden md:block mx-auto w-full max-w-[1500px] px-4 pt-4 lg:px-6">
+          <section className="overflow-hidden rounded-[26px] border border-white/80 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50/70 p-5 shadow-[0_20px_60px_rgba(37,99,235,0.10)] dark:border-slate-800 dark:from-slate-900 dark:via-blue-950/20 dark:to-indigo-950/20">
+            <div className="flex items-center justify-between gap-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="rounded-2xl bg-blue-600 p-2.5 text-white shadow-lg shadow-blue-500/20">
+                  <Wrench className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-black tracking-[-0.03em]">Tools</h1>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Plan, organize, and manage tasks, habits, priorities, and your underlying data.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid min-w-[500px] grid-cols-4 rounded-2xl bg-slate-100/90 p-1 shadow-inner dark:bg-slate-800/90">
+                {TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => !tab.disabled && setActiveTab(tab.id)}
+                      disabled={tab.disabled}
+                      aria-pressed={isActive}
+                      className={`flex h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-[11px] font-bold transition ${
+                        isActive
+                          ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300'
+                          : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      <header className={`${focusMode ? 'hidden' : 'sticky'} md:hidden top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950`}>
         <div className="w-full px-1.5 sm:px-4 lg:px-5 flex items-center gap-1 sm:gap-2">
           <button
             type="button"
@@ -174,8 +219,8 @@ export const MoreWorkspace: React.FC<MoreWorkspaceProps> = ({
         </button>
       )}
 
-      <main className={`w-full ${focusMode ? 'px-0 py-0' : 'px-0 sm:px-4 lg:px-5 py-0 sm:py-3'} flex-1 min-h-0 lg:overflow-hidden`}>
-        <section className="lg:h-full lg:overflow-hidden">
+      <main className={`mx-auto w-full ${focusMode ? 'max-w-none px-0 py-0' : 'max-w-[1500px] px-0 py-0 md:px-4 md:py-4 lg:px-6'} flex-1 min-h-0`}>
+        <section className={`${focusMode ? '' : 'md:overflow-hidden md:rounded-2xl md:border md:border-slate-200/80 md:bg-white/90 md:shadow-sm dark:md:border-slate-800 dark:md:bg-slate-900/80'}`}>
           {activeTab === 'eisenhower' && (
             <div
               id="tools-panel-eisenhower"

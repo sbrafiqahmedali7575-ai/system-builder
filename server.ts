@@ -1059,6 +1059,52 @@ startServer();
 
       const runVirtualSql = (inputSql: string) => {
         let sql = inputSql.replace(/--.*$/gm, ' ').trim().replace(/;+\s*$/, '');
+
+        if (/^with\s+/i.test(sql)) {
+          const cteHead = sql.match(/^with\s+([a-zA-Z_][\w]*)\s+as\s*\(/i);
+          if (!cteHead) throw new Error('Only a single non-recursive CTE is supported in deterministic SQL mode.');
+          const cteName = cteHead[1];
+          const openIndex = sql.indexOf('(', cteHead[0].length - 1);
+          let depth = 0;
+          let quote = '';
+          let closeIndex = -1;
+          for (let index = openIndex; index < sql.length; index += 1) {
+            const char = sql[index];
+            if (quote) {
+              if (char === quote) quote = '';
+              continue;
+            }
+            if (char === "'" || char === '"') {
+              quote = char;
+              continue;
+            }
+            if (char === '(') depth += 1;
+            if (char === ')') {
+              depth -= 1;
+              if (depth === 0) {
+                closeIndex = index;
+                break;
+              }
+            }
+          }
+          if (closeIndex < 0) throw new Error('CTE closing parenthesis was not found.');
+          const innerSql = sql.slice(openIndex + 1, closeIndex).trim();
+          const outerSql = sql.slice(closeIndex + 1).trim();
+          if (!/^select\s+/i.test(innerSql) || !/^select\s+/i.test(outerSql)) {
+            throw new Error('CTE and outer statement must both be SELECT queries.');
+          }
+          const inner = runVirtualSql(innerSql);
+          const key = cteName.toLowerCase();
+          const existing = virtualTables[key];
+          virtualTables[key] = inner.rows;
+          try {
+            return runVirtualSql(outerSql);
+          } finally {
+            if (existing) virtualTables[key] = existing;
+            else delete virtualTables[key];
+          }
+        }
+
         let topLimit: number | undefined;
         sql = sql.replace(/^select\s+top\s+(\d+)\s+/i, (_all, count) => {
           topLimit = Math.max(1, Math.min(500, Number(count)));
@@ -1273,6 +1319,75 @@ startServer();
             resultCount: 1,
             notes: ['This is a contribution decomposition, not a causal claim.'],
           };
+        }
+
+        if (q.includes('task')) {
+          if (q.includes('incomplete') || q.includes('pending') || q.includes('not completed')) {
+            const sql = 'SELECT taskId, title, scheduledDate, quadrant, priority, estimationMinutes, actualMinutes FROM task_facts WHERE completed = false ORDER BY scheduledDate DESC LIMIT 50';
+            const result = runVirtualSql(sql);
+            return {
+              answer: result.resultCount + ' incomplete task' + (result.resultCount === 1 ? '' : 's') + ' found in the live task data.',
+              ...result,
+              notes: result.resultCount > result.rows.length ? ['Showing the first 50 rows.'] : [],
+            };
+          }
+
+          if (q.includes('quadrant')) {
+            const sql = 'SELECT quadrant, COUNT(*) AS totalTasks FROM task_facts GROUP BY quadrant ORDER BY totalTasks DESC';
+            const result = runVirtualSql(sql);
+            return { answer: 'Task volume by Eisenhower quadrant.', ...result, notes: [] };
+          }
+
+          if (q.includes('priority')) {
+            const sql = 'SELECT priority, COUNT(*) AS totalTasks FROM task_facts GROUP BY priority ORDER BY totalTasks DESC';
+            const result = runVirtualSql(sql);
+            return { answer: 'Task volume by priority.', ...result, notes: [] };
+          }
+
+          const total = normalizedTasks.length;
+          const completed = normalizedTasks.filter((task: any) => task.completed).length;
+          const rate = total ? Math.round((completed / total) * 1000) / 10 : 0;
+          return {
+            answer: completed + ' of ' + total + ' tasks are completed (' + rate + '%).',
+            sql: 'SELECT completed, COUNT(*) AS tasks FROM task_facts GROUP BY completed ORDER BY completed DESC',
+            columns: ['completed', 'tasks'],
+            rows: [
+              { completed: true, tasks: completed },
+              { completed: false, tasks: total - completed },
+            ],
+            resultCount: 2,
+            notes: [],
+          };
+        }
+
+        if (q.includes('habit')) {
+          const wantsWeak = q.includes('weak') || q.includes('worst') || q.includes('lowest');
+          const wantsTop = q.includes('top') || q.includes('best') || q.includes('strong');
+          const direction = wantsWeak ? 'ASC' : 'DESC';
+          const limit = wantsTop || wantsWeak ? requestedTop : 50;
+          const sql = 'SELECT habitId, name, completedLogs, incompleteLogs, completionLogRate FROM habit_facts ORDER BY completionLogRate ' + direction + ' LIMIT ' + limit;
+          const result = runVirtualSql(sql);
+          return {
+            answer: wantsWeak ? 'Lowest habit completion rates from live HabitLogs.' : wantsTop ? 'Highest habit completion rates from live HabitLogs.' : 'Habit completion performance from live HabitLogs.',
+            ...result,
+            notes: ['Habit performance uses available HabitLog rows.'],
+          };
+        }
+
+        if (q.includes('weekly') || q.includes('week trend') || q.includes('week-by-week')) {
+          const sql = 'SELECT key, recordedDays, averageDayCompletion, averageTaskCompletionRate, averageHabitCompletionRate, successfulDays, isAchievedWeek FROM weekly_facts ORDER BY key DESC LIMIT 12';
+          const result = runVirtualSql(sql);
+          return {
+            answer: 'Latest weekly performance summary.',
+            ...result,
+            notes: ['Achieved week uses the full Monday-Sunday 7-day average with missing dates counted as 0 and requires >80%.'],
+          };
+        }
+
+        if (q.includes('monthly') || q.includes('month trend') || q.includes('month-by-month')) {
+          const sql = 'SELECT key, recordedDays, averageDayCompletion, averageTaskCompletionRate, averageHabitCompletionRate, successfulDays FROM monthly_facts ORDER BY key DESC LIMIT 12';
+          const result = runVirtualSql(sql);
+          return { answer: 'Latest monthly performance summary.', ...result, notes: [] };
         }
 
         const avgDay = dayFacts.length

@@ -48,13 +48,13 @@
         "habitCompletionRate": {
           "type": "number"
         },
-        "dayCompleted": {
+        "DayCompletion": {
           "type": "number",
-          "description": "Overall day progress percentage: (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20), rounded to 2 decimals."
+          "description": "Overall day progress percentage: (taskCompletionRate × 0.67) + (habitCompletionRate × 0.33), rounded to 2 decimals."
         },
         "IsdayCompleted": {
           "type": "boolean",
-          "description": "True when (taskCompletionRate × 0.80) + (habitCompletionRate × 0.20) is at least 80."
+          "description": "True when (taskCompletionRate × 0.67) + (habitCompletionRate × 0.33) is at least 80."
         }
       },
       "required": [
@@ -65,7 +65,7 @@
         "habitsCompleted",
         "habitTotal",
         "habitCompletionRate",
-        "dayCompleted",
+        "DayCompletion",
         "IsdayCompleted"
       ]
     },

@@ -342,6 +342,17 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   useEffect(() => {
     void refreshStatus();
+
+    const refresh = () => void refreshStatus();
+    const interval = window.setInterval(refresh, 30_000);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('system-builder:auth-profile-changed', refresh);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('system-builder:auth-profile-changed', refresh);
+    };
   }, []);
 
   const logout = async () => {

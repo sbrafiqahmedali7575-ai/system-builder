@@ -22,8 +22,11 @@ const dataTransfer = read('src/utils/dataTransfer.ts');
 const badge = read('src/components/BadgeCelebration.tsx');
 const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
 const mobileBottomNav = read('src/components/MobileBottomNav.tsx');
+const mobileBrandHeader = read('src/components/MobileBrandHeader.tsx');
 const dataAnalytics = read('src/components/DataAnalyticsPage.tsx');
 const powerBiHeader = read('src/components/PowerBiHeader.tsx');
+const authGate = read('src/components/AuthGate.tsx');
+const authServer = read('server/auth.ts');
 const server = read('server.ts');
 
 assert.ok(
@@ -631,8 +634,9 @@ assert.ok(
     desktopHeaderControls.includes('<BarChart3 className="h-4 w-4" />') &&
     desktopHeaderControls.includes('<Wrench className="h-4 w-4" />') &&
     desktopHeaderControls.includes('<BookOpen className="h-4 w-4" />') &&
+    desktopHeaderControls.includes('<UserRound className="h-4 w-4" />') &&
     desktopHeaderControls.includes('<Focus className="h-4 w-4" />'),
-  'Desktop header must expose icon-only Home, Data Analytics, Tools, Books, and Focus controls.'
+  'Desktop header must expose icon-only Home, Data Analytics, Tools, Books, Account, and Focus controls.'
 );
 assert.ok(
   desktopHeaderControls.indexOf('{onOpenHome && (') <
@@ -642,14 +646,17 @@ assert.ok(
     desktopHeaderControls.indexOf('{onOpenTools && (') <
       desktopHeaderControls.indexOf('{onOpenLibrary && (') &&
     desktopHeaderControls.indexOf('{onOpenLibrary && (') <
+      desktopHeaderControls.indexOf('{onOpenAccount && (') &&
+    desktopHeaderControls.indexOf('{onOpenAccount && (') <
       desktopHeaderControls.indexOf('{onToggleFocus && ('),
-  'Desktop header icons must be ordered Home, Data Analytics, Tools, Books, Focus.'
+  'Desktop header icons must be ordered Home, Data Analytics, Tools, Books, Account, Focus.'
 );
 assert.ok(
   !desktopHeaderControls.includes('<span>Home</span>') &&
     !desktopHeaderControls.includes('<span>Data Analytics</span>') &&
     !desktopHeaderControls.includes('<span>Tools</span>') &&
     !desktopHeaderControls.includes('<span>Books</span>') &&
+    !desktopHeaderControls.includes('<span>Account</span>') &&
     !desktopHeaderControls.includes('<span>Focus</span>'),
   'Desktop workspace navigation must show icons only; labels belong in accessible names/tooltips.'
 );
@@ -658,6 +665,50 @@ assert.ok(
     (app.match(/onOpenHome=\{handleOpenHome\}/g) || []).length >= 2,
   'Desktop Home navigation must route back to the main dashboard from header pages.'
 );
+assert.ok(
+  app.includes('<AuthGate>') &&
+    app.includes('<SystemBuilderApp />') &&
+    app.includes('const { openAccount } = useAppAuth();'),
+  'System Builder data lifecycle must mount inside the authentication gate.'
+);
+assert.ok(
+  authGate.includes("fetch('/api/auth/status'") &&
+    authGate.includes("fetch('/api/auth/login'") &&
+    authGate.includes("fetch('/api/auth/credentials'") &&
+    authGate.includes("fetch('/api/auth/logout'"),
+  'Auth gate must support status, login, credential update, and logout flows.'
+);
+assert.ok(
+  authGate.includes('status.loginRequired && !status.authenticated') &&
+    authGate.includes('Login requirement:') &&
+    authGate.includes('IsLoginRequired'),
+  'Login UI must appear only when the Users table requires login.'
+);
+assert.ok(
+  authServer.includes("profile.IsLoginRequired === true") &&
+    authServer.includes("Number(profile.IsLoginRequired) === 1") &&
+    authServer.includes("pbkdf2Sync(") &&
+    authServer.includes("HttpOnly; SameSite=Strict") &&
+    authServer.includes('LOGIN_FAILURE_LIMIT = 5'),
+  'Server authentication must enforce IsLoginRequired, hashed verification, HttpOnly sessions, and login throttling.'
+);
+assert.ok(
+  server.includes('registerAuthRoutes(app);') &&
+    server.includes("app.post('/api/analytics/chat', requireAppSession"),
+  'Server must register auth routes and protect the analytics API when login is required.'
+);
+assert.ok(
+  powerBiHeader.includes('aria-label="Open account settings"') &&
+    mobileBrandHeader.includes('aria-label="Open account settings"') &&
+    (app.match(/onOpenAccount=\{openAccount\}/g) || []).length >= 4,
+  'Account settings must be reachable from desktop and mobile shells.'
+);
+assert.ok(
+  dataWorkspace.includes("system-builder:auth-profile-changed") &&
+    authGate.includes("system-builder:auth-profile-changed"),
+  'Users imports must immediately re-evaluate the login requirement.'
+);
+
 assert.ok(
   (app.match(/<PowerBiHeader/g) || []).length >= 4 &&
     app.includes('!booksFocusMode && (') &&

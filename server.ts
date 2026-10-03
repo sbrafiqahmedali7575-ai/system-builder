@@ -136,6 +136,272 @@ async function startServer() {
         return safeUser;
       });
 
+      const parseDurationMinutes = (value: any): number => {
+        const input = String(value || '').trim().toLowerCase();
+        if (!input) return 0;
+        const clock = input.match(/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/);
+        if (clock) {
+          if (clock[3] !== undefined) {
+            return Number(clock[1]) * 60 + Number(clock[2]) + Number(clock[3]) / 60;
+          }
+          return Number(clock[1]) * 60 + Number(clock[2]);
+        }
+        const hours = Number(input.match(/([\d.]+)\s*h/)?.[1] || 0);
+        const minutes = Number(input.match(/([\d.]+)\s*m/)?.[1] || 0);
+        return Math.round((hours * 60 + minutes) * 100) / 100;
+      };
+
+      const normalizeDateKey = (value: any): string => {
+        const raw = String(value || '').trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+        const parsed = Date.parse(raw);
+        return Number.isFinite(parsed) ? new Date(parsed).toISOString().slice(0, 10) : raw;
+      };
+
+      const mondayOf = (value: string): string => {
+        const ms = Date.parse(value + 'T00:00:00.000Z');
+        if (!Number.isFinite(ms)) return value;
+        const date = new Date(ms);
+        const weekday = date.getUTCDay();
+        const offset = weekday === 0 ? -6 : 1 - weekday;
+        return new Date(ms + offset * 86_400_000).toISOString().slice(0, 10);
+      };
+
+      const normalizedTasks = tasks.map((task: any) => {
+        const scheduledDate = normalizeDateKey(task.scheduledDate || task.taskKey);
+        const completed = task.Iscompleted === true || task.isCompleted === true;
+        const estimationMinutes = parseDurationMinutes(task.EstimationTime || task.timeEstimate);
+        const actualMinutes = parseDurationMinutes(task.ActualTime);
+        const varianceMinutes =
+          estimationMinutes > 0 && actualMinutes > 0
+            ? Math.round((actualMinutes - estimationMinutes) * 100) / 100
+            : null;
+        const variancePercent =
+          estimationMinutes > 0 && actualMinutes > 0
+            ? Math.round(((actualMinutes - estimationMinutes) / estimationMinutes) * 1000) / 10
+            : null;
+
+        return {
+          taskId: String(task.taskId || task.id || task.__documentId || ''),
+          title: String(task.title || task.taskOfTheDay || ''),
+          scheduledDate,
+          completed,
+          quadrant: String(task.quadrant || task.matrixQuadrant || 'unassigned'),
+          priority: String(task.priority || 'Normal'),
+          category: task.category ? String(task.category) : '',
+          taskOrder: Number(task.taskOrder || task.sortOrder || 0),
+          estimationMinutes,
+          actualMinutes,
+          varianceMinutes,
+          variancePercent,
+          completedAt: task.completedAt || null,
+          notes: task.notes ? String(task.notes) : '',
+        };
+      });
+
+      const dayFacts = days.map((day: any) => {
+        const key = normalizeDateKey(day.dateKey || day.__documentId);
+        const ms = Date.parse(key + 'T00:00:00.000Z');
+        const dayTasks = normalizedTasks.filter((task: any) => task.scheduledDate === key);
+        const actualMinutes = dayTasks.reduce(
+          (sum: number, task: any) => sum + Number(task.actualMinutes || 0),
+          0
+        );
+        const estimationMinutes = dayTasks.reduce(
+          (sum: number, task: any) => sum + Number(task.estimationMinutes || 0),
+          0
+        );
+
+        return {
+          dateKey: key,
+          weekday: Number.isFinite(ms)
+            ? new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'UTC' }).format(new Date(ms))
+            : '',
+          month: /^\d{4}-\d{2}/.test(key) ? key.slice(0, 7) : '',
+          weekStart: mondayOf(key),
+          tasksCompleted: Number(day.tasksCompleted || 0),
+          taskTotal: Number(day.taskTotal || 0),
+          taskCompletionRate: Number(day.taskCompletionRate || 0),
+          habitsCompleted: Number(day.habitsCompleted || 0),
+          habitTotal: Number(day.habitTotal || 0),
+          habitCompletionRate: Number(day.habitCompletionRate || 0),
+          DayCompletion: Number(day.DayCompletion || 0),
+          IsdayCompleted: day.IsdayCompleted === true,
+          workloadTasks: dayTasks.length,
+          estimatedMinutes: Math.round(estimationMinutes * 100) / 100,
+          actualMinutes: Math.round(actualMinutes * 100) / 100,
+        };
+      });
+
+      const aggregateRows = (
+        rowsToAggregate: any[],
+        keyOf: (row: any) => string
+      ) => {
+        const groups = new Map<string, any[]>();
+        rowsToAggregate.forEach((row: any) => {
+          const key = keyOf(row);
+          if (!key) return;
+          const group = groups.get(key) || [];
+          group.push(row);
+          groups.set(key, group);
+        });
+        return [...groups.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, group]) => {
+            const mean = (field: string) =>
+              group.length
+                ? Math.round(
+                    (group.reduce((sum, row) => sum + Number(row[field] || 0), 0) / group.length) *
+                      10
+                  ) / 10
+                : 0;
+            return {
+              key,
+              recordedDays: group.length,
+              averageDayCompletion: mean('DayCompletion'),
+              averageTaskCompletionRate: mean('taskCompletionRate'),
+              averageHabitCompletionRate: mean('habitCompletionRate'),
+              successfulDays: group.filter((row) => row.IsdayCompleted === true).length,
+              taskTotal: group.reduce((sum, row) => sum + Number(row.taskTotal || 0), 0),
+              tasksCompleted: group.reduce((sum, row) => sum + Number(row.tasksCompleted || 0), 0),
+              estimatedMinutes: Math.round(
+                group.reduce((sum, row) => sum + Number(row.estimatedMinutes || 0), 0) * 100
+              ) / 100,
+              actualMinutes: Math.round(
+                group.reduce((sum, row) => sum + Number(row.actualMinutes || 0), 0) * 100
+              ) / 100,
+            };
+          });
+      };
+
+      const weeklyFacts = aggregateRows(dayFacts, (row) => row.weekStart).map((week: any) => ({
+        ...week,
+        sevenDayAverageForAchievedWeek:
+          Math.round(((week.averageDayCompletion * week.recordedDays) / 7) * 10) / 10,
+        isAchievedWeek:
+          week.recordedDays <= 7 &&
+          Math.round(((week.averageDayCompletion * week.recordedDays) / 7) * 10) / 10 > 80,
+        note:
+          'sevenDayAverageForAchievedWeek treats unrecorded/missing dates in the Monday-Sunday week as 0; averageDayCompletion averages recorded Days rows only.',
+      }));
+
+      const monthlyFacts = aggregateRows(dayFacts, (row) => row.month);
+
+      const habitNameById = new Map(
+        habits.map((habit: any) => [
+          String(habit.habitId || habit.id || habit.__documentId || ''),
+          String(habit.name || ''),
+        ])
+      );
+      const habitFacts = [...habitNameById.entries()].map(([habitId, name]) => {
+        const logs = habitLogs.filter((log: any) => String(log.habitId || '') === habitId);
+        const completedLogs = logs.filter((log: any) => log.Iscompleted === true).length;
+        return {
+          habitId,
+          name,
+          logRows: logs.length,
+          completedLogs,
+          incompleteLogs: logs.length - completedLogs,
+          completionLogRate:
+            logs.length > 0 ? Math.round((completedLogs / logs.length) * 1000) / 10 : null,
+          firstLogDate: logs.length ? normalizeDateKey(logs[0].dateKey) : null,
+          lastLogDate: logs.length ? normalizeDateKey(logs[logs.length - 1].dateKey) : null,
+        };
+      });
+
+      const taskDimension = (field: 'quadrant' | 'priority' | 'category') => {
+        const groups = new Map<string, any[]>();
+        normalizedTasks.forEach((task: any) => {
+          const key = String(task[field] || 'Unassigned');
+          const group = groups.get(key) || [];
+          group.push(task);
+          groups.set(key, group);
+        });
+        return [...groups.entries()]
+          .map(([key, group]) => ({
+            key,
+            total: group.length,
+            completed: group.filter((task) => task.completed).length,
+            completionRate: group.length
+              ? Math.round(
+                  (group.filter((task) => task.completed).length / group.length) * 1000
+                ) / 10
+              : 0,
+            estimatedMinutes: Math.round(
+              group.reduce((sum, task) => sum + Number(task.estimationMinutes || 0), 0) * 100
+            ) / 100,
+            actualMinutes: Math.round(
+              group.reduce((sum, task) => sum + Number(task.actualMinutes || 0), 0) * 100
+            ) / 100,
+          }))
+          .sort((a, b) => b.total - a.total);
+      };
+
+      const dataQuality = {
+        daysWithoutStoredDateKey: days.filter((day: any) => !day.dateKey).length,
+        tasksWithoutScheduledDate: normalizedTasks.filter((task: any) => !task.scheduledDate).length,
+        tasksWithoutTitle: normalizedTasks.filter((task: any) => !task.title).length,
+        tasksWithEstimate: normalizedTasks.filter((task: any) => task.estimationMinutes > 0).length,
+        tasksWithActualTime: normalizedTasks.filter((task: any) => task.actualMinutes > 0).length,
+        tasksWithBothEstimateAndActual: normalizedTasks.filter(
+          (task: any) => task.estimationMinutes > 0 && task.actualMinutes > 0
+        ).length,
+        habitLogsWithoutHabitId: habitLogs.filter((log: any) => !log.habitId).length,
+        habitLogsWithoutDateKey: habitLogs.filter((log: any) => !log.dateKey).length,
+      };
+
+      const semanticLayer = {
+        metricCatalog: {
+          DayCompletion: {
+            formula: 'taskCompletionRate * 0.67 + habitCompletionRate * 0.33',
+            grain: 'day',
+            range: '0-100',
+          },
+          SuccessfulDay: {
+            formula: 'DayCompletion >= 80',
+            grain: 'day',
+          },
+          AchievedWeek: {
+            formula:
+              'completed Monday-Sunday 7-calendar-day average DayCompletion > 80; missing dates count as 0',
+            grain: 'week',
+          },
+          TaskCompletionRate: {
+            formula: 'completed tasks / total tasks * 100',
+            grain: 'requested grouping',
+          },
+          HabitCompletionRate: {
+            formula: 'completed due habits / due habits * 100',
+            grain: 'day or requested grouping when due counts are available',
+          },
+          TimeVariancePercent: {
+            formula: '(ActualTimeMinutes - EstimationTimeMinutes) / EstimationTimeMinutes * 100',
+            grain: 'task; only when both values are present',
+          },
+        },
+        aliases: {
+          day: ['date', 'dateKey', 'Days'],
+          task: ['Tasks', 'taskOfTheDay', 'title'],
+          completion: ['Iscompleted', 'isCompleted', 'completed'],
+          quadrant: ['quadrant', 'matrixQuadrant'],
+          scheduledDate: ['scheduledDate', 'taskKey'],
+          taskOrder: ['taskOrder', 'sortOrder'],
+          estimate: ['EstimationTime', 'timeEstimate', 'estimationMinutes'],
+          actualTime: ['ActualTime', 'actualMinutes'],
+        },
+        dayFacts,
+        weeklyFacts,
+        monthlyFacts,
+        normalizedTasks,
+        habitFacts,
+        taskBreakdowns: {
+          byQuadrant: taskDimension('quadrant'),
+          byPriority: taskDimension('priority'),
+          byCategory: taskDimension('category'),
+        },
+        dataQuality,
+      };
+
       const dataset = {
         source: 'live Firestore canonical collections',
         fetchedAt: new Date().toISOString(),
@@ -167,6 +433,7 @@ async function startServer() {
           users:
             'userId, name, email when present',
         },
+        semanticLayer,
         data: {
           days,
           tasks,
@@ -177,17 +444,27 @@ async function startServer() {
         },
       };
 
+      const complexQuestion =
+        /why|root cause|correlat|regress|forecast|predict|trend|anomal|outlier|what[- ]?if|scenario|compare|relationship|impact|driver|variance|percentile|distribution|statistic|month over month|week over week/i.test(
+          question
+        );
+      const selectedModel =
+        complexQuestion && process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL
+          ? process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL
+          : process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash';
+
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash',
+        model: selectedModel,
         contents: [
           {
             role: 'user',
             parts: [
               {
                 text: [
-                  'You are the System Builder senior data analyst and business intelligence copilot.',
-                  'Your job is to answer ANY question that can be answered from the supplied System Builder dataset, including exact row lookups, counts, date comparisons, trends, rankings, top/bottom analysis, task names, notes, priorities, quadrants, habits, habit logs, streaks, time estimates, actual time, goals/countdowns, correlations, anomalies, and root-cause analysis.',
+                  'You are the System Builder principal data analyst, BI engineer, statistician, and decision-support copilot.',
+                  'Your job is to answer ANY question that can be answered from the supplied System Builder data, from a one-row lookup to multi-period statistical analysis.',
+                  'Supported work includes exact row retrieval, search over task titles/notes, counts, sums, averages, medians, percentiles, distributions, rankings, top/bottom N, date arithmetic, period-over-period comparisons, moving averages, streaks, cohorts, task/habit segmentation, quadrant/priority/category analysis, workload analysis, time-estimation accuracy, variance, efficiency, correlations, anomaly/outlier detection, trend estimation, descriptive forecasting, what-if simulation, goal pacing, root-cause decomposition, and data-quality diagnostics.',
                   '',
                   'GROUNDING RULES:',
                   '1. Use only the supplied dataset and page context. Never invent a row, value, date, task, habit, or cause.',
@@ -200,6 +477,16 @@ async function startServer() {
                   '8. Answer the exact question first. Then add the most useful supporting figures. Avoid generic productivity advice unless the user asks for recommendations.',
                   '9. Use concise tables or bullets when they make comparisons clearer.',
                   '10. Treat missing calendar days as 0 only for the achieved-week rule. For other averages, follow the metric definition or explicitly state the treatment used.',
+                  '11. Prefer SEMANTIC LAYER normalized fields for calculations, but use RAW DATA when the question asks for exact stored values, notes, titles, or fields not represented in the semantic layer.',
+                  '12. Before giving a numerical answer, verify filters, date boundaries, denominator, missing-value treatment, and units. Recalculate with code when there is any doubt.',
+                  '13. For correlations, report direction, strength, sample size, and relevant caveats; never present correlation as causation.',
+                  '14. For forecasts or projections, label them as estimates, state the method and historical window, and do not pretend future outcomes are known.',
+                  '15. For what-if questions, keep source data unchanged, clearly label the result as a simulation, and apply the current business rules unless the user explicitly changes an assumption.',
+                  '16. For root-cause questions, decompose the result into measurable drivers such as task completion, habit completion, workload, time variance, weekday, priority, quadrant, or specific missed items. Do not infer psychological causes.',
+                  '17. For ambiguous metric names, use dataset.semanticLayer.metricCatalog and aliases. If two interpretations remain plausible and materially change the answer, briefly state the interpretation used.',
+                  '18. If data coverage is insufficient, quantify the coverage gap using semanticLayer.dataQuality instead of giving a weak conclusion.',
+                  '19. When asked for a list, include the exact identifying fields needed to verify the rows (date/task/habit as appropriate).',
+                  '20. Silently self-check the final answer against the computed result before responding; do not expose private reasoning.',
                   '',
                   'CURRENT PAGE CONTEXT:',
                   JSON.stringify(pageContext),
@@ -219,7 +506,7 @@ async function startServer() {
         ],
         config: {
           tools: [{ codeExecution: {} }],
-          temperature: 0.2,
+          temperature: complexQuestion ? 0.1 : 0,
         },
       });
 
@@ -232,6 +519,7 @@ async function startServer() {
         answer,
         dataFreshness: dataset.fetchedAt,
         collectionCounts: dataset.collectionCounts,
+        analysisLevel: complexQuestion ? 'deep' : 'standard',
       });
     } catch (err: any) {
       console.error('Analytics AI chat failed:', err);

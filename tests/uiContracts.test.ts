@@ -21,6 +21,7 @@ const dataWorkspace = read('src/components/DataWorkspace.tsx');
 const dataTransfer = read('src/utils/dataTransfer.ts');
 const badge = read('src/components/BadgeCelebration.tsx');
 const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
+const mobileBottomNav = read('src/components/MobileBottomNav.tsx');
 const dataAnalytics = read('src/components/DataAnalyticsPage.tsx');
 const powerBiHeader = read('src/components/PowerBiHeader.tsx');
 const server = read('server.ts');
@@ -668,4 +669,17 @@ assert.ok(
     dataAnalytics.includes('id="analytics-ai-chat"') &&
     dataAnalytics.includes('Ask AI'),
   'AI chat launcher must stay above mobile navigation, respect safe-area insets, and expose an accessible labeled target.'
+);
+assert.ok(
+  mobileBottomNav.includes('BarChart3') &&
+    mobileBottomNav.includes('onAnalytics') &&
+    mobileBottomNav.includes('aria-label="Open Data Analytics"') &&
+    mobileBottomNav.includes("activeSection === 'analytics'") &&
+    !mobileBottomNav.includes('<Plus'),
+  'Mobile bottom navigation must use Data Analytics as the raised center action instead of Add Task.'
+);
+assert.ok(
+  app.includes('activeSection="analytics"') &&
+    (app.match(/onAnalytics=\{handleOpenAnalytics\}/g) || []).length >= 4,
+  'Every mobile workspace must wire the center Analytics action and mark it active on the Analytics page.'
 );

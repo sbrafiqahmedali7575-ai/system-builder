@@ -450,7 +450,7 @@ async function startServer() {
           dialect: 'SQLite-compatible read-only analytics SQL',
           tables: {
             day_facts: {
-              rows: dayFacts,
+              sourcePath: 'semanticLayer.dayFacts',
               columns: [
                 'dateKey TEXT',
                 'weekday TEXT',
@@ -470,7 +470,7 @@ async function startServer() {
               ],
             },
             task_facts: {
-              rows: normalizedTasks,
+              sourcePath: 'semanticLayer.normalizedTasks',
               columns: [
                 'taskId TEXT',
                 'title TEXT',
@@ -489,11 +489,11 @@ async function startServer() {
               ],
             },
             habit_logs: {
-              rows: habitLogs,
+              sourcePath: 'data.habitLogs',
               columns: ['habitLogId TEXT', 'habitId TEXT', 'dateKey TEXT', 'Iscompleted BOOLEAN'],
             },
             habits: {
-              rows: habits,
+              sourcePath: 'data.habits',
               columns: [
                 'habitId TEXT',
                 'name TEXT',
@@ -505,7 +505,7 @@ async function startServer() {
               ],
             },
             habit_facts: {
-              rows: habitFacts,
+              sourcePath: 'semanticLayer.habitFacts',
               columns: [
                 'habitId TEXT',
                 'name TEXT',
@@ -518,7 +518,7 @@ async function startServer() {
               ],
             },
             weekly_facts: {
-              rows: weeklyFacts,
+              sourcePath: 'semanticLayer.weeklyFacts',
               columns: [
                 'key TEXT',
                 'recordedDays INTEGER',
@@ -535,7 +535,7 @@ async function startServer() {
               ],
             },
             monthly_facts: {
-              rows: monthlyFacts,
+              sourcePath: 'semanticLayer.monthlyFacts',
               columns: [
                 'key TEXT',
                 'recordedDays INTEGER',
@@ -550,11 +550,11 @@ async function startServer() {
               ],
             },
             countdowns: {
-              rows: countdowns,
+              sourcePath: 'data.countdowns',
               columns: ['countdownId TEXT', 'title TEXT', 'reason TEXT', 'targetDate TEXT', 'isActive BOOLEAN'],
             },
             users: {
-              rows: users,
+              sourcePath: 'data.users',
               columns: ['userId TEXT', 'name TEXT', 'email TEXT'],
             },
           },
@@ -601,7 +601,7 @@ async function startServer() {
                   'SQL WORKBENCH RULES:',
                   'A. In ASK mode, translate the question into the smallest useful read-only SQL query over the virtual tables whenever SQL can answer it.',
                   'B. In SQL mode, execute the user SQL as written whenever valid. Do not silently change its business meaning. If a small compatibility rewrite is required, disclose it in notes.',
-                  'C. Use code execution with Python sqlite3: create in-memory tables from dataset.virtualSql.tables[*].rows, execute the SQL, and use the actual result rows for the answer.',
+                  'C. Use code execution with Python sqlite3: create in-memory tables using each virtual table sourcePath, execute the SQL, and use the actual result rows for the answer.',
                   'D. For analytics not directly expressible in SQL (correlation, forecast, percentile, anomaly detection, simulations), use SQL to extract the relevant rows first, then calculate the advanced statistic in code.',
                   'E. Never execute or propose data-changing SQL. SELECT/WITH only.',
                   'F. Return no more than 50 result rows; summarize larger result sets and state the total when known.',

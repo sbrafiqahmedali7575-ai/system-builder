@@ -1,11 +1,12 @@
 import React from 'react';
-import { BarChart3, BookOpen, CalendarDays, Focus, Home } from 'lucide-react';
+import { BarChart3, BookOpen, Bot, CalendarDays, Focus, Home } from 'lucide-react';
 
 type MobileSection = 'today' | 'plan' | 'analytics' | 'books';
 
 interface Props {
   onAnalytics: () => void;
   onFocus: () => void;
+  onAiChat?: () => void;
   onBooks: () => void;
   onPlan: () => void;
   onTop: () => void;
@@ -17,6 +18,7 @@ interface Props {
 export const MobileBottomNav: React.FC<Props> = ({
   onAnalytics,
   onFocus,
+  onAiChat,
   onBooks,
   onPlan,
   onTop,
@@ -41,7 +43,22 @@ export const MobileBottomNav: React.FC<Props> = ({
         >
           <BarChart3 className="w-6 h-6"/>
         </button>
-        {!hideFocus ? <button onClick={onFocus} className={actionClass(focusActive)} aria-pressed={focusActive}><Focus/><span>Focus</span></button> : <div aria-hidden="true" />}
+        {!hideFocus ? (
+          <button onClick={onFocus} className={actionClass(focusActive)} aria-pressed={focusActive}>
+            <Focus/><span>Focus</span>
+          </button>
+        ) : onAiChat ? (
+          <button
+            onClick={onAiChat}
+            className={actionClass(false)}
+            aria-label="Open AI Data Analyst chat"
+            title="AI Chat"
+          >
+            <Bot/><span>AI</span>
+          </button>
+        ) : (
+          <div aria-hidden="true" />
+        )}
         <button onClick={onBooks} className={actionClass(activeSection === 'books' && !focusActive)} aria-current={activeSection === 'books' && !focusActive ? 'page' : undefined}><BookOpen/><span>Books</span></button>
       </div>
     </nav>

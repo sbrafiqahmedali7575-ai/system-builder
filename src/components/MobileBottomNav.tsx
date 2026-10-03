@@ -1,10 +1,10 @@
 import React from 'react';
-import { BookOpen, CalendarDays, Focus, Home, Plus } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, Focus, Home } from 'lucide-react';
 
-type MobileSection = 'today' | 'plan' | 'books';
+type MobileSection = 'today' | 'plan' | 'analytics' | 'books';
 
 interface Props {
-  onAdd: () => void;
+  onAnalytics: () => void;
   onFocus: () => void;
   onBooks: () => void;
   onPlan: () => void;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const MobileBottomNav: React.FC<Props> = ({
-  onAdd,
+  onAnalytics,
   onFocus,
   onBooks,
   onPlan,
@@ -32,7 +32,15 @@ export const MobileBottomNav: React.FC<Props> = ({
       <div className="w-full min-w-0 max-w-lg mx-auto grid grid-cols-5 items-end gap-0.5 overflow-hidden">
         <button onClick={onTop} className={actionClass(activeSection === 'today' && !focusActive)} aria-current={activeSection === 'today' && !focusActive ? 'page' : undefined}><Home/><span>Today</span></button>
         <button onClick={onPlan} className={actionClass(activeSection === 'plan' && !focusActive)} aria-current={activeSection === 'plan' && !focusActive ? 'page' : undefined}><CalendarDays/><span>Plan</span></button>
-        <button onClick={onAdd} className="mx-auto -mt-4 w-12 h-12 min-w-12 min-h-12 aspect-square shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-500 to-violet-500 text-white shadow-[0_10px_24px_rgba(79,70,229,0.35)] ring-4 ring-white dark:ring-slate-950 inline-flex items-center justify-center transition-transform active:scale-95" aria-label="Add task"><Plus className="w-6 h-6"/></button>
+        <button
+          onClick={onAnalytics}
+          className="mx-auto -mt-4 w-12 h-12 min-w-12 min-h-12 aspect-square shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-500 to-violet-500 text-white shadow-[0_10px_24px_rgba(79,70,229,0.35)] ring-4 ring-white dark:ring-slate-950 inline-flex items-center justify-center transition-transform active:scale-95"
+          aria-label="Open Data Analytics"
+          aria-current={activeSection === 'analytics' ? 'page' : undefined}
+          title="Data Analytics"
+        >
+          <BarChart3 className="w-6 h-6"/>
+        </button>
         {!hideFocus ? <button onClick={onFocus} className={actionClass(focusActive)} aria-pressed={focusActive}><Focus/><span>Focus</span></button> : <div aria-hidden="true" />}
         <button onClick={onBooks} className={actionClass(activeSection === 'books' && !focusActive)} aria-current={activeSection === 'books' && !focusActive ? 'page' : undefined}><BookOpen/><span>Books</span></button>
       </div>

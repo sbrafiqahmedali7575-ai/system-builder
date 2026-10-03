@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, BookOpen, Focus, Home, Wrench } from 'lucide-react';
+import { BarChart3, BookOpen, Focus, Home, UserRound, Wrench } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -20,6 +20,7 @@ interface PowerBiHeaderProps {
   onOpenLibrary?: () => void;
   onOpenTools?: () => void;
   onOpenAnalytics?: () => void;
+  onOpenAccount?: () => void;
   onToggleFocus?: () => void;
   focusMode?: boolean;
   isSyncing?: boolean;
@@ -31,6 +32,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenLibrary,
   onOpenTools,
   onOpenAnalytics,
+  onOpenAccount,
   onToggleFocus,
   focusMode = false,
   isSyncing = false,
@@ -181,6 +183,19 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               aria-label={isBooksPage ? 'Books, current page' : 'Open Books'}
             >
               <BookOpen className="h-4 w-4" />
+            </motion.button>
+          )}
+
+          {onOpenAccount && (
+            <motion.button
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenAccount}
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              title="Account"
+              aria-label="Open account settings"
+            >
+              <UserRound className="h-4 w-4" />
             </motion.button>
           )}
 

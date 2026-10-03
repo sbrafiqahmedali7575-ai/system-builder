@@ -706,20 +706,27 @@ export const DataAnalyticsPage: React.FC<Props> = ({
         </section>
       </main>
 
-      <button
-        type="button"
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-20 right-4 z-[170] flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-[0_18px_45px_rgba(37,99,235,0.38)] transition hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(37,99,235,0.45)] md:bottom-6 md:right-6"
-        aria-label="Open AI data analyst"
-        title="Ask AI Data Analyst"
-      >
-        <MessageCircle className="h-6 w-6" />
-        <span className="absolute -right-1 -top-1 rounded-full border-2 border-white bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black dark:border-slate-950">AI</span>
-      </button>
+      {!chatOpen && (
+        <button
+          type="button"
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-3 z-[170] inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 px-3.5 text-white shadow-[0_14px_34px_rgba(37,99,235,0.34)] ring-1 ring-white/25 transition active:scale-[0.97] md:bottom-6 md:right-6 md:h-12 md:px-4 md:hover:-translate-y-1 md:hover:shadow-[0_20px_48px_rgba(37,99,235,0.42)]"
+          aria-label="Open AI data analyst"
+          aria-expanded={chatOpen}
+          aria-controls="analytics-ai-chat"
+          title="Ask AI Data Analyst"
+        >
+          <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <MessageCircle className="h-4.5 w-4.5" />
+            <span className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full border-2 border-blue-600 bg-emerald-400" aria-hidden="true" />
+          </span>
+          <span className="text-xs font-black tracking-tight">Ask AI</span>
+        </button>
+      )}
 
       {chatOpen && (
         <div className="fixed inset-0 z-[190] flex items-end justify-end bg-slate-950/25 p-0 backdrop-blur-[2px] sm:p-4" onMouseDown={(event) => { if (event.currentTarget === event.target) setChatOpen(false); }}>
-          <section className="flex h-[82dvh] w-full flex-col overflow-hidden rounded-t-[26px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:h-[680px] sm:max-w-md sm:rounded-[26px]">
+          <section id="analytics-ai-chat" className="flex h-[82dvh] w-full flex-col overflow-hidden rounded-t-[26px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:h-[680px] sm:max-w-md sm:rounded-[26px]">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="rounded-xl bg-blue-600 p-2 text-white"><Bot className="h-4 w-4" /></div>

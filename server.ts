@@ -762,10 +762,16 @@ async function startServer() {
         /why|root cause|correlat|regress|forecast|predict|trend|anomal|outlier|what[- ]?if|scenario|compare|relationship|impact|driver|variance|percentile|distribution|statistic|month over month|week over week/i.test(
           question
         );
+      const standardModel =
+        String(process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash').trim();
+      const configuredDeepModel =
+        String(process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL || '').trim();
+      const deepModel =
+        /^gemini-2\.5-pro$/i.test(configuredDeepModel)
+          ? standardModel
+          : configuredDeepModel;
       const selectedModel =
-        complexQuestion && process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL
-          ? process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL
-          : process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash';
+        complexQuestion && deepModel ? deepModel : standardModel;
 
       const ai = new GoogleGenAI({ apiKey });
       let response: any;

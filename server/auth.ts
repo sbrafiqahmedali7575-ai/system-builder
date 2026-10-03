@@ -185,6 +185,13 @@ function clearSessionCookie(res: Response): void {
   );
 }
 
+export const authInternalsForTests = {
+  hashPassword,
+  verifyPassword,
+  signSession,
+  verifySessionToken,
+};
+
 export function registerAuthRoutes(app: import('express').Express): void {
   app.get('/api/auth/status', async (req, res) => {
     try {

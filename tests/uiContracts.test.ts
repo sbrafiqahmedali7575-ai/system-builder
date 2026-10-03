@@ -616,6 +616,22 @@ assert.ok(
 assert.ok(
   server.includes("app.post('/api/analytics/chat'") &&
     server.includes('GoogleGenAI') &&
-    server.includes('DayCompletion = taskCompletionRate * 67% + habitCompletionRate * 33%'),
-  'Server must provide a grounded AI analytics endpoint using the current DayCompletion definition.'
+    server.includes("getDocs(collection(db, 'days'))") &&
+    server.includes("getDocs(collection(db, 'tasks'))") &&
+    server.includes("getDocs(collection(db, 'habits'))") &&
+    server.includes("getDocs(collection(db, 'habitLogs'))") &&
+    server.includes("getDocs(collection(db, 'countdowns'))") &&
+    server.includes("getDocs(collection(db, 'users'))"),
+  'AI analyst must query all canonical live Firestore collections.'
+);
+assert.ok(
+  server.includes("tools: [{ codeExecution: {} }]") &&
+    server.includes('FULL LIVE DATASET:') &&
+    server.includes('CHAT HISTORY:'),
+  'AI analyst must support exact multi-row calculations and conversational follow-up questions.'
+);
+assert.ok(
+  dataAnalytics.includes('history: messages.slice(-16)') &&
+    dataAnalytics.includes('Ask anything about your data'),
+  'Analytics chat must send conversation history and present open-ended data questioning.'
 );

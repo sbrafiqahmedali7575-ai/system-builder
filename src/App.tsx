@@ -124,6 +124,17 @@ export default function App() {
   const [focusMode, setFocusMode] = useState(false);
   const [toolsFocusMode, setToolsFocusMode] = useState(false);
   const [booksFocusMode, setBooksFocusMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const desktop = window.matchMedia('(min-width: 768px)');
+    const disableDesktopBooksFocus = () => {
+      if (desktop.matches) setBooksFocusMode(false);
+    };
+    disableDesktopBooksFocus();
+    desktop.addEventListener('change', disableDesktopBooksFocus);
+    return () => desktop.removeEventListener('change', disableDesktopBooksFocus);
+  }, []);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.location.pathname === '/analytics';
@@ -200,8 +211,11 @@ export default function App() {
         }
       } else if (event.key.toLowerCase() === 'f') {
         event.preventDefault();
-        if (isLibraryOpen) setBooksFocusMode((value) => !value);
-        else if (isToolsOpen) setToolsFocusMode((value) => !value);
+        if (isLibraryOpen) {
+          if (!window.matchMedia('(min-width: 768px)').matches) {
+            setBooksFocusMode((value) => !value);
+          }
+        } else if (isToolsOpen) setToolsFocusMode((value) => !value);
         else setFocusMode((value) => !value);
       } else if (event.key.toLowerCase() === 't') {
         event.preventDefault();
@@ -821,8 +835,6 @@ export default function App() {
             onOpenLibrary={handleOpenLibrary}
             onOpenAnalytics={handleOpenAnalytics}
             onOpenTools={() => handleOpenTools()}
-            onToggleFocus={() => setBooksFocusMode((value) => !value)}
-            focusMode={booksFocusMode}
             isSyncing={isSyncing}
           />
         )}

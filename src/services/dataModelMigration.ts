@@ -517,13 +517,15 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     habitLogsSnap,
     existingDaysSnap,
     countdownSnap,
+    existingUserSnap,
   ] = await Promise.all([
     getDocs(collection(db, 'records')),
     getDocs(collection(db, 'tasks')),
     getDocs(collection(db, 'habits')),
     getDocs(collection(db, 'habitLogs')),
     getDocs(collection(db, 'days')),
-    getDoc(doc(db, 'countdowns', 'system_builder_countdown'))
+    getDoc(doc(db, 'countdowns', 'system_builder_countdown')),
+    getDoc(doc(db, 'users', 'default-user'))
   ]);
 
   const result: DataModelMigrationResult = {
@@ -538,17 +540,42 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   const writes: QueuedWrite[] = [];
 
   // 1. Single-user profile.
-  writes.push({
-    ref: doc(db, 'users', 'default-user'),
-    data: {
-      userId: 'default-user',
-      name: 'Rafiq Ahmed',
-      userName: 'sa',
-      password: 'sha256:c91a1ad0b6bf41aba97606740e92c02d87155d8a3626787464417dbda5eae57f',
-      IsLoginRequired: 1,
-    },
-  });
-  result.users = 1;
+  // Credentials are user-owned live data. Never reset an existing username,
+  // password verifier, or IsLoginRequired flag during startup migration.
+  const existingUserData = existingUserSnap.exists()
+    ? (existingUserSnap.data() as Record<string, unknown>)
+    : null;
+  const desiredUser = {
+    ...(existingUserData || {}),
+    userId: String(existingUserData?.userId || 'default-user'),
+    name: String(existingUserData?.name || 'Rafiq Ahmed'),
+    userName: String(existingUserData?.userName || 'sa'),
+    password: String(
+      existingUserData?.password ||
+        'sha256:c91a1ad0b6bf41aba97606740e92c02d87155d8a3626787464417dbda5eae57f'
+    ),
+    IsLoginRequired:
+      existingUserData?.IsLoginRequired === undefined
+        ? 1
+        : existingUserData.IsLoginRequired,
+  };
+
+  if (
+    !existingUserData ||
+    !migrationFieldsMatch(existingUserData, {
+      userId: desiredUser.userId,
+      name: desiredUser.name,
+      userName: desiredUser.userName,
+      password: desiredUser.password,
+      IsLoginRequired: desiredUser.IsLoginRequired,
+    })
+  ) {
+    writes.push({
+      ref: doc(db, 'users', 'default-user'),
+      data: desiredUser,
+    });
+    result.users = 1;
+  }
 
   // Normalize tasks while preserving all legacy fields through merge writes.
   const normalizedTasks = tasksSnap.docs

@@ -18,6 +18,7 @@ const dayReview = read('src/components/DayReviewModal.tsx');
 const migration = read('src/services/dataModelMigration.ts');
 const firebaseService = read('src/services/firebaseService.ts');
 const dataWorkspace = read('src/components/DataWorkspace.tsx');
+const dataTransfer = read('src/utils/dataTransfer.ts');
 const badge = read('src/components/BadgeCelebration.tsx');
 const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
 const dataAnalytics = read('src/components/DataAnalyticsPage.tsx');
@@ -530,11 +531,14 @@ assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Hiding 
 
 
 assert.ok(
-  dataWorkspace.includes("'DayCompletion'"),
+  dataTransfer.includes("'DayCompletion'"),
   'Days data table should expose DayCompletion'
 );
+const daysColumnsStart = dataTransfer.indexOf('days: [');
+const daysColumnsEnd = dataTransfer.indexOf('],', daysColumnsStart);
+const daysColumnsContract = dataTransfer.slice(daysColumnsStart, daysColumnsEnd);
 assert.ok(
-  dataWorkspace.indexOf("'DayCompletion'") < dataWorkspace.indexOf("'IsdayCompleted'"),
+  daysColumnsContract.indexOf("'DayCompletion'") < daysColumnsContract.indexOf("'IsdayCompleted'"),
   'DayCompletion should appear before IsdayCompleted in Days'
 );
 assert.ok(

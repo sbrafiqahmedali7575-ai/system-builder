@@ -60,13 +60,23 @@ jobs:
           curl -fsS http://127.0.0.1:4173/ >/tmp/home.html
           grep -q '<div id="root"></div>' /tmp/home.html
 
-          EMPTY_STATUS=$(curl -sS -o /tmp/empty-question.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d '{"question":""}'             http://127.0.0.1:4173/api/analytics/chat)
-          test "$EMPTY_STATUS" = "400"
-          grep -q 'Question is required' /tmp/empty-question.json
+          curl -fsS http://127.0.0.1:4173/api/auth/status >/tmp/auth-status.json
+          LOGIN_REQUIRED=$(node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/auth-status.json','utf8')); process.stdout.write(x.loginRequired ? 'true' : 'false')")
 
+          EMPTY_STATUS=$(curl -sS -o /tmp/empty-question.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d '{"question":""}'             http://127.0.0.1:4173/api/analytics/chat)
           WRITE_STATUS=$(curl -sS -o /tmp/write-query.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d '{"question":"DELETE FROM day_facts","mode":"sql"}'             http://127.0.0.1:4173/api/analytics/chat)
-          test "$WRITE_STATUS" = "400"
-          grep -q 'SQL mode is read-only' /tmp/write-query.json
+
+          if [ "$LOGIN_REQUIRED" = "true" ]; then
+            test "$EMPTY_STATUS" = "401"
+            grep -q 'Authentication required' /tmp/empty-question.json
+            test "$WRITE_STATUS" = "401"
+            grep -q 'Authentication required' /tmp/write-query.json
+          else
+            test "$EMPTY_STATUS" = "400"
+            grep -q 'Question is required' /tmp/empty-question.json
+            test "$WRITE_STATUS" = "400"
+            grep -q 'SQL mode is read-only' /tmp/write-query.json
+          fi
 
           BROWSER_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
           if [ -z "$BROWSER_BIN" ]; then

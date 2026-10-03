@@ -38,6 +38,8 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   const [quoteIndex, setQuoteIndex] = useState(0);
   const isHomePage =
     typeof window !== 'undefined' && window.location.pathname === '/';
+  const isBooksPage =
+    typeof window !== 'undefined' && window.location.pathname.startsWith('/books');
   const isToolsPage =
     typeof window !== 'undefined' && window.location.pathname === '/tools';
   const isAnalyticsPage =
@@ -108,100 +110,95 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
           </motion.button>
         </div>
 
-        {/* Right Desktop Controls */}
-        <div className="hidden md:flex items-center space-x-1.5 ml-auto shrink-0">
-          {onToggleFocus && (
-            <motion.button
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onToggleFocus}
-              aria-pressed={focusMode}
-              className={`flex items-center space-x-1 px-1.5 py-1 text-xs font-semibold rounded-xl border transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 ${focusMode ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80'}`}
-              title={focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
-              aria-label={focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
-            >
-              <Focus className="w-3.5 h-3.5" />
-              <span>{focusMode ? 'Exit Focus' : 'Focus'}</span>
-            </motion.button>
-          )}
-
+        {/* Right Desktop Controls — icon-only, ordered by primary workspace flow */}
+        <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
           {onOpenHome && (
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onOpenHome}
               aria-current={isHomePage ? 'page' : undefined}
-              className={`group flex items-center space-x-1.5 px-2 py-1 text-xs font-bold rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+              className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 isHomePage
-                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-1 ring-slate-300 dark:bg-white dark:border-white dark:text-slate-950 dark:ring-slate-700'
-                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm dark:bg-white dark:border-white dark:text-slate-950'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300'
               }`}
-              title={isHomePage ? 'Home — current page' : 'Open Home'}
+              title="Home"
               aria-label={isHomePage ? 'Home, current page' : 'Open Home'}
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>Home</span>
-              {isHomePage && <span className="w-1.5 h-1.5 rounded-full bg-white/90 dark:bg-slate-900" aria-hidden="true" />}
-            </motion.button>
-          )}
-
-          {onOpenLibrary && (
-            <motion.button
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onOpenLibrary}
-              className="flex items-center space-x-1 px-1.5 py-1 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 transition-colors shadow-2xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
-              title="Open Cal Newport reading library"
-              aria-label="Open Cal Newport reading library"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Books</span>
+              <Home className="h-4 w-4" />
             </motion.button>
           )}
 
           {onOpenAnalytics && (
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onOpenAnalytics}
               aria-current={isAnalyticsPage ? 'page' : undefined}
-              className={`group flex items-center space-x-1.5 px-2 py-1 text-xs font-bold rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+              className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
                 isAnalyticsPage
-                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm ring-1 ring-indigo-300 dark:ring-indigo-700'
-                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-700 dark:hover:text-indigo-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm'
+                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-700'
               }`}
-              title={isAnalyticsPage ? 'Data Analytics — current page' : 'Open Data Analytics'}
+              title="Data Analytics"
               aria-label={isAnalyticsPage ? 'Data Analytics, current page' : 'Open Data Analytics'}
             >
-              <BarChart3 className={`w-3.5 h-3.5 ${isAnalyticsPage ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
-              <span>Data Analytics</span>
-              {isAnalyticsPage && <span className="w-1.5 h-1.5 rounded-full bg-white/90" aria-hidden="true" />}
+              <BarChart3 className="h-4 w-4" />
             </motion.button>
           )}
 
           {onOpenTools && (
             <motion.button
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onOpenTools}
               aria-current={isToolsPage ? 'page' : undefined}
-              className={`group flex items-center space-x-1.5 px-2 py-1 text-xs font-bold rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+              className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 isToolsPage
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-sm ring-1 ring-blue-300 dark:ring-blue-700'
-                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-700'
               }`}
-              title={isToolsPage ? 'Tools — current page' : 'Open System Builder tools'}
-              aria-label={isToolsPage ? 'Tools, current page' : 'Open System Builder tools'}
+              title="Tools"
+              aria-label={isToolsPage ? 'Tools, current page' : 'Open Tools'}
             >
-              <Wrench
-                className={`w-3.5 h-3.5 transition-transform group-hover:rotate-[-10deg] ${
-                  isToolsPage ? 'text-white' : 'text-blue-600 dark:text-blue-400'
-                }`}
-              />
-              <span>Tools</span>
-              {isToolsPage && (
-                <span className="w-1.5 h-1.5 rounded-full bg-white/90" aria-hidden="true" />
-              )}
+              <Wrench className="h-4 w-4" />
+            </motion.button>
+          )}
+
+          {onOpenLibrary && (
+            <motion.button
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenLibrary}
+              aria-current={isBooksPage ? 'page' : undefined}
+              className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 ${
+                isBooksPage
+                  ? 'bg-violet-600 border-violet-600 text-white shadow-sm'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:border-violet-300 dark:hover:border-violet-700'
+              }`}
+              title="Books"
+              aria-label={isBooksPage ? 'Books, current page' : 'Open Books'}
+            >
+              <BookOpen className="h-4 w-4" />
+            </motion.button>
+          )}
+
+          {onToggleFocus && (
+            <motion.button
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onToggleFocus}
+              aria-pressed={focusMode}
+              className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
+                focusMode
+                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-700'
+              }`}
+              title={focusMode ? 'Exit Focus Mode' : 'Focus Mode'}
+              aria-label={focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+            >
+              <Focus className="h-4 w-4" />
             </motion.button>
           )}
         </div>

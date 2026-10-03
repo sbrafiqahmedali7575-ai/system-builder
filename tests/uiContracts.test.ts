@@ -767,7 +767,8 @@ assert.ok(
 assert.ok(
   server.includes("const queryMode = req.body?.mode === 'sql' ? 'sql' : 'ask'") &&
     server.includes("SQL mode is read-only. Use a SELECT or WITH query only.") &&
-    server.includes("queryMode === 'sql' ||"),
+    server.includes("if (queryMode === 'sql')") &&
+    server.includes("runReadOnlySql(question)"),
   'Analytics AI must support a guarded read-only SQL query mode.'
 );
 assert.ok(

@@ -8,8 +8,14 @@ await page.exposeFunction('desktopRead',()=>store.snapshot());await page.exposeF
 await page.exposeFunction('desktopBackup',()=>{throw Error('Simulated offline network. Local data is safe.');});
 await page.addInitScript(()=>{Object.defineProperty(navigator,'onLine',{get:()=>false});window.systemBuilderDesktop={read:()=>window.desktopRead(),commit:(ops,rev)=>window.desktopCommit(ops,rev),backup:()=>window.desktopBackup(),exportLocal:async()=>true,onChange:fn=>{window.addEventListener('local-changed',fn);return()=>window.removeEventListener('local-changed',fn);}};});
 try{
+// Offset Date only; keep real timers/performance for startup animations.
+await page.addInitScript(()=>{
+ const NativeDate=Date,offset=NativeDate.parse(localStorage.getItem('__habitTestDate')||'2026-10-03T06:30:00Z')-NativeDate.now();
+ window.Date=class extends NativeDate{constructor(...args){if(args.length)super(...args);else super(NativeDate.now()+offset);}static now(){return NativeDate.now()+offset;}};
+});
 await page.goto(origin);
-await page.getByRole('button',{name:'Open Tools',exact:true}).first().click();
+await page.getByRole('button',{name:'Open Tools',exact:true}).first().or(page.getByRole('button',{name:'Habit Tracker',exact:true})).first().waitFor();
+if(await page.getByRole('button',{name:'Open Tools',exact:true}).first().isVisible()) await page.getByRole('button',{name:'Open Tools',exact:true}).first().click();
 await page.getByRole('button',{name:'Habit Tracker',exact:true}).click();
 await page.getByText('Wake Up Early 5 AM',{exact:true}).first().waitFor();
 // Exercise the real habit UI, then upload through the real backup serializer to
@@ -22,18 +28,57 @@ const upload=()=>backup(store.snapshot(),{projectId:'test',apiKey:'test'},async(
 });
 await page.getByRole('button',{name:/^Add(?: Habit)?$/,exact:true}).click();
 await page.getByPlaceholder('Habit name').fill('DESKTOP HABIT TEST');
+assert.equal(await page.getByRole('switch',{name:'Habit active'}).getAttribute('aria-checked'),'true');
+await page.getByRole('switch',{name:'Habit active'}).click();
 await page.getByRole('button',{name:'Save',exact:true}).click();
+await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
 await page.getByRole('button',{name:'Edit DESKTOP HABIT TEST',exact:true}).waitFor();
 const habit=Object.values(store.state.collections.habits).find(h=>h.name==='DESKTOP HABIT TEST');assert.ok(habit);
 const habitId=habit.habitId;
+assert.equal(habit.isActive,false);assert.deepEqual(habit.inactivePeriods,[{from:'2026-10-03',to:null}]);
+assert.equal(Object.values(store.state.collections.habitLogs).filter(l=>l.habitId===habitId).length,0);
+await upload();assert.equal(cloud['habits/'+habitId].isActive.booleanValue,false);
+// Inactive creation remains inactive after a full reload.
+await page.reload();
+await page.getByRole('button',{name:'Open Tools',exact:true}).first().or(page.getByRole('button',{name:'Habit Tracker',exact:true})).first().waitFor();
+if(await page.getByRole('button',{name:'Open Tools',exact:true}).first().isVisible()) await page.getByRole('button',{name:'Open Tools',exact:true}).first().click();
+await page.getByRole('button',{name:'Habit Tracker',exact:true}).click();
+
 await page.getByRole('button',{name:'Edit DESKTOP HABIT TEST',exact:true}).click();
 await page.getByPlaceholder('Habit name').fill('DESKTOP HABIT UPDATED');
+assert.equal(await page.getByRole('switch',{name:'Habit active'}).getAttribute('aria-checked'),'false');
+await page.getByRole('switch',{name:'Habit active'}).click();
 await page.getByRole('button',{name:'Update',exact:true}).click();
+await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
 await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).waitFor();
-const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const today='2026-10-03';
+assert.equal(store.state.collections.habits[habitId].isActive,true);
+assert.equal(Object.values(store.state.collections.habitLogs).filter(l=>l.habitId===habitId&&l.dateKey===today).length,1);
 await page.getByRole('button',{name:'DESKTOP HABIT UPDATED on '+today,exact:true}).click();
 await page.getByRole('button',{name:'DESKTOP HABIT UPDATED on '+today,exact:true}).locator('svg').waitFor();
 assert.ok(Object.values(store.state.collections.habitLogs).some(l=>l.habitId===habitId&&l.dateKey===today&&l.Iscompleted));
+// Pause after completing today: keep history, stop tomorrow, then resume.
+const completedLogs=Object.entries(store.state.collections.habitLogs).filter(([,l])=>l.habitId===habitId);
+await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).click();
+await page.getByRole('switch',{name:'Habit active'}).click();
+await page.getByRole('button',{name:'Update',exact:true}).click();
+await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
+await page.waitForFunction(async id=>(await window.systemBuilderDesktop.read()).collections.habits[id].isActive===false,habitId);
+await page.evaluate(()=>localStorage.setItem('__habitTestDate','2026-10-04T06:30:00Z'));
+store=new Store(dir,JSON.parse(fs.readFileSync('desktop/seed.json')));await page.reload();
+await page.getByRole('button',{name:'Open Tools',exact:true}).first().or(page.getByRole('button',{name:'Habit Tracker',exact:true})).first().waitFor();
+if(await page.getByRole('button',{name:'Open Tools',exact:true}).first().isVisible()) await page.getByRole('button',{name:'Open Tools',exact:true}).first().click();
+await page.getByRole('button',{name:'Habit Tracker',exact:true}).click();
+await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).waitFor();
+assert.deepEqual(Object.entries(store.state.collections.habitLogs).filter(([,l])=>l.habitId===habitId),completedLogs);
+await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).click();
+await page.getByRole('switch',{name:'Habit active'}).click();
+await page.getByRole('button',{name:'Update',exact:true}).click();
+await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
+await page.waitForFunction(async id=>Object.values((await window.systemBuilderDesktop.read()).collections.habitLogs).some(l=>l.habitId===id&&l.dateKey==='2026-10-04'),habitId);
+assert.equal(Object.values(store.state.collections.habitLogs).filter(l=>l.habitId===habitId&&l.dateKey==='2026-10-04').length,1);
+for(const [id,log] of completedLogs)assert.deepEqual(store.state.collections.habitLogs[id],log);
+assert.deepEqual(store.state.collections.habits[habitId].inactivePeriods,[{from:'2026-10-03',to:'2026-10-03'}]);
 // Old history must be deleted too; it is not restricted to today's logs.
 store.commit(['2025-01-01','2026-06-01'].map(date=>({type:'set',path:'habitLogs/'+habitId+'_'+date,data:{habitLogId:habitId+'_'+date,habitId,dateKey:date,Iscompleted:true}})));
 await upload();assert.equal(cloud['habits/'+habitId].name.stringValue,'DESKTOP HABIT UPDATED');
@@ -50,6 +95,6 @@ assert.equal(Object.keys(store.state.collections.habits).length,6);
 
 
 assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);
-console.log('PASS: habit create/edit/check-in, backup, delete with old logs, restart and repeated backup; no live cloud writes.');
+console.log('PASS: inactive creation, enable/check-in, pause across restart/day change, resume without duplicates, backup, delete with old logs; no live cloud writes.');
 }catch(error){console.log((await page.locator('body').innerText()).slice(0,6000));console.log('Errors:',errors);throw error;}finally{await browser.close();server.close();fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

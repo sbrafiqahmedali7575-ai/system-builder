@@ -24,6 +24,13 @@ The renderer is blocked from making HTTP/WebSocket calls. There is no automatic
 Firestore synchronization, cloud login, cloud migration, or email service.
 The app allows a single running instance to prevent competing local writers.
 
+HABIT ACTIVE STATUS
+Create and edit forms both include Active (isActive): True / False.
+True creates one HabitLog for today when scheduled; False stops new entries.
+Pausing preserves all existing logs. Re-enabling resumes from the current day,
+without backfilling paused days or duplicating an existing daily entry.
+The status and logs are included in manual cloud backup.
+
 BACKUP
 Use the cloud-upload Backup icon in the header, then Back up to Firestore.
 Internet is needed for this operation. Desktop records update the six existing

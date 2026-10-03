@@ -408,6 +408,8 @@ async function commitBatchedMutations(
 }
 
 async function syncHabitLogsFromHabit(habit: HabitItem): Promise<void> {
+  // Pausing preserves all existing history, including today, and creates no rows.
+  if (habit.isActive === false) return;
   // Enforce one row per (habitId, dateKey) before applying today's state.
   // This also repairs duplicate historical rows left by older clients.
   await deduplicateHabitLogsForAllDates();
@@ -1563,6 +1565,7 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
   try {
     const normalizedName = habit.name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
     if (!normalizedName) throw new Error('Habit name cannot be empty.');
+    const habitForStorage = applyHabitActivationTransition(null, habit);
     const habitRef = doc(db, HABITS_COLLECTION, habit.id);
     const snapshot = await getDocs(collection(db, HABITS_COLLECTION));
     const duplicateName = snapshot.docs.some((stored) =>
@@ -1577,10 +1580,10 @@ export async function addHabitToCloud(habit: HabitItem): Promise<void> {
       if (existing.exists()) {
         throw new Error(`Duplicate habit rejected: Habit ID ${habit.id} already exists.`);
       }
-      transaction.set(habitRef, habitStoragePayload(habit));
+      transaction.set(habitRef, habitStoragePayload(habitForStorage));
     });
     recordFirestoreWrite('HabitTracker.addHabit', HABITS_COLLECTION, 'transaction');
-    await syncHabitLogsFromHabit(habit);
+    await syncHabitLogsFromHabit(habitForStorage);
     await rebuildAllDaySummaries();
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `${HABITS_COLLECTION}/${habit.id}`);

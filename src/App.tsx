@@ -814,11 +814,22 @@ export default function App() {
 
   if (isLibraryOpen) {
     return (
-      <>
+      <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        {!booksFocusMode && (
+          <PowerBiHeader
+            onOpenHome={handleOpenHome}
+            onOpenLibrary={handleOpenLibrary}
+            onOpenAnalytics={handleOpenAnalytics}
+            onOpenTools={() => handleOpenTools()}
+            onToggleFocus={() => setBooksFocusMode((value) => !value)}
+            focusMode={booksFocusMode}
+            isSyncing={isSyncing}
+          />
+        )}
         <MobileBrandHeader isSyncing={isSyncing} />
         <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} focusMode={booksFocusMode} onFocusChange={setBooksFocusMode} />
         <MobileBottomNav activeSection="books" focusActive={booksFocusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
-      </>
+      </div>
     );
   }
 
@@ -858,28 +869,39 @@ export default function App() {
 
   if (isToolsOpen) {
     return (
-      <>
-      <MobileBrandHeader isSyncing={isSyncing} />
-      <MoreWorkspace
-        theme={theme}
-        initialTab={toolsInitialTab}
-        onBack={handleCloseTools}
-        tasks={tasks}
-        habits={habits}
-        onAddTask={handleAddTask}
-        onUpdateTask={handleUpdateTask}
-        onDeleteTask={handleDeleteTask}
-        onToggleTaskStatus={handleToggleTaskStatus}
-        onAddHabit={handleAddHabit}
-        onUpdateHabit={handleUpdateHabit}
-        onCheckIn={handleHabitCheckIn}
-        onDeleteHabit={handleDeleteHabit}
-        isSyncing={isSyncing}
-        focusMode={toolsFocusMode}
-        onFocusChange={setToolsFocusMode}
-      />
-      <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
-      </>
+      <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        {!toolsFocusMode && (
+          <PowerBiHeader
+            onOpenHome={handleOpenHome}
+            onOpenLibrary={handleOpenLibrary}
+            onOpenAnalytics={handleOpenAnalytics}
+            onOpenTools={() => handleOpenTools()}
+            onToggleFocus={() => setToolsFocusMode((value) => !value)}
+            focusMode={toolsFocusMode}
+            isSyncing={isSyncing}
+          />
+        )}
+        <MobileBrandHeader isSyncing={isSyncing} />
+        <MoreWorkspace
+          theme={theme}
+          initialTab={toolsInitialTab}
+          onBack={handleCloseTools}
+          tasks={tasks}
+          habits={habits}
+          onAddTask={handleAddTask}
+          onUpdateTask={handleUpdateTask}
+          onDeleteTask={handleDeleteTask}
+          onToggleTaskStatus={handleToggleTaskStatus}
+          onAddHabit={handleAddHabit}
+          onUpdateHabit={handleUpdateHabit}
+          onCheckIn={handleHabitCheckIn}
+          onDeleteHabit={handleDeleteHabit}
+          isSyncing={isSyncing}
+          focusMode={toolsFocusMode}
+          onFocusChange={setToolsFocusMode}
+        />
+        <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      </div>
     );
   }
 

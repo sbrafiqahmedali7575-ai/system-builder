@@ -156,6 +156,7 @@ async function startServer() {
           'habitsCompleted',
           'habitTotal',
           'habitCompletionRate',
+          'DayCompletion',
           'IsdayCompleted',
         ];
         const missing = required.filter((k) => x[k] === undefined);
@@ -176,8 +177,9 @@ async function startServer() {
           taskTotal > 0 ? Math.round((tasksCompleted / taskTotal) * 100) : 0;
         const expectedHabitRate =
           habitTotal > 0 ? Math.round((habitsCompleted / habitTotal) * 100) : 0;
-        const expectedDayCompleted =
-          taskTotal > 0 && expectedTaskRate === 100;
+        const expectedDayCompletion =
+          Math.round((expectedTaskRate * 0.67 + expectedHabitRate * 0.33) * 10) / 10;
+        const expectedDayCompleted = expectedDayCompletion >= 80;
 
         if (Number(x.taskCompletionRate) !== expectedTaskRate) {
           issues.push(
@@ -189,9 +191,14 @@ async function startServer() {
             `Days/${d.id}: habitCompletionRate must equal completed habits / habit total.`
           );
         }
+        if (Number(x.DayCompletion) !== expectedDayCompletion) {
+          issues.push(
+            `Days/${d.id}: DayCompletion must equal 67% task completion + 33% habit completion.`
+          );
+        }
         if (x.IsdayCompleted !== expectedDayCompleted) {
           issues.push(
-            `Days/${d.id}: IsdayCompleted must be true only when all scheduled tasks are complete.`
+            `Days/${d.id}: IsdayCompleted must equal DayCompletion >= 80%.`
           );
         }
 

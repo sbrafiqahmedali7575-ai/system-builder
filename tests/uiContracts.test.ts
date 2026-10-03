@@ -557,6 +557,28 @@ assert.ok(
   'IsdayCompleted should be true when DayCompletion is at least 80%'
 );
 
+const usersColumnsStart = dataTransfer.indexOf("users: [");
+const usersColumnsEnd = dataTransfer.indexOf('],', usersColumnsStart);
+const usersColumnsContract = dataTransfer.slice(usersColumnsStart, usersColumnsEnd);
+assert.ok(
+  usersColumnsContract.includes("'userName'") &&
+    usersColumnsContract.includes("'password'") &&
+    usersColumnsContract.includes("'IsLoginRequired'"),
+  'Users data table should expose userName, password, and IsLoginRequired.'
+);
+assert.ok(
+  migration.includes("userName: 'sa'") &&
+    migration.includes("IsLoginRequired: 1") &&
+    migration.includes("password: 'sha256:"),
+  'Default user migration should seed sa, require login, and store a hashed password verifier.'
+);
+assert.ok(
+  !migration.includes("password: '7575'") &&
+    server.includes('password,') &&
+    server.includes('...safeUser'),
+  'Default password must not be stored in plaintext or sent to the Analytics AI dataset.'
+);
+
 
 assert.ok(
   performanceIntelligence.includes("taskRate*.67+habitRate*.33"),

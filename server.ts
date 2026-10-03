@@ -549,7 +549,7 @@ async function startServer() {
             },
             users: {
               sourcePath: 'data.users',
-              columns: ['userId TEXT', 'name TEXT', 'email TEXT'],
+              columns: ['userId TEXT', 'name TEXT', 'userName TEXT', 'IsLoginRequired INTEGER', 'email TEXT'],
             },
           },
         },

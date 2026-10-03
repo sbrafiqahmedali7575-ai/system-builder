@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import type {
   CanonicalCollectionName,
   CanonicalDataRow,
@@ -309,4 +310,182 @@ export function exportCanonicalDataFile(
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, collectionName.slice(0, 31));
   XLSX.writeFile(workbook, `${baseName}.xlsx`, { compression: true });
+}
+
+
+export type CanonicalDataSet = Record<
+  CanonicalCollectionName,
+  CanonicalDataRow[]
+>;
+
+const ALL_COLLECTIONS: CanonicalCollectionName[] = [
+  'users',
+  'days',
+  'tasks',
+  'habits',
+  'habitLogs',
+  'countdowns',
+];
+
+function exportRowsForCollection(
+  collectionName: CanonicalCollectionName,
+  rows: CanonicalDataRow[]
+): Record<string, string | number | boolean>[] {
+  const columns = DATA_TABLE_COLUMNS[collectionName];
+  return rows.map((row) =>
+    Object.fromEntries(
+      columns.map((column) => [column, exportCell(row[column])])
+    ) as Record<string, string | number | boolean>
+  );
+}
+
+function validateImportedRows(
+  collectionName: CanonicalCollectionName,
+  rawRows: Record<string, unknown>[]
+): CanonicalDataRow[] {
+  const rows = rawRows.map((row, index) =>
+    normalizeRow(collectionName, row, index + 2)
+  );
+  const primaryKey = DATA_PRIMARY_KEYS[collectionName];
+  const seen = new Set<string>();
+
+  rows.forEach((row, index) => {
+    const key = String(row[primaryKey] ?? '').trim();
+    if (seen.has(key)) {
+      throw new Error(
+        `${collectionName}: duplicate ${primaryKey} "${key}" at row ${index + 2}.`
+      );
+    }
+    seen.add(key);
+  });
+
+  return rows;
+}
+
+function parseCsvText(
+  text: string,
+  collectionName: CanonicalCollectionName
+): CanonicalDataRow[] {
+  const result = Papa.parse<Record<string, unknown>>(text, {
+    header: true,
+    skipEmptyLines: 'greedy',
+  });
+  if (result.errors.length > 0) {
+    const first = result.errors[0];
+    throw new Error(
+      `${collectionName}: CSV parse error near row ${first.row ?? '?'}: ${first.message}`
+    );
+  }
+  return validateImportedRows(collectionName, result.data);
+}
+
+export async function exportAllCanonicalData(
+  data: CanonicalDataSet,
+  format: DataTransferFormat
+): Promise<void> {
+  const dateStamp = new Date().toISOString().slice(0, 10);
+
+  if (format === 'xlsx') {
+    const workbook = XLSX.utils.book_new();
+
+    ALL_COLLECTIONS.forEach((collectionName) => {
+      const columns = DATA_TABLE_COLUMNS[collectionName];
+      const rows = exportRowsForCollection(
+        collectionName,
+        data[collectionName] || []
+      );
+      const worksheet = XLSX.utils.json_to_sheet(rows, { header: columns });
+      worksheet['!cols'] = columns.map((column) => ({
+        wch: Math.min(
+          40,
+          Math.max(
+            column.length + 2,
+            ...rows.map((row) => String(row[column] ?? '').length + 2)
+          )
+        ),
+      }));
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        collectionName.slice(0, 31)
+      );
+    });
+
+    XLSX.writeFile(
+      workbook,
+      `system-builder-all-data-${dateStamp}.xlsx`,
+      { compression: true }
+    );
+    return;
+  }
+
+  const zip = new JSZip();
+  ALL_COLLECTIONS.forEach((collectionName) => {
+    const columns = DATA_TABLE_COLUMNS[collectionName];
+    const rows = exportRowsForCollection(
+      collectionName,
+      data[collectionName] || []
+    );
+    const csv = Papa.unparse(rows, { columns });
+    zip.file(`${collectionName}.csv`, `\uFEFF${csv}`);
+  });
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  downloadBlob(blob, `system-builder-all-data-${dateStamp}-csv.zip`);
+}
+
+export async function parseAllCanonicalDataFile(
+  file: File,
+  format: DataTransferFormat
+): Promise<CanonicalDataSet> {
+  const emptyData = Object.fromEntries(
+    ALL_COLLECTIONS.map((collectionName) => [collectionName, []])
+  ) as CanonicalDataSet;
+
+  if (format === 'xlsx') {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const sheetLookup = new Map(
+      workbook.SheetNames.map((name) => [name.toLowerCase(), name])
+    );
+
+    for (const collectionName of ALL_COLLECTIONS) {
+      const sheetName = sheetLookup.get(collectionName.toLowerCase());
+      if (!sheetName) {
+        throw new Error(
+          `Excel import is missing the "${collectionName}" worksheet.`
+        );
+      }
+      const worksheet = workbook.Sheets[sheetName];
+      const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+        worksheet,
+        { defval: '', raw: false }
+      );
+      emptyData[collectionName] = rawRows.length === 0
+        ? []
+        : validateImportedRows(collectionName, rawRows);
+    }
+
+    return emptyData;
+  }
+
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const filesByLowerName = new Map(
+    Object.values(zip.files)
+      .filter((entry) => !entry.dir)
+      .map((entry) => [entry.name.split('/').pop()!.toLowerCase(), entry])
+  );
+
+  for (const collectionName of ALL_COLLECTIONS) {
+    const entry = filesByLowerName.get(`${collectionName.toLowerCase()}.csv`);
+    if (!entry) {
+      throw new Error(
+        `CSV ZIP import is missing "${collectionName}.csv".`
+      );
+    }
+    const text = await entry.async('string');
+    emptyData[collectionName] = parseCsvText(text.replace(/^\uFEFF/, ''), collectionName);
+  }
+
+  return emptyData;
 }

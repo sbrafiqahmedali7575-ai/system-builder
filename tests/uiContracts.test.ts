@@ -662,3 +662,10 @@ assert.ok(
     dataAnalytics.includes('Compare last 30 vs previous 30 days'),
   'Analytics chat UI must surface advanced analysis mode and advanced prompts.'
 );
+assert.ok(
+  dataAnalytics.includes('bottom-[calc(5.75rem+env(safe-area-inset-bottom))]') &&
+    dataAnalytics.includes('aria-controls="analytics-ai-chat"') &&
+    dataAnalytics.includes('id="analytics-ai-chat"') &&
+    dataAnalytics.includes('Ask AI'),
+  'AI chat launcher must stay above mobile navigation, respect safe-area insets, and expose an accessible labeled target.'
+);

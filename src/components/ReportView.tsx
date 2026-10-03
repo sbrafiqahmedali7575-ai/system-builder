@@ -195,7 +195,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
     const systemStart = Date.UTC(2026, 7, 1);
     const [year, month, day] = currentDateKey.split('-').map(Number);
     const today = Date.UTC(year, month - 1, day);
-    const recordMap = new Map(records.map((record) => [record.date, record]));
+    const recordMap = new Map<string, DailyRecord>(records.map((record) => [record.date, record]));
     const values: number[] = [];
 
     for (let ms = systemStart; ms <= today; ms += DAY_MS) {

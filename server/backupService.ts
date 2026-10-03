@@ -66,6 +66,7 @@ export function generateDaysCsv(days: any[]): string {
     'habitsCompleted',
     'habitTotal',
     'habitCompletionRate',
+    'DayCompletion',
     'IsdayCompleted',
   ];
 
@@ -77,7 +78,8 @@ export function generateDaysCsv(days: any[]): string {
     d.habitsCompleted ?? 0,
     d.habitTotal ?? 0,
     d.habitCompletionRate ?? 0,
-    d.IsdayCompleted === true ? 'TRUE' : 'FALSE',
+    d.DayCompletion ?? Math.round(((Number(d.taskCompletionRate || 0) * 0.67) + (Number(d.habitCompletionRate || 0) * 0.33)) * 10) / 10,
+    (typeof d.DayCompletion === 'number' ? d.DayCompletion : Math.round(((Number(d.taskCompletionRate || 0) * 0.67) + (Number(d.habitCompletionRate || 0) * 0.33)) * 10) / 10) >= 80 ? 'TRUE' : 'FALSE',
   ]);
 
   return [formatCsvRow(headers), ...rows.map(formatCsvRow)].join('\r\n');

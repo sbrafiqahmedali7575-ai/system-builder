@@ -543,6 +543,9 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
     data: {
       userId: 'default-user',
       name: 'Rafiq Ahmed',
+      userName: 'sa',
+      password: 'sha256:c91a1ad0b6bf41aba97606740e92c02d87155d8a3626787464417dbda5eae57f',
+      IsLoginRequired: 1,
     },
   });
   result.users = 1;

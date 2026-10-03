@@ -19,10 +19,7 @@ import {
   setCachedRecords,
   setCachedTasks,
 } from '../services/offlineStorage';
-import {
-  migrateLegacyDataModel,
-  repairCanonicalHabitLogsAndDays,
-} from '../services/dataModelMigration';
+
 
 const DATA_MODEL_MIGRATION_KEY = 'SYSTEM_BUILDER_SINGLE_USER_MODEL_V16_DAYS_DEDUP_FUTURE_CLEANUP';
 const HABIT_LOG_REPAIR_KEY = 'SYSTEM_BUILDER_V17_CALENDAR_DAYS_BACKFILL';
@@ -65,49 +62,6 @@ export function useSystemDataLifecycle({
   setHabits,
 }: Params): void {
   useEffect(() => {
-    let mounted = true;
-    Promise.all([getCachedRecords(), getCachedTasks(), getCachedHabits()])
-      .then(([records, tasks, habits]) => {
-        if (!mounted) return;
-        if (records?.length) setRecords(records);
-        if (tasks?.length) setTasks(tasks);
-        if (habits?.length) setHabits(habits);
-      })
-      .catch((error) => console.warn('Local cache hydration failed:', error));
-    return () => { mounted = false; };
-  }, [setHabits, setRecords, setTasks]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || isFirestoreWriteQuotaExhausted()) return;
-    if (localStorage.getItem(DATA_MODEL_MIGRATION_KEY) === '1') return;
-    let cancelled = false;
-    void migrateLegacyDataModel()
-      .then(() => {
-        if (!cancelled) localStorage.setItem(DATA_MODEL_MIGRATION_KEY, '1');
-      })
-      .catch((error) => {
-        if (isQuotaExceededError(error)) markFirestoreWriteQuotaExhausted();
-        else console.warn('Data model migration remains pending:', error);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || isFirestoreWriteQuotaExhausted()) return;
-    if (localStorage.getItem(HABIT_LOG_REPAIR_KEY) === '1') return;
-    let cancelled = false;
-    void repairCanonicalHabitLogsAndDays()
-      .then(() => {
-        if (!cancelled) localStorage.setItem(HABIT_LOG_REPAIR_KEY, '1');
-      })
-      .catch((error) => {
-        if (isQuotaExceededError(error)) markFirestoreWriteQuotaExhausted();
-        else if (!cancelled) console.warn('Historical habit/day repair remains pending:', error);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
     if (isFirestoreWriteQuotaExhausted()) return;
     void daysRepository.initializeHabitStatus(currentDateKey).catch((error) => {
       if (isQuotaExceededError(error)) markFirestoreWriteQuotaExhausted();
@@ -137,7 +91,7 @@ export function useSystemDataLifecycle({
 
   useEffect(() => daysRepository.subscribe(
     (cloud) => {
-      if (!cloud?.length) return;
+
       setRecords(cloud);
       void setCachedRecords(cloud);
     },

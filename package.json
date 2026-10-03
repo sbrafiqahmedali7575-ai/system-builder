@@ -1,15 +1,19 @@
 {
-  "name": "react-example",
+  "name": "system-builder-desktop",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
-    "start": "node dist/server.cjs",
+    "dev": "npm run desktop:build && electron .",
+    "build": "vite build",
+    "start": "electron .",
     "lint": "tsc --noEmit",
-    "test": "tsx tests/progressAnalytics.test.ts && tsx tests/uiContracts.test.ts && tsx tests/interactionFeedback.test.ts && tsx tests/auth.test.ts",
-    "check": "bun run lint && bun run test && bun run build"
+    "test": "node tests/desktop.test.cjs",
+    "check": "npm run lint && npm test && npm run build",
+    "desktop:build": "vite build",
+    "desktop:start": "electron .",
+    "desktop:package": "node desktop/package.mjs",
+    "desktop:test": "node --test tests/desktop.test.cjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -24,23 +28,28 @@
     "localforage": "^1.10.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "nodemailer": "^10.0.1",
     "papaparse": "^5.7.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "recharts": "^3.10.1",
-    "xlsx": "^0.18.5",
-    "nodemailer": "^10.0.1"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/papaparse": "^5.5.2",
     "autoprefixer": "^10.4.21",
+    "electron": "^44.5.1",
     "esbuild": "^0.25.0",
+    "extract-zip": "^2.0.1",
+    "playwright": "^1.51.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
-  }
+  },
+  "main": "desktop/main.cjs"
 }

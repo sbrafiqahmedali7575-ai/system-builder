@@ -52,9 +52,7 @@ export interface SyncHandlers {
  * Check if an error or current environment indicates offline state.
  */
 export function isNetworkOrOfflineError(error?: unknown): boolean {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    return true;
-  }
+  // Disk/IPC errors must be shown even when the computer is offline.
   if (!error) return false;
   const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
   return (

@@ -12,6 +12,7 @@ export default defineConfig(() => {
       },
     },
     build: {
+      target: 'esnext',
       // Firebase is intentionally isolated; its minified chunk is ~521 kB but
       // compresses to ~121 kB. Keep the warning threshold just above that
       // known vendor chunk while still flagging unexpected bundle growth.

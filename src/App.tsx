@@ -14,7 +14,7 @@ import { MobileBrandHeader } from './components/MobileBrandHeader';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastProvider } from './components/ui/ToastProvider';
 import { FeedbackDiagnosticsPanel } from './components/FeedbackDiagnosticsPanel';
-import { AuthGate, useAppAuth } from './components/AuthGate';
+import { DesktopBackup } from './components/DesktopBackup';
 import { standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { calculateKPIStats } from './utils/daxMeasures';
@@ -62,7 +62,7 @@ const buildDayProgressStats = (
 };
 
 function SystemBuilderApp() {
-  const { openAccount } = useAppAuth();
+  const openAccount = () => window.dispatchEvent(new CustomEvent('system-builder:backup'));
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
     if (typeof window !== 'undefined') {
@@ -78,7 +78,7 @@ function SystemBuilderApp() {
         }
       }
     }
-    return INITIAL_RECORDS;
+    return [];
   });
 
   // Initialize tasks from localStorage cache
@@ -872,7 +872,6 @@ function SystemBuilderApp() {
             activeSection="analytics"
             onAnalytics={handleOpenAnalytics}
             onFocus={() => {}}
-            onAiChat={() => window.dispatchEvent(new CustomEvent('system-builder:open-analytics-ai'))}
             hideFocus
             onPlan={() => { handleCloseAnalytics(); setTimeout(() => handleOpenTools('tasks'), 0); }}
             onBooks={() => { handleCloseAnalytics(); setTimeout(handleOpenLibrary, 0); }}
@@ -1029,8 +1028,8 @@ function SystemBuilderApp() {
 
 export default function App() {
   return (
-    <AuthGate>
-      <SystemBuilderApp />
-    </AuthGate>
+    <>
+      <SystemBuilderApp /><DesktopBackup />
+    </>
   );
 }

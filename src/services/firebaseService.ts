@@ -1,5 +1,3 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import {
   getFirestore,
   collection,
@@ -17,7 +15,7 @@ import {
   type QuerySnapshot,
   type DocumentData,
   type DocumentReference,
-} from 'firebase/firestore';
+} from './desktopFirestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { recordFirestoreWrite } from './firestoreWriteDiagnostics';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
@@ -28,17 +26,8 @@ import {
   getIsoDateKeyInTimezone,
 } from '../utils/taskDateUtils';
 
-// Initialize Firebase App
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-// Target specific Firestore Database ID if configured
-export const db =
-  firebaseConfig.firestoreDatabaseId &&
-  firebaseConfig.firestoreDatabaseId !== '(default)'
-    ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-    : getFirestore(app);
-
-export const auth = getAuth(app);
+export const db = getFirestore();
+export const auth = { currentUser: null };
 
  export enum OperationType {
   CREATE = 'create',

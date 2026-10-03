@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { UserRound } from 'lucide-react';
+import { CloudUpload } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 interface MobileBrandHeaderProps {
@@ -54,10 +54,10 @@ export const MobileBrandHeader: React.FC<MobileBrandHeaderProps> = ({
             type="button"
             onClick={onOpenAccount}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300"
-            aria-label="Open account settings"
-            title="Account"
+            aria-label="Open backup"
+            title="Backup"
           >
-            <UserRound className="h-4 w-4" />
+            <CloudUpload className="h-4 w-4" />
           </button>
         )}
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, BookOpen, Focus, Home, UserRound, Wrench } from 'lucide-react';
+import { BarChart3, BookOpen, Focus, Home, CloudUpload, Wrench } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -77,7 +77,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
                 {isSyncing && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
                 <span className="tracking-[0.01em]">
-                  {isSyncing ? 'Syncing...' : 'Developed by Rafiq Ahmed'}
+                  {isSyncing ? 'Saving...' : 'Developed by Rafiq Ahmed'}
                 </span>
               </div>
             </div>
@@ -192,10 +192,10 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               whileTap={{ scale: 0.95 }}
               onClick={onOpenAccount}
               className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs transition-all hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              title="Account"
-              aria-label="Open account settings"
+              title="Backup"
+              aria-label="Open backup"
             >
-              <UserRound className="h-4 w-4" />
+              <CloudUpload className="h-4 w-4" />
             </motion.button>
           )}
 

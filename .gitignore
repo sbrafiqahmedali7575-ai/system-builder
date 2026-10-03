@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+release/
+desktop/seed.json
+desktop/cloud-seed.raw.json
+desktop/*-preview.png
+desktop/ui-*

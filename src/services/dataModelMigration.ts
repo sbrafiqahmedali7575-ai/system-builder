@@ -7,7 +7,7 @@ import {
   writeBatch,
   type DocumentReference,
   type WriteBatch,
-} from 'firebase/firestore';
+} from './desktopFirestore';
 import {
   db,
   isFirestoreWriteQuotaExhausted,
@@ -698,7 +698,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
         Iscompleted: true,
       };
       const existingLog = existingHabitLogsById.get(habitLogId);
-      if (!existingLog || !migrationFieldsMatch(existingLog, desiredLog)) {
+      if (!existingLog || !migrationFieldsMatch(existingLog as Record<string, unknown>, desiredLog)) {
         writes.push({ ref: doc(db, 'habitLogs', habitLogId), data: desiredLog });
         result.habitLogs += 1;
       }

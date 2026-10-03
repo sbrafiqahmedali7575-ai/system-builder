@@ -190,6 +190,7 @@ export const authInternalsForTests = {
   verifyPassword,
   signSession,
   verifySessionToken,
+  loginRequired,
 };
 
 export function registerAuthRoutes(app: import('express').Express): void {

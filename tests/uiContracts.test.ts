@@ -573,8 +573,10 @@ assert.ok(
   migration.includes('buildCanonicalUserProfile') &&
     migration.includes("existingUserData?.userName || 'sa'") &&
     migration.includes('existingUserData?.password ||') &&
-    migration.includes('existingUserData?.IsLoginRequired === undefined'),
-  'Default user migration should seed missing login fields while preserving existing username, password verifier, and IsLoginRequired.'
+    migration.includes('shouldApplyLoginDefault') &&
+    migration.includes('IsLoginRequired: shouldApplyLoginDefault') &&
+    migration.includes('loginPreferenceVersion: LOGIN_PREFERENCE_VERSION'),
+  'Default user migration should disable login once, then preserve later user-selected login settings.'
 );
 assert.ok(
   !migration.includes("password: '7575'") &&
@@ -676,8 +678,9 @@ assert.ok(
   authGate.includes("fetch('/api/auth/status'") &&
     authGate.includes("fetch('/api/auth/login'") &&
     authGate.includes("fetch('/api/auth/credentials'") &&
+    authGate.includes("fetch('/api/auth/login-required'") &&
     authGate.includes("fetch('/api/auth/logout'"),
-  'Auth gate must support status, login, credential update, and logout flows.'
+  'Auth gate must support status, login, credential update, login-required toggle, and logout flows.'
 );
 assert.ok(
   authGate.includes('status.loginRequired && !status.authenticated') &&
@@ -703,8 +706,10 @@ assert.ok(
 );
 assert.ok(
   server.includes('registerAuthRoutes(app);') &&
-    server.includes("app.post('/api/analytics/chat', requireAppSession"),
-  'Server must register auth routes and protect the analytics API when login is required.'
+    server.includes("app.post('/api/analytics/chat', requireAppSession") &&
+    authServer.includes("app.post('/api/auth/login-required'") &&
+    authServer.includes('loginPreferenceVersion: 1'),
+  'Server must register auth routes, protect analytics, and support an explicit login-required setting.'
 );
 assert.ok(
   powerBiHeader.includes('aria-label="Open account settings"') &&

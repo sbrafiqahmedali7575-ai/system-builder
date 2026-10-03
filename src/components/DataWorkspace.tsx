@@ -1,13 +1,34 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Database, KeyRound, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowDown,
+  ArrowRightLeft,
+  ArrowUp,
+  ChevronsUpDown,
+  ChevronDown,
+  ChevronRight,
+  Database,
+  FileSpreadsheet,
+  FileText,
+  KeyRound,
+  Loader2,
+} from 'lucide-react';
+import {
+  importCanonicalDataRows,
   subscribeToCanonicalData,
   type CanonicalCollectionName,
   type CanonicalDataRow,
 } from '../services/firebaseService';
+import {
+  DATA_TABLE_COLUMNS,
+  exportCanonicalDataFile,
+  parseCanonicalDataFile,
+  type DataTransferFormat,
+} from '../utils/dataTransfer';
+import { useToast } from './ui/ToastProvider';
 
 type SortDirection = 'asc' | 'desc';
 type SortState = { column: string; direction: SortDirection } | null;
+type CollectionDescriptor = { id: CanonicalCollectionName; label: string };
 
 const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> = {
   users: { userId: 'PK' },
@@ -18,38 +39,23 @@ const KEY_COLUMNS: Record<CanonicalCollectionName, Record<string, 'PK' | 'FK'>> 
   countdowns: { countdownId: 'PK' },
 };
 
-const TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
-  users: ['userId', 'name'],
-  days: [
-    'dateKey',
-    'tasksCompleted',
-    'taskTotal',
-    'taskCompletionRate',
-    'habitsCompleted',
-    'habitTotal',
-    'habitCompletionRate',
-    'DayCompletion',
-    'IsdayCompleted',
-  ],
-  tasks: ['taskId', 'title', 'quadrant', 'scheduledDate', 'taskOrder', 'EstimationTime', 'ActualTime', 'notes', 'Iscompleted'],
-  habits: ['habitId', 'name', 'repeatDays', 'activeFrom', 'isActive', 'color'],
-  habitLogs: ['habitLogId', 'habitId', 'dateKey', 'Iscompleted'],
-  countdowns: ['countdownId', 'title', 'targetDate', 'isActive'],
-};
-
-const FACT_COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
+const FACT_COLLECTIONS: CollectionDescriptor[] = [
   { id: 'days', label: 'Days' },
   { id: 'tasks', label: 'Tasks' },
   { id: 'habitLogs', label: 'HabitLogs' },
 ];
 
-const DIM_COLLECTIONS: Array<{ id: CanonicalCollectionName; label: string }> = [
+const DIM_COLLECTIONS: CollectionDescriptor[] = [
   { id: 'habits', label: 'Habits' },
   { id: 'users', label: 'Users' },
   { id: 'countdowns', label: 'Countdowns' },
 ];
 
 const COLLECTIONS = [...FACT_COLLECTIONS, ...DIM_COLLECTIONS];
+
+function collectionLabel(collectionName: CanonicalCollectionName): string {
+  return COLLECTIONS.find((item) => item.id === collectionName)?.label || collectionName;
+}
 
 function renderValue(value: unknown, column?: string): string {
   if (value === null || value === undefined) return '—';
@@ -61,7 +67,143 @@ function renderValue(value: unknown, column?: string): string {
   return String(value);
 }
 
+interface DataCollectionCardProps {
+  collection: CollectionDescriptor;
+  selected: boolean;
+  rowCount: number;
+  menuOpen: boolean;
+  busy: boolean;
+  onSelect: () => void;
+  onToggleTransfer: () => void;
+  onExport: (format: DataTransferFormat) => void;
+  onImport: (format: DataTransferFormat) => void;
+}
+
+const DataCollectionCard: React.FC<DataCollectionCardProps> = ({
+  collection,
+  selected,
+  rowCount,
+  menuOpen,
+  busy,
+  onSelect,
+  onToggleTransfer,
+  onExport,
+  onImport,
+}) => (
+  <div className="relative" data-transfer-menu>
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full relative rounded-xl border px-2 py-2 pr-9 text-left transition-colors ${
+        selected
+          ? 'border-[#4772fa] bg-blue-50/50 dark:bg-blue-950/20'
+          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900'
+      }`}
+    >
+      <div className="flex items-center gap-1.5">
+        <Database
+          className={`w-3.5 h-3.5 ${
+            selected ? 'text-blue-600' : 'text-slate-400'
+          }`}
+        />
+        <span
+          className={`text-[11px] font-semibold truncate ${
+            selected
+              ? 'text-blue-800 dark:text-blue-300'
+              : 'text-slate-700 dark:text-slate-200'
+          }`}
+        >
+          {collection.label}
+        </span>
+      </div>
+      <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        {rowCount}
+      </div>
+      <div className="text-[11px] uppercase tracking-wide font-medium text-slate-400">
+        rows
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggleTransfer();
+      }}
+      disabled={busy}
+      className={`absolute right-1.5 top-1.5 z-20 inline-flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${
+        menuOpen
+          ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+          : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+      }`}
+      aria-label={`Import or export ${collection.label} data`}
+      aria-haspopup="menu"
+      aria-expanded={menuOpen}
+      title={`Import / Export ${collection.label}`}
+    >
+      {busy ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <ArrowRightLeft className="h-3.5 w-3.5" />
+      )}
+    </button>
+
+    {menuOpen && (
+      <div
+        role="menu"
+        className="absolute right-1.5 top-9 z-50 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          Export
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            type="button"
+            onClick={() => onExport('xlsx')}
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+            Excel
+          </button>
+          <button
+            type="button"
+            onClick={() => onExport('csv')}
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <FileText className="h-3.5 w-3.5 text-blue-600" />
+            CSV
+          </button>
+        </div>
+
+        <div className="mt-2 border-t border-slate-100 px-1 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800">
+          Import
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            type="button"
+            onClick={() => onImport('xlsx')}
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+            Excel
+          </button>
+          <button
+            type="button"
+            onClick={() => onImport('csv')}
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <FileText className="h-3.5 w-3.5 text-blue-600" />
+            CSV
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = false }) => {
+  const { notify } = useToast();
   const [active, setActive] = useState<CanonicalCollectionName>('days');
   const [data, setData] = useState<Record<CanonicalCollectionName, CanonicalDataRow[]>>({
     users: [], days: [], tasks: [], habits: [], habitLogs: [], countdowns: [],
@@ -69,8 +211,25 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortState>(null);
   const [showDimensions, setShowDimensions] = useState(false);
+  const [transferMenu, setTransferMenu] = useState<CanonicalCollectionName | null>(null);
+  const [transferBusy, setTransferBusy] = useState<CanonicalCollectionName | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingImportRef = useRef<{
+    collection: CanonicalCollectionName;
+    format: DataTransferFormat;
+  } | null>(null);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
+
+  useEffect(() => {
+    if (!transferMenu) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('[data-transfer-menu]')) setTransferMenu(null);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [transferMenu]);
 
   const rows = data[active];
   const sortedRows = useMemo(() => {
@@ -87,14 +246,12 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
       const primary = effectiveSort.direction === 'asc' ? comparison : -comparison;
       if (primary !== 0) return primary;
 
-      // Default Tasks tie-breaker: same scheduledDate -> taskId DESC.
       if (!sort && active === 'tasks' && effectiveSort.column === 'scheduledDate') {
         const leftTaskId = renderValue(a.taskId).toLocaleLowerCase();
         const rightTaskId = renderValue(b.taskId).toLocaleLowerCase();
         return -leftTaskId.localeCompare(rightTaskId, undefined, { numeric: true, sensitivity: 'base' });
       }
 
-      // Default HabitLogs tie-breaker: same dateKey -> habitLogId DESC.
       if (!sort && active === 'habitLogs' && effectiveSort.column === 'dateKey') {
         const leftHabitLogId = renderValue(a.habitLogId).toLocaleLowerCase();
         const rightHabitLogId = renderValue(b.habitLogId).toLocaleLowerCase();
@@ -117,142 +274,183 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
     setActive(collection);
     setSort(null);
   };
-  const columns = TABLE_COLUMNS[active];
+
+  const handleExport = (
+    collection: CanonicalCollectionName,
+    format: DataTransferFormat
+  ) => {
+    setError(null);
+    setTransferMenu(null);
+    try {
+      exportCanonicalDataFile(collection, data[collection], format);
+      notify(
+        `${collectionLabel(collection)} exported as ${format === 'xlsx' ? 'Excel' : 'CSV'}.`
+      );
+    } catch (exportError) {
+      const message = exportError instanceof Error
+        ? exportError.message
+        : String(exportError);
+      setError(`Export failed for ${collectionLabel(collection)}: ${message}`);
+    }
+  };
+
+  const beginImport = (
+    collection: CanonicalCollectionName,
+    format: DataTransferFormat
+  ) => {
+    setError(null);
+    setTransferMenu(null);
+    selectCollection(collection);
+    pendingImportRef.current = { collection, format };
+
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.value = '';
+    input.accept = format === 'xlsx'
+      ? '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
+      : '.csv,text/csv';
+    input.click();
+  };
+
+  const handleImportFile = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    const pending = pendingImportRef.current;
+    if (!file || !pending) return;
+
+    const { collection, format } = pending;
+    setTransferBusy(collection);
+    setError(null);
+
+    try {
+      const importedRows = await parseCanonicalDataFile(file, collection, format);
+      const result = await importCanonicalDataRows(collection, importedRows);
+      notify(
+        `${result.imported} row${result.imported === 1 ? '' : 's'} imported into ${collectionLabel(collection)}.`
+      );
+    } catch (importError) {
+      const message = importError instanceof Error
+        ? importError.message
+        : String(importError);
+      setError(`Import failed for ${collectionLabel(collection)}: ${message}`);
+    } finally {
+      setTransferBusy(null);
+      pendingImportRef.current = null;
+      event.target.value = '';
+    }
+  };
+
+  const renderCollectionCard = (collection: CollectionDescriptor) => (
+    <DataCollectionCard
+      key={collection.id}
+      collection={collection}
+      selected={active === collection.id}
+      rowCount={data[collection.id].length}
+      menuOpen={transferMenu === collection.id}
+      busy={transferBusy === collection.id}
+      onSelect={() => selectCollection(collection.id)}
+      onToggleTransfer={() =>
+        setTransferMenu((current) => current === collection.id ? null : collection.id)
+      }
+      onExport={(format) => handleExport(collection.id, format)}
+      onImport={(format) => beginImport(collection.id, format)}
+    />
+  );
+
+  const columns = DATA_TABLE_COLUMNS[active];
 
   return (
     <div className="tools-workspace-view lg:flex lg:flex-col">
-      {!focusMode && <div className="tools-view-header lg:shrink-0"><div><h2 className="tools-view-title">Data</h2><p className="tools-view-subtitle"></p></div></div>}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleImportFile}
+        aria-hidden="true"
+      />
 
-      {!focusMode && <div className="space-y-2 p-2.5 sm:p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
-        <div>
-          <div className="mb-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">Fact</div>
-          <div className="grid grid-cols-3 gap-1.5">
-            {FACT_COLLECTIONS.map((collection) => {
-              const selected = active === collection.id;
-              return (
-                <button
-                  key={collection.id}
-                  type="button"
-                  onClick={() => selectCollection(collection.id)}
-                  className={`relative rounded-xl border px-2 py-2 text-left transition-colors ${
-                    selected
-                      ? 'border-[#4772fa] bg-blue-50/50 '
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Database
-                      className={`w-3.5 h-3.5 ${
-                        selected ? 'text-blue-600' : 'text-slate-400'
-                      }`}
-                    />
-                    <span
-                      className={`text-[11px] font-semibold truncate ${
-                        selected ? 'text-blue-800' : 'text-slate-700'
-                      }`}
-                    >
-                      {collection.label}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-lg font-semibold text-slate-900">
-                    {data[collection.id].length}
-                  </div>
-                  <div className="text-[11px] uppercase tracking-wide font-medium text-slate-400">
-                    rows
-                  </div>
-                </button>
-              );
-            })}
+      {!focusMode && (
+        <div className="tools-view-header lg:shrink-0">
+          <div>
+            <h2 className="tools-view-title">Data</h2>
+            <p className="tools-view-subtitle"></p>
           </div>
         </div>
+      )}
 
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowDimensions((value) => !value)}
-            className="min-h-11 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
-            aria-expanded={showDimensions}
-            title="Show dimension tables"
-          >
-            {showDimensions ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
-            )}
-            Dim
-          </button>
-          {showDimensions && (
-            <div className="mt-1 grid grid-cols-3 gap-1.5">
-              {DIM_COLLECTIONS.map((collection) => {
-                const selected = active === collection.id;
-                return (
-                  <button
-                    key={collection.id}
-                    type="button"
-                    onClick={() => selectCollection(collection.id)}
-                    className={`relative rounded-xl border px-2 py-2 text-left transition-colors ${
-                      selected
-                        ? 'border-[#4772fa] bg-blue-50/50 '
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Database
-                        className={`w-3.5 h-3.5 ${
-                          selected ? 'text-blue-600' : 'text-slate-400'
-                        }`}
-                      />
-                      <span
-                        className={`text-[11px] font-semibold truncate ${
-                          selected ? 'text-blue-800' : 'text-slate-700'
-                        }`}
-                      >
-                        {collection.label}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-lg font-semibold text-slate-900">
-                      {data[collection.id].length}
-                    </div>
-                    <div className="text-[11px] uppercase tracking-wide font-medium text-slate-400">
-                      rows
-                    </div>
-                  </button>
-                );
-              })}
+      {!focusMode && (
+        <div className="space-y-2 p-2.5 sm:p-3 border-b border-slate-100 dark:border-slate-800 lg:shrink-0">
+          <div>
+            <div className="mb-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">Fact</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {FACT_COLLECTIONS.map(renderCollectionCard)}
             </div>
-          )}
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowDimensions((value) => !value)}
+              className="min-h-11 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
+              aria-expanded={showDimensions}
+              title="Show dimension tables"
+            >
+              {showDimensions ? (
+                <ChevronDown className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
+              Dim
+            </button>
+            {showDimensions && (
+              <div className="mt-1 grid grid-cols-3 gap-1.5">
+                {DIM_COLLECTIONS.map(renderCollectionCard)}
+              </div>
+            )}
+          </div>
         </div>
-      </div>}
+      )}
 
       {error && <div className="tools-feedback-error">{error}</div>}
 
       <div className="bg-white dark:bg-slate-950 overflow-hidden lg:flex-1 lg:min-h-0">
-        <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 flex items-center justify-between">
-          <div className="font-semibold text-sm">{COLLECTIONS.find((item) => item.id === active)?.label}</div>
-          <div className="text-[10px] font-medium text-slate-500">{rows.length} document{rows.length === 1 ? '' : 's'}</div>
+        <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between gap-3">
+          <div className="font-semibold text-sm">{collectionLabel(active)}</div>
+          <div className="text-[10px] font-medium text-slate-500">
+            {rows.length} document{rows.length === 1 ? '' : 's'}
+          </div>
         </div>
-        <div className="overflow-x-auto overflow-y-auto overscroll-contain lg:h-[calc(100%-41px)]">
+
+        <div className="overflow-x-auto overflow-y-auto overscroll-contain max-h-[62dvh] sm:max-h-[68dvh] lg:max-h-none lg:h-[calc(100%-41px)] [scrollbar-gutter:stable]">
           {rows.length === 0 ? (
-            <div className="min-h-40 flex items-center justify-center text-sm font-medium text-slate-400">No documents</div>
+            <div className="min-h-40 flex items-center justify-center text-sm font-medium text-slate-400">
+              No documents
+            </div>
           ) : (
             <table className="w-full min-w-[760px] border-collapse text-left">
-              <thead className="sticky top-0 z-10 bg-white dark:bg-slate-950 ">
+              <thead className="sticky top-0 z-10 bg-white dark:bg-slate-950">
                 <tr>
                   {columns.map((column) => {
                     const keyType = KEY_COLUMNS[active][column];
                     const isSorted = sort?.column === column;
                     return (
-                      <th key={column} className="border-b border-r border-slate-200 dark:border-slate-800 p-0 text-[10px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap">
+                      <th
+                        key={column}
+                        className="border-b border-r border-slate-200 dark:border-slate-800 p-0 text-[10px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap"
+                      >
                         {keyType ? (
                           <button
                             type="button"
                             onClick={() => cycleSort(column)}
-                            className="w-full min-h-11 sm:min-h-0 px-2.5 py-2 inline-flex items-center gap-1.5 text-left hover:bg-slate-100 transition-colors"
+                            className="w-full min-h-11 sm:min-h-0 px-2.5 py-2 inline-flex items-center gap-1.5 text-left hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
                             title={`Sort by ${column} (${keyType})`}
                           >
                             <KeyRound className="w-3 h-3 text-amber-500 shrink-0" />
                             <span>{column}</span>
-                            <span className="rounded bg-slate-100 px-1 py-0.5 text-[11px] text-slate-500">{keyType}</span>
+                            <span className="rounded bg-slate-100 dark:bg-slate-800 px-1 py-0.5 text-[11px] text-slate-500 dark:text-slate-300">
+                              {keyType}
+                            </span>
                             {isSorted ? (
                               sort?.direction === 'asc'
                                 ? <ArrowUp className="w-3 h-3 text-blue-600 ml-auto" />
@@ -271,9 +469,12 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
               </thead>
               <tbody>
                 {sortedRows.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50">
+                  <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/70">
                     {columns.map((column) => (
-                      <td key={column} className="max-w-[320px] border-b border-r border-slate-100 dark:border-slate-800 px-2.5 py-2.5 sm:py-2 text-xs font-medium text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <td
+                        key={column}
+                        className="max-w-[320px] border-b border-r border-slate-100 dark:border-slate-800 px-2.5 py-2.5 sm:py-2 text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap overflow-hidden text-ellipsis"
+                      >
                         {renderValue(row[column], column)}
                       </td>
                     ))}

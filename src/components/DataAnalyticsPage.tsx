@@ -61,6 +61,7 @@ interface ChatMessage {
   dataFreshness?: string;
   analysisLevel?: 'standard' | 'deep';
   queryMode?: QueryMode;
+  executionEngine?: string;
 }
 
 const DAY = 86_400_000;
@@ -554,8 +555,10 @@ export const DataAnalyticsPage: React.FC<Props> = ({
           mode: queryMode,
         }),
       });
-      if (!response.ok) throw new Error('AI endpoint unavailable');
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(String(payload.error || 'Analytics service unavailable'));
+      }
       const answer = String(payload.answer || '').trim();
       const responseLevel = payload.analysisLevel === 'deep' ? 'deep' : 'standard';
       setAnalysisLevel(responseLevel);
@@ -572,17 +575,23 @@ export const DataAnalyticsPage: React.FC<Props> = ({
           dataFreshness: payload.dataFreshness ? String(payload.dataFreshness) : undefined,
           analysisLevel: responseLevel,
           queryMode,
+          executionEngine: payload.executionEngine ? String(payload.executionEngine) : undefined,
         },
       ]);
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Analytics service unavailable';
       setMessages((current) => [
         ...current,
         {
           role: 'assistant',
           text: queryMode === 'sql'
-            ? 'The live SQL analysis service is unavailable right now, so this query was not executed.'
-            : localAnswer(input),
+            ? `SQL could not be executed: ${message}`
+            : `${localAnswer(input)}\n\nServer note: ${message}`,
+          notes: queryMode === 'sql'
+            ? ['SQL is read-only. Open Schema to verify table and column names.']
+            : ['Using the local dashboard fallback because the live analyst request failed.'],
           queryMode,
+          executionEngine: 'client-fallback',
         },
       ]);
     } finally {
@@ -968,9 +977,20 @@ export const DataAnalyticsPage: React.FC<Props> = ({
                       </div>
                     )}
 
-                    {message.role === 'assistant' && message.dataFreshness && (
-                      <div className="mt-1.5 text-right text-[9px] font-medium text-slate-400">
-                        Live data · {new Date(message.dataFreshness).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {message.role === 'assistant' && (message.dataFreshness || message.executionEngine) && (
+                      <div className="mt-1.5 flex items-center justify-end gap-1.5 text-[9px] font-medium text-slate-400">
+                        {message.executionEngine && (
+                          <span className="rounded-full border border-slate-200 bg-white px-1.5 py-0.5 dark:border-slate-700 dark:bg-slate-900">
+                            {message.executionEngine === 'server-deterministic'
+                              ? 'Verified SQL engine'
+                              : message.executionEngine === 'client-fallback'
+                                ? 'Local fallback'
+                                : 'AI analyst'}
+                          </span>
+                        )}
+                        {message.dataFreshness && (
+                          <span>Live data · {new Date(message.dataFreshness).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        )}
                       </div>
                     )}
                   </div>

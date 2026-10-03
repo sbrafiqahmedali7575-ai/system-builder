@@ -139,6 +139,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
   const [chatOpen, setChatOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
+  const [analysisLevel, setAnalysisLevel] = useState<'standard' | 'deep'>('standard');
   const [goal, setGoal] = useState<{ targetDate: string; reason: string } | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -503,6 +504,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       if (!response.ok) throw new Error('AI endpoint unavailable');
       const payload = await response.json();
       const answer = String(payload.answer || '').trim();
+      setAnalysisLevel(payload.analysisLevel === 'deep' ? 'deep' : 'standard');
       setMessages((current) => [...current, { role: 'assistant', text: answer || localAnswer(input) }]);
     } catch {
       setMessages((current) => [...current, { role: 'assistant', text: localAnswer(input) }]);
@@ -721,13 +723,13 @@ export const DataAnalyticsPage: React.FC<Props> = ({
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="rounded-xl bg-blue-600 p-2 text-white"><Bot className="h-4 w-4" /></div>
-                <div><div className="text-sm font-black">AI Data Analyst</div><div className="text-[10px] text-slate-500">Full live access to Days · Tasks · Habits · HabitLogs · Goals</div></div>
+                <div><div className="flex items-center gap-2"><div className="text-sm font-black">AI Data Analyst</div><span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300">{analysisLevel === 'deep' ? 'Deep' : 'Live'}</span></div><div className="text-[10px] text-slate-500">Full live access to Days · Tasks · Habits · HabitLogs · Goals</div></div>
               </div>
               <button type="button" onClick={() => setChatOpen(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close AI analyst"><X className="h-4 w-4" /></button>
             </div>
             <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-800">
               <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {['Why is performance low?', 'How are my habits?', 'What should I improve?', 'Show task performance'].map((prompt) => (
+                {['Find my biggest anomaly', 'Compare last 30 vs previous 30 days', 'What drives low DayCompletion?', 'Which tasks overran estimates?'].map((prompt) => (
                   <button key={prompt} type="button" onClick={() => void askQuestion(prompt)} className="whitespace-nowrap rounded-full border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300">{prompt}</button>
                 ))}
               </div>

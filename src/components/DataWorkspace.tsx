@@ -442,9 +442,12 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
       menuOpen={transferMenu === collection.id}
       busy={transferBusy === collection.id}
       onSelect={() => selectCollection(collection.id)}
-      onToggleTransfer={() =>
-        setTransferMenu((current) => current === collection.id ? null : collection.id)
-      }
+      onToggleTransfer={() => {
+        setAllTransferMenu(false);
+        setTransferMenu((current) =>
+          current === collection.id ? null : collection.id
+        );
+      }}
       onExport={(format) => handleExport(collection.id, format)}
       onImport={(format) => beginImport(collection.id, format)}
     />

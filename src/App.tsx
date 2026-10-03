@@ -669,6 +669,7 @@ export default function App() {
         skill: 'Daily Review',
         summary,
         notes: 'Submitted from current-day Review checklist',
+        dayCompletion,
         updatedAt: nowIso,
       };
 

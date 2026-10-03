@@ -67,3 +67,18 @@ jobs:
           WRITE_STATUS=$(curl -sS -o /tmp/write-query.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d '{"question":"DELETE FROM day_facts","mode":"sql"}'             http://127.0.0.1:4173/api/analytics/chat)
           test "$WRITE_STATUS" = "400"
           grep -q 'SQL mode is read-only' /tmp/write-query.json
+
+          BROWSER_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$BROWSER_BIN" ]; then
+            echo "No Chromium-compatible browser found on runner."
+            exit 1
+          fi
+
+          "$BROWSER_BIN"             --headless=new             --no-sandbox             --disable-gpu             --disable-dev-shm-usage             --virtual-time-budget=5000             --dump-dom             http://127.0.0.1:4173/ >/tmp/rendered-home.html 2>/tmp/browser.log
+
+          if ! grep -q 'System Builder' /tmp/rendered-home.html; then
+            echo "React app did not hydrate/render System Builder."
+            cat /tmp/browser.log
+            head -200 /tmp/rendered-home.html
+            exit 1
+          fi

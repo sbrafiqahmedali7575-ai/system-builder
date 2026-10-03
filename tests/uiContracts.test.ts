@@ -20,6 +20,9 @@ const firebaseService = read('src/services/firebaseService.ts');
 const dataWorkspace = read('src/components/DataWorkspace.tsx');
 const badge = read('src/components/BadgeCelebration.tsx');
 const performanceIntelligence = read('src/components/PerformanceIntelligence.tsx');
+const dataAnalytics = read('src/components/DataAnalyticsPage.tsx');
+const powerBiHeader = read('src/components/PowerBiHeader.tsx');
+const server = read('server.ts');
 
 // Mobile modal safety: interactive dialogs must render above the fixed bottom nav (z-[140])
 // and remain reachable on short/narrow phone viewports.
@@ -578,4 +581,37 @@ assert.ok(
   performanceIntelligence.includes("performanceTrendAverage") &&
     performanceIntelligence.includes("hasPerformanceTrendData"),
   'Dynamic performance trend should calculate an average and hide it when no values exist.'
+);
+
+
+assert.ok(
+  powerBiHeader.includes('Data Analytics') &&
+    powerBiHeader.includes('onOpenAnalytics') &&
+    powerBiHeader.includes("window.location.pathname === '/analytics'"),
+  'Desktop navigation must expose the Data Analytics page beside Tools.'
+);
+assert.ok(
+  app.includes("window.location.pathname === '/analytics'") &&
+    app.includes('<DataAnalyticsPage') &&
+    app.includes('onOpenAnalytics={handleOpenAnalytics}'),
+  'App routing must support the Data Analytics page.'
+);
+assert.ok(
+  dataAnalytics.includes('DayCompletion') &&
+    dataAnalytics.includes('Task vs Habit Drivers') &&
+    dataAnalytics.includes('Habit Performance') &&
+    dataAnalytics.includes('Consistency & Reliability'),
+  'Data Analytics must expose the core performance, task, habit, and consistency views.'
+);
+assert.ok(
+  dataAnalytics.includes('Ask AI Data Analyst') &&
+    dataAnalytics.includes('/api/analytics/chat') &&
+    dataAnalytics.includes('localAnswer'),
+  'Data Analytics must include a usable AI analyst chat with local fallback.'
+);
+assert.ok(
+  server.includes("app.post('/api/analytics/chat'") &&
+    server.includes('GoogleGenAI') &&
+    server.includes('DayCompletion = taskCompletionRate * 67% + habitCompletionRate * 33%'),
+  'Server must provide a grounded AI analytics endpoint using the current DayCompletion definition.'
 );

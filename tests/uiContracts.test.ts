@@ -26,6 +26,12 @@ const dataAnalytics = read('src/components/DataAnalyticsPage.tsx');
 const powerBiHeader = read('src/components/PowerBiHeader.tsx');
 const server = read('server.ts');
 
+assert.ok(
+  app.includes('activeSection="analytics"') &&
+    app.includes('onTop={handleOpenHome}'),
+  'Data Analytics mobile Today/Home action must return to the dashboard instead of only scrolling.'
+);
+
 // Mobile modal safety: interactive dialogs must render above the fixed bottom nav (z-[140])
 // and remain reachable on short/narrow phone viewports.
 assert.ok(todayTasks.includes('fixed inset-0 z-[220]'), 'Task dialogs must render above mobile navigation.');

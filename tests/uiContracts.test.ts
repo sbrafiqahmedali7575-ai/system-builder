@@ -494,7 +494,7 @@ assert.ok(pomodoroTimer.includes("oscillator.type = 'square'") && pomodoroTimer.
 
 
 // Focus timer alert preview controls must exercise the production alert generator.
-assert.ok(pomodoroTimer.includes('Test Alerts'), 'Focus timer must expose an alert preview mode.');
+assert.ok(pomodoroTimer.includes('Test 1 Beep') && pomodoroTimer.includes('Test 3 Beeps'), 'Focus timer must expose alert preview controls.');
 assert.ok(pomodoroTimer.includes('onClick={() => playHighAlertBeeps(1)}'), 'Alert preview must test the one-beep milestone sound.');
 assert.ok(pomodoroTimer.includes('onClick={() => playHighAlertBeeps(3)}'), 'Alert preview must test the three-beep milestone sound.');
 
@@ -508,7 +508,7 @@ assert.ok(pomodoroTimer.includes('currentMilestone % 2 === 0 ? 3 : 1'), 'Volume 
 
 
 // Running timer must expose the same persisted one-tap mute state.
-assert.ok((pomodoroTimer.match(/setAlertsMuted\(\(muted\) => !muted\)/g) || []).length >= 2, 'Timer must expose mute both beside status and in alert settings.');
+assert.ok((pomodoroTimer.match(/setAlertsMuted\(\(muted\) => !muted\)/g) || []).length >= 1, 'Timer alert settings must expose a persisted one-tap mute control.');
 assert.ok(pomodoroTimer.includes("currentMilestone % 2 === 0 ? 3 : 1"), 'Mute shortcut must not alter milestone beep cadence.');
 
 

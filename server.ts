@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 import express from 'express';
+import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { fetchAllProjectData, generateAllCsvFiles } from './server/backupService';
@@ -15,6 +16,71 @@ async function startServer() {
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  app.post('/api/analytics/chat', async (req, res) => {
+    try {
+      const question = String(req.body?.question || '').trim();
+      const context = req.body?.context;
+      if (!question) {
+        return res.status(400).json({ error: 'Question is required.' });
+      }
+
+      const apiKey = String(
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        process.env.API_KEY ||
+        ''
+      ).trim();
+
+      if (!apiKey) {
+        return res.status(503).json({
+          error: 'AI analyst is not configured on the server.',
+          fallback: true,
+        });
+      }
+
+      const safeContext = JSON.stringify(context || {}).slice(0, 24_000);
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: [
+                  'You are the System Builder Data Analyst.',
+                  'Answer only from the supplied analytics context. Never invent values.',
+                  'Be concise, quantitative, and decision-oriented.',
+                  'Distinguish selected-period metrics from all-time metrics.',
+                  'Definitions: DayCompletion = taskCompletionRate * 67% + habitCompletionRate * 33%; successful day = DayCompletion >= 80%; achieved week = completed Monday-Sunday week with 7-day average DayCompletion > 80%.',
+                  'When useful, explain the main driver, risk, and one practical next action.',
+                  '',
+                  'ANALYTICS CONTEXT:',
+                  safeContext,
+                  '',
+                  'BUSINESS QUESTION:',
+                  question,
+                ].join('\n'),
+              },
+            ],
+          },
+        ],
+      });
+
+      const answer = String(response.text || '').trim();
+      if (!answer) {
+        return res.status(502).json({ error: 'AI analyst returned an empty response.' });
+      }
+      return res.json({ answer });
+    } catch (err: any) {
+      console.error('Analytics AI chat failed:', err);
+      return res.status(500).json({
+        error: err?.message || 'Analytics AI request failed.',
+        fallback: true,
+      });
+    }
   });
 
   const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {

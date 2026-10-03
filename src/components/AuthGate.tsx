@@ -213,15 +213,58 @@ const AccountDialog: React.FC<{
   loginRequired: boolean;
   onClose: () => void;
   onUpdated: (userName: string) => void;
+  onLoginRequiredChanged: (enabled: boolean) => void;
   onLogout: () => Promise<void>;
-}> = ({ userName, loginRequired, onClose, onUpdated, onLogout }) => {
+}> = ({
+  userName,
+  loginRequired,
+  onClose,
+  onUpdated,
+  onLoginRequiredChanged,
+  onLogout,
+}) => {
   const [nextUserName, setNextUserName] = useState(userName);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [toggleBusy, setToggleBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+
+  const toggleLoginRequired = async () => {
+    setError('');
+    setSaved(false);
+    if (!currentPassword) {
+      setError('Enter your current password before changing the login requirement.');
+      return;
+    }
+
+    setToggleBusy(true);
+    try {
+      const response = await fetch('/api/auth/login-required', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword,
+          enabled: !loginRequired,
+        }),
+      });
+      const payload = await readJson(response);
+      onLoginRequiredChanged(Boolean(payload.loginRequired));
+      setCurrentPassword('');
+      setSaved(true);
+    } catch (toggleError) {
+      setError(
+        toggleError instanceof Error
+          ? toggleError.message
+          : 'Unable to update login requirement.'
+      );
+    } finally {
+      setToggleBusy(false);
+    }
+  };
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -282,8 +325,36 @@ const AccountDialog: React.FC<{
           </button>
         </div>
 
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] text-slate-600 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-300">
-          Login requirement: <strong>{loginRequired ? 'Enabled' : 'Disabled'}</strong>. This follows the Users table <code>IsLoginRequired</code> value.
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/50">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                Login requirement
+              </div>
+              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                Users.IsLoginRequired = {loginRequired ? '1' : '0'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void toggleLoginRequired()}
+              disabled={toggleBusy}
+              className={`inline-flex h-9 min-w-24 items-center justify-center rounded-xl px-3 text-[11px] font-black transition disabled:opacity-50 ${
+                loginRequired
+                  ? 'bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {toggleBusy
+                ? 'Saving…'
+                : loginRequired
+                  ? 'Disable'
+                  : 'Enable'}
+            </button>
+          </div>
+          <p className="mt-2 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
+            Enter your current password below before changing this setting.
+          </p>
         </div>
 
         <form className="mt-5 space-y-4" onSubmit={save}>
@@ -422,6 +493,17 @@ export const AuthGate: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onUpdated={(userName) =>
             setStatus((current) =>
               current ? { ...current, userName } : current
+            )
+          }
+          onLoginRequiredChanged={(enabled) =>
+            setStatus((current) =>
+              current
+                ? {
+                    ...current,
+                    loginRequired: enabled,
+                    authenticated: true,
+                  }
+                : current
             )
           }
           onLogout={logout}

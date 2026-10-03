@@ -9,7 +9,7 @@ import type {
 export type DataTransferFormat = 'csv' | 'xlsx';
 
 export const DATA_TABLE_COLUMNS: Record<CanonicalCollectionName, string[]> = {
-  users: ['userId', 'name'],
+  users: ['userId', 'name', 'userName', 'password', 'IsLoginRequired'],
   days: [
     'dateKey',
     'tasksCompleted',
@@ -55,6 +55,7 @@ const NUMBER_COLUMNS = new Set([
   'habitCompletionRate',
   'DayCompletion',
   'taskOrder',
+  'IsLoginRequired',
 ]);
 
 const BOOLEAN_COLUMNS = new Set([

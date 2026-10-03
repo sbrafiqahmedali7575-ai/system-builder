@@ -21,6 +21,7 @@ import {
 } from '../utils/taskDateUtils';
 
 const MIGRATION_BATCH_LIMIT = 400;
+const LOGIN_PREFERENCE_VERSION = 1;
 
 export interface DataModelMigrationResult {
   users: number;
@@ -57,6 +58,12 @@ function migrationFieldsMatch(stored: Record<string, unknown>, desired: Record<s
 export function buildCanonicalUserProfile(
   existingUserData: Record<string, unknown> | null
 ): Record<string, unknown> {
+  const storedPreferenceVersion = Number(
+    existingUserData?.loginPreferenceVersion || 0
+  );
+  const shouldApplyLoginDefault =
+    storedPreferenceVersion < LOGIN_PREFERENCE_VERSION;
+
   return {
     ...(existingUserData || {}),
     userId: String(existingUserData?.userId || 'default-user'),
@@ -66,10 +73,10 @@ export function buildCanonicalUserProfile(
       existingUserData?.password ||
         'sha256:c91a1ad0b6bf41aba97606740e92c02d87155d8a3626787464417dbda5eae57f'
     ),
-    IsLoginRequired:
-      existingUserData?.IsLoginRequired === undefined
-        ? 1
-        : existingUserData.IsLoginRequired,
+    IsLoginRequired: shouldApplyLoginDefault
+      ? 0
+      : existingUserData?.IsLoginRequired ?? 0,
+    loginPreferenceVersion: LOGIN_PREFERENCE_VERSION,
   };
 }
 

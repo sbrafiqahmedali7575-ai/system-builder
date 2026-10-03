@@ -856,6 +856,7 @@ export default function App() {
             activeSection="analytics"
             onAnalytics={handleOpenAnalytics}
             onFocus={() => {}}
+            onAiChat={() => window.dispatchEvent(new CustomEvent('system-builder:open-analytics-ai'))}
             hideFocus
             onPlan={() => { handleCloseAnalytics(); setTimeout(() => handleOpenTools('tasks'), 0); }}
             onBooks={() => { handleCloseAnalytics(); setTimeout(handleOpenLibrary, 0); }}

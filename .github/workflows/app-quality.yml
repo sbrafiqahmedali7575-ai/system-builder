@@ -34,3 +34,36 @@ jobs:
 
       - name: Run quality checks
         run: bun run check
+
+      - name: Run production server smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PORT=4173
+          export NODE_ENV=production
+          bun run start > /tmp/system-builder-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/api/health >/tmp/health.json; then
+              break
+            fi
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              cat /tmp/system-builder-server.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          grep -q '"status":"ok"' /tmp/health.json
+          curl -fsS http://127.0.0.1:4173/ >/tmp/home.html
+          grep -q '<div id="root"></div>' /tmp/home.html
+
+          EMPTY_STATUS=$(curl -sS -o /tmp/empty-question.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d '{"question":""}'             http://127.0.0.1:4173/api/analytics/chat)
+          test "$EMPTY_STATUS" = "400"
+          grep -q 'Question is required' /tmp/empty-question.json
+
+          WRITE_STATUS=$(curl -sS -o /tmp/write-query.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d '{"question":"DELETE FROM day_facts","mode":"sql"}'             http://127.0.0.1:4173/api/analytics/chat)
+          test "$WRITE_STATUS" = "400"
+          grep -q 'SQL mode is read-only' /tmp/write-query.json

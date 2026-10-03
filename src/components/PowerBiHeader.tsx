@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Focus, Wrench } from 'lucide-react';
+import { BarChart3, BookOpen, Focus, Wrench } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -18,6 +18,7 @@ const HEADER_QUOTES = [
 interface PowerBiHeaderProps {
   onOpenLibrary?: () => void;
   onOpenTools?: () => void;
+  onOpenAnalytics?: () => void;
   onToggleFocus?: () => void;
   focusMode?: boolean;
   isSyncing?: boolean;
@@ -27,6 +28,7 @@ interface PowerBiHeaderProps {
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   onOpenLibrary,
   onOpenTools,
+  onOpenAnalytics,
   onToggleFocus,
   focusMode = false,
   isSyncing = false,
@@ -34,6 +36,8 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   const [quoteIndex, setQuoteIndex] = useState(0);
   const isToolsPage =
     typeof window !== 'undefined' && window.location.pathname === '/tools';
+  const isAnalyticsPage =
+    typeof window !== 'undefined' && window.location.pathname === '/analytics';
 
   const showNextQuote = () => {
     setQuoteIndex((current) => (current + 1) % HEADER_QUOTES.length);
@@ -131,6 +135,26 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             </motion.button>
           )}
 
+          {onOpenAnalytics && (
+            <motion.button
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onOpenAnalytics}
+              aria-current={isAnalyticsPage ? 'page' : undefined}
+              className={`group flex items-center space-x-1.5 px-2 py-1 text-xs font-bold rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                isAnalyticsPage
+                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm ring-1 ring-indigo-300 dark:ring-indigo-700'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-700 dark:hover:text-indigo-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm'
+              }`}
+              title={isAnalyticsPage ? 'Data Analytics — current page' : 'Open Data Analytics'}
+              aria-label={isAnalyticsPage ? 'Data Analytics, current page' : 'Open Data Analytics'}
+            >
+              <BarChart3 className={`w-3.5 h-3.5 ${isAnalyticsPage ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
+              <span>Data Analytics</span>
+              {isAnalyticsPage && <span className="w-1.5 h-1.5 rounded-full bg-white/90" aria-hidden="true" />}
+            </motion.button>
+          )}
+
           {onOpenTools && (
             <motion.button
               whileHover={{ y: -2, scale: 1.02 }}
@@ -170,6 +194,25 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
               aria-label="Open Cal Newport books"
             >
               <BookOpen className="w-4 h-4" />
+            </motion.button>
+          )}
+
+          {onOpenAnalytics && (
+            <motion.button
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onOpenAnalytics}
+              aria-current={isAnalyticsPage ? 'page' : undefined}
+              className={`group relative p-1.5 rounded-xl border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
+                isAnalyticsPage
+                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm ring-1 ring-indigo-300'
+                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-700 dark:hover:text-indigo-300'
+              }`}
+              title={isAnalyticsPage ? 'Data Analytics — current page' : 'Open Data Analytics'}
+              aria-label={isAnalyticsPage ? 'Data Analytics, current page' : 'Open Data Analytics'}
+            >
+              <BarChart3 className="w-4 h-4" />
+              {isAnalyticsPage && <span className="absolute -right-0.5 -top-0.5 w-2 h-2 rounded-full bg-white border border-indigo-600" aria-hidden="true" />}
             </motion.button>
           )}
 

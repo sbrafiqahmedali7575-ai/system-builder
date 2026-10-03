@@ -637,7 +637,9 @@ async function startServer() {
           : process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash';
 
       const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
+      let response: any;
+      try {
+        response = await ai.models.generateContent({
         model: selectedModel,
         contents: [
           {
@@ -713,7 +715,23 @@ async function startServer() {
           tools: [{ codeExecution: {} }],
           temperature: complexQuestion ? 0.1 : 0,
         },
-      });
+        });
+      } catch (aiError: any) {
+        console.warn('Generative analytics unavailable; using deterministic live-data engine:', aiError?.message || aiError);
+        const fallback = deterministicAsk(question);
+        return res.json({
+          ...fallback,
+          notes: [
+            ...(Array.isArray(fallback.notes) ? fallback.notes : []),
+            'The generative analyst was unavailable, so this answer was produced by the verified live-data engine.',
+          ],
+          queryMode,
+          dataFreshness: dataset.fetchedAt,
+          collectionCounts: dataset.collectionCounts,
+          analysisLevel: 'standard',
+          executionEngine: 'server-deterministic',
+        });
+      }
 
       const rawAnswer = String(response.text || '').trim();
       if (!rawAnswer) {
@@ -762,6 +780,7 @@ async function startServer() {
         dataFreshness: dataset.fetchedAt,
         collectionCounts: dataset.collectionCounts,
         analysisLevel: complexQuestion ? 'deep' : 'standard',
+        executionEngine: 'gemini-code-execution',
       });
     } catch (err: any) {
       console.error('Analytics AI chat failed:', err);

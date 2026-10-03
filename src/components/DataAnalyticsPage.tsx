@@ -616,43 +616,27 @@ export const DataAnalyticsPage: React.FC<Props> = ({
                 </div>
               </div>
             </div>
-            <div className="flex w-full flex-col gap-2.5 lg:w-auto lg:min-w-[420px] lg:items-end">
+            <div className="flex w-full items-center gap-2.5 lg:w-auto lg:min-w-[470px]">
               <button
                 type="button"
                 onClick={() => setChatOpen(true)}
                 aria-label="Open AI data analyst"
                 aria-expanded={chatOpen}
                 aria-controls="analytics-ai-chat"
-                className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-indigo-200/80 bg-white/90 px-3.5 py-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md active:translate-y-0 dark:border-indigo-900/70 dark:bg-slate-900/85 dark:hover:border-indigo-700 sm:px-4 lg:w-auto lg:min-w-[300px]"
-                title="Ask AI Data Analyst"
+                className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-500 to-violet-500 text-white shadow-[0_10px_24px_rgba(79,70,229,0.28)] ring-4 ring-white transition-transform hover:-translate-y-0.5 active:scale-95 dark:ring-slate-900"
+                title="Open Query Intelligence"
               >
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20">
-                    <Bot className="h-4.5 w-4.5" />
-                    <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 dark:border-slate-900" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="flex items-center gap-2">
-                      <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">AI Data Analyst</span>
-                      <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300">
-                        {analysisLevel === 'deep' ? 'Deep' : 'Live'}
-                      </span>
-                    </span>
-                    <span className="mt-0.5 block truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">Ask anything about your System Builder data</span>
-                  </span>
-                </span>
-                <span className="shrink-0 rounded-xl bg-slate-950 px-2.5 py-1.5 text-[10px] font-black text-white transition group-hover:bg-indigo-600 dark:bg-white dark:text-slate-950 dark:group-hover:bg-indigo-300">
-                  Ask AI
-                </span>
+                <Bot className="h-5 w-5" />
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 dark:border-slate-900" aria-hidden="true" />
               </button>
 
-              <div className="grid w-full grid-cols-7 rounded-2xl bg-slate-100/90 p-1 shadow-inner dark:bg-slate-800/90 lg:w-auto">
+              <div className="grid min-w-0 flex-1 grid-cols-7 rounded-2xl bg-slate-100/90 p-1 shadow-inner dark:bg-slate-800/90 lg:min-w-[420px]">
                 {PERIODS.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setPeriod(item.id)}
-                    className={'h-9 rounded-xl px-2 text-[10px] font-bold transition sm:text-xs ' + (period === item.id ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white')}
+                    className={'h-9 rounded-xl px-1.5 text-[10px] font-bold transition sm:px-2 sm:text-xs ' + (period === item.id ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white')}
                   >
                     {item.label}
                   </button>
@@ -824,8 +808,8 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       </main>
 
       {chatOpen && (
-        <div className="fixed inset-0 z-[190] flex items-end justify-end bg-slate-950/30 p-0 backdrop-blur-[3px] sm:p-4" onMouseDown={(event) => { if (event.currentTarget === event.target) setChatOpen(false); }}>
-          <section id="analytics-ai-chat" className="flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[26px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:h-[760px] sm:max-w-2xl sm:rounded-[26px]">
+        <div className="fixed inset-0 z-[190] flex items-end justify-center bg-slate-950/30 p-0 backdrop-blur-[3px]" onMouseDown={(event) => { if (event.currentTarget === event.target) setChatOpen(false); }}>
+          <section id="analytics-ai-chat" className="flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[26px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
             <div className="border-b border-slate-100 bg-white/95 px-3.5 py-3 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 sm:px-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2.5">

@@ -739,6 +739,18 @@ assert.ok(
   'Mobile bottom navigation must use Data Analytics as the raised center action instead of Add Task.'
 );
 assert.ok(
+  mobileBottomNav.includes('onAiChat?: () => void;') &&
+    mobileBottomNav.includes('aria-label="Open AI Data Analyst chat"') &&
+    mobileBottomNav.includes('<Bot/><span>AI</span>'),
+  'Analytics mobile navigation must replace the hidden Focus slot with a direct AI chat action.'
+);
+assert.ok(
+  app.includes("onAiChat={() => window.dispatchEvent(new CustomEvent('system-builder:open-analytics-ai'))}") &&
+    dataAnalytics.includes("window.addEventListener('system-builder:open-analytics-ai', openAiChat)") &&
+    dataAnalytics.includes('const openAiChat = () => setChatOpen(true);'),
+  'Mobile AI navigation must open the Data Analytics chat directly.'
+);
+assert.ok(
   app.includes('activeSection="analytics"') &&
     (app.match(/onAnalytics=\{handleOpenAnalytics\}/g) || []).length >= 4,
   'Every mobile workspace must wire the center Analytics action and mark it active on the Analytics page.'

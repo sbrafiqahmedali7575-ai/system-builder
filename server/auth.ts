@@ -14,6 +14,9 @@ const SESSION_COOKIE = 'system_builder_session';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const PBKDF2_ITERATIONS = 210_000;
 const SESSION_SECRET = randomBytes(32);
+const LOGIN_FAILURE_LIMIT = 5;
+const LOGIN_BLOCK_MS = 5 * 60 * 1000;
+const failedLogins = new Map<string, { count: number; blockedUntil: number }>();
 
 type UserProfile = {
   userId: string;
@@ -190,6 +193,16 @@ export function registerAuthRoutes(app: import('express').Express): void {
 
   app.post('/api/auth/login', async (req, res) => {
     try {
+      const clientKey = String(req.ip || req.socket.remoteAddress || 'unknown');
+      const attempt = failedLogins.get(clientKey);
+      if (attempt && attempt.blockedUntil > Date.now()) {
+        const retryAfterSeconds = Math.ceil((attempt.blockedUntil - Date.now()) / 1000);
+        res.setHeader('Retry-After', String(retryAfterSeconds));
+        return res.status(429).json({
+          error: 'Too many failed attempts. Try again in a few minutes.',
+        });
+      }
+
       const profile = await readProfile();
       if (!profile) {
         return res.status(503).json({
@@ -210,8 +223,17 @@ export function registerAuthRoutes(app: import('express').Express): void {
         !constantTimeEqual(userName, profile.userName) ||
         !passwordCheck.valid
       ) {
+        const previous = failedLogins.get(clientKey);
+        const nextCount = (previous?.count || 0) + 1;
+        failedLogins.set(clientKey, {
+          count: nextCount,
+          blockedUntil:
+            nextCount >= LOGIN_FAILURE_LIMIT ? Date.now() + LOGIN_BLOCK_MS : 0,
+        });
         return res.status(401).json({ error: 'Invalid username or password.' });
       }
+
+      failedLogins.delete(clientKey);
 
       if (passwordCheck.needsUpgrade) {
         await setDoc(

@@ -635,3 +635,30 @@ assert.ok(
     dataAnalytics.includes('Ask anything about your data'),
   'Analytics chat must send conversation history and present open-ended data questioning.'
 );
+assert.ok(
+  server.includes('const semanticLayer = {') &&
+    server.includes('metricCatalog') &&
+    server.includes('weeklyFacts') &&
+    server.includes('monthlyFacts') &&
+    server.includes('taskBreakdowns') &&
+    server.includes('dataQuality'),
+  'Advanced AI analytics must expose a semantic layer with derived metrics and quality metadata.'
+);
+assert.ok(
+  server.includes('SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL') &&
+    server.includes('complexQuestion') &&
+    server.includes("analysisLevel: complexQuestion ? 'deep' : 'standard'"),
+  'Complex analytics questions must support an optional deep-analysis model path.'
+);
+assert.ok(
+  server.includes('correlations, anomaly/outlier detection') &&
+    server.includes('what-if simulation') &&
+    server.includes('Silently self-check the final answer'),
+  'AI analyst prompt must support advanced statistical, diagnostic, simulation, and verification workflows.'
+);
+assert.ok(
+  dataAnalytics.includes("analysisLevel === 'deep' ? 'Deep' : 'Live'") &&
+    dataAnalytics.includes('Find my biggest anomaly') &&
+    dataAnalytics.includes('Compare last 30 vs previous 30 days'),
+  'Analytics chat UI must surface advanced analysis mode and advanced prompts.'
+);

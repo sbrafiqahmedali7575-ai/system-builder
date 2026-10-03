@@ -762,23 +762,30 @@ async function startServer() {
         /why|root cause|correlat|regress|forecast|predict|trend|anomal|outlier|what[- ]?if|scenario|compare|relationship|impact|driver|variance|percentile|distribution|statistic|month over month|week over week/i.test(
           question
         );
-      const standardModel =
-        String(process.env.SYSTEM_BUILDER_ANALYTICS_MODEL || 'gemini-2.5-flash').trim();
-      const configuredDeepModel =
-        String(process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL || '').trim();
-      const deepModel =
-        /^gemini-2\.5-pro$/i.test(configuredDeepModel)
-          ? standardModel
-          : configuredDeepModel;
+      const latestFallbackModel = 'gemini-3.8-flash';
+      const normalizeAnalyticsModel = (value: unknown, fallback = latestFallbackModel) => {
+        const configured = String(value || '').trim();
+        if (!configured) return fallback;
+        if (/^gemini-2\.5-(flash|pro)$/i.test(configured)) return fallback;
+        return configured;
+      };
+      const standardModel = normalizeAnalyticsModel(
+        process.env.SYSTEM_BUILDER_ANALYTICS_MODEL
+      );
+      const configuredDeepModel = String(
+        process.env.SYSTEM_BUILDER_ANALYTICS_DEEP_MODEL || ''
+      ).trim();
+      const deepModel = configuredDeepModel
+        ? normalizeAnalyticsModel(configuredDeepModel, standardModel)
+        : '';
       const selectedModel =
         complexQuestion && deepModel ? deepModel : standardModel;
 
       const ai = new GoogleGenAI({ apiKey });
-      let response: any;
-      try {
-        response = await ai.models.generateContent({
-        model: selectedModel,
-        contents: [
+      const generateAnalyticsResponse = (model: string) =>
+        ai.models.generateContent({
+          model,
+          contents: [
           {
             role: 'user',
             parts: [
@@ -848,15 +855,57 @@ async function startServer() {
             ],
           },
         ],
-        config: {
-          tools: [{ codeExecution: {} }],
-          temperature: complexQuestion ? 0.1 : 0,
-        },
+          config: {
+            tools: [{ codeExecution: {} }],
+            temperature: complexQuestion ? 0.1 : 0,
+          },
         });
-      } catch (aiError: any) {
-        console.warn('Generative analytics unavailable; using deterministic live-data engine:', aiError?.message || aiError);
-        const fallback = deterministicAsk(question);
-        return res.json({ ...fallback, queryMode, dataFreshness: dataset.fetchedAt, collectionCounts: dataset.collectionCounts, analysisLevel: 'standard', executionEngine: 'server-deterministic' });
+
+      let response: any;
+      try {
+        response = await generateAnalyticsResponse(selectedModel);
+      } catch (primaryError: any) {
+        const canRetryLatest = selectedModel !== latestFallbackModel;
+        if (canRetryLatest) {
+          try {
+            console.warn(
+              'Configured analytics model unavailable; retrying with latest fallback model:',
+              selectedModel,
+              '->',
+              latestFallbackModel,
+              primaryError?.message || primaryError
+            );
+            response = await generateAnalyticsResponse(latestFallbackModel);
+          } catch (fallbackError: any) {
+            console.warn(
+              'Generative analytics unavailable; using deterministic live-data engine:',
+              fallbackError?.message || fallbackError
+            );
+            const fallback = deterministicAsk(question);
+            return res.json({
+              ...fallback,
+              queryMode,
+              dataFreshness: dataset.fetchedAt,
+              collectionCounts: dataset.collectionCounts,
+              analysisLevel: 'standard',
+              executionEngine: 'server-deterministic',
+            });
+          }
+        } else {
+          console.warn(
+            'Generative analytics unavailable; using deterministic live-data engine:',
+            primaryError?.message || primaryError
+          );
+          const fallback = deterministicAsk(question);
+          return res.json({
+            ...fallback,
+            queryMode,
+            dataFreshness: dataset.fetchedAt,
+            collectionCounts: dataset.collectionCounts,
+            analysisLevel: 'standard',
+            executionEngine: 'server-deterministic',
+          });
+        }
       }
 
       const rawAnswer = String(response.text || '').trim();

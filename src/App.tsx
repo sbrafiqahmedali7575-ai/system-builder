@@ -570,8 +570,8 @@ export default function App() {
   };
 
   // Submit the current-day review into the records table.
-  // IsdayCompleted is task-driven: all scheduled tasks checked => Completed.
-  // Habits are still reviewed and stored, but do not decide the day result.
+  // DayCompletion = 67% task completion + 33% habit completion.
+  // IsdayCompleted is true when DayCompletion >= 80%.
   const handleSubmitTaskDay = async (
     dateKey: string,
     dayTasks: TaskItem[],
@@ -614,9 +614,6 @@ export default function App() {
       : null;
 
     const statsBefore = buildDayProgressStats(records, todayDateKey);
-
-    const reviewedTaskMap = new Map(dayTasks.map((task) => [task.id, task]));
-    const tasksAfter = tasks.map((task) => reviewedTaskMap.get(task.id) ?? task);
 
     let recordsAfter: DailyRecord[];
 

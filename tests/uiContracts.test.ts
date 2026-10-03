@@ -596,6 +596,17 @@ assert.ok(
   'Desktop navigation must expose the Data Analytics page beside Tools.'
 );
 assert.ok(
+  powerBiHeader.includes('onOpenHome') &&
+    powerBiHeader.includes('<Home className="w-3.5 h-3.5" />') &&
+    powerBiHeader.indexOf('{onOpenHome && (') < powerBiHeader.indexOf('{onOpenLibrary && ('),
+  'Desktop navigation must expose Home immediately before Books.'
+);
+assert.ok(
+  app.includes('const handleOpenHome = () =>') &&
+    (app.match(/onOpenHome=\{handleOpenHome\}/g) || []).length >= 2,
+  'Desktop Home navigation must route back to the main dashboard from header pages.'
+);
+assert.ok(
   app.includes("window.location.pathname === '/analytics'") &&
     app.includes('<DataAnalyticsPage') &&
     app.includes('onOpenAnalytics={handleOpenAnalytics}'),

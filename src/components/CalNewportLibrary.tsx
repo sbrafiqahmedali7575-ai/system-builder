@@ -430,6 +430,54 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${toneClasses}`}>
+      {!isFocusReader && (
+        <div className="hidden md:block mx-auto w-full max-w-[1500px] px-4 pt-4 lg:px-6">
+          <section className={`overflow-hidden rounded-[26px] border p-5 shadow-[0_20px_60px_rgba(37,99,235,0.10)] ${
+            readerTone === 'night'
+              ? 'border-[#2b3035] bg-gradient-to-br from-[#191c1f] via-[#172033] to-[#1d2038]'
+              : readerTone === 'sepia'
+              ? 'border-[#ded0b4] bg-gradient-to-br from-[#fffaf0] via-[#f8efd9] to-[#efe3ca]'
+              : 'border-white/80 bg-gradient-to-br from-white via-blue-50/70 to-indigo-50/70'
+          }`}>
+            <div className="flex items-center justify-between gap-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="rounded-2xl bg-violet-600 p-2.5 text-white shadow-lg shadow-violet-500/20">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-black tracking-[-0.03em]">Books</h1>
+                  <p className={`mt-0.5 text-xs ${mutedText}`}>
+                    Focused reading, deep study, highlights, notes, and research editions in one workspace.
+                  </p>
+                </div>
+              </div>
+
+              <div className={`min-w-[330px] rounded-2xl border px-4 py-3 ${
+                readerTone === 'night'
+                  ? 'border-[#343a40] bg-white/[0.035]'
+                  : readerTone === 'sepia'
+                  ? 'border-[#ded0b4] bg-white/35'
+                  : 'border-violet-100 bg-white/80'
+              }`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className={`text-[9px] font-black uppercase tracking-[0.12em] ${mutedText}`}>Current library</div>
+                    <div className="mt-1 truncate text-sm font-black">
+                      {author === 'ryan' ? 'Ryan Holiday' : 'Cal Newport'}
+                    </div>
+                    <div className={`mt-0.5 truncate text-[10px] ${mutedText}`}>{activeBook.title}</div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-lg font-black text-violet-600">{Math.round(readingProgress)}%</div>
+                    <div className={`text-[9px] font-semibold ${mutedText}`}>reading progress</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
       <div className="fixed top-0 left-0 right-0 z-[70] h-1 bg-black/10">
         <div
           className="h-full bg-blue-600 transition-[width] duration-150"
@@ -437,13 +485,13 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
         />
       </div>
 
-      <header className="sticky top-0 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <header className="sticky top-0 md:top-14 z-[60] border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <div className="w-full px-2.5 sm:px-5 lg:px-7 h-14 flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
               onClick={onBack}
-              className={`h-9 w-9 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
+              className={`md:hidden h-9 w-9 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
                 readerTone === 'night'
                   ? 'border-[#343a40] hover:bg-white/5'
                   : 'border-black/10 hover:bg-black/5'
@@ -468,7 +516,7 @@ export const CalNewportLibrary: React.FC<CalNewportLibraryProps> = ({
             <button type="button" onClick={() => setIsSearchOpen(v => !v)} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Search this guide"><Search className="w-4 h-4" /></button>
             <button type="button" onClick={toggleFavorite} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Favorite"><Star className={`w-4 h-4 ${favoriteBooks.includes(activeBookId) ? 'fill-current text-amber-500' : ''}`} /></button>
             <button type="button" onClick={toggleComplete} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Mark complete"><Check className={`w-4 h-4 ${completedBooks.includes(activeBookId) ? 'text-emerald-600' : ''}`} /></button>
-            <button type="button" onClick={() => setIsFocusReader(v => !v)} className="h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Distraction-free reading">{isFocusReader ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
+            <button type="button" onClick={() => setIsFocusReader(v => !v)} className="md:hidden h-8 w-8 rounded-lg hover:bg-black/5 flex items-center justify-center" title="Distraction-free reading">{isFocusReader ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">

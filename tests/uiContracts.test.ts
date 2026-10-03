@@ -570,10 +570,11 @@ assert.ok(
   'Users data table should expose userName, password, and IsLoginRequired.'
 );
 assert.ok(
-  migration.includes("userName: 'sa'") &&
-    migration.includes("IsLoginRequired: 1") &&
-    migration.includes("password: 'sha256:"),
-  'Default user migration should seed sa, require login, and store a hashed password verifier.'
+  migration.includes('buildCanonicalUserProfile') &&
+    migration.includes("existingUserData?.userName || 'sa'") &&
+    migration.includes('existingUserData?.password ||') &&
+    migration.includes('existingUserData?.IsLoginRequired === undefined'),
+  'Default user migration should seed missing login fields while preserving existing username, password verifier, and IsLoginRequired.'
 );
 assert.ok(
   !migration.includes("password: '7575'") &&

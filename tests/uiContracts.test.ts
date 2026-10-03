@@ -595,16 +595,60 @@ assert.ok(
     powerBiHeader.includes("window.location.pathname === '/analytics'"),
   'Desktop navigation must expose the Data Analytics page beside Tools.'
 );
+const desktopHeaderStart = powerBiHeader.indexOf('{/* Right Desktop Controls');
+const desktopHeaderEnd = powerBiHeader.indexOf('{/* Mobile Header Right Controls', desktopHeaderStart);
+const desktopHeaderControls = powerBiHeader.slice(desktopHeaderStart, desktopHeaderEnd);
 assert.ok(
-  powerBiHeader.includes('onOpenHome') &&
-    powerBiHeader.includes('<Home className="w-3.5 h-3.5" />') &&
-    powerBiHeader.indexOf('{onOpenHome && (') < powerBiHeader.indexOf('{onOpenLibrary && ('),
-  'Desktop navigation must expose Home immediately before Books.'
+  desktopHeaderControls.includes('<Home className="h-4 w-4" />') &&
+    desktopHeaderControls.includes('<BarChart3 className="h-4 w-4" />') &&
+    desktopHeaderControls.includes('<Wrench className="h-4 w-4" />') &&
+    desktopHeaderControls.includes('<BookOpen className="h-4 w-4" />') &&
+    desktopHeaderControls.includes('<Focus className="h-4 w-4" />'),
+  'Desktop header must expose icon-only Home, Data Analytics, Tools, Books, and Focus controls.'
+);
+assert.ok(
+  desktopHeaderControls.indexOf('{onOpenHome && (') <
+    desktopHeaderControls.indexOf('{onOpenAnalytics && (') &&
+    desktopHeaderControls.indexOf('{onOpenAnalytics && (') <
+      desktopHeaderControls.indexOf('{onOpenTools && (') &&
+    desktopHeaderControls.indexOf('{onOpenTools && (') <
+      desktopHeaderControls.indexOf('{onOpenLibrary && (') &&
+    desktopHeaderControls.indexOf('{onOpenLibrary && (') <
+      desktopHeaderControls.indexOf('{onToggleFocus && ('),
+  'Desktop header icons must be ordered Home, Data Analytics, Tools, Books, Focus.'
+);
+assert.ok(
+  !desktopHeaderControls.includes('<span>Home</span>') &&
+    !desktopHeaderControls.includes('<span>Data Analytics</span>') &&
+    !desktopHeaderControls.includes('<span>Tools</span>') &&
+    !desktopHeaderControls.includes('<span>Books</span>') &&
+    !desktopHeaderControls.includes('<span>Focus</span>'),
+  'Desktop workspace navigation must show icons only; labels belong in accessible names/tooltips.'
 );
 assert.ok(
   app.includes('const handleOpenHome = () =>') &&
     (app.match(/onOpenHome=\{handleOpenHome\}/g) || []).length >= 2,
   'Desktop Home navigation must route back to the main dashboard from header pages.'
+);
+assert.ok(
+  (app.match(/<PowerBiHeader/g) || []).length >= 4 &&
+    app.includes('!booksFocusMode && (') &&
+    app.includes('!toolsFocusMode && ('),
+  'Books and Tools desktop pages must use the same standard PowerBiHeader shell as Home and Data Analytics.'
+);
+assert.ok(
+  more.includes('rounded-[26px]') &&
+    more.includes('bg-gradient-to-br from-white via-blue-50/70 to-indigo-50/70') &&
+    more.includes('Plan, organize, and manage tasks, habits, priorities, and your underlying data.') &&
+    more.includes('max-w-[1500px]'),
+  'Desktop Tools must use the Data Analytics visual language with a gradient page hero and standard max-width shell.'
+);
+assert.ok(
+  books.includes('rounded-[26px]') &&
+    books.includes('Focused reading, deep study, highlights, notes, and research editions in one workspace.') &&
+    books.includes('Current library') &&
+    books.includes('reading progress'),
+  'Desktop Books must use the Data Analytics visual language with a professional page hero and contextual status card.'
 );
 assert.ok(
   app.includes("window.location.pathname === '/analytics'") &&

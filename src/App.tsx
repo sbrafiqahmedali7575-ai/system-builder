@@ -6,6 +6,7 @@ import { PowerBiHeader } from './components/PowerBiHeader';
 import { ReportView } from './components/ReportView';
 import { DayReviewModal } from './components/DayReviewModal';
 import { CalNewportLibrary } from './components/CalNewportLibrary';
+import { DataAnalyticsPage } from './components/DataAnalyticsPage';
 import { MoreWorkspace, type MoreTab } from './components/MoreWorkspace';
 import { TaskSearchDialog } from './components/TaskSearchDialog';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -48,14 +49,13 @@ const HABITS_STORAGE_KEY = 'SYSTEM_BUILDER_HABITS_CACHE_V1';
 
 const buildDayProgressStats = (
   recordSnapshot: DailyRecord[],
-  taskSnapshot: TaskItem[],
   currentDateKey: string
 ): DayProgressStats => {
   const kpis = calculateKPIStats(recordSnapshot, currentDateKey);
   return {
     successfulDays: kpis.completedDays,
     currentStreak: kpis.currentStreak,
-    achievedWeeks: calculateAchievedWeeks(taskSnapshot, currentDateKey),
+    achievedWeeks: calculateAchievedWeeks(recordSnapshot, currentDateKey),
     bestStreak: kpis.maxStreak,
   };
 };
@@ -124,6 +124,10 @@ export default function App() {
   const [focusMode, setFocusMode] = useState(false);
   const [toolsFocusMode, setToolsFocusMode] = useState(false);
   const [booksFocusMode, setBooksFocusMode] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname === '/analytics';
+  });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDayReviewOpen, setIsDayReviewOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -155,13 +159,14 @@ export default function App() {
       setToolsFocusMode(false);
       setIsLibraryOpen(false);
       setIsToolsOpen(false);
+      setIsAnalyticsOpen(false);
       window.setTimeout(afterReturn, 0);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT' || target?.isContentEditable;
-      const awayFromDashboard = isLibraryOpen || isToolsOpen;
+      const awayFromDashboard = isLibraryOpen || isToolsOpen || isAnalyticsOpen;
 
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
@@ -205,7 +210,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isLibraryOpen, isToolsOpen]);
+  }, [isLibraryOpen, isToolsOpen, isAnalyticsOpen]);
 
   // Listen to popstate in case of browser navigation
   useEffect(() => {
@@ -213,6 +218,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       setIsLibraryOpen(window.location.pathname === '/books/cal-newport');
       setIsToolsOpen(window.location.pathname === '/tools');
+      setIsAnalyticsOpen(window.location.pathname === '/analytics');
       setIsDayReviewOpen(params.get('review') === '1');
     };
 
@@ -589,8 +595,10 @@ export default function App() {
     const completedHabitCount = dayHabits.filter((habit) =>
       habit.checkIns.includes(dateKey)
     ).length;
-    const allCompleted =
-      dayTasks.length > 0 && completedTaskCount === dayTasks.length;
+    const taskCompletionRate = dayTasks.length ? (completedTaskCount / dayTasks.length) * 100 : 0;
+    const habitCompletionRate = dayHabits.length ? (completedHabitCount / dayHabits.length) * 100 : 0;
+    const dayCompletion = Math.round((taskCompletionRate * 0.67 + habitCompletionRate * 0.33) * 10) / 10;
+    const allCompleted = dayCompletion >= 80;
 
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
@@ -605,7 +613,7 @@ export default function App() {
         : 'NOT_COMPLETED'
       : null;
 
-    const statsBefore = buildDayProgressStats(records, tasks, todayDateKey);
+    const statsBefore = buildDayProgressStats(records, todayDateKey);
 
     const reviewedTaskMap = new Map(dayTasks.map((task) => [task.id, task]));
     const tasksAfter = tasks.map((task) => reviewedTaskMap.get(task.id) ?? task);
@@ -620,6 +628,7 @@ export default function App() {
         result: allCompleted ? 'TRUE' : 'FALSE',
         change: 0,
         summary,
+        dayCompletion,
         updatedAt: nowIso,
       };
 
@@ -692,7 +701,6 @@ export default function App() {
       : 'NOT_COMPLETED';
     const statsAfter = buildDayProgressStats(
       recordsAfter,
-      tasksAfter,
       todayDateKey
     );
 
@@ -716,6 +724,7 @@ export default function App() {
     }
     setToolsFocusMode(false);
     setIsToolsOpen(false);
+    setIsAnalyticsOpen(false);
     setIsLibraryOpen(true);
   };
 
@@ -740,6 +749,7 @@ export default function App() {
     }
     setBooksFocusMode(false);
     setIsLibraryOpen(false);
+    setIsAnalyticsOpen(false);
     setIsToolsOpen(true);
   };
 
@@ -752,6 +762,30 @@ export default function App() {
     }
     setToolsFocusMode(false);
     setIsToolsOpen(false);
+  };
+
+  const handleOpenAnalytics = () => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== '/analytics') {
+        window.history.pushState({}, '', '/analytics');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setBooksFocusMode(false);
+    setToolsFocusMode(false);
+    setIsLibraryOpen(false);
+    setIsToolsOpen(false);
+    setIsAnalyticsOpen(true);
+  };
+
+  const handleCloseAnalytics = () => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsAnalyticsOpen(false);
   };
 
   const handleCloseDayReview = () => {
@@ -772,6 +806,39 @@ export default function App() {
         <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} focusMode={booksFocusMode} onFocusChange={setBooksFocusMode} />
         <MobileBottomNav activeSection="books" focusActive={booksFocusMode} onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
       </>
+    );
+  }
+
+  if (isAnalyticsOpen) {
+    return (
+      <ToastProvider>
+        <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+          <PowerBiHeader
+            onOpenLibrary={handleOpenLibrary}
+            onOpenAnalytics={handleOpenAnalytics}
+            onOpenTools={() => handleOpenTools()}
+            isSyncing={isSyncing}
+          />
+          <MobileBrandHeader isSyncing={isSyncing} />
+          <DataAnalyticsPage
+            records={records}
+            tasks={tasks}
+            habits={habits}
+            currentDateKey={currentDateKey}
+            onBack={handleCloseAnalytics}
+          />
+          <MobileBottomNav
+            activeSection="today"
+            onAdd={() => { handleCloseAnalytics(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }}
+            onFocus={() => {}}
+            hideFocus
+            onPlan={() => { handleCloseAnalytics(); setTimeout(() => handleOpenTools('tasks'), 0); }}
+            onBooks={() => { handleCloseAnalytics(); setTimeout(handleOpenLibrary, 0); }}
+            onTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          />
+        </div>
+        <FeedbackDiagnosticsPanel />
+      </ToastProvider>
     );
   }
 
@@ -815,6 +882,7 @@ export default function App() {
       {/* 1. Clean Navigation Header */}
       {!focusMode && <PowerBiHeader
         onOpenLibrary={handleOpenLibrary}
+        onOpenAnalytics={handleOpenAnalytics}
         onOpenTools={() => handleOpenTools()}
         isSyncing={isSyncing}
         onToggleFocus={() => setFocusMode((value) => !value)}

@@ -13,7 +13,6 @@ const DEFAULT_USER_ID = 'default-user';
 const SESSION_COOKIE = 'system_builder_session';
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 const PBKDF2_ITERATIONS = 210_000;
-const SESSION_SECRET = randomBytes(32);
 const LOGIN_FAILURE_LIMIT = 5;
 const LOGIN_BLOCK_MS = 5 * 60 * 1000;
 const failedLogins = new Map<string, { count: number; blockedUntil: number }>();
@@ -102,20 +101,33 @@ function parseCookies(req: Request): Record<string, string> {
   );
 }
 
-function signSession(userId: string): string {
+function sessionSigningKey(profile: UserProfile): Buffer {
+  const configuredSecret = String(
+    process.env.SYSTEM_BUILDER_SESSION_SECRET || ''
+  ).trim();
+  const baseSecret = configuredSecret || profile.password;
+
+  return createHmac('sha256', baseSecret)
+    .update(
+      `system-builder-session:v1:${profile.userId}:${profile.password}`
+    )
+    .digest();
+}
+
+function signSession(profile: UserProfile): string {
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  const payload = `${userId}.${expiresAt}`;
-  const signature = createHmac('sha256', SESSION_SECRET)
+  const payload = `${profile.userId}.${expiresAt}`;
+  const signature = createHmac('sha256', sessionSigningKey(profile))
     .update(payload)
     .digest('base64url');
   return `${payload}.${signature}`;
 }
 
-function verifySessionToken(token: string): boolean {
+function verifySessionToken(token: string, profile: UserProfile): boolean {
   const parts = token.split('.');
   if (parts.length !== 3) return false;
   const [userId, expiresRaw, providedSignature] = parts;
-  if (userId !== DEFAULT_USER_ID) return false;
+  if (userId !== profile.userId || userId !== DEFAULT_USER_ID) return false;
 
   const expiresAt = Number(expiresRaw);
   if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() / 1000) {
@@ -123,15 +135,15 @@ function verifySessionToken(token: string): boolean {
   }
 
   const payload = `${userId}.${expiresAt}`;
-  const expectedSignature = createHmac('sha256', SESSION_SECRET)
+  const expectedSignature = createHmac('sha256', sessionSigningKey(profile))
     .update(payload)
     .digest('base64url');
   return constantTimeEqual(providedSignature, expectedSignature);
 }
 
-function hasValidSession(req: Request): boolean {
+function hasValidSession(req: Request, profile: UserProfile): boolean {
   const token = parseCookies(req)[SESSION_COOKIE] || '';
-  return Boolean(token && verifySessionToken(token));
+  return Boolean(token && verifySessionToken(token, profile));
 }
 
 function loginRequired(profile: UserProfile | null): boolean {
@@ -155,12 +167,12 @@ async function readProfile(): Promise<UserProfile | null> {
   };
 }
 
-function setSessionCookie(res: Response): void {
+function setSessionCookie(res: Response, profile: UserProfile): void {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
   res.setHeader(
     'Set-Cookie',
     `${SESSION_COOKIE}=${encodeURIComponent(
-      signSession(DEFAULT_USER_ID)
+      signSession(profile)
     )}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_TTL_SECONDS}${secure}`
   );
 }
@@ -178,7 +190,7 @@ export function registerAuthRoutes(app: import('express').Express): void {
     try {
       const profile = await readProfile();
       const required = loginRequired(profile);
-      const authenticated = !required || hasValidSession(req);
+      const authenticated = !required || Boolean(profile && hasValidSession(req, profile));
       return res.json({
         loginRequired: required,
         authenticated,
@@ -211,7 +223,7 @@ export function registerAuthRoutes(app: import('express').Express): void {
       }
 
       if (!loginRequired(profile)) {
-        setSessionCookie(res);
+        setSessionCookie(res, profile);
         return res.json({ success: true, userName: profile.userName });
       }
 
@@ -235,15 +247,18 @@ export function registerAuthRoutes(app: import('express').Express): void {
 
       failedLogins.delete(clientKey);
 
+      let sessionProfile = profile;
       if (passwordCheck.needsUpgrade) {
+        const upgradedPassword = hashPassword(password);
         await setDoc(
           doc(db, USER_COLLECTION, DEFAULT_USER_ID),
-          { password: hashPassword(password) },
+          { password: upgradedPassword },
           { merge: true }
         );
+        sessionProfile = { ...profile, password: upgradedPassword };
       }
 
-      setSessionCookie(res);
+      setSessionCookie(res, sessionProfile);
       return res.json({ success: true, userName: profile.userName });
     } catch (error) {
       console.error('Login failed:', error);
@@ -263,7 +278,7 @@ export function registerAuthRoutes(app: import('express').Express): void {
         return res.status(404).json({ error: 'Default user was not found.' });
       }
 
-      if (loginRequired(profile) && !hasValidSession(req)) {
+      if (loginRequired(profile) && !hasValidSession(req, profile)) {
         return res.status(401).json({ error: 'Sign in again to update account settings.' });
       }
 
@@ -286,10 +301,13 @@ export function registerAuthRoutes(app: import('express').Express): void {
       const update: Record<string, unknown> = {
         userName: nextUserName,
       };
+      let sessionPassword = profile.password;
       if (nextPassword) {
-        update.password = hashPassword(nextPassword);
+        sessionPassword = hashPassword(nextPassword);
+        update.password = sessionPassword;
       } else if (currentCheck.needsUpgrade) {
-        update.password = hashPassword(currentPassword);
+        sessionPassword = hashPassword(currentPassword);
+        update.password = sessionPassword;
       }
 
       await setDoc(
@@ -298,7 +316,11 @@ export function registerAuthRoutes(app: import('express').Express): void {
         { merge: true }
       );
 
-      setSessionCookie(res);
+      setSessionCookie(res, {
+        ...profile,
+        userName: nextUserName,
+        password: sessionPassword,
+      });
       return res.json({ success: true, userName: nextUserName });
     } catch (error) {
       console.error('Credential update failed:', error);
@@ -314,7 +336,7 @@ export async function requireAppSession(
 ) {
   try {
     const profile = await readProfile();
-    if (!loginRequired(profile) || hasValidSession(req)) {
+    if (!loginRequired(profile) || Boolean(profile && hasValidSession(req, profile))) {
       return next();
     }
     return res.status(401).json({ error: 'Authentication required.' });

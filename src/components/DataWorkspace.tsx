@@ -396,6 +396,9 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
           totalImported += result.imported;
         }
 
+        window.dispatchEvent(
+          new CustomEvent('system-builder:auth-profile-changed')
+        );
         notify(
           `Import All completed: ${totalImported} rows upserted across 6 tables.`
         );
@@ -418,6 +421,11 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
     try {
       const importedRows = await parseCanonicalDataFile(file, collection, format);
       const result = await importCanonicalDataRows(collection, importedRows);
+      if (collection === 'users') {
+        window.dispatchEvent(
+          new CustomEvent('system-builder:auth-profile-changed')
+        );
+      }
       notify(
         `${result.imported} row${result.imported === 1 ? '' : 's'} imported into ${collectionLabel(collection)}.`
       );

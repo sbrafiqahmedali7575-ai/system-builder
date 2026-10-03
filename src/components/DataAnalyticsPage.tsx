@@ -165,7 +165,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       ? systemStartMs
       : todayMs - ((periodMeta.days || 1) - 1) * DAY;
 
-    const recordMap = new Map(records.map((record) => [getRecordDateKey(record), record]));
+    const recordMap = new Map<string, DailyRecord>(records.map((record) => [getRecordDateKey(record), record]));
     const scoreForDate = (key: string) => {
       const stored = recordMap.get(key)?.dayCompletion;
       if (typeof stored === 'number') return clampPct(stored);

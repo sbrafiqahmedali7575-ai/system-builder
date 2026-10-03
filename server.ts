@@ -21,6 +21,7 @@ async function startServer() {
   app.post('/api/analytics/chat', async (req, res) => {
     try {
       const question = String(req.body?.question || '').trim();
+      const queryMode = req.body?.mode === 'sql' ? 'sql' : 'ask';
       const pageContext = req.body?.context || {};
       const history = Array.isArray(req.body?.history)
         ? req.body.history
@@ -34,6 +35,17 @@ async function startServer() {
 
       if (!question) {
         return res.status(400).json({ error: 'Question is required.' });
+      }
+
+      if (queryMode === 'sql') {
+        const normalizedSql = question.replace(/--.*$/gm, ' ').trim();
+        const forbiddenSql =
+          /\b(insert|update|delete|drop|alter|create|replace|truncate|pragma|attach|detach|vacuum|reindex|grant|revoke)\b/i;
+        if (!/^(select|with)\b/i.test(normalizedSql) || forbiddenSql.test(normalizedSql)) {
+          return res.status(400).json({
+            error: 'SQL mode is read-only. Use a SELECT or WITH query only.',
+          });
+        }
       }
 
       const apiKey = String(
@@ -434,6 +446,119 @@ async function startServer() {
             'userId, name, email when present',
         },
         semanticLayer,
+        virtualSql: {
+          dialect: 'SQLite-compatible read-only analytics SQL',
+          tables: {
+            day_facts: {
+              rows: dayFacts,
+              columns: [
+                'dateKey TEXT',
+                'weekday TEXT',
+                'month TEXT',
+                'weekStart TEXT',
+                'tasksCompleted INTEGER',
+                'taskTotal INTEGER',
+                'taskCompletionRate REAL',
+                'habitsCompleted INTEGER',
+                'habitTotal INTEGER',
+                'habitCompletionRate REAL',
+                'DayCompletion REAL',
+                'IsdayCompleted BOOLEAN',
+                'workloadTasks INTEGER',
+                'estimatedMinutes REAL',
+                'actualMinutes REAL',
+              ],
+            },
+            task_facts: {
+              rows: normalizedTasks,
+              columns: [
+                'taskId TEXT',
+                'title TEXT',
+                'scheduledDate TEXT',
+                'completed BOOLEAN',
+                'quadrant TEXT',
+                'priority TEXT',
+                'category TEXT',
+                'taskOrder INTEGER',
+                'estimationMinutes REAL',
+                'actualMinutes REAL',
+                'varianceMinutes REAL',
+                'variancePercent REAL',
+                'completedAt TEXT',
+                'notes TEXT',
+              ],
+            },
+            habit_logs: {
+              rows: habitLogs,
+              columns: ['habitLogId TEXT', 'habitId TEXT', 'dateKey TEXT', 'Iscompleted BOOLEAN'],
+            },
+            habits: {
+              rows: habits,
+              columns: [
+                'habitId TEXT',
+                'name TEXT',
+                'repeatDays JSON',
+                'activeFrom TEXT',
+                'isActive BOOLEAN',
+                'color TEXT',
+                'checkIns JSON',
+              ],
+            },
+            habit_facts: {
+              rows: habitFacts,
+              columns: [
+                'habitId TEXT',
+                'name TEXT',
+                'logRows INTEGER',
+                'completedLogs INTEGER',
+                'incompleteLogs INTEGER',
+                'completionLogRate REAL',
+                'firstLogDate TEXT',
+                'lastLogDate TEXT',
+              ],
+            },
+            weekly_facts: {
+              rows: weeklyFacts,
+              columns: [
+                'key TEXT',
+                'recordedDays INTEGER',
+                'averageDayCompletion REAL',
+                'averageTaskCompletionRate REAL',
+                'averageHabitCompletionRate REAL',
+                'successfulDays INTEGER',
+                'taskTotal INTEGER',
+                'tasksCompleted INTEGER',
+                'estimatedMinutes REAL',
+                'actualMinutes REAL',
+                'sevenDayAverageForAchievedWeek REAL',
+                'isAchievedWeek BOOLEAN',
+              ],
+            },
+            monthly_facts: {
+              rows: monthlyFacts,
+              columns: [
+                'key TEXT',
+                'recordedDays INTEGER',
+                'averageDayCompletion REAL',
+                'averageTaskCompletionRate REAL',
+                'averageHabitCompletionRate REAL',
+                'successfulDays INTEGER',
+                'taskTotal INTEGER',
+                'tasksCompleted INTEGER',
+                'estimatedMinutes REAL',
+                'actualMinutes REAL',
+              ],
+            },
+            countdowns: {
+              rows: countdowns,
+              columns: ['countdownId TEXT', 'title TEXT', 'reason TEXT', 'targetDate TEXT', 'isActive BOOLEAN'],
+            },
+            users: {
+              rows: users,
+              columns: ['userId TEXT', 'name TEXT', 'email TEXT'],
+            },
+          },
+        },
         data: {
           days,
           tasks,
@@ -445,6 +570,7 @@ async function startServer() {
       };
 
       const complexQuestion =
+        queryMode === 'sql' ||
         /why|root cause|correlat|regress|forecast|predict|trend|anomal|outlier|what[- ]?if|scenario|compare|relationship|impact|driver|variance|percentile|distribution|statistic|month over month|week over week/i.test(
           question
         );
@@ -462,9 +588,28 @@ async function startServer() {
             parts: [
               {
                 text: [
-                  'You are the System Builder principal data analyst, BI engineer, statistician, and decision-support copilot.',
+                  'You are System Builder Query Intelligence: a principal data analyst, BI engineer, statistician, and SQL copilot.',
+                  'Operate like a conversational SQL workbench combined with ChatGPT: the user can ask in natural language or write SQL, get a verified answer, inspect the SQL used, see result rows, and continue with follow-up questions.',
                   'Your job is to answer ANY question that can be answered from the supplied System Builder data, from a one-row lookup to multi-period statistical analysis.',
                   'Supported work includes exact row retrieval, search over task titles/notes, counts, sums, averages, medians, percentiles, distributions, rankings, top/bottom N, date arithmetic, period-over-period comparisons, moving averages, streaks, cohorts, task/habit segmentation, quadrant/priority/category analysis, workload analysis, time-estimation accuracy, variance, efficiency, correlations, anomaly/outlier detection, trend estimation, descriptive forecasting, what-if simulation, goal pacing, root-cause decomposition, and data-quality diagnostics.',
+                  '',
+                  'QUERY MODE: ' + queryMode.toUpperCase(),
+                  'VIRTUAL SQL DIALECT: SQLite-compatible, read-only SELECT/WITH queries.',
+                  'VIRTUAL SQL TABLES:',
+                  JSON.stringify(dataset.virtualSql),
+                  '',
+                  'SQL WORKBENCH RULES:',
+                  'A. In ASK mode, translate the question into the smallest useful read-only SQL query over the virtual tables whenever SQL can answer it.',
+                  'B. In SQL mode, execute the user SQL as written whenever valid. Do not silently change its business meaning. If a small compatibility rewrite is required, disclose it in notes.',
+                  'C. Use code execution with Python sqlite3: create in-memory tables from dataset.virtualSql.tables[*].rows, execute the SQL, and use the actual result rows for the answer.',
+                  'D. For analytics not directly expressible in SQL (correlation, forecast, percentile, anomaly detection, simulations), use SQL to extract the relevant rows first, then calculate the advanced statistic in code.',
+                  'E. Never execute or propose data-changing SQL. SELECT/WITH only.',
+                  'F. Return no more than 50 result rows; summarize larger result sets and state the total when known.',
+                  'G. Use SQLite-compatible functions and syntax in the returned sql field.',
+                  '',
+                  'FINAL RESPONSE FORMAT — return ONLY valid JSON with this shape:',
+                  '{"answer":"concise natural-language answer","sql":"read-only SQL used or empty string","columns":["col1"],"rows":[{"col1":"value"}],"notes":["important caveat"],"resultCount":0}',
+                  'The answer field may contain short line breaks but no markdown code fences. rows must contain at most 50 objects. resultCount is the full result count when known.',
                   '',
                   'GROUNDING RULES:',
                   '1. Use only the supplied dataset and page context. Never invent a row, value, date, task, habit, or cause.',
@@ -497,7 +642,10 @@ async function startServer() {
                   'FULL LIVE DATASET:',
                   JSON.stringify(dataset),
                   '',
-                  'QUESTION:',
+                  'USER QUERY MODE:',
+                  queryMode,
+                  '',
+                  'QUESTION / SQL:',
                   question,
                 ].join('\n'),
               },
@@ -510,13 +658,50 @@ async function startServer() {
         },
       });
 
-      const answer = String(response.text || '').trim();
-      if (!answer) {
+      const rawAnswer = String(response.text || '').trim();
+      if (!rawAnswer) {
         return res.status(502).json({ error: 'AI analyst returned an empty response.' });
       }
 
+      const parseStructuredResult = (raw: string) => {
+        const cleaned = raw
+          .replace(/^\s*```(?:json)?/i, '')
+          .replace(/```\s*$/, '')
+          .trim();
+        const firstBrace = cleaned.indexOf('{');
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (firstBrace < 0 || lastBrace <= firstBrace) return null;
+        try {
+          return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+        } catch {
+          return null;
+        }
+      };
+
+      const structured = parseStructuredResult(rawAnswer);
+      const rowsOut = Array.isArray(structured?.rows)
+        ? structured.rows.slice(0, 50).filter((row: any) => row && typeof row === 'object')
+        : [];
+      const columnsOut = Array.isArray(structured?.columns)
+        ? structured.columns.map((column: any) => String(column)).slice(0, 30)
+        : rowsOut.length
+          ? Object.keys(rowsOut[0]).slice(0, 30)
+          : [];
+      const notesOut = Array.isArray(structured?.notes)
+        ? structured.notes.map((note: any) => String(note)).slice(0, 8)
+        : [];
+
       return res.json({
-        answer,
+        answer: String(structured?.answer || rawAnswer).trim(),
+        sql: String(structured?.sql || '').trim(),
+        columns: columnsOut,
+        rows: rowsOut,
+        notes: notesOut,
+        resultCount:
+          Number.isFinite(Number(structured?.resultCount))
+            ? Number(structured.resultCount)
+            : rowsOut.length,
+        queryMode,
         dataFreshness: dataset.fetchedAt,
         collectionCounts: dataset.collectionCounts,
         analysisLevel: complexQuestion ? 'deep' : 'standard',

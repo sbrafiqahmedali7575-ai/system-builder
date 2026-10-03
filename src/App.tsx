@@ -14,6 +14,7 @@ import { MobileBrandHeader } from './components/MobileBrandHeader';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastProvider } from './components/ui/ToastProvider';
 import { FeedbackDiagnosticsPanel } from './components/FeedbackDiagnosticsPanel';
+import { AuthGate, useAppAuth } from './components/AuthGate';
 import { standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { calculateKPIStats } from './utils/daxMeasures';
@@ -60,7 +61,8 @@ const buildDayProgressStats = (
   };
 };
 
-export default function App() {
+function SystemBuilderApp() {
+  const { openAccount } = useAppAuth();
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
     if (typeof window !== 'undefined') {
@@ -831,6 +833,7 @@ export default function App() {
       <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         {!booksFocusMode && (
           <PowerBiHeader
+            onOpenAccount={openAccount}
             onOpenHome={handleOpenHome}
             onOpenLibrary={handleOpenLibrary}
             onOpenAnalytics={handleOpenAnalytics}
@@ -838,7 +841,7 @@ export default function App() {
             isSyncing={isSyncing}
           />
         )}
-        <MobileBrandHeader isSyncing={isSyncing} />
+        <MobileBrandHeader isSyncing={isSyncing} onOpenAccount={openAccount} />
         <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} focusMode={booksFocusMode} onFocusChange={setBooksFocusMode} />
         <MobileBottomNav activeSection="books" focusActive={booksFocusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
       </div>
@@ -850,13 +853,14 @@ export default function App() {
       <ToastProvider>
         <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
           <PowerBiHeader
+            onOpenAccount={openAccount}
             onOpenHome={handleOpenHome}
             onOpenLibrary={handleOpenLibrary}
             onOpenAnalytics={handleOpenAnalytics}
             onOpenTools={() => handleOpenTools()}
             isSyncing={isSyncing}
           />
-          <MobileBrandHeader isSyncing={isSyncing} />
+          <MobileBrandHeader isSyncing={isSyncing} onOpenAccount={openAccount} />
           <DataAnalyticsPage
             records={records}
             tasks={tasks}
@@ -885,6 +889,7 @@ export default function App() {
       <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         {!toolsFocusMode && (
           <PowerBiHeader
+            onOpenAccount={openAccount}
             onOpenHome={handleOpenHome}
             onOpenLibrary={handleOpenLibrary}
             onOpenAnalytics={handleOpenAnalytics}
@@ -894,7 +899,7 @@ export default function App() {
             isSyncing={isSyncing}
           />
         )}
-        <MobileBrandHeader isSyncing={isSyncing} />
+        <MobileBrandHeader isSyncing={isSyncing} onOpenAccount={openAccount} />
         <MoreWorkspace
           theme={theme}
           initialTab={toolsInitialTab}
@@ -930,6 +935,7 @@ export default function App() {
     >
       {/* 1. Clean Navigation Header */}
       {!focusMode && <PowerBiHeader
+            onOpenAccount={openAccount}
         onOpenHome={handleOpenHome}
         onOpenLibrary={handleOpenLibrary}
         onOpenAnalytics={handleOpenAnalytics}
@@ -938,7 +944,7 @@ export default function App() {
         onToggleFocus={() => setFocusMode((value) => !value)}
         focusMode={focusMode}
       />}
-      <MobileBrandHeader isSyncing={isSyncing} />
+      <MobileBrandHeader isSyncing={isSyncing} onOpenAccount={openAccount} />
 
       {isQuotaExhausted && (
         <div className="w-full bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/60 px-4 py-2.5 text-xs text-amber-900 dark:text-amber-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
@@ -1017,5 +1023,14 @@ export default function App() {
     </div>
           <FeedbackDiagnosticsPanel />
     </ToastProvider>
+  );
+}
+
+
+export default function App() {
+  return (
+    <AuthGate>
+      <SystemBuilderApp />
+    </AuthGate>
   );
 }

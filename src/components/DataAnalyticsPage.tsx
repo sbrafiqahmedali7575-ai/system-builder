@@ -548,10 +548,10 @@ export const DataAnalyticsPage: React.FC<Props> = ({
         <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-6">
           <KpiCard label="DayCompletion" value={fmt(model.overall) + '%'} detail={periodTitle + ' average'} icon={Activity} tone="blue" />
           <KpiCard label="Successful Days" value={String(model.successfulDays)} detail={fmt(model.successRate) + '% of selected days'} icon={CheckCircle2} tone="emerald" />
-          <KpiCard label="Task Completion" value={fmt(model.taskRate) + '%'} detail={model.completedTasks + ' / ' + model.selectedTasks.length + ' tasks'} icon={ListChecks} tone="violet" />
-          <KpiCard label="Habit Adherence" value={fmt(model.habitRate) + '%'} detail={model.habitDone + ' / ' + model.habitDue + ' due check-ins'} icon={Target} tone="amber" />
           <KpiCard label="Achieved Weeks" value={String(model.achievedWeeks)} detail="All time · 7-day average > 80%" icon={Trophy} tone="amber" />
           <KpiCard label="Latest 7 Days" value={fmt(model.last7Average) + '%'} detail={(model.momentum >= 0 ? '+' : '') + model.momentum.toFixed(1) + 'pp vs previous 7'} icon={model.momentum >= 0 ? TrendingUp : TrendingDown} tone={model.momentum >= 0 ? 'emerald' : 'rose'} />
+          <KpiCard label="Task Completion" value={fmt(model.taskRate) + '%'} detail={model.completedTasks + ' / ' + model.selectedTasks.length + ' tasks'} icon={ListChecks} tone="violet" />
+          <KpiCard label="Habit Adherence" value={fmt(model.habitRate) + '%'} detail={model.habitDone + ' / ' + model.habitDue + ' due check-ins'} icon={Target} tone="amber" />
         </section>
 
         <section className="grid gap-3 xl:grid-cols-[1.65fr_.85fr]">

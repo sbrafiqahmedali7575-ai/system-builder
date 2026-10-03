@@ -664,7 +664,7 @@ assert.ok(
   'Data Analytics must expose the core performance, task, habit, and consistency views.'
 );
 assert.ok(
-  dataAnalytics.includes('Ask AI Data Analyst') &&
+  dataAnalytics.includes('Query Intelligence') &&
     dataAnalytics.includes('/api/analytics/chat') &&
     dataAnalytics.includes('localAnswer'),
   'Data Analytics must include a usable AI analyst chat with local fallback.'

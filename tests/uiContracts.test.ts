@@ -719,12 +719,21 @@ assert.ok(
   'Analytics chat UI must surface advanced analysis mode and advanced prompts.'
 );
 assert.ok(
-  dataAnalytics.includes('Ask anything about your System Builder data') &&
+  dataAnalytics.includes('aria-label="Open AI data analyst"') &&
+    dataAnalytics.includes('title="Open Query Intelligence"') &&
     dataAnalytics.includes('aria-controls="analytics-ai-chat"') &&
     dataAnalytics.includes('id="analytics-ai-chat"') &&
-    dataAnalytics.indexOf('Ask anything about your System Builder data') <
+    dataAnalytics.indexOf('aria-label="Open AI data analyst"') <
+      dataAnalytics.indexOf('{PERIODS.map((item) => (') &&
+    dataAnalytics.indexOf('{PERIODS.map((item) => (') <
       dataAnalytics.indexOf('<section className="grid grid-cols-2 gap-2.5'),
-  'AI chat launcher must live professionally inside the top Data Analytics header before the KPI grid.'
+  'AI chat must use the compact icon launcher immediately before the Analytics period selector.'
+);
+assert.ok(
+  dataAnalytics.includes('fixed inset-0 z-[190] flex items-end justify-center') &&
+    dataAnalytics.includes('className="flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[26px]') &&
+    !dataAnalytics.includes('sm:max-w-2xl sm:rounded-[26px]'),
+  'Analytics AI chat must use the same full-width mobile bottom-sheet UI on desktop.'
 );
 assert.ok(
   !dataAnalytics.includes('bottom-[calc(5.75rem+env(safe-area-inset-bottom))]'),

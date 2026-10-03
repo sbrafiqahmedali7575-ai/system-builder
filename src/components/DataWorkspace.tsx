@@ -20,7 +20,9 @@ import {
 } from '../services/firebaseService';
 import {
   DATA_TABLE_COLUMNS,
+  exportAllCanonicalData,
   exportCanonicalDataFile,
+  parseAllCanonicalDataFile,
   parseCanonicalDataFile,
   type DataTransferFormat,
 } from '../utils/dataTransfer';
@@ -212,24 +214,37 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
   const [sort, setSort] = useState<SortState>(null);
   const [showDimensions, setShowDimensions] = useState(false);
   const [transferMenu, setTransferMenu] = useState<CanonicalCollectionName | null>(null);
+  const [allTransferMenu, setAllTransferMenu] = useState(false);
   const [transferBusy, setTransferBusy] = useState<CanonicalCollectionName | null>(null);
+  const [allTransferBusy, setAllTransferBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingImportRef = useRef<{
-    collection: CanonicalCollectionName;
-    format: DataTransferFormat;
-  } | null>(null);
+  const pendingImportRef = useRef<
+    | {
+        scope: 'single';
+        collection: CanonicalCollectionName;
+        format: DataTransferFormat;
+      }
+    | {
+        scope: 'all';
+        format: DataTransferFormat;
+      }
+    | null
+  >(null);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
 
   useEffect(() => {
-    if (!transferMenu) return;
+    if (!transferMenu && !allTransferMenu) return;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
-      if (!target?.closest('[data-transfer-menu]')) setTransferMenu(null);
+      if (!target?.closest('[data-transfer-menu]')) {
+        setTransferMenu(null);
+        setAllTransferMenu(false);
+      }
     };
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [transferMenu]);
+  }, [transferMenu, allTransferMenu]);
 
   const rows = data[active];
   const sortedRows = useMemo(() => {
@@ -301,7 +316,7 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
     setError(null);
     setTransferMenu(null);
     selectCollection(collection);
-    pendingImportRef.current = { collection, format };
+    pendingImportRef.current = { scope: 'single', collection, format };
 
     const input = fileInputRef.current;
     if (!input) return;
@@ -312,6 +327,41 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
     input.click();
   };
 
+  const handleExportAll = async (format: DataTransferFormat) => {
+    setError(null);
+    setAllTransferMenu(false);
+    setAllTransferBusy(true);
+    try {
+      await exportAllCanonicalData(data, format);
+      notify(
+        format === 'xlsx'
+          ? 'All 6 tables exported in one Excel workbook.'
+          : 'All 6 tables exported as CSV files in one ZIP.'
+      );
+    } catch (exportError) {
+      const message = exportError instanceof Error
+        ? exportError.message
+        : String(exportError);
+      setError(`Export All failed: ${message}`);
+    } finally {
+      setAllTransferBusy(false);
+    }
+  };
+
+  const beginImportAll = (format: DataTransferFormat) => {
+    setError(null);
+    setAllTransferMenu(false);
+    pendingImportRef.current = { scope: 'all', format };
+
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.value = '';
+    input.accept = format === 'xlsx'
+      ? '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
+      : '.zip,application/zip,application/x-zip-compressed';
+    input.click();
+  };
+
   const handleImportFile = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -319,9 +369,51 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
     const pending = pendingImportRef.current;
     if (!file || !pending) return;
 
+    setError(null);
+
+    if (pending.scope === 'all') {
+      setAllTransferBusy(true);
+      try {
+        const importedData = await parseAllCanonicalDataFile(
+          file,
+          pending.format
+        );
+        const importOrder: CanonicalCollectionName[] = [
+          'users',
+          'habits',
+          'tasks',
+          'habitLogs',
+          'countdowns',
+          'days',
+        ];
+
+        let totalImported = 0;
+        for (const collection of importOrder) {
+          const result = await importCanonicalDataRows(
+            collection,
+            importedData[collection]
+          );
+          totalImported += result.imported;
+        }
+
+        notify(
+          `Import All completed: ${totalImported} rows upserted across 6 tables.`
+        );
+      } catch (importError) {
+        const message = importError instanceof Error
+          ? importError.message
+          : String(importError);
+        setError(`Import All failed: ${message}`);
+      } finally {
+        setAllTransferBusy(false);
+        pendingImportRef.current = null;
+        event.target.value = '';
+      }
+      return;
+    }
+
     const { collection, format } = pending;
     setTransferBusy(collection);
-    setError(null);
 
     try {
       const importedRows = await parseCanonicalDataFile(file, collection, format);
@@ -371,10 +463,89 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
       />
 
       {!focusMode && (
-        <div className="tools-view-header lg:shrink-0">
+        <div className="tools-view-header lg:shrink-0 flex items-center justify-between gap-3">
           <div>
             <h2 className="tools-view-title">Data</h2>
             <p className="tools-view-subtitle"></p>
+          </div>
+
+          <div className="relative shrink-0" data-transfer-menu>
+            <button
+              type="button"
+              onClick={() => {
+                setTransferMenu(null);
+                setAllTransferMenu((open) => !open);
+              }}
+              disabled={allTransferBusy}
+              className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              aria-haspopup="menu"
+              aria-expanded={allTransferMenu}
+              title="Import or export all six data tables"
+            >
+              {allTransferBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRightLeft className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Data Transfer</span>
+              <span className="sm:hidden">All</span>
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+
+            {allTransferMenu && (
+              <div
+                role="menu"
+                className="absolute right-0 top-11 z-[70] w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+              >
+                <div className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  Export All
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleExportAll('xlsx')}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                    Excel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExportAll('csv')}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-blue-600" />
+                    CSV ZIP
+                  </button>
+                </div>
+
+                <div className="mt-2 border-t border-slate-100 px-1 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800">
+                  Import All
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => beginImportAll('xlsx')}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                    Excel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => beginImportAll('csv')}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-blue-600" />
+                    CSV ZIP
+                  </button>
+                </div>
+
+                <p className="px-1 pt-2 text-[10px] leading-4 text-slate-400">
+                  Excel uses 6 worksheets. CSV uses a ZIP containing 6 CSV files.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

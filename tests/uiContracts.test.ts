@@ -684,9 +684,9 @@ assert.ok(
 );
 assert.ok(
   authGate.includes('status.loginRequired && !status.authenticated') &&
-    authGate.includes('Login requirement:') &&
-    authGate.includes('IsLoginRequired'),
-  'Login UI must appear only when the Users table requires login.'
+    authGate.includes('Login requirement') &&
+    authGate.includes('Users.IsLoginRequired'),
+  'Login UI must appear only when the Users table requires login and Account must show the underlying flag.'
 );
 assert.ok(
   authServer.includes("profile.IsLoginRequired === true") &&

@@ -473,7 +473,10 @@ export async function parseAllCanonicalDataFile(
   const filesByLowerName = new Map(
     Object.values(zip.files)
       .filter((entry) => !entry.dir)
-      .map((entry) => [entry.name.split('/').pop()!.toLowerCase(), entry])
+      .map(
+        (entry) =>
+          [entry.name.split('/').pop()!.toLowerCase(), entry] as const
+      )
   );
 
   for (const collectionName of ALL_COLLECTIONS) {

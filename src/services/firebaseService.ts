@@ -935,6 +935,147 @@ export async function saveCountdownSettings(
 export type CanonicalCollectionName = 'users' | 'days' | 'tasks' | 'habits' | 'habitLogs' | 'countdowns';
 export type CanonicalDataRow = { id: string; [key: string]: unknown };
 
+const CANONICAL_IMPORT_PRIMARY_KEYS: Record<CanonicalCollectionName, string> = {
+  users: 'userId',
+  days: 'dateKey',
+  tasks: 'taskId',
+  habits: 'habitId',
+  habitLogs: 'habitLogId',
+  countdowns: 'countdownId',
+};
+
+function normalizeCanonicalImportDate(
+  value: unknown,
+  field: string,
+  required = true
+): string {
+  const raw = String(value ?? '').trim();
+  if (!raw && !required) return '';
+  const normalized = normalizeModelDateKey(raw);
+  if (!normalized) {
+    throw new Error(`${field} must be a valid date.`);
+  }
+  return normalized;
+}
+
+function buildCanonicalImportWrite(
+  collectionName: CanonicalCollectionName,
+  row: CanonicalDataRow
+): {
+  ref: DocumentReference<DocumentData>;
+  data: Record<string, unknown>;
+  dateKey?: string;
+} {
+  const primaryKey = CANONICAL_IMPORT_PRIMARY_KEYS[collectionName];
+  const rawPrimaryValue = String(row[primaryKey] ?? row.id ?? '').trim();
+  if (!rawPrimaryValue) {
+    throw new Error(`Missing required ${primaryKey}.`);
+  }
+  if (rawPrimaryValue.includes('/')) {
+    throw new Error(`${primaryKey} cannot contain "/".`);
+  }
+
+  const payload = Object.fromEntries(
+    Object.entries(row).filter(
+      ([key, value]) => key !== 'id' && value !== undefined
+    )
+  ) as Record<string, unknown>;
+
+  let documentId = rawPrimaryValue;
+  let affectedDateKey: string | undefined;
+
+  if (collectionName === 'days') {
+    documentId = normalizeCanonicalImportDate(rawPrimaryValue, 'dateKey');
+    payload.dateKey = documentId;
+  } else {
+    payload[primaryKey] = rawPrimaryValue;
+  }
+
+  if (collectionName === 'tasks') {
+    const scheduledDate = normalizeCanonicalImportDate(
+      payload.scheduledDate,
+      'scheduledDate'
+    );
+    payload.scheduledDate = scheduledDate;
+    affectedDateKey = scheduledDate;
+    if (payload.taskOrder !== undefined) {
+      const taskOrder = Number(payload.taskOrder);
+      if (!Number.isInteger(taskOrder) || taskOrder < 1) {
+        throw new Error('taskOrder must be a positive whole number.');
+      }
+      payload.sortOrder = taskOrder;
+      delete payload.taskOrder;
+    }
+  }
+
+  if (collectionName === 'habitLogs') {
+    const dateKey = normalizeCanonicalImportDate(payload.dateKey, 'dateKey');
+    payload.dateKey = dateKey;
+    affectedDateKey = dateKey;
+  }
+
+  if (collectionName === 'habits' && payload.activeFrom) {
+    payload.activeFrom = normalizeCanonicalImportDate(
+      payload.activeFrom,
+      'activeFrom'
+    );
+  }
+
+  if (collectionName === 'countdowns' && payload.targetDate) {
+    payload.targetDate = normalizeCanonicalImportDate(
+      payload.targetDate,
+      'targetDate'
+    );
+  }
+
+  return {
+    ref: doc(db, collectionName, documentId),
+    data: payload,
+    dateKey: affectedDateKey,
+  };
+}
+
+export async function importCanonicalDataRows(
+  collectionName: CanonicalCollectionName,
+  rows: CanonicalDataRow[]
+): Promise<{ imported: number }> {
+  assertFirestoreWritesAvailable();
+  if (rows.length === 0) return { imported: 0 };
+
+  const writes = rows.map((row, index) => {
+    try {
+      return buildCanonicalImportWrite(collectionName, row);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Row ${index + 1}: ${message}`);
+    }
+  });
+
+  await commitBatchedMutations(
+    writes.map(({ ref, data }) => ({ ref, data }))
+  );
+
+  const affectedDates = [...new Set(
+    writes.map((write) => write.dateKey).filter((value): value is string => Boolean(value))
+  )];
+
+  if (collectionName === 'tasks') {
+    for (const dateKey of affectedDates) {
+      await normalizeTaskOrderForDate(dateKey);
+      await rebuildDaySummary(dateKey);
+    }
+  } else if (collectionName === 'habitLogs') {
+    await deduplicateHabitLogsForAllDates();
+    for (const dateKey of affectedDates) {
+      await rebuildDaySummary(dateKey);
+    }
+  } else if (collectionName === 'habits') {
+    await rebuildAllDaySummaries();
+  }
+
+  return { imported: rows.length };
+}
+
 export function subscribeToCanonicalData(
   onUpdate: (data: Record<CanonicalCollectionName, CanonicalDataRow[]>) => void,
   onError?: (error: Error) => void

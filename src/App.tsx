@@ -786,6 +786,21 @@ export default function App() {
     setIsAnalyticsOpen(false);
   };
 
+  const handleOpenHome = () => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setBooksFocusMode(false);
+    setToolsFocusMode(false);
+    setFocusMode(false);
+    setIsLibraryOpen(false);
+    setIsToolsOpen(false);
+    setIsAnalyticsOpen(false);
+  };
+
   const handleCloseDayReview = () => {
     setIsDayReviewOpen(false);
     if (typeof window !== 'undefined') {
@@ -812,6 +827,7 @@ export default function App() {
       <ToastProvider>
         <div className="system-edition system-app-shell min-h-screen bg-[#f6f8ff] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
           <PowerBiHeader
+            onOpenHome={handleOpenHome}
             onOpenLibrary={handleOpenLibrary}
             onOpenAnalytics={handleOpenAnalytics}
             onOpenTools={() => handleOpenTools()}
@@ -879,6 +895,7 @@ export default function App() {
     >
       {/* 1. Clean Navigation Header */}
       {!focusMode && <PowerBiHeader
+        onOpenHome={handleOpenHome}
         onOpenLibrary={handleOpenLibrary}
         onOpenAnalytics={handleOpenAnalytics}
         onOpenTools={() => handleOpenTools()}

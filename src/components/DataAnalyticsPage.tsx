@@ -213,18 +213,16 @@ export const DataAnalyticsPage: React.FC<Props> = ({
     }
     const allTimeOverall = avg(allTimeDays.map((day) => day.dayCompletion));
     const allTimeSuccessfulDays = allTimeDays.filter((day) => day.dayCompletion >= 80).length;
-    const achievedWeeks = calculateAchievedWeeks(
-      allTimeDays.map((day, index) => ({
-        id: day.dateKey,
-        day: index + 1,
-        date: day.dateKey,
-        isCompleted: day.dayCompletion >= 80,
-        result: day.dayCompletion >= 80 ? 'TRUE' : 'FALSE',
-        change: 0,
-        dayCompletion: day.dayCompletion,
-      })),
-      currentDateKey
-    );
+    const allTimeRecords: DailyRecord[] = allTimeDays.map((day, index) => ({
+      id: day.dateKey,
+      day: index + 1,
+      date: day.dateKey,
+      isCompleted: day.dayCompletion >= 80,
+      result: day.dayCompletion >= 80 ? 'TRUE' : 'FALSE',
+      change: 0,
+      dayCompletion: day.dayCompletion,
+    }));
+    const achievedWeeks = calculateAchievedWeeks(allTimeRecords, currentDateKey);
 
     let currentStreak = 0;
     for (let index = allTimeDays.length - 1; index >= 0; index -= 1) {

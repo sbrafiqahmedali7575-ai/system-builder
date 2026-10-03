@@ -28,8 +28,8 @@ const upload=()=>backup(store.snapshot(),{projectId:'test',apiKey:'test'},async(
 });
 await page.getByRole('button',{name:/^Add(?: Habit)?$/,exact:true}).click();
 await page.getByPlaceholder('Habit name').fill('DESKTOP HABIT TEST');
-assert.equal(await page.getByRole('switch',{name:'Habit active'}).getAttribute('aria-checked'),'true');
-await page.getByRole('switch',{name:'Habit active'}).click();
+assert.equal(await page.getByRole('switch',{name:/Enable habit|Disable habit/}).getAttribute('aria-checked'),'true');
+await page.getByRole('switch',{name:/Enable habit|Disable habit/}).click();
 await page.getByRole('button',{name:'Save',exact:true}).click();
 await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
 await page.getByRole('button',{name:'Edit DESKTOP HABIT TEST',exact:true}).waitFor();
@@ -46,8 +46,8 @@ await page.getByRole('button',{name:'Habit Tracker',exact:true}).click();
 
 await page.getByRole('button',{name:'Edit DESKTOP HABIT TEST',exact:true}).click();
 await page.getByPlaceholder('Habit name').fill('DESKTOP HABIT UPDATED');
-assert.equal(await page.getByRole('switch',{name:'Habit active'}).getAttribute('aria-checked'),'false');
-await page.getByRole('switch',{name:'Habit active'}).click();
+assert.equal(await page.getByRole('switch',{name:/Enable habit|Disable habit/}).getAttribute('aria-checked'),'false');
+await page.getByRole('switch',{name:/Enable habit|Disable habit/}).click();
 await page.getByRole('button',{name:'Update',exact:true}).click();
 await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
 await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).waitFor();
@@ -60,7 +60,7 @@ assert.ok(Object.values(store.state.collections.habitLogs).some(l=>l.habitId===h
 // Pause after completing today: keep history, stop tomorrow, then resume.
 const completedLogs=Object.entries(store.state.collections.habitLogs).filter(([,l])=>l.habitId===habitId);
 await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).click();
-await page.getByRole('switch',{name:'Habit active'}).click();
+await page.getByRole('switch',{name:/Enable habit|Disable habit/}).click();
 await page.getByRole('button',{name:'Update',exact:true}).click();
 await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
 await page.waitForFunction(async id=>(await window.systemBuilderDesktop.read()).collections.habits[id].isActive===false,habitId);
@@ -72,7 +72,7 @@ await page.getByRole('button',{name:'Habit Tracker',exact:true}).click();
 await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).waitFor();
 assert.deepEqual(Object.entries(store.state.collections.habitLogs).filter(([,l])=>l.habitId===habitId),completedLogs);
 await page.getByRole('button',{name:'Edit DESKTOP HABIT UPDATED',exact:true}).click();
-await page.getByRole('switch',{name:'Habit active'}).click();
+await page.getByRole('switch',{name:/Enable habit|Disable habit/}).click();
 await page.getByRole('button',{name:'Update',exact:true}).click();
 await page.getByPlaceholder('Habit name').waitFor({state:'hidden'});
 await page.waitForFunction(async id=>Object.values((await window.systemBuilderDesktop.read()).collections.habitLogs).some(l=>l.habitId===id&&l.dateKey==='2026-10-04'),habitId);

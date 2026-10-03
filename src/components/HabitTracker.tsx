@@ -580,7 +580,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
           {
             <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 flex items-center justify-between gap-4">
               <div>
-                <div className="text-xs font-medium text-slate-700 dark:text-slate-200">Active (isActive): {draft.isActive ? 'True' : 'False'}</div>
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-200">Habit status: {draft.isActive ? 'Enabled' : 'Disabled'} (isActive: {draft.isActive ? 'True' : 'False'})</div>
                 <div className="mt-0.5 text-[11px] font-semibold text-slate-500">
                   {draft.isActive
                     ? 'Active — daily HabitLogs will be created when this habit is due.'
@@ -596,7 +596,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   }))
                 }
                 role="switch"
-                aria-label="Habit active"
+                aria-label={draft.isActive ? 'Disable habit' : 'Enable habit'}
                 aria-checked={draft.isActive}
                 className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
                   draft.isActive ? 'bg-emerald-500' : 'bg-slate-300'

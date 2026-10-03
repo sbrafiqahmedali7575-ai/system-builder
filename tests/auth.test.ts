@@ -42,6 +42,7 @@ const profile = {
   userName: 'tester',
   password: strongHash,
   IsLoginRequired: 1,
+  loginPreferenceVersion: 1,
 };
 
 const token = signSession(profile);
@@ -76,13 +77,26 @@ const migratedExisting = buildCanonicalUserProfile(existingUser);
 assert.equal(migratedExisting.userName, 'custom-user');
 assert.equal(migratedExisting.password, preservedPassword);
 assert.equal(migratedExisting.IsLoginRequired, 0);
+assert.equal(migratedExisting.loginPreferenceVersion, 1);
 assert.equal(migratedExisting.name, 'Custom Name');
 assert.equal(migratedExisting.customField, 'preserve-me');
+
+const previouslyMigratedEnabledUser = buildCanonicalUserProfile({
+  ...existingUser,
+  IsLoginRequired: 1,
+  loginPreferenceVersion: 1,
+});
+assert.equal(
+  previouslyMigratedEnabledUser.IsLoginRequired,
+  1,
+  'After the one-time default-disable migration, an explicitly enabled login setting must be preserved.'
+);
 
 const newUser = buildCanonicalUserProfile(null);
 assert.equal(newUser.userId, 'default-user');
 assert.equal(newUser.userName, 'sa');
-assert.equal(newUser.IsLoginRequired, 1);
+assert.equal(newUser.IsLoginRequired, 0);
+assert.equal(newUser.loginPreferenceVersion, 1);
 assert.match(String(newUser.password), /^sha256:/);
 
 console.log('auth tests passed');

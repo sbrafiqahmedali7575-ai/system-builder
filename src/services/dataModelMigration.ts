@@ -54,6 +54,25 @@ function migrationFieldsMatch(stored: Record<string, unknown>, desired: Record<s
   return Object.entries(desired).every(([key, value]) => migrationValueEqual(stored[key], value));
 }
 
+export function buildCanonicalUserProfile(
+  existingUserData: Record<string, unknown> | null
+): Record<string, unknown> {
+  return {
+    ...(existingUserData || {}),
+    userId: String(existingUserData?.userId || 'default-user'),
+    name: String(existingUserData?.name || 'Rafiq Ahmed'),
+    userName: String(existingUserData?.userName || 'sa'),
+    password: String(
+      existingUserData?.password ||
+        'sha256:c91a1ad0b6bf41aba97606740e92c02d87155d8a3626787464417dbda5eae57f'
+    ),
+    IsLoginRequired:
+      existingUserData?.IsLoginRequired === undefined
+        ? 1
+        : existingUserData.IsLoginRequired,
+  };
+}
+
 function toDateKey(value: unknown): string {
   const raw = String(value ?? '').trim();
   if (!raw) return '';
@@ -545,20 +564,7 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   const existingUserData = existingUserSnap.exists()
     ? (existingUserSnap.data() as Record<string, unknown>)
     : null;
-  const desiredUser = {
-    ...(existingUserData || {}),
-    userId: String(existingUserData?.userId || 'default-user'),
-    name: String(existingUserData?.name || 'Rafiq Ahmed'),
-    userName: String(existingUserData?.userName || 'sa'),
-    password: String(
-      existingUserData?.password ||
-        'sha256:c91a1ad0b6bf41aba97606740e92c02d87155d8a3626787464417dbda5eae57f'
-    ),
-    IsLoginRequired:
-      existingUserData?.IsLoginRequired === undefined
-        ? 1
-        : existingUserData.IsLoginRequired,
-  };
+  const desiredUser = buildCanonicalUserProfile(existingUserData);
 
   if (
     !existingUserData ||

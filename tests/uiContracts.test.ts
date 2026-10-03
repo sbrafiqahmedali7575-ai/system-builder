@@ -693,6 +693,14 @@ assert.ok(
   'Server authentication must enforce IsLoginRequired, hashed verification, HttpOnly sessions, and login throttling.'
 );
 assert.ok(
+  authServer.includes('function sessionSigningKey(profile: UserProfile)') &&
+    authServer.includes('SYSTEM_BUILDER_SESSION_SECRET') &&
+    authServer.includes('profile.password') &&
+    authServer.includes('verifySessionToken(token: string, profile: UserProfile)') &&
+    !authServer.includes('const SESSION_SECRET = randomBytes(32)'),
+  'Login sessions must use a stable profile-aware signing key so server restarts or multiple instances do not force re-login.'
+);
+assert.ok(
   server.includes('registerAuthRoutes(app);') &&
     server.includes("app.post('/api/analytics/chat', requireAppSession"),
   'Server must register auth routes and protect the analytics API when login is required.'

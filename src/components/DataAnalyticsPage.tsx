@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -31,6 +31,7 @@ import {
 import type { DailyRecord, HabitItem, TaskItem } from '../types';
 import { isHabitDue } from '../utils/habitUtils';
 import { calculateAchievedWeeks } from '../utils/progressAnalytics';
+import { subscribeToCountdownSettings } from '../services/firebaseService';
 
 type Period = '1w' | '2w' | '1m' | 'quarter' | '6m' | '1y' | 'all';
 
@@ -138,6 +139,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
   const [chatOpen, setChatOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
+  const [goal, setGoal] = useState<{ targetDate: string; reason: string } | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -145,8 +147,18 @@ export const DataAnalyticsPage: React.FC<Props> = ({
     },
   ]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeToCountdownSettings(
+      (settings) => setGoal(settings ? { targetDate: settings.targetDate, reason: settings.reason } : null),
+      () => setGoal(null)
+    );
+    return () => unsubscribe();
+  }, []);
+
   const model = useMemo(() => {
     const todayMs = toUtc(currentDateKey);
+    const goalTargetMs = goal?.targetDate ? toUtc(goal.targetDate) : NaN;
+    const goalDaysRemaining = Number.isFinite(goalTargetMs) ? Math.max(0, Math.ceil((goalTargetMs - todayMs) / DAY)) : null;
     const systemStartMs = toUtc(SYSTEM_START);
     const periodMeta = PERIODS.find((item) => item.id === period)!;
     const startMs = period === 'all'
@@ -389,8 +401,9 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       strongestWeekday,
       weakestWeekday,
       insights,
+      goalDaysRemaining,
     };
-  }, [records, tasks, habits, currentDateKey, period]);
+  }, [records, tasks, habits, currentDateKey, period, goal]);
 
   const context = useMemo(() => ({
     selectedPeriod: PERIODS.find((item) => item.id === period)?.label || period,
@@ -428,7 +441,8 @@ export const DataAnalyticsPage: React.FC<Props> = ({
     habits: model.habitPerformance.slice(0, 10),
     quadrants: model.quadrants,
     weekdayPerformance: model.weekdays,
-  }), [model, period, currentDateKey]);
+    goal: goal ? { title: goal.reason, targetDate: goal.targetDate, daysRemaining: model.goalDaysRemaining } : null,
+  }), [model, period, currentDateKey, goal]);
 
   const localAnswer = (input: string) => {
     const q = input.toLowerCase();
@@ -452,6 +466,11 @@ export const DataAnalyticsPage: React.FC<Props> = ({
     }
     if (q.includes('worst') || q.includes('weak')) {
       return `Lowest day in the selected range is ${model.worstDay?.dateKey || 'n/a'} at ${fmt(model.worstDay?.dayCompletion || 0)}%. Weakest weekday is ${model.weakestWeekday?.label || 'n/a'} at ${fmt(model.weakestWeekday?.value || 0)}% average.`;
+    }
+    if (q.includes('goal') || q.includes('job') || q.includes('deadline') || q.includes('countdown')) {
+      return goal?.targetDate
+        ? `${goal.reason || 'Current goal'} is targeted for ${goal.targetDate}. ${model.goalDaysRemaining ?? 0} days remain from ${currentDateKey}. Use the trend and completion drivers on this page to judge whether your current execution pace is improving.`
+        : 'No active goal countdown is available in the current System Builder data.';
     }
     if (q.includes('time') || q.includes('focus') || q.includes('estimate')) {
       return model.tasksWithActual > 0
@@ -675,6 +694,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-950/45"><span className="text-slate-500">Tasks analyzed</span><b>{model.selectedTasks.length}</b></div>
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-950/45"><span className="text-slate-500">Active/current habits visible</span><b>{habits.length}</b></div>
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-950/45"><span className="text-slate-500">Actual-time coverage</span><b>{model.selectedTasks.length ? fmt(model.tasksWithActual / model.selectedTasks.length * 100) : '0.0'}%</b></div>
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-950/45"><span className="truncate pr-2 text-slate-500">{goal?.reason || 'Goal countdown'}</span><b>{model.goalDaysRemaining === null ? '—' : model.goalDaysRemaining + ' days'}</b></div>
             </div>
           </div>
         </section>

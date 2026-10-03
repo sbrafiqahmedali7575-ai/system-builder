@@ -688,3 +688,41 @@ assert.ok(
     (app.match(/onAnalytics=\{handleOpenAnalytics\}/g) || []).length >= 4,
   'Every mobile workspace must wire the center Analytics action and mark it active on the Analytics page.'
 );
+assert.ok(
+  server.includes("const queryMode = req.body?.mode === 'sql' ? 'sql' : 'ask'") &&
+    server.includes("SQL mode is read-only. Use a SELECT or WITH query only.") &&
+    server.includes("queryMode === 'sql' ||"),
+  'Analytics AI must support a guarded read-only SQL query mode.'
+);
+assert.ok(
+  server.includes("dialect: 'SQLite-compatible read-only analytics SQL'") &&
+    server.includes("day_facts: {") &&
+    server.includes("task_facts: {") &&
+    server.includes("weekly_facts: {") &&
+    server.includes("monthly_facts: {") &&
+    server.includes("sourcePath: 'semanticLayer.dayFacts'"),
+  'Analytics AI must publish a virtual SQL schema over normalized semantic tables.'
+);
+assert.ok(
+  server.includes('Python sqlite3') &&
+    server.includes('FINAL RESPONSE FORMAT') &&
+    server.includes('parseStructuredResult') &&
+    server.includes('resultCount'),
+  'SQL workbench must execute analytical queries through code and return structured answers, SQL, rows, and counts.'
+);
+assert.ok(
+  dataAnalytics.includes("type QueryMode = 'ask' | 'sql'") &&
+    dataAnalytics.includes("setQueryMode('sql')") &&
+    dataAnalytics.includes('Virtual SQL schema') &&
+    dataAnalytics.includes('Executed SQL') &&
+    dataAnalytics.includes('Query result') &&
+    dataAnalytics.includes('Run SQL query'),
+  'Analytics chat must expose Ask/SQL modes, schema discovery, SQL trace, and result tables.'
+);
+assert.ok(
+  dataAnalytics.includes('history: messages.slice(-16)') &&
+    dataAnalytics.includes('mode: queryMode') &&
+    dataAnalytics.includes('resetChat') &&
+    dataAnalytics.includes('copySql'),
+  'SQL-style analytics chat must preserve conversational context and provide new-chat and SQL-copy controls.'
+);

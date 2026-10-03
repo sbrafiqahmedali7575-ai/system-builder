@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, BookOpen, Focus, Wrench } from 'lucide-react';
+import { BarChart3, BookOpen, Focus, Home, Wrench } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
@@ -16,6 +16,7 @@ const HEADER_QUOTES = [
 ] as const;
 
 interface PowerBiHeaderProps {
+  onOpenHome?: () => void;
   onOpenLibrary?: () => void;
   onOpenTools?: () => void;
   onOpenAnalytics?: () => void;
@@ -26,6 +27,7 @@ interface PowerBiHeaderProps {
 
 
 export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
+  onOpenHome,
   onOpenLibrary,
   onOpenTools,
   onOpenAnalytics,
@@ -34,6 +36,8 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
   isSyncing = false,
 }) => {
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const isHomePage =
+    typeof window !== 'undefined' && window.location.pathname === '/';
   const isToolsPage =
     typeof window !== 'undefined' && window.location.pathname === '/tools';
   const isAnalyticsPage =
@@ -118,6 +122,26 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             >
               <Focus className="w-3.5 h-3.5" />
               <span>{focusMode ? 'Exit Focus' : 'Focus'}</span>
+            </motion.button>
+          )}
+
+          {onOpenHome && (
+            <motion.button
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onOpenHome}
+              aria-current={isHomePage ? 'page' : undefined}
+              className={`group flex items-center space-x-1.5 px-2 py-1 text-xs font-bold rounded-xl border transition-all shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                isHomePage
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-1 ring-slate-300 dark:bg-white dark:border-white dark:text-slate-950 dark:ring-slate-700'
+                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm'
+              }`}
+              title={isHomePage ? 'Home — current page' : 'Open Home'}
+              aria-label={isHomePage ? 'Home, current page' : 'Open Home'}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Home</span>
+              {isHomePage && <span className="w-1.5 h-1.5 rounded-full bg-white/90 dark:bg-slate-900" aria-hidden="true" />}
             </motion.button>
           )}
 

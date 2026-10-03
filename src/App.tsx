@@ -872,7 +872,7 @@ export default function App() {
             hideFocus
             onPlan={() => { handleCloseAnalytics(); setTimeout(() => handleOpenTools('tasks'), 0); }}
             onBooks={() => { handleCloseAnalytics(); setTimeout(handleOpenLibrary, 0); }}
-            onTop={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onTop={handleOpenHome}
           />
         </div>
         <FeedbackDiagnosticsPanel />

@@ -6,6 +6,7 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { fetchAllProjectData, generateAllCsvFiles } from './server/backupService';
 import { db, collection, getDocs, doc, getDoc } from './server/db';
+import { registerAuthRoutes, requireAppSession } from './server/auth';
 
 async function startServer() {
   const app = express();
@@ -18,7 +19,9 @@ async function startServer() {
     res.json({ status: 'ok' });
   });
 
-  app.post('/api/analytics/chat', async (req, res) => {
+  registerAuthRoutes(app);
+
+  app.post('/api/analytics/chat', requireAppSession, async (req, res) => {
     try {
       const question = String(req.body?.question || '').trim();
       const queryMode = req.body?.mode === 'sql' ? 'sql' : 'ask';

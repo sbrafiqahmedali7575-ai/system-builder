@@ -802,7 +802,7 @@ export default function App() {
       <>
         <MobileBrandHeader isSyncing={isSyncing} />
         <CalNewportLibrary theme={theme} onBack={handleCloseLibrary} focusMode={booksFocusMode} onFocusChange={setBooksFocusMode} />
-        <MobileBottomNav activeSection="books" focusActive={booksFocusMode} onAdd={() => { handleCloseLibrary(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
+        <MobileBottomNav activeSection="books" focusActive={booksFocusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setBooksFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseLibrary} />
       </>
     );
   }
@@ -826,8 +826,8 @@ export default function App() {
             onBack={handleCloseAnalytics}
           />
           <MobileBottomNav
-            activeSection="today"
-            onAdd={() => { handleCloseAnalytics(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }}
+            activeSection="analytics"
+            onAnalytics={handleOpenAnalytics}
             onFocus={() => {}}
             hideFocus
             onPlan={() => { handleCloseAnalytics(); setTimeout(() => handleOpenTools('tasks'), 0); }}
@@ -862,7 +862,7 @@ export default function App() {
         focusMode={toolsFocusMode}
         onFocusChange={setToolsFocusMode}
       />
-      <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAdd={() => { handleCloseTools(); setTimeout(() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks')), 0); }} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
+      <MobileBottomNav activeSection="plan" focusActive={toolsFocusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setToolsFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={handleCloseTools} />
       </>
     );
   }
@@ -947,8 +947,8 @@ export default function App() {
 
       {isTaskSearchOpen && <TaskSearchDialog tasks={tasks} onClose={() => setIsTaskSearchOpen(false)} />}
 
-      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onCalendar={() => handleOpenTools('tasks')} onTools={() => handleOpenTools()} />}
-      <MobileBottomNav activeSection="today" focusActive={focusMode} onAdd={() => window.dispatchEvent(new CustomEvent('system-builder:open-enter-tasks'))} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
+      {isCommandPaletteOpen && <CommandPalette onClose={() => setIsCommandPaletteOpen(false)} onAnalytics={handleOpenAnalytics} onSearch={() => setIsTaskSearchOpen(true)} onFocus={() => setFocusMode(v => !v)} onCalendar={() => handleOpenTools('tasks')} onTools={() => handleOpenTools()} />}
+      <MobileBottomNav activeSection="today" focusActive={focusMode} onAnalytics={handleOpenAnalytics} onFocus={() => setFocusMode(v => !v)} onPlan={() => handleOpenTools('tasks')} onBooks={handleOpenLibrary} onTop={() => window.scrollTo({top:0,behavior:'smooth'})} />
 
       {/* 5. Header-triggered current-day review */}
       <DayReviewModal

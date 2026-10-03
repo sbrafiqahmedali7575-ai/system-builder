@@ -759,7 +759,6 @@ async function startServer() {
         return res.json({ ...fallback, queryMode, dataFreshness: dataset.fetchedAt, collectionCounts: dataset.collectionCounts, analysisLevel: 'standard', executionEngine: 'server-deterministic' });
       }
       const complexQuestion =
-        queryMode === 'sql' ||
         /why|root cause|correlat|regress|forecast|predict|trend|anomal|outlier|what[- ]?if|scenario|compare|relationship|impact|driver|variance|percentile|distribution|statistic|month over month|week over week/i.test(
           question
         );

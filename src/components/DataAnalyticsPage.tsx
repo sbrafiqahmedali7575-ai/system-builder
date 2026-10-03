@@ -5,10 +5,16 @@ import {
   Bot,
   CalendarDays,
   CheckCircle2,
+  Check,
   Clock3,
+  Code2,
+  Copy,
+  Database,
   Flame,
   ListChecks,
+  RotateCcw,
   Send,
+  Table2,
   Sparkles,
   Target,
   TrendingDown,
@@ -42,9 +48,19 @@ interface Props {
   onBack: () => void;
 }
 
+type QueryMode = 'ask' | 'sql';
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
+  sql?: string;
+  columns?: string[];
+  rows?: Array<Record<string, unknown>>;
+  notes?: string[];
+  resultCount?: number;
+  dataFreshness?: string;
+  analysisLevel?: 'standard' | 'deep';
+  queryMode?: QueryMode;
 }
 
 const DAY = 86_400_000;
@@ -72,6 +88,12 @@ const avg = (values: number[]) =>
   values.length ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10 : 0;
 const fmt = (value: number, digits = 1) =>
   new Intl.NumberFormat('en-IN', { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(value);
+const displayCell = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'object') return JSON.stringify(value);
+  if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+  return String(value);
+};
 
 const parseDurationMinutes = (value?: string) => {
   if (!value) return 0;
@@ -138,12 +160,15 @@ export const DataAnalyticsPage: React.FC<Props> = ({
   const [chatOpen, setChatOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
+  const [queryMode, setQueryMode] = useState<QueryMode>('ask');
+  const [schemaOpen, setSchemaOpen] = useState(false);
+  const [copiedSqlIndex, setCopiedSqlIndex] = useState<number | null>(null);
   const [analysisLevel, setAnalysisLevel] = useState<'standard' | 'deep'>('standard');
   const [goal, setGoal] = useState<{ targetDate: string; reason: string } | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      text: 'Ask me anything about your System Builder data — any date, task, habit, week, trend, ranking, comparison, note, time estimate, goal, anomaly, or performance question.',
+      text: 'Query your System Builder data in plain English or switch to SQL. I can retrieve exact rows, generate and execute read-only SQL, calculate advanced statistics, explain results, and continue with follow-up questions.',
     },
   ]);
 
@@ -484,6 +509,28 @@ export const DataAnalyticsPage: React.FC<Props> = ({
     return `The full AI data-query service is unavailable right now, so I cannot reliably answer that open-ended question from every raw row. Built-in metrics are still available: DayCompletion ${fmt(model.overall)}%, task completion ${fmt(model.taskRate)}%, habit adherence ${fmt(model.habitRate)}%, successful days ${model.successfulDays}/${model.calendarDays.length}, latest 7-day average ${fmt(model.last7Average)}%, and ${model.achievedWeeks} achieved weeks all-time.`;
   };
 
+  const resetChat = () => {
+    setMessages([
+      {
+        role: 'assistant',
+        text: 'New analysis session started. Ask in plain English or switch to SQL for a read-only query.',
+      },
+    ]);
+    setQuestion('');
+    setAnalysisLevel('standard');
+    setCopiedSqlIndex(null);
+  };
+
+  const copySql = async (sql: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(sql);
+      setCopiedSqlIndex(index);
+      window.setTimeout(() => setCopiedSqlIndex((current) => current === index ? null : current), 1600);
+    } catch {
+      setCopiedSqlIndex(null);
+    }
+  };
+
   const askQuestion = async (preset?: string) => {
     const input = (preset ?? question).trim();
     if (!input || asking) return;
@@ -498,15 +545,40 @@ export const DataAnalyticsPage: React.FC<Props> = ({
           question: input,
           context,
           history: messages.slice(-16),
+          mode: queryMode,
         }),
       });
       if (!response.ok) throw new Error('AI endpoint unavailable');
       const payload = await response.json();
       const answer = String(payload.answer || '').trim();
-      setAnalysisLevel(payload.analysisLevel === 'deep' ? 'deep' : 'standard');
-      setMessages((current) => [...current, { role: 'assistant', text: answer || localAnswer(input) }]);
+      const responseLevel = payload.analysisLevel === 'deep' ? 'deep' : 'standard';
+      setAnalysisLevel(responseLevel);
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          text: answer || localAnswer(input),
+          sql: String(payload.sql || '').trim() || undefined,
+          columns: Array.isArray(payload.columns) ? payload.columns.map(String) : undefined,
+          rows: Array.isArray(payload.rows) ? payload.rows : undefined,
+          notes: Array.isArray(payload.notes) ? payload.notes.map(String) : undefined,
+          resultCount: Number.isFinite(Number(payload.resultCount)) ? Number(payload.resultCount) : undefined,
+          dataFreshness: payload.dataFreshness ? String(payload.dataFreshness) : undefined,
+          analysisLevel: responseLevel,
+          queryMode,
+        },
+      ]);
     } catch {
-      setMessages((current) => [...current, { role: 'assistant', text: localAnswer(input) }]);
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          text: queryMode === 'sql'
+            ? 'The live SQL analysis service is unavailable right now, so this query was not executed.'
+            : localAnswer(input),
+          queryMode,
+        },
+      ]);
     } finally {
       setAsking(false);
     }
@@ -737,44 +809,201 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       </main>
 
       {chatOpen && (
-        <div className="fixed inset-0 z-[190] flex items-end justify-end bg-slate-950/25 p-0 backdrop-blur-[2px] sm:p-4" onMouseDown={(event) => { if (event.currentTarget === event.target) setChatOpen(false); }}>
-          <section id="analytics-ai-chat" className="flex h-[82dvh] w-full flex-col overflow-hidden rounded-t-[26px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:h-[680px] sm:max-w-md sm:rounded-[26px]">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-blue-600 p-2 text-white"><Bot className="h-4 w-4" /></div>
-                <div><div className="flex items-center gap-2"><div className="text-sm font-black">AI Data Analyst</div><span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300">{analysisLevel === 'deep' ? 'Deep' : 'Live'}</span></div><div className="text-[10px] text-slate-500">Full live access to Days · Tasks · Habits · HabitLogs · Goals</div></div>
+        <div className="fixed inset-0 z-[190] flex items-end justify-end bg-slate-950/30 p-0 backdrop-blur-[3px] sm:p-4" onMouseDown={(event) => { if (event.currentTarget === event.target) setChatOpen(false); }}>
+          <section id="analytics-ai-chat" className="flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[26px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:h-[760px] sm:max-w-2xl sm:rounded-[26px]">
+            <div className="border-b border-slate-100 bg-white/95 px-3.5 py-3 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 sm:px-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="relative rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 text-white shadow-md shadow-blue-500/20">
+                    <Bot className="h-4 w-4" />
+                    <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 dark:border-slate-900" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-sm font-black">Query Intelligence</div>
+                      <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300">{analysisLevel === 'deep' ? 'Deep' : 'Live'}</span>
+                      <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Read only</span>
+                    </div>
+                    <div className="mt-0.5 truncate text-[10px] text-slate-500">Natural language + SQL over live System Builder data</div>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button type="button" onClick={resetChat} className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200" aria-label="Start new analysis chat" title="New chat"><RotateCcw className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => setChatOpen(false)} className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200" aria-label="Close AI analyst"><X className="h-4 w-4" /></button>
+                </div>
               </div>
-              <button type="button" onClick={() => setChatOpen(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close AI analyst"><X className="h-4 w-4" /></button>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setQueryMode('ask')}
+                    className={'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[10px] font-black transition ' + (queryMode === 'ask' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400')}
+                    aria-pressed={queryMode === 'ask'}
+                  >
+                    <Bot className="h-3.5 w-3.5" /> Ask
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQueryMode('sql')}
+                    className={'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[10px] font-black transition ' + (queryMode === 'sql' ? 'bg-white text-indigo-700 shadow-sm dark:bg-slate-700 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400')}
+                    aria-pressed={queryMode === 'sql'}
+                  >
+                    <Code2 className="h-3.5 w-3.5" /> SQL
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSchemaOpen((value) => !value)}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 text-[10px] font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700 dark:border-slate-700 dark:text-slate-300"
+                  aria-expanded={schemaOpen}
+                >
+                  <Database className="h-3.5 w-3.5" /> Schema
+                </button>
+              </div>
+
+              {schemaOpen && (
+                <div className="mt-2.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-950/55">
+                  <div className="mb-2 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">Virtual SQL schema</div>
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    {[
+                      ['day_facts', 'dateKey · DayCompletion · task/habit rates · workload · time'],
+                      ['task_facts', 'taskId · title · date · completed · quadrant · priority · time · notes'],
+                      ['habit_logs', 'habitId · dateKey · Iscompleted'],
+                      ['habit_facts', 'habit · completed/incomplete logs · completion rate'],
+                      ['weekly_facts', 'week · averages · successful days · achieved-week score'],
+                      ['monthly_facts', 'month · averages · tasks · time'],
+                      ['habits', 'name · repeatDays · activeFrom · isActive'],
+                      ['countdowns', 'goal · targetDate · isActive'],
+                    ].map(([table, fields]) => (
+                      <div key={table} className="rounded-lg bg-white px-2.5 py-2 dark:bg-slate-900">
+                        <div className="font-mono text-[10px] font-black text-indigo-600 dark:text-indigo-300">{table}</div>
+                        <div className="mt-0.5 text-[9px] leading-relaxed text-slate-500">{fields}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
             <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-800">
               <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {['Find my biggest anomaly', 'Compare last 30 vs previous 30 days', 'What drives low DayCompletion?', 'Which tasks overran estimates?'].map((prompt) => (
-                  <button key={prompt} type="button" onClick={() => void askQuestion(prompt)} className="whitespace-nowrap rounded-full border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300">{prompt}</button>
+                {(queryMode === 'sql'
+                  ? [
+                      'SELECT dateKey, DayCompletion FROM day_facts ORDER BY DayCompletion DESC LIMIT 5',
+                      'SELECT quadrant, COUNT(*) AS tasks FROM task_facts GROUP BY quadrant ORDER BY tasks DESC',
+                      'SELECT * FROM weekly_facts ORDER BY key DESC LIMIT 8',
+                    ]
+                  : [
+                      'Find my biggest anomaly',
+                      'Compare last 30 vs previous 30 days',
+                      'What drives low DayCompletion?',
+                      'Which tasks overran estimates?',
+                    ]
+                ).map((prompt) => (
+                  <button key={prompt} type="button" onClick={() => void askQuestion(prompt)} className="whitespace-nowrap rounded-full border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300">{prompt}</button>
                 ))}
               </div>
             </div>
-            <div className="flex-1 space-y-3 overflow-y-auto p-3">
+
+            <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50/45 p-3 dark:bg-slate-950/25 sm:p-4">
               {messages.map((message, index) => (
                 <div key={index} className={'flex ' + (message.role === 'user' ? 'justify-end' : 'justify-start')}>
-                  <div className={'max-w-[88%] rounded-2xl px-3 py-2.5 text-xs leading-relaxed ' + (message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200')}>
-                    {message.text}
+                  <div className={'max-w-[94%] sm:max-w-[90%] ' + (message.role === 'user' ? '' : 'w-full')}>
+                    <div className={'rounded-2xl px-3 py-2.5 text-xs leading-relaxed ' + (message.role === 'user' ? 'ml-auto w-fit max-w-full bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200')}>
+                      <div className="whitespace-pre-wrap">{message.text}</div>
+                    </div>
+
+                    {message.role === 'assistant' && message.sql && (
+                      <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 bg-slate-950 shadow-sm dark:border-slate-700">
+                        <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+                          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400"><Code2 className="h-3.5 w-3.5" /> Executed SQL</div>
+                          <button type="button" onClick={() => void copySql(message.sql!, index)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold text-slate-300 hover:bg-white/10 hover:text-white" aria-label="Copy SQL query">
+                            {copiedSqlIndex === index ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                            {copiedSqlIndex === index ? 'Copied' : 'Copy'}
+                          </button>
+                        </div>
+                        <pre className="max-h-44 overflow-auto whitespace-pre-wrap break-words p-3 font-mono text-[10px] leading-relaxed text-emerald-300">{message.sql}</pre>
+                      </div>
+                    )}
+
+                    {message.role === 'assistant' && message.rows && message.rows.length > 0 && (
+                      <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-slate-800">
+                          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-500"><Table2 className="h-3.5 w-3.5" /> Query result</div>
+                          <div className="text-[9px] font-semibold text-slate-400">{message.resultCount ?? message.rows.length} row{(message.resultCount ?? message.rows.length) === 1 ? '' : 's'}</div>
+                        </div>
+                        <div className="max-h-64 overflow-auto">
+                          <table className="min-w-full border-collapse text-left text-[10px]">
+                            <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-950">
+                              <tr>
+                                {(message.columns?.length ? message.columns : Object.keys(message.rows[0])).map((column) => (
+                                  <th key={column} className="whitespace-nowrap border-b border-slate-200 px-2.5 py-2 font-black text-slate-600 dark:border-slate-800 dark:text-slate-300">{column}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {message.rows.slice(0, 50).map((row, rowIndex) => (
+                                <tr key={rowIndex} className="border-b border-slate-100 last:border-0 dark:border-slate-800/70">
+                                  {(message.columns?.length ? message.columns : Object.keys(message.rows![0])).map((column) => (
+                                    <td key={column} className="max-w-[260px] whitespace-nowrap px-2.5 py-2 text-slate-600 dark:text-slate-300">{displayCell(row[column])}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {message.role === 'assistant' && message.notes && message.notes.length > 0 && (
+                      <div className="mt-2 rounded-xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-[10px] leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-200">
+                        {message.notes.join(' · ')}
+                      </div>
+                    )}
+
+                    {message.role === 'assistant' && message.dataFreshness && (
+                      <div className="mt-1.5 text-right text-[9px] font-medium text-slate-400">
+                        Live data · {new Date(message.dataFreshness).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
-              {asking && <div className="flex justify-start"><div className="rounded-2xl bg-slate-100 px-3 py-2.5 text-xs text-slate-500 dark:bg-slate-800">Analyzing your data…</div></div>}
+              {asking && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    {queryMode === 'sql' ? 'Executing read-only SQL…' : 'Building query and analyzing live data…'}
+                  </div>
+                </div>
+              )}
             </div>
+
             <form
-              className="flex items-end gap-2 border-t border-slate-100 p-3 dark:border-slate-800"
+              className="border-t border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
               onSubmit={(event) => { event.preventDefault(); void askQuestion(); }}
             >
-              <textarea
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                rows={2}
-                placeholder="Ask anything about your data…"
-                className="min-h-12 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-blue-950"
-              />
-              <button type="submit" disabled={!question.trim() || asking} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ask AI analyst"><Send className="h-4 w-4" /></button>
+              <div className={'flex items-end gap-2 rounded-2xl border bg-slate-50 p-2 transition focus-within:ring-2 dark:bg-slate-950 ' + (queryMode === 'sql' ? 'border-indigo-200 focus-within:border-indigo-400 focus-within:ring-indigo-100 dark:border-indigo-900 dark:focus-within:ring-indigo-950' : 'border-slate-200 focus-within:border-blue-400 focus-within:ring-blue-100 dark:border-slate-700 dark:focus-within:ring-blue-950')}>
+                <textarea
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      void askQuestion();
+                    }
+                  }}
+                  rows={queryMode === 'sql' ? 3 : 2}
+                  placeholder={queryMode === 'sql' ? 'SELECT ... FROM day_facts ...' : 'Ask anything about your data…'}
+                  className={'min-h-12 flex-1 resize-none bg-transparent px-1.5 py-1.5 text-xs outline-none ' + (queryMode === 'sql' ? 'font-mono' : '')}
+                  aria-label={queryMode === 'sql' ? 'SQL query' : 'Ask data question'}
+                />
+                <button type="submit" disabled={!question.trim() || asking} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40" aria-label={queryMode === 'sql' ? 'Run SQL query' : 'Ask AI analyst'}><Send className="h-4 w-4" /></button>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between gap-3 px-1 text-[9px] text-slate-400">
+                <span>{queryMode === 'sql' ? 'SELECT / WITH only · Enter to run · Shift+Enter for new line' : 'AI generates verified read-only SQL when useful · Enter to send'}</span>
+                <span className="hidden sm:inline">Live Firestore source</span>
+              </div>
             </form>
           </section>
         </div>

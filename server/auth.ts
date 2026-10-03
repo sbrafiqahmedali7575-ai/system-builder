@@ -23,6 +23,7 @@ type UserProfile = {
   userName: string;
   password: string;
   IsLoginRequired: number | boolean;
+  loginPreferenceVersion: number;
 };
 
 function constantTimeEqual(left: string, right: string): boolean {
@@ -155,15 +156,36 @@ function loginRequired(profile: UserProfile | null): boolean {
 }
 
 async function readProfile(): Promise<UserProfile | null> {
-  const snapshot = await getDoc(doc(db, USER_COLLECTION, DEFAULT_USER_ID));
+  const userRef = doc(db, USER_COLLECTION, DEFAULT_USER_ID);
+  const snapshot = await getDoc(userRef);
   if (!snapshot.exists()) return null;
+
   const data = snapshot.data();
+  const storedPreferenceVersion = Number(data.loginPreferenceVersion || 0);
+  const needsLoginPreferenceMigration = storedPreferenceVersion < 1;
+
+  if (needsLoginPreferenceMigration) {
+    await setDoc(
+      userRef,
+      {
+        IsLoginRequired: 0,
+        loginPreferenceVersion: 1,
+      },
+      { merge: true }
+    );
+  }
+
   return {
     userId: String(data.userId || DEFAULT_USER_ID),
     name: String(data.name || ''),
     userName: String(data.userName || ''),
     password: String(data.password || ''),
-    IsLoginRequired: data.IsLoginRequired ?? 0,
+    IsLoginRequired: needsLoginPreferenceMigration
+      ? 0
+      : data.IsLoginRequired ?? 0,
+    loginPreferenceVersion: needsLoginPreferenceMigration
+      ? 1
+      : storedPreferenceVersion,
   };
 }
 
@@ -277,6 +299,52 @@ export function registerAuthRoutes(app: import('express').Express): void {
   app.post('/api/auth/logout', (_req, res) => {
     clearSessionCookie(res);
     return res.json({ success: true });
+  });
+
+  app.post('/api/auth/login-required', async (req, res) => {
+    try {
+      const profile = await readProfile();
+      if (!profile) {
+        return res.status(404).json({ error: 'Default user was not found.' });
+      }
+
+      const currentPassword = String(req.body?.currentPassword || '');
+      const passwordCheck = verifyPassword(currentPassword, profile.password);
+      if (!passwordCheck.valid) {
+        return res.status(401).json({ error: 'Current password is incorrect.' });
+      }
+
+      const enabled = Boolean(req.body?.enabled);
+      await setDoc(
+        doc(db, USER_COLLECTION, DEFAULT_USER_ID),
+        {
+          IsLoginRequired: enabled ? 1 : 0,
+          loginPreferenceVersion: 1,
+        },
+        { merge: true }
+      );
+
+      const nextProfile = {
+        ...profile,
+        IsLoginRequired: enabled ? 1 : 0,
+        loginPreferenceVersion: 1,
+      };
+
+      if (enabled) {
+        setSessionCookie(res, nextProfile);
+      } else {
+        clearSessionCookie(res);
+      }
+
+      return res.json({
+        success: true,
+        loginRequired: enabled,
+        userName: profile.userName,
+      });
+    } catch (error) {
+      console.error('Login requirement update failed:', error);
+      return res.status(500).json({ error: 'Unable to update login requirement.' });
+    }
   });
 
   app.post('/api/auth/credentials', async (req, res) => {

@@ -143,7 +143,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      text: 'Ask me a System Builder business question. I can explain performance, tasks, habits, consistency, workload, time capture, strengths, weaknesses, and trends.',
+      text: 'Ask me anything about your System Builder data — any date, task, habit, week, trend, ranking, comparison, note, time estimate, goal, anomaly, or performance question.',
     },
   ]);
 
@@ -481,7 +481,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       const gap = model.taskRate >= model.habitRate ? 'habit adherence' : 'task completion';
       return `The larger measurable gap is ${gap}: tasks are at ${fmt(model.taskRate)}% and habits at ${fmt(model.habitRate)}%. Recent 7-day DayCompletion is ${fmt(model.last7Average)}% (${model.momentum >= 0 ? '+' : ''}${model.momentum.toFixed(1)}pp versus the previous 7 days). Prioritize the weakest component first, then review the lowest-performing weekday and habit shown on this page.`;
     }
-    return `Executive summary for ${context.selectedPeriod}: DayCompletion ${fmt(model.overall)}%, task completion ${fmt(model.taskRate)}%, habit adherence ${fmt(model.habitRate)}%, successful days ${model.successfulDays}/${model.calendarDays.length}, latest 7-day average ${fmt(model.last7Average)}%, and ${model.achievedWeeks} achieved weeks all-time. Ask about tasks, habits, successful days, weeks, best/worst days, focus time, or what to improve.`;
+    return `The full AI data-query service is unavailable right now, so I cannot reliably answer that open-ended question from every raw row. Built-in metrics are still available: DayCompletion ${fmt(model.overall)}%, task completion ${fmt(model.taskRate)}%, habit adherence ${fmt(model.habitRate)}%, successful days ${model.successfulDays}/${model.calendarDays.length}, latest 7-day average ${fmt(model.last7Average)}%, and ${model.achievedWeeks} achieved weeks all-time.`;
   };
 
   const askQuestion = async (preset?: string) => {
@@ -494,7 +494,11 @@ export const DataAnalyticsPage: React.FC<Props> = ({
       const response = await fetch('/api/analytics/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: input, context }),
+        body: JSON.stringify({
+          question: input,
+          context,
+          history: messages.slice(-16),
+        }),
       });
       if (!response.ok) throw new Error('AI endpoint unavailable');
       const payload = await response.json();
@@ -717,7 +721,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="rounded-xl bg-blue-600 p-2 text-white"><Bot className="h-4 w-4" /></div>
-                <div><div className="text-sm font-black">AI Data Analyst</div><div className="text-[10px] text-slate-500">Grounded in your current System Builder metrics</div></div>
+                <div><div className="text-sm font-black">AI Data Analyst</div><div className="text-[10px] text-slate-500">Full live access to Days · Tasks · Habits · HabitLogs · Goals</div></div>
               </div>
               <button type="button" onClick={() => setChatOpen(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close AI analyst"><X className="h-4 w-4" /></button>
             </div>
@@ -746,7 +750,7 @@ export const DataAnalyticsPage: React.FC<Props> = ({
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 rows={2}
-                placeholder="Ask a business question…"
+                placeholder="Ask anything about your data…"
                 className="min-h-12 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-blue-950"
               />
               <button type="submit" disabled={!question.trim() || asking} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ask AI analyst"><Send className="h-4 w-4" /></button>

@@ -1,13 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { UserRound } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
 
 interface MobileBrandHeaderProps {
   isSyncing?: boolean;
+  onOpenAccount?: () => void;
 }
 
 export const MobileBrandHeader: React.FC<MobileBrandHeaderProps> = ({
   isSyncing = false,
+  onOpenAccount,
 }) => (
   <div className="md:hidden px-2 pt-[max(.625rem,env(safe-area-inset-top))] sm:px-3">
     <motion.div
@@ -37,13 +40,26 @@ export const MobileBrandHeader: React.FC<MobileBrandHeaderProps> = ({
         </div>
       </div>
 
-      <div className="min-w-0 shrink-0 border-l border-slate-200 pl-2.5 text-right leading-none max-[360px]:pl-2 dark:border-slate-700">
-        <div className="whitespace-nowrap text-[7px] font-bold uppercase tracking-[0.14em] text-slate-400 max-[360px]:text-[6.5px] dark:text-slate-500">
-          Developed by
+      <div className="flex min-w-0 shrink-0 items-center gap-2 border-l border-slate-200 pl-2.5 max-[360px]:pl-2 dark:border-slate-700">
+        <div className="text-right leading-none max-[390px]:hidden">
+          <div className="whitespace-nowrap text-[7px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+            Developed by
+          </div>
+          <div className="mt-1 whitespace-nowrap text-[10px] font-extrabold tracking-[-0.01em] text-slate-800 dark:text-slate-100">
+            Rafiq Ahmed
+          </div>
         </div>
-        <div className="mt-1 whitespace-nowrap text-[10px] font-extrabold tracking-[-0.01em] text-slate-800 max-[360px]:text-[9.5px] dark:text-slate-100">
-          Rafiq Ahmed
-        </div>
+        {onOpenAccount && (
+          <button
+            type="button"
+            onClick={onOpenAccount}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300"
+            aria-label="Open account settings"
+            title="Account"
+          >
+            <UserRound className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </motion.div>
   </div>

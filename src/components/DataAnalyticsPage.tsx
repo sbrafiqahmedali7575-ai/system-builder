@@ -180,6 +180,12 @@ export const DataAnalyticsPage: React.FC<Props> = ({
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const openAiChat = () => setChatOpen(true);
+    window.addEventListener('system-builder:open-analytics-ai', openAiChat);
+    return () => window.removeEventListener('system-builder:open-analytics-ai', openAiChat);
+  }, []);
+
   const model = useMemo(() => {
     const todayMs = toUtc(currentDateKey);
     const goalTargetMs = goal?.targetDate ? toUtc(goal.targetDate) : NaN;

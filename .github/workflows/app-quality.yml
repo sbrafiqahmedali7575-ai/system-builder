@@ -84,11 +84,39 @@ jobs:
             exit 1
           fi
 
-          "$BROWSER_BIN"             --headless=new             --no-sandbox             --disable-gpu             --disable-dev-shm-usage             --virtual-time-budget=5000             --dump-dom             http://127.0.0.1:4173/ >/tmp/rendered-home.html 2>/tmp/browser.log
+          render_route() {
+            local label="$1"
+            local width="$2"
+            local height="$3"
+            local user_agent="$4"
+            local route="$5"
+            local expected="$6"
+            local output="/tmp/rendered-${label}.html"
+            local log="/tmp/browser-${label}.log"
+            local profile="/tmp/chrome-profile-${label}"
 
-          if ! grep -q 'System Builder' /tmp/rendered-home.html; then
-            echo "React app did not hydrate/render System Builder."
-            cat /tmp/browser.log
-            head -200 /tmp/rendered-home.html
-            exit 1
-          fi
+            "$BROWSER_BIN"               --headless=new               --no-sandbox               --disable-gpu               --disable-dev-shm-usage               --window-size="${width},${height}"               --user-agent="$user_agent"               --user-data-dir="$profile"               --virtual-time-budget=3500               --dump-dom               "http://127.0.0.1:4173${route}" >"$output" 2>"$log"
+
+            if ! grep -q "$expected" "$output"; then
+              echo "Route ${route} failed to render expected content '${expected}' at ${width}x${height}."
+              cat "$log"
+              head -200 "$output"
+              exit 1
+            fi
+          }
+
+          DESKTOP_UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36'
+          MOBILE_UA='Mozilla/5.0 (Linux; Android 16; Mobile) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36'
+
+          render_route desktop-home 1440 1000 "$DESKTOP_UA" / 'System Builder'
+          render_route desktop-analytics 1440 1000 "$DESKTOP_UA" /analytics 'Data Analytics'
+          render_route desktop-tools 1440 1000 "$DESKTOP_UA" /tools 'Data'
+          render_route desktop-books 1440 1000 "$DESKTOP_UA" /books/cal-newport 'Cal Newport'
+
+          render_route mobile-home 390 844 "$MOBILE_UA" / 'System Builder'
+          render_route mobile-analytics 390 844 "$MOBILE_UA" /analytics 'Data Analytics'
+          render_route mobile-tools 390 844 "$MOBILE_UA" /tools 'Data'
+          render_route mobile-books 390 844 "$MOBILE_UA" /books/cal-newport 'Cal Newport'
+
+          render_route narrow-home 320 568 "$MOBILE_UA" / 'System Builder'
+          render_route narrow-tools 320 568 "$MOBILE_UA" /tools 'Data'

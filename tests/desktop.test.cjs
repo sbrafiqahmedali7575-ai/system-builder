@@ -1,6 +1,6 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const os=require('node:os');const path=require('node:path');
 const {Store,DELETE}=require('../desktop/store.cjs');const {backup,encode}=require('../desktop/backup.cjs');
-const seed=JSON.parse(fs.readFileSync(path.join(__dirname,'../desktop/seed.json')));
+const seed=require('./synthetic-seed.cjs');
 const config={projectId:'test-project',firestoreDatabaseId:'test-database',apiKey:'test'};
 function temporary(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sb-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
 test('all six exports, durable edits, deletes, reopen and previous file',t=>{
@@ -109,3 +109,4 @@ test('payload size batching, missing acknowledgements and invalid data are handl
  const invalid=store.snapshot();invalid.deleted.push('tasks/a/b');calls=0;
  await assert.rejects(backup(invalid,config,async()=>{calls++;}),/Invalid deletion/);assert.equal(calls,0);
 });
+

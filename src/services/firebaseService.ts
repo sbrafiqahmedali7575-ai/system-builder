@@ -340,6 +340,8 @@ function applyHabitActivationTransition(
 function habitStoragePayload(habit: HabitItem): Record<string, unknown> {
   return {
     habitId: habit.id,
+    ...(Number.isSafeInteger(habit.habitOrder) && habit.habitOrder! >= 0
+      ? { habitOrder: habit.habitOrder } : {}),
     name: habit.name.trim(),
     repeatDays: habitRepeatDays(habit),
     activeFrom: habitActiveFrom(habit),
@@ -1143,7 +1145,7 @@ export function subscribeToRecords(
         result: Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10 >= 80 ? 'TRUE' : 'FALSE',
         change: 0,
         skill: 'Daily Review',
-        summary: `${Number(data.tasksCompleted ?? data.tasksDone ?? 0)}/${Number(data.taskTotal ?? data.tasks ?? 0)} tasks • ${Number(data.habitsCompleted ?? data.habitsDone ?? 0)}/${Number(data.habitTotal ?? data.Habits ?? 0)} habits`,
+        summary: `${Number(data.tasksCompleted ?? data.tasksDone ?? 0)}/${Number(data.taskTotal ?? data.tasks ?? 0)} tasks  ${Number(data.habitsCompleted ?? data.habitsDone ?? 0)}/${Number(data.habitTotal ?? data.Habits ?? 0)} habits`,
         notes: '',
         dayCompletion:
           Math.round((Number(data.taskCompletionRate ?? 0) * 0.67 + Number(data.habitCompletionRate ?? 0) * 0.33) * 10) / 10,
@@ -1499,7 +1501,7 @@ export function subscribeToHabits(
       habits.push({
         id: habitId,
         name: String(data.name ?? ''),
-        emoji: String(data.emoji ?? '✓'),
+        emoji: String(data.emoji ?? '�'),
         frequency: storedHabitFrequency(data),
         repeatDays: Array.isArray(data.repeatDays)
           ? data.repeatDays
@@ -1519,10 +1521,16 @@ export function subscribeToHabits(
         activeFrom,
         isActive: data.isActive !== false,
         inactivePeriods: normalizeInactivePeriods(data.inactivePeriods),
+        habitOrder: Number.isSafeInteger(data.habitOrder) && data.habitOrder >= 0
+          ? data.habitOrder : undefined,
       });
     });
 
-    habits.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    habits.sort((a, b) => {
+      const order = (a.habitOrder ?? Number.MAX_SAFE_INTEGER) -
+        (b.habitOrder ?? Number.MAX_SAFE_INTEGER);
+      return order || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+    });
     onUpdate(habits);
   };
 
@@ -1558,6 +1566,25 @@ export function subscribeToHabits(
     unsubscribeHabits();
     unsubscribeHabitLogs();
   };
+}
+
+// Save only ordering fields in one durable transaction. Check-ins, schedules,
+// and history are untouched, and a stale UI cannot recreate a deleted habit.
+export async function reorderHabits(orderedIds: string[]): Promise<void> {
+  if (new Set(orderedIds).size !== orderedIds.length) {
+    throw new Error('Habit order contains duplicate IDs.');
+  }
+  await runTransaction(db, async (transaction) => {
+    const snapshots = await Promise.all(orderedIds.map((id) =>
+      transaction.get(doc(db, HABITS_COLLECTION, id))
+    ));
+    if (snapshots.some((snapshot) => !snapshot.exists())) {
+      throw new Error('A habit has changed. Please try arranging the habits again.');
+    }
+    snapshots.forEach((snapshot, habitOrder) => {
+      transaction.set(snapshot.ref, { habitOrder }, { merge: true });
+    });
+  });
 }
 
 export async function addHabitToCloud(habit: HabitItem): Promise<void> {
@@ -1700,4 +1727,5 @@ export async function syncAllDataInCloud(
   await batch.commit();
   await rebuildAllDaySummaries();
 }
+
 

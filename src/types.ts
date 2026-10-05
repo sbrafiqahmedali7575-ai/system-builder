@@ -23,6 +23,7 @@ export interface HabitInactivePeriod {
 
 export interface HabitItem {
   id: string;
+  habitOrder?: number; // Saved custom display order; legacy habits retain their existing order.
   name: string;
   emoji: string;
   frequency: HabitFrequency;
@@ -88,3 +89,4 @@ export interface KPIStats {
   positiveDaysCount: number;
   negativeDaysCount: number;
 }
+

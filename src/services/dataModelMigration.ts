@@ -675,6 +675,8 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
 
     const desiredHabit = {
       habitId: habitDoc.id,
+      ...(typeof data.habitOrder === 'number' && Number.isSafeInteger(data.habitOrder) && data.habitOrder >= 0
+        ? { habitOrder: data.habitOrder } : {}),
       name: String(data.name || '').trim(),
       repeatDays,
       activeFrom,
@@ -802,3 +804,4 @@ export async function migrateLegacyDataModel(): Promise<DataModelMigrationResult
   await backfillTaskOrder();
   return result;
 }
+

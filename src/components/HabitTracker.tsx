@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   BarChart3,
   Check,
   Flame,
+  GripVertical,
   History,
   Pencil,
   Plus,
@@ -15,6 +16,7 @@ import {
 import { HabitFrequency, HabitItem, ToolsDensity } from '../types';
 import { CONFIGURED_TIMEZONE } from '../utils/taskDateUtils';
 import { useCurrentDateKey } from '../hooks/useCurrentDateKey';
+import { reorderHabits } from '../services/firebaseService';
 import {
   HABIT_WEEKDAYS,
   addHabitDays,
@@ -87,7 +89,7 @@ const colorClasses: Record<
 
 const EMPTY_DRAFT: HabitDraft = {
   name: '',
-  emoji: '✓',
+  emoji: '�',
   frequency: 'daily',
   repeatDays: [],
   color: 'blue',
@@ -118,6 +120,33 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [historyHabitId, setHistoryHabitId] = useState<string | null>(null);
   const compact = density === 'compact';
+  const draggedHabitId = useRef<string | null>(null);
+  const savingOrder = useRef(false);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [orderBusy, setOrderBusy] = useState(false);
+
+  const moveHabit = async (sourceId: string, targetId: string) => {
+    if (savingOrder.current || sourceId === targetId) return;
+    const ids = habits.map((habit) => habit.id);
+    const from = ids.indexOf(sourceId);
+    const to = ids.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, sourceId);
+    savingOrder.current = true;
+    setOrderBusy(true);
+    setOrderError(null);
+    try {
+      await reorderHabits(ids);
+    } catch (error) {
+      setOrderError(error instanceof Error ? error.message : 'Could not save habit order. Please try again.');
+    } finally {
+      savingOrder.current = false;
+      setOrderBusy(false);
+      setDropTargetId(null);
+    }
+  };
 
   const weekDates = useMemo(() => {
     const monday = getMonday(weekAnchor);
@@ -314,7 +343,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
       await onUpdateHabit({
         ...existing,
         name,
-        emoji: draft.emoji.trim() || '✓',
+        emoji: draft.emoji.trim() || '�',
         frequency: draft.frequency,
         repeatDays: draft.frequency === 'custom' ? draft.repeatDays : undefined,
         color: draft.color,
@@ -324,7 +353,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
     } else {
       await onAddHabit({
         name,
-        emoji: draft.emoji.trim() || '✓',
+        emoji: draft.emoji.trim() || '�',
         frequency: draft.frequency,
         repeatDays: draft.frequency === 'custom' ? draft.repeatDays : undefined,
         color: draft.color,
@@ -404,10 +433,14 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
 
   return (
     <div className="tools-workspace-view lg:overflow-y-auto">
+      {orderError && <div role="alert" className="text-sm text-rose-600">{orderError}</div>}
+      <div role="status" className="text-xs text-slate-500">
+        {orderBusy ? 'Saving habit order.' : 'Drag the grip beside a habit to arrange it. Order is saved automatically.'}
+      </div>
       {!focusMode && <div className="tools-view-header">
         <div className="min-w-0">
           <h2 className="tools-view-title">Habit Tracker</h2>
-          <p className="tools-view-subtitle">{completedToday}/{dueToday.length} today · {weekCompletionRate}% this week</p>
+          <p className="tools-view-subtitle">{completedToday}/{dueToday.length} today � {weekCompletionRate}% this week</p>
         </div>
         <button
           type="button"
@@ -583,8 +616,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 <div className="text-xs font-medium text-slate-700 dark:text-slate-200">Habit status: {draft.isActive ? 'Enabled' : 'Disabled'} (isActive: {draft.isActive ? 'True' : 'False'})</div>
                 <div className="mt-0.5 text-[11px] font-semibold text-slate-500">
                   {draft.isActive
-                    ? 'Active — daily HabitLogs will be created when this habit is due.'
-                    : 'Inactive — no new HabitLogs will be created until you enable it again.'}
+                    ? 'Active - daily HabitLogs will be created when this habit is due.'
+                    : 'Inactive - no new HabitLogs will be created until you enable it again.'}
                 </div>
               </div>
               <button
@@ -644,7 +677,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
               day: 'numeric',
               timeZone: 'UTC',
             })}
-            {' – '}
+            {' - '}
             {parseHabitDateKey(weekDates[6]).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
@@ -716,11 +749,53 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 return (
                   <div
                     key={habit.id}
+                    data-habit-id={habit.id}
+                    onDragOver={(event) => {
+                      if (!draggedHabitId.current || savingOrder.current) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = 'move';
+                      setDropTargetId(habit.id);
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const sourceId = draggedHabitId.current;
+                      draggedHabitId.current = null;
+                      setDropTargetId(null);
+                      if (sourceId) void moveHabit(sourceId, habit.id);
+                    }}
                     className={`grid grid-cols-[200px_repeat(7,56px)_64px] sm:grid-cols-[248px_repeat(7,58px)_66px] lg:grid-cols-[300px_repeat(7,1fr)_72px] border-b last:border-b-0 border-slate-200 dark:border-slate-800/80 ${
                       busyId === habit.id ? 'opacity-60' : ''
+                    } ${
+                      dropTargetId === habit.id ? 'bg-blue-50 outline outline-2 outline-blue-400' : ''
                     }`}
                   >
                     <div className="p-2.5 flex items-center gap-2 min-w-0">
+                      <button
+                        type="button"
+                        draggable={!orderBusy}
+                        disabled={orderBusy}
+                        aria-label={`Reorder ${habit.name}`}
+                        title="Drag to reorder; use Arrow Up or Arrow Down to move"
+                        className="w-6 h-8 shrink-0 inline-flex items-center justify-center text-slate-400 hover:text-blue-600 cursor-grab active:cursor-grabbing disabled:opacity-40"
+                        onDragStart={(event) => {
+                          draggedHabitId.current = habit.id;
+                          event.dataTransfer.effectAllowed = 'move';
+                          event.dataTransfer.setData('text/plain', habit.id);
+                        }}
+                        onDragEnd={() => {
+                          draggedHabitId.current = null;
+                          setDropTargetId(null);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+                          event.preventDefault();
+                          const index = habits.findIndex((item) => item.id === habit.id);
+                          const target = habits[index + (event.key === 'ArrowUp' ? -1 : 1)];
+                          if (target) void moveHabit(habit.id, target.id);
+                        }}
+                      >
+                        <GripVertical className="w-4 h-4" />
+                      </button>
                       <div className="min-w-0 flex-1">
                         <button
                           type="button"
@@ -838,7 +913,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                   {historyHabit.name} History
                 </div>
                 <div className="text-[11px] font-semibold text-slate-500">
-                  {getHabitScheduleLabel(historyHabit)} • Detailed streak, trend, monthly & heatmap history
+                  {getHabitScheduleLabel(historyHabit)}  Detailed streak, trend, monthly & heatmap history
                 </div>
               </div>
             </div>
@@ -953,8 +1028,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-medium text-slate-500">
-                  <span>80–100% strong</span>
-                  <span>50–79% moderate</span>
+                  <span>80-100% strong</span>
+                  <span>50-79% moderate</span>
                   <span>&lt;50% needs attention</span>
                 </div>
               </div>
@@ -977,7 +1052,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                         <div>
                           <div className="text-xs font-semibold">{month.label}</div>
                           <div className="text-[10px] font-semibold text-slate-500">
-                            {month.completed}/{month.due} done • {month.missed} missed
+                            {month.completed}/{month.due} done  {month.missed} missed
                           </div>
                         </div>
                         <div className="text-sm font-semibold">{month.rate}%</div>
@@ -1005,7 +1080,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                 <div>
                   <div className="text-sm font-semibold">Calendar Heatmap</div>
                   <div className="text-[11px] font-semibold text-slate-500">
-                    Past 12 months • one square per calendar day.
+                    Past 12 months  one square per calendar day.
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-[10px] font-medium text-slate-500">
@@ -1168,3 +1243,4 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
     </div>
   );
 };
+

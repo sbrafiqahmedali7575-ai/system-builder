@@ -37,6 +37,13 @@ await page.getByRole('button',{name:'Habit Tracker',exact:true}).click();
 await page.getByText('Wake Up Early 5 AM',{exact:true}).first().waitFor();
 await page.getByRole('button',{name:'Data',exact:true}).click();
 await page.getByRole('table').first().waitFor();
+assert.equal(await page.getByRole('button',{name:/Import or export .* data/}).count(),0);
+await page.getByRole('button',{name:'Data Transfer'}).click();
+await page.getByText('Export All',{exact:true}).waitFor();
+await page.getByText('Import All',{exact:true}).waitFor();
+assert.equal(await page.getByRole('menu').count(),1);
+await page.getByRole('button',{name:'Data Transfer'}).click();
+
 await page.getByRole('button',{name:'Open Home',exact:true}).first().click();
 await page.getByRole('button',{name:'More actions for DESKTOP OFFLINE TEST',exact:true}).click();
 await page.getByRole('button',{name:'Delete',exact:true}).click();

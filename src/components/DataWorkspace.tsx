@@ -21,9 +21,7 @@ import {
 import {
   DATA_TABLE_COLUMNS,
   exportAllCanonicalData,
-  exportCanonicalDataFile,
   parseAllCanonicalDataFile,
-  parseCanonicalDataFile,
   type DataTransferFormat,
 } from '../utils/dataTransfer';
 import { useToast } from './ui/ToastProvider';
@@ -73,30 +71,20 @@ interface DataCollectionCardProps {
   collection: CollectionDescriptor;
   selected: boolean;
   rowCount: number;
-  menuOpen: boolean;
-  busy: boolean;
   onSelect: () => void;
-  onToggleTransfer: () => void;
-  onExport: (format: DataTransferFormat) => void;
-  onImport: (format: DataTransferFormat) => void;
 }
 
 const DataCollectionCard: React.FC<DataCollectionCardProps> = ({
   collection,
   selected,
   rowCount,
-  menuOpen,
-  busy,
   onSelect,
-  onToggleTransfer,
-  onExport,
-  onImport,
 }) => (
-  <div className="relative" data-transfer-menu>
+  <div className="relative">
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full relative rounded-xl border px-2 py-2 pr-9 text-left transition-colors ${
+      className={`w-full relative rounded-xl border px-2 py-2 text-left transition-colors ${
         selected
           ? 'border-[#4772fa] bg-blue-50/50 dark:bg-blue-950/20'
           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900'
@@ -125,82 +113,6 @@ const DataCollectionCard: React.FC<DataCollectionCardProps> = ({
         rows
       </div>
     </button>
-
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        onToggleTransfer();
-      }}
-      disabled={busy}
-      className={`absolute right-1.5 top-1.5 z-20 inline-flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${
-        menuOpen
-          ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-          : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
-      }`}
-      aria-label={`Import or export ${collection.label} data`}
-      aria-haspopup="menu"
-      aria-expanded={menuOpen}
-      title={`Import / Export ${collection.label}`}
-    >
-      {busy ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <ArrowRightLeft className="h-3.5 w-3.5" />
-      )}
-    </button>
-
-    {menuOpen && (
-      <div
-        role="menu"
-        className="absolute right-1.5 top-9 z-50 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-          Export
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            type="button"
-            onClick={() => onExport('xlsx')}
-            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-          >
-            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-            Excel
-          </button>
-          <button
-            type="button"
-            onClick={() => onExport('csv')}
-            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-          >
-            <FileText className="h-3.5 w-3.5 text-blue-600" />
-            CSV
-          </button>
-        </div>
-
-        <div className="mt-2 border-t border-slate-100 px-1 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800">
-          Import
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            type="button"
-            onClick={() => onImport('xlsx')}
-            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-          >
-            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-            Excel
-          </button>
-          <button
-            type="button"
-            onClick={() => onImport('csv')}
-            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-          >
-            <FileText className="h-3.5 w-3.5 text-blue-600" />
-            CSV
-          </button>
-        </div>
-      </div>
-    )}
   </div>
 );
 
@@ -213,38 +125,24 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortState>(null);
   const [showDimensions, setShowDimensions] = useState(false);
-  const [transferMenu, setTransferMenu] = useState<CanonicalCollectionName | null>(null);
   const [allTransferMenu, setAllTransferMenu] = useState(false);
-  const [transferBusy, setTransferBusy] = useState<CanonicalCollectionName | null>(null);
   const [allTransferBusy, setAllTransferBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingImportRef = useRef<
-    | {
-        scope: 'single';
-        collection: CanonicalCollectionName;
-        format: DataTransferFormat;
-      }
-    | {
-        scope: 'all';
-        format: DataTransferFormat;
-      }
-    | null
-  >(null);
+  const pendingImportRef = useRef<{ scope: 'all'; format: DataTransferFormat } | null>(null);
 
   useEffect(() => subscribeToCanonicalData(setData, (err) => setError(err.message)), []);
 
   useEffect(() => {
-    if (!transferMenu && !allTransferMenu) return;
+    if (!allTransferMenu) return;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target?.closest('[data-transfer-menu]')) {
-        setTransferMenu(null);
         setAllTransferMenu(false);
       }
     };
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [transferMenu, allTransferMenu]);
+  }, [allTransferMenu]);
 
   const rows = data[active];
   const sortedRows = useMemo(() => {
@@ -288,43 +186,6 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
   const selectCollection = (collection: CanonicalCollectionName) => {
     setActive(collection);
     setSort(null);
-  };
-
-  const handleExport = (
-    collection: CanonicalCollectionName,
-    format: DataTransferFormat
-  ) => {
-    setError(null);
-    setTransferMenu(null);
-    try {
-      exportCanonicalDataFile(collection, data[collection], format);
-      notify(
-        `${collectionLabel(collection)} exported as ${format === 'xlsx' ? 'Excel' : 'CSV'}.`
-      );
-    } catch (exportError) {
-      const message = exportError instanceof Error
-        ? exportError.message
-        : String(exportError);
-      setError(`Export failed for ${collectionLabel(collection)}: ${message}`);
-    }
-  };
-
-  const beginImport = (
-    collection: CanonicalCollectionName,
-    format: DataTransferFormat
-  ) => {
-    setError(null);
-    setTransferMenu(null);
-    selectCollection(collection);
-    pendingImportRef.current = { scope: 'single', collection, format };
-
-    const input = fileInputRef.current;
-    if (!input) return;
-    input.value = '';
-    input.accept = format === 'xlsx'
-      ? '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
-      : '.csv,text/csv';
-    input.click();
   };
 
   const handleExportAll = async (format: DataTransferFormat) => {
@@ -412,32 +273,6 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
         pendingImportRef.current = null;
         event.target.value = '';
       }
-      return;
-    }
-
-    const { collection, format } = pending;
-    setTransferBusy(collection);
-
-    try {
-      const importedRows = await parseCanonicalDataFile(file, collection, format);
-      const result = await importCanonicalDataRows(collection, importedRows);
-      if (collection === 'users') {
-        window.dispatchEvent(
-          new CustomEvent('system-builder:auth-profile-changed')
-        );
-      }
-      notify(
-        `${result.imported} row${result.imported === 1 ? '' : 's'} imported into ${collectionLabel(collection)}.`
-      );
-    } catch (importError) {
-      const message = importError instanceof Error
-        ? importError.message
-        : String(importError);
-      setError(`Import failed for ${collectionLabel(collection)}: ${message}`);
-    } finally {
-      setTransferBusy(null);
-      pendingImportRef.current = null;
-      event.target.value = '';
     }
   };
 
@@ -447,17 +282,7 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
       collection={collection}
       selected={active === collection.id}
       rowCount={data[collection.id].length}
-      menuOpen={transferMenu === collection.id}
-      busy={transferBusy === collection.id}
       onSelect={() => selectCollection(collection.id)}
-      onToggleTransfer={() => {
-        setAllTransferMenu(false);
-        setTransferMenu((current) =>
-          current === collection.id ? null : collection.id
-        );
-      }}
-      onExport={(format) => handleExport(collection.id, format)}
-      onImport={(format) => beginImport(collection.id, format)}
     />
   );
 
@@ -484,7 +309,6 @@ export const DataWorkspace: React.FC<{ focusMode?: boolean }> = ({ focusMode = f
             <button
               type="button"
               onClick={() => {
-                setTransferMenu(null);
                 setAllTransferMenu((open) => !open);
               }}
               disabled={allTransferBusy}

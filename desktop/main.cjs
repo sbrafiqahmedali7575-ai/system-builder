@@ -30,7 +30,7 @@ app.whenReady().then(()=>{
     }finally{backingUp=false;}
   });
   ipcMain.handle('database:export',async event=>{trusted(event);const selected=await dialog.showSaveDialog(win,{defaultPath:'System-Builder-Backup.json',filters:[{name:'JSON backup',extensions:['json']}]});if(selected.canceled)return false;fs.writeFileSync(selected.filePath,JSON.stringify(store.snapshot(),null,2),{mode:0o600});return true;});
-  win=new BrowserWindow({width:1440,height:960,minWidth:800,minHeight:600,title:'System Builder',icon:path.join(dist,'system-builder-icon-512.png'),autoHideMenuBar:true,backgroundColor:'#f6f8ff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  win=new BrowserWindow({width:1440,height:960,minWidth:800,minHeight:600,title:'System Builder',icon:path.join(__dirname,'system-builder.ico'),autoHideMenuBar:true,backgroundColor:'#f6f8ff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
   // The renderer cannot reach cloud services. Only the explicit backup handler can.
   win.webContents.session.webRequest.onBeforeRequest((details,callback)=>callback({cancel:/^https?:|^wss?:/.test(details.url)}));
   win.webContents.session.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));
@@ -40,3 +40,4 @@ app.whenReady().then(()=>{
 });
 app.on('window-all-closed',()=>app.quit());
 }
+

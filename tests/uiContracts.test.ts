@@ -841,6 +841,17 @@ assert.ok(
   'Mobile bottom navigation must use Data Analytics as the raised center action instead of Add Task.'
 );
 assert.ok(
+  dataWorkspace.includes('exportAllCanonicalData') &&
+    dataWorkspace.includes('parseAllCanonicalDataFile') &&
+    dataWorkspace.includes('Data Transfer') &&
+    !dataWorkspace.includes('exportCanonicalDataFile') &&
+    !dataWorkspace.includes('parseCanonicalDataFile') &&
+    !dataWorkspace.includes("scope: 'single'") &&
+    !dataWorkspace.includes('onToggleTransfer'),
+  'Data Workspace must expose import/export only at the global all-table level on desktop and mobile.'
+);
+
+assert.ok(
   mobileBottomNav.includes('onAiChat?: () => void;') &&
     mobileBottomNav.includes('aria-label="Open AI Data Analyst chat"') &&
     mobileBottomNav.includes('<Bot/><span>AI</span>'),

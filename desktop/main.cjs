@@ -1,10 +1,14 @@
 const {app,BrowserWindow,ipcMain,protocol,net,dialog}=require('electron');
 const fs=require('node:fs'); const path=require('node:path'); const {pathToFileURL}=require('node:url');
-const {Store}=require('./store.cjs'); const {backup}=require('./backup.cjs');
+const {Store}=require('./store.cjs');
+const editionFile=path.join(__dirname,'edition.json');
+const edition=fs.existsSync(editionFile)?JSON.parse(fs.readFileSync(editionFile,'utf8')):{pure:false,dataFolder:'System Builder Desktop'};
 protocol.registerSchemesAsPrivileged([{scheme:'app',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true}}]);
-app.setName('System Builder Desktop');
+app.setName(edition.pure?'System Builder Pure Desktop':'System Builder Desktop');
+app.setAppUserModelId(edition.pure?'com.systembuilder.pure.desktop':'com.systembuilder.desktop');
 // Stable path survives moving/updating the portable application.
-app.setPath('userData',path.join(app.getPath('appData'),'System Builder Desktop'));
+// Automated launch tests use a temporary profile and never touch live user data.
+app.setPath('userData',process.env.SYSTEM_BUILDER_TEST_PROFILE||path.join(app.getPath('appData'),edition.dataFolder));
 if(!app.requestSingleInstanceLock())app.quit();
 else {
 let win,store,backingUp=false;
@@ -22,6 +26,8 @@ app.whenReady().then(()=>{
   const trusted=event=>{if(event.sender!==win?.webContents||event.senderFrame!==win.webContents.mainFrame||!event.senderFrame.url.startsWith('app://system-builder/'))throw Error('Untrusted request.');};
   ipcMain.handle('database:read',event=>{trusted(event);return store.snapshot();});
   ipcMain.handle('database:commit',(event,ops,revision)=>{trusted(event);const result=store.commit(ops,revision);if(result.changed)win.webContents.send('database:changed');return result;});
+  if(!edition.pure){
+  const {backup}=require('./backup.cjs');
   ipcMain.handle('database:backup',async event=>{
     trusted(event);if(backingUp)throw Error('Backup is already running.');backingUp=true;
     try {
@@ -30,7 +36,8 @@ app.whenReady().then(()=>{
     }finally{backingUp=false;}
   });
   ipcMain.handle('database:export',async event=>{trusted(event);const selected=await dialog.showSaveDialog(win,{defaultPath:'System-Builder-Backup.json',filters:[{name:'JSON backup',extensions:['json']}]});if(selected.canceled)return false;fs.writeFileSync(selected.filePath,JSON.stringify(store.snapshot(),null,2),{mode:0o600});return true;});
-  win=new BrowserWindow({width:1440,height:960,minWidth:800,minHeight:600,title:'System Builder',icon:path.join(__dirname,'system-builder.ico'),autoHideMenuBar:true,backgroundColor:'#f6f8ff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  }
+  win=new BrowserWindow({show:process.env.SYSTEM_BUILDER_TEST_HIDE!=='1',width:1440,height:960,minWidth:800,minHeight:600,title:'System Builder',icon:path.join(__dirname,'system-builder.ico'),autoHideMenuBar:true,backgroundColor:'#f6f8ff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
   // The renderer cannot reach cloud services. Only the explicit backup handler can.
   win.webContents.session.webRequest.onBeforeRequest((details,callback)=>callback({cancel:/^https?:|^wss?:/.test(details.url)}));
   win.webContents.session.setPermissionRequestHandler((_webContents,_permission,callback)=>callback(false));

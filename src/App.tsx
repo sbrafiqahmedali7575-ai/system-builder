@@ -15,6 +15,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { ToastProvider } from './components/ui/ToastProvider';
 import { FeedbackDiagnosticsPanel } from './components/FeedbackDiagnosticsPanel';
 import { DesktopBackup } from './components/DesktopBackup';
+import { PURE_DESKTOP } from './desktopEdition';
 import { standardizeDate } from './utils/dateUtils';
 import { areDatesEqual, CONFIGURED_TIMEZONE, formatCalendarDate, getIsoDateKeyInTimezone } from './utils/taskDateUtils';
 import { calculateKPIStats } from './utils/daxMeasures';
@@ -62,7 +63,7 @@ const buildDayProgressStats = (
 };
 
 function SystemBuilderApp() {
-  const openAccount = () => window.dispatchEvent(new CustomEvent('system-builder:backup'));
+  const openAccount = PURE_DESKTOP ? undefined : () => window.dispatchEvent(new CustomEvent('system-builder:backup'));
   // Initialize records from localStorage cache or initial template data
   const [records, setRecords] = useState<DailyRecord[]>(() => {
     if (typeof window !== 'undefined') {
@@ -267,9 +268,9 @@ function SystemBuilderApp() {
     setCachedHabits(habits);
   }, [habits]);
 
-  // ─────────────────────────────────────────────────────────────
+  // �������������������������������������������������������������
   // TASK MANAGEMENT HANDLERS
-  // ─────────────────────────────────────────────────────────────
+  // �������������������������������������������������������������
 
   // Reserve sequential canonical Task IDs (T1, T2, T3...).
   const nextTaskIdRef = useRef(0);
@@ -618,7 +619,7 @@ function SystemBuilderApp() {
 
     const formattedDate = formatCalendarDate(dateKey);
     const nowIso = new Date().toISOString();
-    const summary = `${completedTaskCount}/${dayTasks.length} tasks • ${completedHabitCount}/${dayHabits.length} habits`;
+    const summary = `${completedTaskCount}/${dayTasks.length} tasks  ${completedHabitCount}/${dayHabits.length} habits`;
     const existingRecord = records.find((record) =>
       areDatesEqual(record.date, formattedDate)
     );
@@ -945,10 +946,10 @@ function SystemBuilderApp() {
       />}
       <MobileBrandHeader isSyncing={isSyncing} onOpenAccount={openAccount} />
 
-      {isQuotaExhausted && (
+      {!PURE_DESKTOP && isQuotaExhausted && (
         <div className="w-full bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/60 px-4 py-2.5 text-xs text-amber-900 dark:text-amber-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold">⚠️ Daily Firestore Write Quota Reached:</span>
+            <span className="font-semibold">?? Daily Firestore Write Quota Reached:</span>
             <span>The free-tier daily write limit for this Firebase project has been reached. Existing commitments remain readable, and writes will resume after midnight PT.</span>
           </div>
           <div className="flex items-center gap-3">
@@ -966,7 +967,7 @@ function SystemBuilderApp() {
               className="w-5 h-5 rounded-md flex items-center justify-center text-amber-700 dark:text-amber-300 hover:bg-amber-200/50 dark:hover:bg-amber-900/50"
               aria-label="Dismiss banner"
             >
-              ✕
+              ?
             </button>
           </div>
         </div>
@@ -1029,7 +1030,8 @@ function SystemBuilderApp() {
 export default function App() {
   return (
     <>
-      <SystemBuilderApp /><DesktopBackup />
+      <SystemBuilderApp />{!PURE_DESKTOP && <DesktopBackup />}
     </>
   );
 }
+

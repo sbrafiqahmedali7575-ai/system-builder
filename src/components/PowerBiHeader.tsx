@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, BookOpen, Focus, Home, CloudUpload, Wrench } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
+import { PURE_DESKTOP } from '../desktopEdition';
 
 export type NavTab = 'ALL' | 'TRENDS' | 'ANALYTICS' | 'TASKS';
 
@@ -104,15 +105,15 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                 transition={{ duration: 0.18 }}
                 className="text-[11px] lg:text-xs font-semibold text-slate-500 dark:text-slate-400 leading-snug line-clamp-1 tracking-normal"
               >
-                <span className="text-blue-500/80 dark:text-blue-300/80">“</span>
+                <span className="text-blue-500/80 dark:text-blue-300/80">"</span>
                 {HEADER_QUOTES[quoteIndex]}
-                <span className="text-blue-500/80 dark:text-blue-300/80">”</span>
+                <span className="text-blue-500/80 dark:text-blue-300/80">"</span>
               </motion.div>
             </AnimatePresence>
           </motion.button>
         </div>
 
-        {/* Right Desktop Controls — icon-only, ordered by primary workspace flow */}
+        {/* Right Desktop Controls - icon-only, ordered by primary workspace flow */}
         <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
           {onOpenHome && (
             <motion.button
@@ -186,7 +187,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
             </motion.button>
           )}
 
-          {onOpenAccount && (
+          {!PURE_DESKTOP && onOpenAccount && (
             <motion.button
               whileHover={{ y: -2, scale: 1.04 }}
               whileTap={{ scale: 0.95 }}
@@ -244,7 +245,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                   ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm ring-1 ring-indigo-300'
                   : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-700 dark:hover:text-indigo-300'
               }`}
-              title={isAnalyticsPage ? 'Data Analytics — current page' : 'Open Data Analytics'}
+              title={isAnalyticsPage ? 'Data Analytics - current page' : 'Open Data Analytics'}
               aria-label={isAnalyticsPage ? 'Data Analytics, current page' : 'Open Data Analytics'}
             >
               <BarChart3 className="w-4 h-4" />
@@ -263,7 +264,7 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
                   ? 'bg-blue-600 border-blue-600 text-white shadow-sm ring-1 ring-blue-300'
                   : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-300'
               }`}
-              title={isToolsPage ? 'Tools — current page' : 'Open System Builder tools'}
+              title={isToolsPage ? 'Tools - current page' : 'Open System Builder tools'}
               aria-label={isToolsPage ? 'Tools, current page' : 'Open System Builder tools'}
             >
               <Wrench className="w-4 h-4 transition-transform group-hover:rotate-[-10deg]" />
@@ -280,3 +281,4 @@ export const PowerBiHeader: React.FC<PowerBiHeaderProps> = ({
     </motion.header>
   );
 };
+

@@ -6,7 +6,7 @@ export type QuerySnapshot<T = DocumentData> = any;
 export type WriteBatch = ReturnType<typeof writeBatch>;
 declare global { interface Window { systemBuilderDesktop: {
   read:()=>Promise<any>; commit:(ops:any[],revision?:number)=>Promise<any>;
-  backup:()=>Promise<any>; exportLocal:()=>Promise<boolean>; onChange:(callback:()=>void)=>()=>void;
+  backup?:()=>Promise<any>; exportLocal?:()=>Promise<boolean>; onChange:(callback:()=>void)=>()=>void;
 }; } }
 export const getFirestore = (..._args:any[]) => ({});
 export const collection = (_db:any,name:string) => ({path:name,kind:'collection'});
@@ -45,3 +45,4 @@ export async function runTransaction<T>(_db:any,fn:(transaction:any)=>Promise<T>
   }
   throw Error('Another change was saved at the same time. Please try again.');
 }
+

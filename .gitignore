@@ -12,3 +12,7 @@ desktop/seed.json
 desktop/cloud-seed.raw.json
 desktop/*-preview.png
 desktop/ui-*
+desktop/capture-profile/
+desktop/capture-result.json
+desktop/build-runtime/
+

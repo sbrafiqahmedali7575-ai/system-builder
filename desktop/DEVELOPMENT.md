@@ -4,13 +4,22 @@ This branch builds a local desktop edition. `main` remains the online app.
 
 ```sh
 npm ci
-node desktop/import-seed.mjs /path/to/six/xlsx/exports
+node desktop/capture-desktop.mjs
 npm run check
-npm run desktop:package
+npm run build -- --outDir build/up-to-date
+node desktop/package.mjs up-to-date
+# Set SYSTEM_BUILDER_EDITION=pure in the build environment:
+npm run build -- --outDir build/pure
+node desktop/package.mjs pure
+node tests/editions-windows.cjs
+python desktop/zip-editions.py
 ```
 
-The private `desktop/seed.json` is deliberately ignored by Git. It is copied into
-the personal Windows package. Never publish that package or seed in a public release.
+The private `desktop/seed.json` is deliberately ignored by Git. It is captured
+from the installed desktop database and copied only into the Up-to-Date package.
+Never publish that package, seed, or captured profile in a public release.
+The Pure Desktop package has empty tables, a separate AppData profile, and no
+backup renderer, upload IPC handlers, backup module, or cloud configuration file.
 The artifact contains personal table data. Builds use the bundled Electron version
 from the lockfile and require network access only to download dependencies/runtime.
 
@@ -24,4 +33,8 @@ deletion tombstones, corruption handling and mocked Firestore backup results.
 `tests/desktop-ui.cjs` uses a temporary data copy and a headless browser bridge to
 exercise the production UI. It makes no Firestore requests. It requires Playwright
 Chromium (`npx playwright install chromium`) and a permitted loopback test server.
-Windows main-process launch and live Firestore access must be checked on Windows.
+`tests/editions-windows.cjs` launches both packaged Windows EXEs in isolated
+temporary profiles and verifies empty startup, backup removal, local edits,
+habit order persistence, and captured table/preference restoration. Live
+Firestore writes are never made by these tests.
+

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CloudUpload } from 'lucide-react';
 import { SystemBuilderLogo } from './SystemBuilderLogo';
+import { PURE_DESKTOP } from '../desktopEdition';
 
 interface MobileBrandHeaderProps {
   isSyncing?: boolean;
@@ -49,7 +50,7 @@ export const MobileBrandHeader: React.FC<MobileBrandHeaderProps> = ({
             Rafiq Ahmed
           </div>
         </div>
-        {onOpenAccount && (
+        {!PURE_DESKTOP && onOpenAccount && (
           <button
             type="button"
             onClick={onOpenAccount}
@@ -64,3 +65,4 @@ export const MobileBrandHeader: React.FC<MobileBrandHeaderProps> = ({
     </motion.div>
   </div>
 );
+

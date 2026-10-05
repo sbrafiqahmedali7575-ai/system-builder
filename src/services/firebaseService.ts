@@ -16,7 +16,7 @@ import {
   type DocumentData,
   type DocumentReference,
 } from './desktopFirestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import { PURE_DESKTOP } from '../desktopEdition';
 import { recordFirestoreWrite } from './firestoreWriteDiagnostics';
 import { DailyRecord, HabitItem, TaskItem } from '../types';
 import { INITIAL_RECORDS, INITIAL_TASKS } from '../data/initialData';
@@ -857,6 +857,13 @@ export async function rebuildDaySummary(dateKey: string): Promise<void> {
 
 export async function initializeDayHabitStatus(dateKey: string): Promise<void> {
   if (isFirestoreWriteQuotaExhausted()) return;
+  if (PURE_DESKTOP) {
+    const [tasks, habits] = await Promise.all([
+      getDocs(collection(db, TASKS_COLLECTION)),
+      getDocs(collection(db, HABITS_COLLECTION)),
+    ]);
+    if (tasks.empty && habits.empty) return;
+  }
   const normalizedDateKey = normalizeModelDateKey(dateKey);
   if (!normalizedDateKey) return;
   // rebuildDaySummary already ensures today's HabitLogs.
